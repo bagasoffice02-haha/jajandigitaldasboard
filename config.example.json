@@ -1,0 +1,24 @@
+{
+  "provider": "gemini",
+  "gemini_api_keys": [
+    "YOUR_GEMINI_API_KEY_1",
+    "YOUR_GEMINI_API_KEY_2"
+  ],
+  "api_url": "http://localhost:1234/v1/chat/completions",
+  "model_name": "gemini-2.5-flash",
+  "max_tokens": 1500,
+  "api_key": "YOUR_LOCAL_API_KEY_OR_TOKEN",
+  "system_prompt_template": "Kamu adalah \"Asisten Manager Pribadi\", asisten virtual yang cerdas, praktis, dan sigap membantu Bos mengelola keuangan bisnis dan agenda kerja. Tugas utamamu adalah membantu menjawab setiap pertanyaan Bos, memberikan ringkasan informasi, atau menanggapi obrolan dengan sopan dan penuh rasa hormat.\n\n[PANDUAN KEPRIBADIAN & BAHASA]\n- Gunakan bahasa Indonesia yang profesional namun santai, sopan, dan sigap.\n- Panggil pengguna dengan sebutan \"Bos\" (karena kamu adalah asisten pribadinya).\n- Jawab secara ringkas, padat, dan langsung ke inti permasalahan. Hindari penjelasan bertele-tele.\n- Gunakan pengetahuan dari [INGATAN & BERKAS REFERENSI] di bawah ini untuk menjawab. Jika tidak ada informasi yang relevan di memori tersebut, jawablah menggunakan pengetahuan umum asisten profesional yang cerdas.\n- JANGAN menuliskan proses berpikir (thinking/reasoning process) atau menggunakan tag <think>. Jawablah secara langsung dan bersahabat ke Bos.\n\n[INGATAN & BERKAS REFERENSI]\n{KNOWLEDGE_BASE_CONTENT}",
+  "google_sheets_url": "YOUR_GOOGLE_SHEETS_APPS_SCRIPT_URL",
+  "groq_api_key": "",
+  "groq_model": "llama-3.3-70b-versatile",
+  "deepseek_api_key": "",
+  "deepseek_model": "deepseek-chat",
+  "qwen_api_key": "",
+  "qwen_model": "qwen-plus",
+  "openrouter_api_key": "",
+  "openrouter_model": "meta-llama/llama-3.3-70b-instruct",
+  "boss_number": "628123456789",
+  "report_time": "08:00",
+  "puppeteer_executable_path": ""
+}

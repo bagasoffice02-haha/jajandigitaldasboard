@@ -1,0 +1,52 @@
+[
+  {
+    "category": "greetings",
+    "keywords": ["halo", "hai", "hay", "hello", "p", "permisi", "pagi", "siang", "sore", "malam", "hey", "helo", "halo kak", "halo kk", "halo bos"],
+    "draft": "Selamat datang di Tekno Unggul! Saya Sania, asisten virtual CS Anda. Ada yang bisa Sania bantu seputar program pelatihan atau informasi kami hari ini?"
+  },
+  {
+    "category": "salam",
+    "keywords": ["assalamualaikum", "assalamu'alaikum", "assalam", "sholom", "asalamualaikum"],
+    "draft": "Wa'alaikumussalam Wr. Wb. Selamat datang di Tekno Unggul! Ada yang bisa Sania bantu hari ini?"
+  },
+  {
+    "category": "terima_kasih",
+    "keywords": ["makasih", "terima kasih", "terimakasih", "nuhun", "suwun", "thank you", "thanks", "mksh", "tq", "syukron"],
+    "draft": "Sama-sama! Senang sekali bisa membantu Anda. Jika ada hal lain yang ditanyakan, silakan hubungi Sania kembali."
+  },
+  {
+    "category": "konfirmasi",
+    "keywords": ["ok", "oke", "baik", "siap", "siaap", "sip", "mantap", "siipp", "okey", "ok oce", "siap bos"],
+    "draft": "Baik, dimengerti! Terima kasih atas konfirmasi Anda. Silakan hubungi kami kembali jika membutuhkan informasi lainnya."
+  },
+  {
+    "category": "pamitan",
+    "keywords": ["bye", "daah", "dah", "dadah", "pamit", "selesai", "cukup", "dadaah", "sampai jumpa"],
+    "draft": "Sampai jumpa kembali! Terima kasih telah menghubungi Tekno Unggul. Semoga aktivitas Anda menyenangkan dan sukses selalu."
+  },
+  {
+    "category": "admin",
+    "keywords": ["admin", "operator", "manusia", "hubungi", "nomor", "telp", "telepon", "wa admin", "kontak admin"],
+    "draft": "Untuk berkonsultasi langsung dengan staf Admin Manusia kami, Kakak bisa menghubungi nomor WhatsApp resmi kami di 0812-3456-7890."
+  },
+  {
+    "category": "promo",
+    "keywords": ["promo", "diskon", "cashback", "potongan", "murah"],
+    "draft": "Kami menyediakan beasiswa cicilan ringan tanpa bunga serta potongan biaya pendaftaran sebesar 10% untuk program kelas bulan ini."
+  },
+  {
+    "category": "brosur",
+    "keywords": ["brosur", "brosur pendaftaran", "detail harga", "detail biaya"],
+    "draft": "Ini adalah berkas brosur pendaftaran resmi Tekno Unggul. Silakan cek detail kelas dan rincian biaya di sini. [KIRIM_MEDIA: brosur_pendaftaran.pdf]"
+  },
+  {
+    "category": "panduan",
+    "keywords": ["panduan", "kurikulum", "akademik", "silabus", "materi"],
+    "draft": "Berikut adalah berkas panduan akademik dan silabus kurikulum program pelatihan kami untuk Kakak. [KIRIM_MEDIA: panduan_akademik.pdf]"
+  },
+  {
+    "category": "lokasi",
+    "keywords": ["lokasi", "peta", "alamat", "rute", "kantor", "gedung", "alamatnya"],
+    "draft": "Kantor kami berada di Gedung Cyber Tech, Lantai 3, Jl. Teknologi No. 42, Kebayoran Baru, Jakarta Selatan (dekat Stasiun MRT Blok M). Berikut adalah peta lokasi digital kami untuk navigasi. [KIRIM_MEDIA: peta_lokasi.png]"
+  }
+]

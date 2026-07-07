@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
+    <title>WA Bot Dashboard — Asisten Manager Pribadi</title>
+    <meta name="description" content="Dashboard kontrol WhatsApp Bot AI Asisten Manager Pribadi. Monitor pesan, kelola memori, dan atur konfigurasi bot Anda.">
+
+    <!-- Fonts & Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css?v=4">
+
+    <!-- Socket.io & QR -->
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.4.4/build/qrcode.min.js"></script>
+
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- Inline: load saved theme before paint (prevents FOUC) -->
+    <script>
+        (function() {
+            const t = localStorage.getItem('dashboard-theme') || 'light';
+            if (t !== 'light') document.documentElement.className = 'theme-' + t;
+        })();
+    </script>
+</head>
+<body>
+<div class="app-container">
+
+    <!-- ══════════════════════════════════════════
+         HEADER
+    ══════════════════════════════════════════ -->
+    <header class="app-header">
+        <div class="logo-area">
+            <span class="logo-icon"><i data-lucide="bot"></i></span>
+            <div class="logo-text">
+                <h1>WA Bot CS</h1>
+                <p>Asisten Manager Pribadi</p>
+            </div>
+        </div>
+
+        <div class="header-right">
+            <button type="button" class="header-action-btn" onclick="refreshQRCode(false)" title="Muat Ulang WhatsApp">
+                <i data-lucide="refresh-cw"></i>
+            </button>
+            <span class="server-badge" id="badge-model-name">Loading…</span>
+        </div>
+    </header>
+
+    <!-- ══════════════════════════════════════════
+         TAB 1 — MONITOR
+    ══════════════════════════════════════════ -->
+    <div id="tab-monitor" class="tab-content">
+        <main class="dashboard-grid">
+
+            <!-- PANEL KIRI -->
+            <section class="panel panel-left">
+
+                <!-- Status Koneksi -->
+                <div class="card status-card">
+                    <h2><i data-lucide="wifi"></i> Status Koneksi Bot</h2>
+                    <p class="card-subtitle">Kondisi koneksi WhatsApp bot secara real-time</p>
+
+                    <div class="status-indicator-wrapper">
+                        <div id="status-dot" class="status-dot disconnected"></div>
+                        <span id="status-text" class="status-label">Terputus</span>
+                    </div>
+
+                    <!-- QR Code -->
+                    <div id="qr-container" class="qr-container hidden">
+                        <p class="qr-instruction">Pindai QR ini lewat WhatsApp → Perangkat Tertaut</p>
+                        <div id="qr-code-placeholder" class="qr-placeholder">
+                            <span class="loader"></span>
+                            <p>Memuat QR Code…</p>
+                        </div>
+                        <div class="qr-actions">
+                            <button type="button" class="btn btn-primary btn-sm" onclick="refreshQRCode(false)">
+                                <i data-lucide="refresh-cw"></i> Refresh QR
+                            </button>
+                            <button type="button" class="btn btn-danger btn-sm" onclick="refreshQRCode(true)">
+                                <i data-lucide="log-out"></i> Reset Sesi
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Sesi Aktif -->
+                    <div id="active-session-info" class="session-info hidden">
+                        <p class="session-success-msg">✓ Bot terhubung & siap membalas pesan</p>
+                        <button type="button" class="btn btn-danger btn-sm" style="margin-top:10px;" onclick="refreshQRCode(true)">
+                            Tautkan Ulang / Logout
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Riwayat Keuangan -->
+                <div class="card history-card">
+                    <h2><i data-lucide="trending-up"></i> Catatan Keuangan Terakhir</h2>
+                    <p class="card-subtitle">Riwayat kas masuk/keluar yang dicatat bot</p>
+                    <div id="history-finance-list" class="wa-chat-list">
+                        <div class="file-item-placeholder">Memuat riwayat keuangan…</div>
+                    </div>
+                </div>
+
+                <!-- Riwayat Agenda -->
+                <div class="card history-card">
+                    <h2><i data-lucide="calendar-check"></i> Agenda Terjadwal Terakhir</h2>
+                    <p class="card-subtitle">Riwayat agenda/kegiatan yang dijadwalkan bot</p>
+                    <div id="history-agenda-list" class="wa-chat-list">
+                        <div class="file-item-placeholder">Memuat riwayat agenda…</div>
+                    </div>
+                </div>
+
+            </section>
+
+            <!-- PANEL KANAN — LIVE MONITOR -->
+            <section class="panel panel-right card monitor-card">
+                <div class="monitor-header">
+                    <h2><i data-lucide="message-circle"></i> Monitor Obrolan Langsung</h2>
+                    <span class="badge pulse-badge">● Live</span>
+                </div>
+                <div id="chat-messages" class="chat-messages-container">
+                    <div class="chat-placeholder">
+                        <p>Belum ada pesan aktif</p>
+                        <span class="small-text">Pesan masuk & balasan bot akan tampil di sini secara real-time.</span>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <!-- ══════════════════════════════════════════
+         TAB 2 — MEMORY
+    ══════════════════════════════════════════ -->
+    <div id="tab-memory" class="tab-content hidden">
+        <main class="dashboard-grid">
+
+            <!-- PANEL KIRI: Memori & Knowledge -->
+            <section class="panel panel-left">
+
+                <!-- Undang-undang AI -->
+                <div class="card memory-card">
+                    <h2><i data-lucide="scroll-text"></i> Undang-Undang AI (Konstitusi Bot)</h2>
+                    <p class="card-subtitle">Aturan prioritas tertinggi yang ditulis Bos — dikirim via chat: <code>#akubosmu</code></p>
+
+                    <div class="form-group">
+                        <textarea id="cfg-ai-memory" rows="6" placeholder="Undang-undang AI masih kosong. Tulis aturan bagi bot di sini…"></textarea>
+                        <small>Disimpan di <code>00_memori_otomatis.txt</code>. Memiliki prioritas mutlak di atas panduan kepribadian default.</small>
+                    </div>
+
+                    <div style="display:flex; gap:10px; margin-top:14px;">
+                        <button id="btn-save-memory" class="btn btn-primary btn-sm" onclick="saveAiMemory()">
+                            <i data-lucide="save"></i> Simpan
+                        </button>
+                        <button id="btn-clear-memory" class="btn btn-danger btn-sm" onclick="clearAiMemory()">
+                            <i data-lucide="trash-2"></i> Kosongkan
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Knowledge Base -->
+                <div class="card knowledge-card">
+                    <div class="card-header-btn">
+                        <h2><i data-lucide="book-open"></i> Basis Pengetahuan (.txt)</h2>
+                        <label for="knowledge-upload" class="btn btn-primary btn-sm">
+                            <i data-lucide="upload"></i> Unggah
+                        </label>
+                        <input type="file" id="knowledge-upload" accept=".txt" style="display:none;">
+                    </div>
+                    <p class="card-subtitle">Dokumen lokal untuk injeksi konteks AI asisten</p>
+                    <div id="knowledge-list" class="file-list">
+                        <div class="file-item-placeholder">Memuat berkas…</div>
+                    </div>
+                </div>
+
+            </section>
+
+            <!-- PANEL KANAN: Media Assets -->
+            <section class="panel panel-right">
+                <div class="card media-card">
+                    <div class="card-header-btn">
+                        <h2><i data-lucide="paperclip"></i> Aset Media (.pdf, .png)</h2>
+                        <label for="media-upload" class="btn btn-primary btn-sm">
+                            <i data-lucide="upload"></i> Unggah
+                        </label>
+                        <input type="file" id="media-upload" accept=".pdf,.png" style="display:none;">
+                    </div>
+                    <p class="card-subtitle">Berkas media dikirim AI lewat tag <code>[KIRIM_MEDIA: nama_file]</code></p>
+                    <div id="media-list" class="file-list">
+                        <div class="file-item-placeholder">Memuat berkas…</div>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <!-- ══════════════════════════════════════════
+         TAB 4 — GROUPS
+    ══════════════════════════════════════════ -->
+    <div id="tab-groups" class="tab-content hidden">
+        <main class="dashboard-grid groups-grid" style="display: grid; grid-template-columns: 280px 1fr; gap: 20px; height: calc(100vh - 120px);">
+            
+            <!-- SIDEBAR: Daftar Grup -->
+            <section class="panel card" style="display: flex; flex-direction: column; overflow: hidden; padding: 15px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                    <h2 style="margin: 0; font-size: 1.1rem;"><i data-lucide="users"></i> Grup WA</h2>
+                    <button class="btn btn-secondary btn-icon" onclick="loadGroupsList()" title="Refresh Grup">
+                        <i data-lucide="rotate-cw" style="width: 14px; height: 14px;"></i>
+                    </button>
+                </div>
+                <p class="card-subtitle" style="margin-top: -10px; margin-bottom: 15px; font-size: 0.8rem;">Daftar grup WhatsApp Anda</p>
+                <div id="groups-list-container" style="flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; padding-right: 5px;">
+                    <div style="text-align: center; color: var(--text-secondary); margin-top: 50px; font-size: 0.9rem;">
+                        <i data-lucide="users" style="width: 24px; height: 24px; opacity: 0.5; margin-bottom: 8px;"></i>
+                        <p>Memuat daftar grup...</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- PANEL UTAMA: Konfigurasi Grup & Editor Menu -->
+            <div id="group-editor-panel" class="hidden" style="display: grid; grid-template-columns: 320px 1fr; gap: 20px; height: 100%;">
+                
+                <!-- KOLOM KIRI: Pengaturan Grup -->
+                <section class="panel card form-card" style="display: flex; flex-direction: column; overflow-y: auto; padding: 15px;">
+                    <h3 style="margin-top: 0; font-size: 1.1rem;"><i data-lucide="settings"></i> Pengaturan Grup</h3>
+                    <p class="card-subtitle" style="margin-top: -10px; margin-bottom: 15px; font-size: 0.8rem;" id="selected-group-title">Pilih grup...</p>
+                    
+                    <div class="form-group" style="margin-bottom: 15px;">
+                        <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; font-weight: 600;">
+                            <input type="checkbox" id="grp-enabled" style="width: 16px; height: 16px;">
+                            <span>Aktifkan Bot di Grup</span>
+                        </label>
+                    </div>
+
+                    <div class="form-group" style="margin-bottom: 15px;">
+                        <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; font-weight: 600;">
+                            <input type="checkbox" id="grp-ai-fallback" style="width: 16px; height: 16px;">
+                            <span>Aktifkan AI Fallback</span>
+                        </label>
+                        <small style="color: var(--text-secondary); font-size: 0.75rem; display: block; margin-top: 4px;">
+                            Jawab dengan AI jika input tidak cocok dengan menu.
+                        </small>
+                    </div>
+
+                    <div class="form-group" style="margin-bottom: 15px;">
+                        <label for="grp-trigger">Pemicu Menu (Trigger Command)</label>
+                        <input type="text" id="grp-trigger" placeholder="Contoh: menu (kosongkan untuk default)" class="form-control" style="width: 100%; padding: 8px; border-radius: 6px;">
+                        <small style="color: var(--text-secondary); font-size: 0.75rem; display: block; margin-top: 4px;">
+                            Ketik kata ini di grup untuk menampilkan menu (default: menu/bantuan).
+                        </small>
+                    </div>
+
+                    <div class="form-group" style="flex: 1; display: flex; flex-direction: column;">
+                        <label>Referensi File AI (Knowledge Base)</label>
+                        <div id="grp-knowledge-files" style="flex: 1; border: 1px solid var(--border-color); border-radius: 6px; padding: 10px; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; max-height: 150px;">
+                            <p style="color: var(--text-secondary); font-size: 0.8rem; text-align: center;">Memuat berkas referensi...</p>
+                        </div>
+                        <small style="color: var(--text-secondary); font-size: 0.75rem; display: block; margin-top: 4px;">
+                            Pilih berkas referensi AI khusus untuk grup ini.
+                        </small>
+                    </div>
+
+                    <div style="margin-top: 15px; display: flex; gap: 10px;">
+                        <button class="btn btn-secondary" onclick="showCloneConfigModal()" style="flex: 1; font-size: 0.8rem; padding: 8px;">
+                            <i data-lucide="copy" style="width: 12px; height: 12px; display: inline; vertical-align: middle; margin-right: 4px;"></i> Salin Konfig
+                        </button>
+                    </div>
+                </section>
+
+                <!-- KOLOM KANAN: Editor Pohon Menu -->
+                <section class="panel card" style="display: flex; flex-direction: column; overflow: hidden; padding: 15px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                        <h3 style="margin: 0; font-size: 1.1rem;"><i data-lucide="git-fork"></i> Visual Editor Pohon Menu</h3>
+                        <button class="btn btn-primary" onclick="saveGroupConfiguration()" style="padding: 6px 15px; font-size: 0.85rem;">
+                            <i data-lucide="save" style="width: 14px; height: 14px; display: inline; vertical-align: middle; margin-right: 4px;"></i> Simpan Menu
+                        </button>
+                    </div>
+                    
+                    <div style="display: grid; grid-template-columns: 1fr 280px; gap: 15px; flex: 1; overflow: hidden;">
+                        
+                        <!-- Visual Pohon -->
+                        <div style="border: 1px solid var(--border-color); border-radius: 6px; padding: 10px; overflow-y: auto; background: rgba(255,255,255,0.02);" id="menu-tree-visualizer">
+                            <!-- Visual pohon menu dirender dinamis -->
+                        </div>
+
+                        <!-- Form Pengeditan Node Aktif -->
+                        <div id="active-node-editor" style="border: 1px solid var(--border-color); border-radius: 6px; padding: 12px; display: flex; flex-direction: column; gap: 10px; background: rgba(255,255,255,0.01); overflow-y: auto;">
+                            <h4 style="margin: 0; font-size: 0.9rem; text-transform: uppercase; color: var(--text-secondary);" id="node-editor-title">Edit Menu Pilihan</h4>
+                            
+                            <div id="node-editor-fields" class="hidden">
+                                <div class="form-group" style="margin-bottom: 8px;">
+                                    <label for="node-name" style="font-size: 0.75rem;">Nama Menu / Label</label>
+                                    <input type="text" id="node-name" class="form-control" style="width: 100%; padding: 6px; font-size: 0.85rem;">
+                                </div>
+
+                                <div class="form-group" style="margin-bottom: 8px;">
+                                    <label for="node-type" style="font-size: 0.75rem;">Tipe Menu</label>
+                                    <select id="node-type" onchange="toggleNodeFields()" style="width: 100%; padding: 6px; font-size: 0.85rem; border-radius: 4px; border: 1px solid var(--border-color); background: var(--bg-primary); color: var(--text-primary);">
+                                        <option value="category">📁 Kategori (Milik sub-menu)</option>
+                                        <option value="content">📄 Konten (Teks / Media Akhir)</option>
+                                    </select>
+                                </div>
+
+                                <div id="node-content-fields" class="hidden">
+                                    <div class="form-group" style="margin-bottom: 8px;">
+                                        <label for="node-text" style="font-size: 0.75rem;">Isi Balasan Teks</label>
+                                        <textarea id="node-text" rows="4" class="form-control" style="width: 100%; padding: 6px; font-size: 0.85rem; resize: vertical;"></textarea>
+                                    </div>
+                                    <div class="form-group" style="margin-bottom: 8px;">
+                                        <label for="node-media" style="font-size: 0.75rem;">Lampiran Berkas Media (Nama File)</label>
+                                        <input type="text" id="node-media" class="form-control" placeholder="brosur.pdf" style="width: 100%; padding: 6px; font-size: 0.85rem;">
+                                        <small style="color: var(--text-secondary); font-size: 0.65rem;">Masukkan nama file yang sudah diupload di tab Memory.</small>
+                                    </div>
+                                </div>
+
+                                <div style="display: flex; gap: 8px; margin-top: 15px;">
+                                    <button id="btn-add-child" class="btn btn-secondary" onclick="addChildNode()" style="flex: 1; font-size: 0.75rem; padding: 5px;">
+                                        <i data-lucide="plus-circle" style="width: 12px; height: 12px; display: inline;"></i> Tambah Anak
+                                    </button>
+                                    <button class="btn btn-secondary" onclick="deleteNode()" style="flex: 1; font-size: 0.75rem; padding: 5px; color: #ff453a; border-color: rgba(255,69,58,0.3);">
+                                        <i data-lucide="trash" style="width: 12px; height: 12px; display: inline;"></i> Hapus
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div id="node-editor-placeholder" style="text-align: center; color: var(--text-secondary); margin-top: 50px; font-size: 0.8rem;">
+                                <i data-lucide="info" style="width: 20px; height: 20px; opacity: 0.5; margin-bottom: 5px; display: inline-block;"></i>
+                                <p>Klik salah satu node di pohon sebelah kiri untuk mengedit atau menambahkan sub-menu.</p>
+                            </div>
+                        </div>
+
+                    </div>
+                </section>
+            </div>
+            
+            <div id="no-group-selected-placeholder" style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; border: 1px dashed var(--border-color); border-radius: 6px; background: rgba(255,255,255,0.01);">
+                <i data-lucide="users" style="width: 48px; height: 48px; opacity: 0.3; margin-bottom: 15px;"></i>
+                <h3>Belum Ada Grup Dipilih</h3>
+                <p style="color: var(--text-secondary);">Silakan pilih salah satu grup WhatsApp di sebelah kiri untuk dikonfigurasi.</p>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- MODAL COPY CONFIG -->
+    <div id="clone-config-modal" class="hidden" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center; z-index: 9999;">
+        <div class="panel card" style="width: 380px; padding: 20px; position: relative;">
+            <h3><i data-lucide="copy"></i> Salin Konfigurasi</h3>
+            <p class="card-subtitle" style="margin-bottom: 15px;">Duplikasi konfigurasi & menu dari grup lain</p>
+            <div class="form-group" style="margin-bottom: 15px;">
+                <label for="clone-source-select">Pilih Grup Sumber (Source Group)</label>
+                <select id="clone-source-select" style="width: 100%; padding: 8px; font-size: 0.9rem; border-radius: 6px; border: 1px solid var(--border-color); background: var(--bg-primary); color: var(--text-primary);">
+                    <!-- Grup sumber diisi dinamis -->
+                </select>
+            </div>
+            <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px;">
+                <button class="btn btn-secondary" onclick="closeCloneConfigModal()">Batal</button>
+                <button class="btn btn-primary" onclick="applyCloneConfig()">Terapkan</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════
+         TAB 3 — SETTINGS
+    ══════════════════════════════════════════ -->
+    <div id="tab-settings" class="tab-content hidden">
+        <main class="dashboard-grid settings-grid">
+
+            <!-- PANEL KIRI: Bot Config -->
+            <section class="panel panel-left card form-card">
+                <h2><i data-lucide="sliders-horizontal"></i> Konfigurasi Bot</h2>
+                <p class="card-subtitle">Sesuaikan penyedia AI dan parameter asisten Anda</p>
+
+                <form id="config-form" class="settings-form">
+
+                    <!-- Provider -->
+                    <div class="form-group">
+                        <label for="cfg-provider">Penyedia AI (AI Provider)</label>
+                        <select id="cfg-provider" onchange="toggleProviderFields()">
+                            <option value="gemini">Google Gemini API</option>
+                            <option value="local">LM Studio (Lokal)</option>
+                            <option value="groq">Groq API</option>
+                            <option value="deepseek">DeepSeek API</option>
+                            <option value="qwen">Alibaba DashScope (Qwen)</option>
+                            <option value="openrouter">OpenRouter (Llama/Qwen/dll)</option>
+                        </select>
+                    </div>
+
+                    <!-- Gemini -->
+                    <div id="group-gemini-settings">
+                        <div class="form-group">
+                            <label for="cfg-gemini-api-keys">Stok Gemini API Keys (Satu Key Per Baris)</label>
+                            <textarea id="cfg-gemini-api-keys" rows="4" placeholder="Masukkan Google Gemini API Keys Anda (satu per baris)…"></textarea>
+                            <small>Bot akan rotasi otomatis (round-robin) jika ada key yang limit.</small>
+                        </div>
+                        <div class="form-group" style="margin-top:12px;">
+                            <label for="cfg-gemini-model">Model Gemini</label>
+                            <input type="text" id="cfg-gemini-model" placeholder="gemini-2.5-flash">
+                            <small>Rekomendasi: <code>gemini-2.5-flash</code> (cepat & hemat)</small>
+                        </div>
+                    </div>
+
+                    <!-- LM Studio -->
+                    <div id="group-local-settings" class="hidden">
+                        <div class="form-group">
+                            <label for="cfg-api-url">URL API Local Server</label>
+                            <input type="text" id="cfg-api-url" placeholder="http://localhost:1234/v1/chat/completions">
+                        </div>
+                        <div class="form-group" style="margin-top:12px;">
+                            <label for="cfg-model-name">Nama Model (Sesuai di LM Studio)</label>
+                            <input type="text" id="cfg-model-name" placeholder="qwen3.5-9b">
+                        </div>
+                        <div class="form-group" style="margin-top:12px;">
+                            <label for="cfg-api-key">API Key (Opsional)</label>
+                            <input type="password" id="cfg-api-key" placeholder="Token autentikasi LM Studio…">
+                        </div>
+                    </div>
+
+                    <!-- Groq -->
+                    <div id="group-groq-settings" class="hidden">
+                        <div class="form-group">
+                            <label for="cfg-groq-api-key">Groq API Key</label>
+                            <input type="password" id="cfg-groq-api-key" placeholder="gsk_…">
+                        </div>
+                        <div class="form-group" style="margin-top:12px;">
+                            <label for="cfg-groq-model">Model Groq</label>
+                            <input type="text" id="cfg-groq-model" placeholder="llama-3.3-70b-versatile">
+                            <small>Contoh: <code>llama-3.3-70b-versatile</code>, <code>deepseek-r1-distill-llama-70b</code></small>
+                        </div>
+                    </div>
+
+                    <!-- DeepSeek -->
+                    <div id="group-deepseek-settings" class="hidden">
+                        <div class="form-group">
+                            <label for="cfg-deepseek-api-key">DeepSeek API Key</label>
+                            <input type="password" id="cfg-deepseek-api-key" placeholder="sk-…">
+                        </div>
+                        <div class="form-group" style="margin-top:12px;">
+                            <label for="cfg-deepseek-model">Model DeepSeek</label>
+                            <input type="text" id="cfg-deepseek-model" placeholder="deepseek-chat">
+                            <small>Pilihan: <code>deepseek-chat</code> (V3), <code>deepseek-reasoner</code> (R1)</small>
+                        </div>
+                    </div>
+
+                    <!-- Qwen -->
+                    <div id="group-qwen-settings" class="hidden">
+                        <div class="form-group">
+                            <label for="cfg-qwen-api-key">Alibaba DashScope (Qwen) API Key</label>
+                            <input type="password" id="cfg-qwen-api-key" placeholder="sk-…">
+                        </div>
+                        <div class="form-group" style="margin-top:12px;">
+                            <label for="cfg-qwen-model">Model Qwen</label>
+                            <input type="text" id="cfg-qwen-model" placeholder="qwen-plus">
+                            <small>Contoh: <code>qwen-plus</code>, <code>qwen-max</code>, <code>qwen-turbo</code></small>
+                        </div>
+                    </div>
+
+                    <!-- OpenRouter -->
+                    <div id="group-openrouter-settings" class="hidden">
+                        <div class="form-group">
+                            <label for="cfg-openrouter-api-key">OpenRouter API Key</label>
+                            <input type="password" id="cfg-openrouter-api-key" placeholder="sk-or-…">
+                        </div>
+                        <div class="form-group" style="margin-top:12px;">
+                            <label for="cfg-openrouter-model">Model OpenRouter</label>
+                            <input type="text" id="cfg-openrouter-model" placeholder="meta-llama/llama-3.3-70b-instruct">
+                            <small>Contoh: <code>meta-llama/llama-3.3-70b-instruct</code>, <code>qwen/qwen-2.5-72b-instruct</code></small>
+                        </div>
+                    </div>
+
+                    <!-- Shared Settings -->
+                    <div class="form-group">
+                        <label for="cfg-max-tokens">Batas Maksimal Token</label>
+                        <input type="number" id="cfg-max-tokens" required min="100" max="4000" placeholder="1000">
+                        <small>Token lebih banyak membantu model reasoning menyelesaikan jawaban panjang.</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="cfg-sheets-url">URL Google Sheets (Apps Script Web App)</label>
+                        <input type="text" id="cfg-sheets-url" placeholder="https://script.google.com/macros/s/…/exec">
+                        <small>URL hasil deployment Google Apps Script di Spreadsheet Anda.</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="cfg-boss-number">Nomor WhatsApp Bos (Akses Tunggal)</label>
+                        <input type="text" id="cfg-boss-number" placeholder="Contoh: 628123456789">
+                        <small>Jika diisi, bot hanya membalas nomor ini. Kosongkan agar bot merespons semua nomor.</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="cfg-report-time">Waktu Laporan Harian (Format HH:MM)</label>
+                        <input type="text" id="cfg-report-time" placeholder="Contoh: 08:00">
+                        <small>Waktu kirim otomatis rekap kas & agenda harian ke nomor Bos.</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="cfg-system-prompt">Template Prompt Sistem (Kepribadian Asisten)</label>
+                        <textarea id="cfg-system-prompt" rows="7" placeholder="Tuliskan kepribadian dan panduan bot di sini…"></textarea>
+                        <small>Wajib menyertakan <code>{KNOWLEDGE_BASE_CONTENT}</code> di bagian akhir agar bot bisa memproses dokumen pengetahuan.</small>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary btn-block">
+                        <i data-lucide="save"></i> Simpan Konfigurasi
+                    </button>
+                </form>
+            </section>
+
+            <!-- PANEL KANAN: Tampilan & Tema -->
+            <section class="panel panel-right">
+                <div class="card">
+                    <h2><i data-lucide="palette"></i> Tampilan &amp; Tema</h2>
+                    <p class="card-subtitle">Pilih tema yang paling nyaman untuk Anda — perubahan langsung diterapkan</p>
+
+                    <div class="theme-grid" id="theme-grid">
+
+                        <!-- Light (default) -->
+                        <div class="theme-card active" id="tc-light" onclick="changeTheme('light')">
+                            <div class="theme-preview tp-light">
+                                <div class="theme-preview-bar"></div>
+                                <div class="theme-preview-body">
+                                    <div class="theme-preview-dot"></div>
+                                    <div class="theme-preview-dot"></div>
+                                    <div class="theme-preview-dot"></div>
+                                </div>
+                            </div>
+                            <div class="theme-card-label">Light</div>
+                            <div class="theme-card-sub">Terang &amp; Bersih</div>
+                        </div>
+
+                        <!-- Dark -->
+                        <div class="theme-card" id="tc-dark" onclick="changeTheme('dark')">
+                            <div class="theme-preview tp-dark">
+                                <div class="theme-preview-bar"></div>
+                                <div class="theme-preview-body">
+                                    <div class="theme-preview-dot"></div>
+                                    <div class="theme-preview-dot"></div>
+                                    <div class="theme-preview-dot"></div>
+                                </div>
+                            </div>
+                            <div class="theme-card-label">Dark</div>
+                            <div class="theme-card-sub">Gelap &amp; Elegan</div>
+                        </div>
+
+                        <!-- Minimal Dark -->
+                        <div class="theme-card" id="tc-minimal-dark" onclick="changeTheme('minimal-dark')">
+                            <div class="theme-preview tp-minimal-dark">
+                                <div class="theme-preview-bar"></div>
+                                <div class="theme-preview-body">
+                                    <div class="theme-preview-dot"></div>
+                                    <div class="theme-preview-dot"></div>
+                                    <div class="theme-preview-dot"></div>
+                                </div>
+                            </div>
+                            <div class="theme-card-label">Minimal Dark</div>
+                            <div class="theme-card-sub">Gelap &amp; Lega</div>
+                        </div>
+
+                        <!-- Minimal Light -->
+                        <div class="theme-card" id="tc-minimal-light" onclick="changeTheme('minimal-light')">
+                            <div class="theme-preview tp-minimal-light">
+                                <div class="theme-preview-bar"></div>
+                                <div class="theme-preview-body">
+                                    <div class="theme-preview-dot"></div>
+                                    <div class="theme-preview-dot"></div>
+                                    <div class="theme-preview-dot"></div>
+                                </div>
+                            </div>
+                            <div class="theme-card-label">Minimal Light</div>
+                            <div class="theme-card-sub">Terang &amp; Lega</div>
+                        </div>
+
+                    </div>
+
+                    <!-- Hidden select for backward compatibility with client.js -->
+                    <select id="cfg-theme-selector" style="display:none;" onchange="changeThemeFromSelect()">
+                        <option value="light">Light</option>
+                        <option value="dark">Dark</option>
+                        <option value="minimal-dark">Minimal Dark</option>
+                        <option value="minimal-light">Minimal Light</option>
+                        <!-- Legacy values kept for compat -->
+                        <option value="ios-dark">iOS Dark Mode (Bawaan)</option>
+                        <option value="ios-light">iOS Light Mode (Putih Bersih)</option>
+                    </select>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <!-- ══════════════════════════════════════════
+         BOTTOM TAB BAR
+    ══════════════════════════════════════════ -->
+    <nav class="ios-tab-bar">
+        <button id="btn-tab-monitor" class="ios-tab-btn active" onclick="switchTab('monitor')">
+            <i data-lucide="message-circle"></i>
+            <span>Chats</span>
+        </button>
+        <button id="btn-tab-memory" class="ios-tab-btn" onclick="switchTab('memory')">
+            <i data-lucide="database"></i>
+            <span>Memory</span>
+        </button>
+        <button id="btn-tab-groups" class="ios-tab-btn" onclick="switchTab('groups')">
+            <i data-lucide="users"></i>
+            <span>Groups</span>
+        </button>
+        <button id="btn-tab-settings" class="ios-tab-btn" onclick="switchTab('settings')">
+            <i data-lucide="settings-2"></i>
+            <span>Settings</span>
+        </button>
+    </nav>
+
+</div>
+
+<script src="client.js?v=4"></script>
+<script>
+    // Initialize Lucide Icons
+    lucide.createIcons();
+
+    // Theme Card UI handler
+    window.changeTheme = function(theme) {
+        // Remove active class from all cards
+        document.querySelectorAll('.theme-card').forEach(c => c.classList.remove('active'));
+
+        // Add active to clicked card
+        const card = document.getElementById('tc-' + theme);
+        if (card) card.classList.add('active');
+
+        // Apply theme to HTML element
+        const allThemes = ['dark', 'minimal-dark', 'minimal-light',
+                           'ios-dark', 'ios-light']; // include legacy
+        document.documentElement.className = '';
+        if (theme !== 'light' && theme !== 'ios-dark') {
+            // Map legacy values
+            const mapped = (theme === 'ios-light') ? 'minimal-light' : theme;
+            document.documentElement.classList.add('theme-' + mapped);
+        }
+
+        // Persist
+        localStorage.setItem('dashboard-theme', theme);
+
+        // Keep hidden select in sync
+        const sel = document.getElementById('cfg-theme-selector');
+        if (sel) sel.value = theme;
+    };
+
+    window.changeThemeFromSelect = function() {
+        const sel = document.getElementById('cfg-theme-selector');
+        if (sel) changeTheme(sel.value);
+    };
+
+    // Sync active card on page load
+    (function syncThemeCard() {
+        const saved = localStorage.getItem('dashboard-theme') || 'light';
+        const card = document.getElementById('tc-' + saved);
+        document.querySelectorAll('.theme-card').forEach(c => c.classList.remove('active'));
+        if (card) card.classList.add('active');
+    })();
+</script>
+</body>
+</html>
