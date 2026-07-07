@@ -18,17 +18,37 @@
             "name": "capcut",
             "type": "content",
             "media": "",
-            "text": "capcut\n10k satu bulan"
+            "text": "capcut\n10k satu bulan",
+            "status": "Tersedia"
           },
           {
             "id": "1783459382807",
             "name": "canva",
             "type": "content",
             "text": "10k ",
-            "media": ""
+            "media": "",
+            "status": "Tersedia"
           }
         ]
-      }
+      },
+      "categoryEmoji": "📁",
+      "contentEmoji": "📄",
+      "enableNumberNavigation": false,
+      "universalHeader": "Selamat datang di Jajandigital.store",
+      "universalFooter": "ketik \"namabarang\" untuk lebih informasi lebih lanjut.",
+      "autoCloseSchedule": {
+        "enabled": true,
+        "openTime": "08:00",
+        "closeTime": "17:00",
+        "activeDays": [
+          1,
+          2,
+          3,
+          4,
+          5
+        ]
+      },
+      "extraTriggers": []
     }
   }
 }
