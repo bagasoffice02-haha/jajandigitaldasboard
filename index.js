@@ -14,6 +14,7 @@ const http = require('http');
 const { Server } = require('socket.io');
 const multer = require('multer');
 const pdfParse = require('pdf-parse');
+const { exec } = require('child_process');
 
 // Definisikan File Penyimpanan Data Persisten
 const CONFIG_FILE = './config.json';
@@ -693,6 +694,7 @@ app.post('/api/whatsapp/restart', async (req, res) => {
         
         // 3. Re-initialize client
         console.log('[API] Memulai inisialisasi ulang WhatsApp Client...');
+        await cleanupHeadlessChrome();
         createNewClient();
         
         res.sendStatus(200);
@@ -733,6 +735,23 @@ if (process.platform === 'android') {
 }
 
 let client;
+
+function cleanupHeadlessChrome() {
+    return new Promise((resolve) => {
+        if (process.platform !== 'win32') {
+            return resolve();
+        }
+        const cmd = 'powershell -Command "Get-CimInstance Win32_Process -Filter \\"name = \'chrome.exe\'\\" | ForEach-Object { if ($_.CommandLine -like \'*--headless*\') { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue } }"';
+        exec(cmd, (err) => {
+            if (err) {
+                console.warn('[Cleanup] Gagal membersihkan chrome headless:', err.message);
+            } else {
+                console.log('[Cleanup] Berhasil membersihkan proses chrome headless gantung.');
+            }
+            resolve();
+        });
+    });
+}
 
 function createNewClient() {
     client = new Client({
@@ -3541,9 +3560,10 @@ process.on('unhandledRejection', (reason, promise) => {
 });
 
 // Mulai Inisialisasi WhatsApp Client & Express Web Server
-server.listen(PORT, () => {
+server.listen(PORT, async () => {
     console.log(`\n======================================================`);
     console.log(`Web Dashboard CS Aktif di: http://localhost:${PORT}`);
     console.log(`======================================================\n`);
+    await cleanupHeadlessChrome();
     createNewClient();
 });
