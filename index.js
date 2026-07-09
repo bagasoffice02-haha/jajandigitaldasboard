@@ -5053,6 +5053,72 @@ Ketik obrolan seperti biasa, AI akan mendeteksi otomatis!
         return;
     }
 
+    // --- MEKANISME CUSTOMER SERVICE AI FALLBACK ---
+    if (!isSenderBoss) {
+        // Jika pembeli mengirim chat bebas (dan tidak/belum memilih menu)
+        // Jalankan Customer Service AI untuk menjawab & mengarahkan mereka
+        activeLocks.add(chatId);
+        const chat = await msg.getChat();
+        await chat.sendStateTyping();
+        try {
+            // Bangun system prompt untuk Customer Service
+            const knowledge = getGroupKnowledgeContext(cfg ? cfg.allowedKnowledgeFiles : []);
+            
+            // Helper lokalisasi tree menu
+            const serializeMenuTree = (node, depth = 0) => {
+                if (!node) return '';
+                let res = '  '.repeat(depth) + `- ${node.name} (${node.type === 'category' ? 'Kategori' : 'Produk'}): ${node.text || ''}\n`;
+                if (node.children && node.children.length > 0) {
+                    node.children.forEach(child => {
+                        res += serializeMenuTree(child, depth + 1);
+                    });
+                }
+                return res;
+            };
+            const serializedMenu = cfg ? serializeMenuTree(cfg.menuTree) : 'Belum ada menu produk terkonfigurasi.';
+            
+            const contact = await msg.getContact();
+            const customerName = contact.pushname || contact.name || 'Kakak';
+            
+            const customerPrompt = `
+Tugas Anda adalah menjadi Asisten Pelayanan Pelanggan (Customer Service) yang sangat ramah, sopan, dan sigap untuk toko kami.
+Pelanggan yang Anda hadapi saat ini bernama: ${customerName}.
+
+[PANDUAN UTAMA CS]
+1. Sapa pelanggan dengan panggilan "Kak", "Kakak", atau "Kak ${customerName}". JANGAN PERNAH panggil mereka "Bos".
+2. Bantu menjawab pertanyaan mereka tentang produk atau toko kami berdasarkan dokumen pendukung dan daftar menu di bawah.
+3. Jika pelanggan bingung, ingin melihat menu, atau ingin membeli sesuatu:
+   - Arahkan mereka untuk mengetik kata *menu* atau ketik angka pilihan menu untuk melihat daftar katalog secara interaktif.
+   - Informasikan juga bahwa mereka bisa langsung memesan kapan saja dengan mengetik format chat: *pesan: [Nama Barang] [Jumlah]* (contoh: *pesan: Kopi Susu 2*).
+4. Jawablah secara singkat, ramah, padat, dan hindari penjelasan bertele-tele.
+
+[DAFTAR MENU & PRODUK TOKO KAMI]
+${serializedMenu}
+
+[DOKUMEN PENDUKUNG / PENGETAHUAN TOKO]
+${knowledge}
+`.trim();
+
+            console.log(`[CS AI] Memproses pesan pelanggan ${chatId}: "${userMessage}"`);
+            const response = await generateGroupAiResponse(userMessage, customerPrompt, chatId);
+            const aiReply = response.reply || 'Ada yang bisa saya bantu, Kak?';
+            await msg.reply(aiReply);
+            
+            io.emit('message_log', {
+                chatId,
+                body: aiReply,
+                type: 'outgoing',
+                timestamp: Date.now()
+            });
+        } catch (err) {
+            console.error('Gagal menjalankan CS AI Fallback:', err.message);
+            await msg.reply('Maaf Kak, saat ini sistem CS sedang sibuk. Silakan coba beberapa saat lagi.');
+        } finally {
+            activeLocks.delete(chatId);
+        }
+        return;
+    }
+
     // 6. FALLBACK: COBA PARSING ALGORITMA LOKAL DULU (HEMAT TOKEN) [DINONAKTIFKAN jika FITUR_KEUANGAN=false]
     const localFinance = FITUR_KEUANGAN ? localParseFinanceMessage(userMessage) : null;
     if (localFinance) {
