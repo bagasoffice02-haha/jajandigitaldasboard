@@ -4493,16 +4493,7 @@ async function handleIncomingMessage(msg) {
             return;
         }
 
-    // --- MEKANISME PROCESSING LOCK (ANTI OVERLOAD RAM) ---
-    if (activeLocks.has(chatId)) {
-        console.log(`[Lock Active] Mengabaikan pesan dari ${chatId} karena pesan sebelumnya sedang diproses.`);
-        try {
-            await msg.react('⏳');
-        } catch (e) {
-            // Abaikan
-        }
-        return;
-    }
+    // MEKANISME PROCESSING LOCK DINONAKTIFKAN ATAS PERMINTAAN USER
 
     // Emit incoming message ke dashboard
     io.emit('message_log', {
