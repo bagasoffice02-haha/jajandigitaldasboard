@@ -152,6 +152,28 @@ socket.on('memory_updated', (data) => {
     loadFiles();
 });
 
+socket.on('group_config_updated', (data) => {
+    if (selectedGroupId && data.groupId === selectedGroupId) {
+        setTimeout(async () => {
+            if (selectedGroupId === data.groupId) {
+                try {
+                    const res = await fetch(`/api/group-config/${selectedGroupId}`);
+                    if (res.ok) {
+                        selectedGroupConfig = await res.json();
+                        if (quickEditOpen) {
+                            renderQuickEditList();
+                        } else {
+                            renderMenuTreeVisual();
+                        }
+                    }
+                } catch (e) {
+                    console.error('Error auto-refreshing group config:', e);
+                }
+            }
+        }, 200);
+    }
+});
+
 // Update WhatsApp status display
 function updateConnectionStatus(status) {
     statusDot.className = 'status-dot';
@@ -288,17 +310,55 @@ function renderFileList(container, files, type) {
         
         const actionsDiv = document.createElement('div');
         actionsDiv.className = 'file-actions';
+        actionsDiv.style.display = 'flex';
+        actionsDiv.style.gap = '5px';
+        
+        const viewBtn = document.createElement('button');
+        viewBtn.className = 'btn btn-secondary btn-sm';
+        viewBtn.innerHTML = 'Lihat';
+        viewBtn.onclick = () => window.open(`/${type}/${file}`, '_blank');
+        
+        const renameBtn = document.createElement('button');
+        renameBtn.className = 'btn btn-secondary btn-sm';
+        renameBtn.innerHTML = 'Rename';
+        renameBtn.onclick = () => renameFile(type, file);
         
         const deleteBtn = document.createElement('button');
         deleteBtn.className = 'btn btn-danger btn-sm';
         deleteBtn.textContent = 'Hapus';
         deleteBtn.onclick = () => deleteFile(type, file);
         
+        actionsDiv.appendChild(viewBtn);
+        actionsDiv.appendChild(renameBtn);
         actionsDiv.appendChild(deleteBtn);
+        
         item.appendChild(nameSpan);
         item.appendChild(actionsDiv);
         container.appendChild(item);
     });
+}
+
+// Rename uploaded file
+async function renameFile(type, filename) {
+    const newName = prompt(`Masukkan nama baru untuk berkas "${filename}":`, filename);
+    if (!newName || newName.trim() === '' || newName.trim() === filename) return;
+    
+    try {
+        const res = await fetch('/api/files/rename', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ type, oldFilename: filename, newFilename: newName.trim() })
+        });
+        
+        if (res.ok) {
+            alert('Nama berkas berhasil diubah!');
+            loadFiles();
+        } else {
+            alert('Gagal mengubah nama berkas: ' + await res.text());
+        }
+    } catch(err) {
+        alert('Gagal mengubah nama berkas: ' + err.message);
+    }
 }
 
 // Setup File Upload inputs change listeners
@@ -801,6 +861,7 @@ window.selectGroup = async function(groupId) {
         document.getElementById('grp-number-nav-enable').checked = selectedGroupConfig.enableNumberNavigation !== false;
         document.getElementById('grp-universal-header').value = selectedGroupConfig.universalHeader || '';
         document.getElementById('grp-universal-footer').value = selectedGroupConfig.universalFooter || '';
+        document.getElementById('grp-welcome-message').value = selectedGroupConfig.welcomeMessage || '';
         
         // Auto Close Schedule
         const schedule = selectedGroupConfig.autoCloseSchedule || { enabled: false, openTime: '08:00', closeTime: '17:00', activeDays: [1,2,3,4,5] };
@@ -828,6 +889,11 @@ window.selectGroup = async function(groupId) {
         
         // Reset editor node sebelah kanan
         resetNodeEditorForm();
+
+        // Refresh Quick Edit list if currently open
+        if (typeof quickEditOpen !== 'undefined' && quickEditOpen) {
+            renderQuickEditList();
+        }
     } catch (err) {
         console.error('Error selectGroup:', err);
         alert('Gagal memuat konfigurasi grup: ' + err.message);
@@ -999,6 +1065,10 @@ window.selectTreeNode = function(nodeId) {
     toggleNodeFields();
     
     document.getElementById('node-text').value = node.text || '';
+    const promoCheck = document.getElementById('node-promo');
+    if (promoCheck) {
+        promoCheck.checked = !!node.isPromo;
+    }
     if (node.type === 'content') {
         document.getElementById('node-media').value = node.media || '';
         document.getElementById('node-status-field').classList.remove('hidden');
@@ -1113,6 +1183,18 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
+    
+    const inputPromo = document.getElementById('node-promo');
+    if (inputPromo) {
+        inputPromo.addEventListener('change', (e) => {
+            if (!selectedGroupId || !selectedNodeId) return;
+            const node = findNodeInTree(selectedGroupConfig.menuTree, selectedNodeId);
+            if (node) {
+                node.isPromo = e.target.checked;
+                renderMenuTreeVisual();
+            }
+        });
+    }
 });
 
 // Tambah Node Anak ke kategori aktif
@@ -1185,6 +1267,7 @@ window.saveGroupConfiguration = async function() {
     const enableNumberNavigation = document.getElementById('grp-number-nav-enable').checked;
     const universalHeader = document.getElementById('grp-universal-header').value.trim();
     const universalFooter = document.getElementById('grp-universal-footer').value.trim();
+    const welcomeMessage = document.getElementById('grp-welcome-message').value.trim();
     
     // Auto Close Schedule
     const activeDays = [];
@@ -1228,6 +1311,7 @@ window.saveGroupConfiguration = async function() {
         enableNumberNavigation,
         universalHeader,
         universalFooter,
+        welcomeMessage,
         autoCloseSchedule,
         extraTriggers
     };
@@ -1403,32 +1487,54 @@ window.deleteExtraTriggerRow = function(btn) {
 
 // Host Admin
 let activeHostAdmins = [];
+let selectedHostAdmin = null;
 
 window.loadHostAdmins = async function() {
     try {
-        const res = await fetch('/api/shop/admins');
-        if (!res.ok) throw new Error('Gagal memuat Host Admin');
-        activeHostAdmins = await res.json();
+        const res = await fetch('/api/shop/pinned-chats');
+        if (!res.ok) throw new Error('Gagal memuat chat tersemat');
+        const pinnedChats = await res.json();
         
         const list = document.getElementById('shop-admins-list');
         if (!list) return;
         list.innerHTML = '';
         
-        if (activeHostAdmins.length === 0) {
-            list.innerHTML = `<p style="text-align: center; color: var(--text-secondary); font-size: 0.8rem; margin-top: 30px;">Belum ada Host Admin...</p>`;
+        if (pinnedChats.length === 0) {
+            list.innerHTML = `<p style="text-align: center; color: var(--text-secondary); font-size: 0.8rem; margin-top: 30px;">Belum ada chat pribadi tersemat (pinned) di WhatsApp...</p>`;
             return;
         }
         
-        activeHostAdmins.forEach(admin => {
-            const cleanAdmin = admin.replace(/\D/g, '');
+        pinnedChats.forEach(chat => {
+            const cleanPhone = chat.phone.replace(/\D/g, '');
             const row = document.createElement('div');
-            row.style = 'display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; border: 1px solid var(--border-color); border-radius: 6px; background: var(--bg-secondary); margin-bottom: 6px;';
+            row.style = 'display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; border: 1px solid var(--border-color); border-radius: 8px; background: var(--bg-secondary); margin-bottom: 8px; transition: all 0.2s ease;';
+            row.className = 'host-admin-item-row';
+            
             row.innerHTML = `
-                <span style="font-weight: 500; font-size: 0.85rem;"><i data-lucide="shield" style="width: 14px; height: 14px; display: inline-block; vertical-align: middle; margin-right: 4px; color: #30d158;"></i> ${cleanAdmin}</span>
-                <button class="btn btn-secondary btn-icon" onclick="deleteHostAdmin('${admin}')" style="padding: 4px; color: #ff453a; border-color: rgba(255,69,58,0.2); background: transparent;">
-                    <i data-lucide="trash" style="width: 12px; height: 12px;"></i>
-                </button>
+                <div style="cursor: pointer; flex: 1; display: flex; flex-direction: column; gap: 2px;" onclick="window.openHostConfig('${chat.id}')">
+                    <span style="font-weight: 500; font-size: 0.85rem; display: flex; align-items: center; gap: 6px; color: var(--text-primary);">
+                        <i data-lucide="message-square" style="width: 14px; height: 14px; color: ${chat.isHostAdmin ? '#30d158' : 'var(--text-secondary)'};"></i> 
+                        ${chat.name}
+                    </span>
+                    <span style="font-size: 0.75rem; color: var(--text-secondary);">+${cleanPhone} ${chat.isHostAdmin ? '🛡️ (Host Admin)' : ''}</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <div style="position: relative; display: inline-block; width: 40px; height: 24px;">
+                        <input type="checkbox" id="toggle-${cleanPhone}" ${chat.isHostAdmin ? 'checked' : ''} onchange="window.toggleHostAdmin('${chat.id}', this.checked)" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; z-index: 2;">
+                        <div style="width: 100%; height: 100%; background: ${chat.isHostAdmin ? '#30d158' : 'rgba(255,255,255,0.08)'}; border-radius: 12px; transition: background 0.2s; position: relative; pointer-events: none; border: 1px solid var(--border-color);">
+                            <div style="width: 18px; height: 18px; background: white; border-radius: 50%; position: absolute; top: 2px; left: ${chat.isHostAdmin ? '18px' : '2px'}; transition: left 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.3);"></div>
+                        </div>
+                    </div>
+                </div>
             `;
+            
+            row.onmouseover = () => {
+                row.style.borderColor = chat.isHostAdmin ? '#30d158' : 'var(--accent-color)';
+            };
+            row.onmouseout = () => {
+                row.style.borderColor = 'var(--border-color)';
+            };
+            
             list.appendChild(row);
         });
         
@@ -1438,59 +1544,168 @@ window.loadHostAdmins = async function() {
     }
 };
 
-window.addHostAdmin = async function() {
-    const input = document.getElementById('shop-admin-input');
-    const val = input.value.trim().replace(/\D/g, '');
-    if (!val || val.length < 9) {
-        alert('Format nomor tidak valid! Masukkan angka saja, contoh: 628123456789');
-        return;
-    }
-    
-    const formatted = val + '@c.us';
-    if (activeHostAdmins.includes(formatted)) {
-        alert('Nomor ini sudah terdaftar sebagai Host Admin!');
-        return;
-    }
-    
-    activeHostAdmins.push(formatted);
-    
+window.toggleHostAdmin = async function(jid, isChecked) {
     try {
-        const res = await fetch('/api/shop/admins', {
+        const resAdmins = await fetch('/api/shop/admins');
+        if (!resAdmins.ok) throw new Error('Gagal mengambil daftar admin');
+        let adminsList = await resAdmins.json();
+        
+        if (isChecked) {
+            if (!adminsList.includes(jid)) {
+                adminsList.push(jid);
+            }
+        } else {
+            adminsList = adminsList.filter(a => a !== jid);
+        }
+        
+        const saveRes = await fetch('/api/shop/admins', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ host_admins: activeHostAdmins })
+            body: JSON.stringify({ host_admins: adminsList })
         });
         
-        if (res.ok) {
-            input.value = '';
-            loadHostAdmins();
-        } else {
-            throw new Error(await res.text());
-        }
+        if (!saveRes.ok) throw new Error(await saveRes.text());
+        
+        loadHostAdmins();
     } catch (err) {
-        alert('Gagal menambah Host Admin: ' + err.message);
+        alert('Gagal memperbarui status Host Admin: ' + err.message);
+        loadHostAdmins();
     }
 };
 
-window.deleteHostAdmin = async function(admin) {
-    if (!confirm('Apakah Anda yakin ingin menghapus nomor ini dari Host Admin?')) return;
+window.openHostConfig = async function(admin) {
+    selectedHostAdmin = admin;
+    const cleanAdmin = admin.replace(/\D/g, '');
     
-    activeHostAdmins = activeHostAdmins.filter(a => a !== admin);
+    const numEl = document.getElementById('host-config-number');
+    if (numEl) numEl.textContent = `+${cleanAdmin}`;
+    
+    const txtArea = document.getElementById('host-config-memory');
+    if (txtArea) txtArea.value = 'Memuat panduan...';
+    
+    const msgInput = document.getElementById('host-config-msg');
+    if (msgInput) msgInput.value = '';
+
+    // Show modal
+    const modal = document.getElementById('host-config-modal');
+    if (modal) modal.classList.remove('hidden');
+    
+    // Fetch current memory
+    try {
+        const res = await fetch('/api/memory');
+        if (res.ok) {
+            const data = await res.json();
+            if (txtArea) txtArea.value = data.content || '';
+        } else {
+            if (txtArea) txtArea.value = '';
+        }
+    } catch(err) {
+        console.error('Gagal mengambil memori:', err);
+        if (txtArea) txtArea.value = '';
+    }
+
+    // Populate group selector and menu tree nodes
+    try {
+        const groupsRes = await fetch('/api/groups');
+        if (groupsRes.ok) {
+            hostConfigActiveGroups = await groupsRes.json();
+            const groupSelect = document.getElementById('host-config-group-select');
+            if (groupSelect) {
+                groupSelect.innerHTML = '';
+                hostConfigActiveGroups.forEach(g => {
+                    const opt = document.createElement('option');
+                    opt.value = g.id;
+                    opt.textContent = g.name;
+                    groupSelect.appendChild(opt);
+                });
+                // Render first group's toggle/menu items
+                window.onHostGroupSelectChange();
+            }
+        }
+    } catch(err) {
+        console.error('Gagal mengambil daftar grup untuk modal host:', err);
+    }
+    
+    if (window.lucide) lucide.createIcons();
+};
+
+window.closeHostConfigModal = function() {
+    const modal = document.getElementById('host-config-modal');
+    if (modal) modal.classList.add('hidden');
+    selectedHostAdmin = null;
+};
+
+window.triggerHostAction = async function(action) {
+    if (!confirm(`Apakah Anda yakin ingin menjalankan aksi "${action === 'buka' ? 'Buka Toko' : 'Tutup Toko'}" secara manual ke semua grup?`)) return;
     
     try {
-        const res = await fetch('/api/shop/admins', {
+        const res = await fetch('/api/shop/action', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ host_admins: activeHostAdmins })
+            body: JSON.stringify({ action })
         });
         
         if (res.ok) {
-            loadHostAdmins();
+            const data = await res.json();
+            alert(`Aksi berhasil dikirim! Sukses mengubah ${data.count} grup.`);
         } else {
             throw new Error(await res.text());
         }
-    } catch (err) {
-        alert('Gagal menghapus Host Admin: ' + err.message);
+    } catch(err) {
+        alert('Gagal menjalankan aksi toko: ' + err.message);
+    }
+};
+
+window.saveHostMemory = async function() {
+    const textarea = document.getElementById('host-config-memory');
+    if (!textarea) return;
+    const content = textarea.value;
+    
+    try {
+        const res = await fetch('/api/memory', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ content })
+        });
+        
+        if (res.ok) {
+            alert('Panduan & Karakter Bot berhasil disimpan!');
+            // Sync to memory tab also
+            const mainTextArea = document.getElementById('cfg-ai-memory');
+            if (mainTextArea) mainTextArea.value = content;
+        } else {
+            throw new Error(await res.text());
+        }
+    } catch(err) {
+        alert('Gagal menyimpan panduan: ' + err.message);
+    }
+};
+
+window.sendHostMsg = async function() {
+    if (!selectedHostAdmin) return;
+    const input = document.getElementById('host-config-msg');
+    if (!input) return;
+    const message = input.value.trim();
+    if (!message) {
+        alert('Pesan tidak boleh kosong!');
+        return;
+    }
+    
+    try {
+        const res = await fetch('/api/shop/send-message', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ to: selectedHostAdmin, message })
+        });
+        
+        if (res.ok) {
+            alert('Pesan WhatsApp berhasil dikirim ke nomor host admin!');
+            input.value = '';
+        } else {
+            throw new Error(await res.text());
+        }
+    } catch(err) {
+        alert('Gagal mengirim pesan: ' + err.message);
     }
 };
 
@@ -1667,3 +1882,567 @@ window.sendBroadcast = async function() {
         alert('Gagal mengirim siaran massal: ' + err.message);
     }
 };
+
+// Host Admin Group/Menu Config Modal Handlers
+let hostConfigActiveGroups = [];
+
+window.onHostGroupSelectChange = function() {
+    const select = document.getElementById('host-config-group-select');
+    if (!select) return;
+    const gId = select.value;
+    if (!gId) return;
+
+    // Cari config grup terpilih
+    const group = hostConfigActiveGroups.find(g => g.id === gId);
+    if (!group) return;
+
+    // Update group active toggle
+    const toggle = document.getElementById('host-group-active-toggle');
+    const bg = document.getElementById('host-group-active-bg');
+    const dot = document.getElementById('host-group-active-dot');
+
+    if (toggle) toggle.checked = group.enabled;
+    if (bg) bg.style.background = group.enabled ? '#30d158' : 'rgba(255,255,255,0.08)';
+    if (dot) dot.style.left = group.enabled ? '18px' : '2px';
+
+    // Update Welcome Message UI
+    const welcomeInput = document.getElementById('host-group-welcome-msg');
+    if (welcomeInput) {
+        welcomeInput.value = (group.config && group.config.welcomeMessage) || '';
+    }
+
+    // Update Scheduler UI
+    const schedToggle = document.getElementById('host-scheduler-toggle');
+    const schedBg = document.getElementById('host-scheduler-bg');
+    const schedDot = document.getElementById('host-scheduler-dot');
+    const openInput = document.getElementById('host-scheduler-open');
+    const closeInput = document.getElementById('host-scheduler-close');
+
+    const schedConfig = (group.config && group.config.autoCloseSchedule) || { enabled: false, openTime: '08:00', closeTime: '17:00' };
+    
+    if (schedToggle) schedToggle.checked = schedConfig.enabled;
+    if (schedBg) schedBg.style.background = schedConfig.enabled ? '#30d158' : 'rgba(255,255,255,0.08)';
+    if (schedDot) schedDot.style.left = schedConfig.enabled ? '14px' : '2px';
+    if (openInput) openInput.value = schedConfig.openTime || '08:00';
+    if (closeInput) closeInput.value = schedConfig.closeTime || '17:00';
+
+    // Clear Trigger inputs
+    const keyInp = document.getElementById('host-trigger-keyword');
+    const repInp = document.getElementById('host-trigger-reply');
+    const medInp = document.getElementById('host-trigger-media');
+    if (keyInp) keyInp.value = '';
+    if (repInp) repInp.value = '';
+    if (medInp) medInp.value = '';
+
+    // Render Trigger list
+    const triggerList = document.getElementById('host-active-triggers-list');
+    if (triggerList) {
+        triggerList.innerHTML = '';
+        const triggers = (group.config && group.config.extraTriggers) || [];
+        if (triggers.length === 0) {
+            triggerList.innerHTML = '<p style="text-align: center; color: var(--text-secondary); font-size: 0.7rem; margin-top: 10px;">Belum ada kata kunci tambahan.</p>';
+        } else {
+            triggers.forEach(t => {
+                const row = document.createElement('div');
+                row.style = 'display: flex; justify-content: space-between; align-items: center; padding: 4px 8px; background: var(--bg-secondary); border-radius: 4px; border: 1px solid var(--border-color); margin-bottom: 4px;';
+                
+                const mediaSuffix = t.media ? ` 📁 (${t.media})` : '';
+                row.innerHTML = `
+                    <div style="font-size: 0.75rem; text-overflow: ellipsis; overflow: hidden; white-space: nowrap; max-width: 80%; color: var(--text-primary);">
+                        <strong>${t.keyword}</strong>: ${t.reply}${mediaSuffix}
+                    </div>
+                    <button class="btn btn-secondary btn-icon" onclick="window.deleteHostTrigger('${gId}', '${t.keyword}')" style="padding: 2px; color: #ff453a; border: none; background: transparent; cursor: pointer;">
+                        <i data-lucide="trash" style="width: 12px; height: 12px;"></i>
+                    </button>
+                `;
+                triggerList.appendChild(row);
+            });
+        }
+    }
+
+    // Update list menu konten item
+    const list = document.getElementById('host-menu-items-list');
+    if (!list) return;
+    list.innerHTML = '';
+
+    const nodes = [];
+    if (group.config && group.config.menuTree) {
+        const collectContentNodes = (node) => {
+            if (node.type === 'content') {
+                nodes.push(node);
+            }
+            if (node.children) {
+                node.children.forEach(collectContentNodes);
+            }
+        };
+        collectContentNodes(group.config.menuTree);
+    }
+
+    if (nodes.length === 0) {
+        list.innerHTML = '<p style="text-align: center; color: var(--text-secondary); font-size: 0.75rem; margin-top: 20px;">Belum ada menu konten di grup ini...</p>';
+        return;
+    }
+
+    nodes.forEach(node => {
+        const itemRow = document.createElement('div');
+        itemRow.style = 'display: flex; justify-content: space-between; align-items: center; padding: 6px 10px; border-bottom: 1px solid var(--border-color);';
+        
+        const statusVal = node.status || 'Tersedia';
+        itemRow.innerHTML = `
+            <span style="font-size: 0.8rem; font-weight: 500; color: var(--text-primary);">${node.name}</span>
+            <select onchange="window.updateHostNodeStatus('${gId}', '${node.id}', this.value)" style="padding: 2px 6px; font-size: 0.75rem; background: var(--bg-secondary); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 4px; cursor: pointer;">
+                <option value="Tersedia" ${statusVal === 'Tersedia' ? 'selected' : ''}>Tersedia</option>
+                <option value="Habis" ${statusVal === 'Habis' ? 'selected' : ''}>Habis</option>
+                <option value="Pre-order" ${statusVal === 'Pre-order' ? 'selected' : ''}>Pre-order</option>
+            </select>
+        `;
+        list.appendChild(itemRow);
+    });
+
+    if (window.lucide) lucide.createIcons();
+};
+
+window.onHostGroupActiveToggleChange = async function(isChecked) {
+    const select = document.getElementById('host-config-group-select');
+    if (!select) return;
+    const gId = select.value;
+    if (!gId) return;
+
+    try {
+        const res = await fetch('/api/host-admin/toggle-group', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ groupId: gId, enabled: isChecked })
+        });
+
+        if (res.ok) {
+            const group = hostConfigActiveGroups.find(g => g.id === gId);
+            if (group) group.enabled = isChecked;
+
+            const bg = document.getElementById('host-group-active-bg');
+            const dot = document.getElementById('host-group-active-dot');
+            if (bg) bg.style.background = isChecked ? '#30d158' : 'rgba(255,255,255,0.08)';
+            if (dot) dot.style.left = isChecked ? '18px' : '2px';
+            
+            loadGroupsList();
+        } else {
+            throw new Error(await res.text());
+        }
+    } catch (err) {
+        alert('Gagal mengubah status grup: ' + err.message);
+    }
+};
+
+window.onHostSchedulerToggleChange = function(isChecked) {
+    const bg = document.getElementById('host-scheduler-bg');
+    const dot = document.getElementById('host-scheduler-dot');
+    if (bg) bg.style.background = isChecked ? '#30d158' : 'rgba(255,255,255,0.08)';
+    if (dot) dot.style.left = isChecked ? '14px' : '2px';
+};
+
+window.triggerHostActionSpecific = async function(action) {
+    const select = document.getElementById('host-config-group-select');
+    if (!select) return;
+    const gId = select.value;
+    if (!gId) return;
+
+    if (!confirm(`Apakah Anda yakin ingin ${action === 'buka' ? 'membuka' : 'menutup'} grup ini secara manual?`)) return;
+
+    try {
+        const res = await fetch('/api/host-admin/open-close-group', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ groupId: gId, action })
+        });
+
+        if (res.ok) {
+            alert(`Berhasil ${action === 'buka' ? 'membuka' : 'menutup'} grup!`);
+        } else {
+            throw new Error(await res.text());
+        }
+    } catch(err) {
+        alert('Gagal mengontrol grup: ' + err.message);
+    }
+};
+
+window.saveHostScheduler = async function() {
+    const select = document.getElementById('host-config-group-select');
+    if (!select) return;
+    const gId = select.value;
+    if (!gId) return;
+
+    const enabled = document.getElementById('host-scheduler-toggle').checked;
+    const openTime = document.getElementById('host-scheduler-open').value;
+    const closeTime = document.getElementById('host-scheduler-close').value;
+
+    try {
+        const res = await fetch('/api/host-admin/group-scheduler', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ groupId: gId, schedulerEnabled: enabled, openTime, closeTime })
+        });
+
+        if (res.ok) {
+            alert('Jadwal otomatis grup berhasil disimpan!');
+            // Refresh local state config
+            const group = hostConfigActiveGroups.find(g => g.id === gId);
+            if (group) {
+                group.config = group.config || {};
+                group.config.autoCloseSchedule = { enabled, openTime, closeTime, activeDays: [1,2,3,4,5] };
+            }
+        } else {
+            throw new Error(await res.text());
+        }
+    } catch(err) {
+        alert('Gagal menyimpan jadwal: ' + err.message);
+    }
+};
+
+window.addHostTrigger = async function() {
+    const select = document.getElementById('host-config-group-select');
+    if (!select) return;
+    const gId = select.value;
+    if (!gId) return;
+
+    const keyword = document.getElementById('host-trigger-keyword').value.trim();
+    const reply = document.getElementById('host-trigger-reply').value.trim();
+    const media = document.getElementById('host-trigger-media').value.trim();
+    const allGroups = document.getElementById('host-scope-all').checked;
+
+    if (!keyword || !reply) {
+        alert('Kata kunci dan balasan teks wajib diisi!');
+        return;
+    }
+
+    try {
+        const res = await fetch('/api/host-admin/add-trigger', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ groupId: gId, keyword, reply, media, allGroups })
+        });
+
+        if (res.ok) {
+            alert('Kata kunci / trigger baru berhasil ditambahkan!');
+            // Refresh local state
+            const groupsRes = await fetch('/api/groups');
+            if (groupsRes.ok) {
+                hostConfigActiveGroups = await groupsRes.json();
+                window.onHostGroupSelectChange();
+            }
+        } else {
+            throw new Error(await res.text());
+        }
+    } catch(err) {
+        alert('Gagal menambahkan trigger: ' + err.message);
+    }
+};
+
+window.deleteHostTrigger = async function(gId, keyword) {
+    if (!confirm(`Hapus kata kunci "${keyword}"?`)) return;
+
+    try {
+        const res = await fetch('/api/host-admin/delete-trigger', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ groupId: gId, keyword })
+        });
+
+        if (res.ok) {
+            // Refresh local state
+            const groupsRes = await fetch('/api/groups');
+            if (groupsRes.ok) {
+                hostConfigActiveGroups = await groupsRes.json();
+                window.onHostGroupSelectChange();
+            }
+        } else {
+            throw new Error(await res.text());
+        }
+    } catch(err) {
+        alert('Gagal menghapus trigger: ' + err.message);
+    }
+};
+
+window.updateHostNodeStatus = async function(gId, nodeId, status) {
+    try {
+        const res = await fetch('/api/host-admin/update-node-status', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ groupId: gId, nodeId, status })
+        });
+
+        if (!res.ok) {
+            throw new Error(await res.text());
+        }
+    } catch (err) {
+        alert('Gagal memperbarui status menu item: ' + err.message);
+    }
+};
+
+// WhatsApp text style format helper
+window.insertFormatToElement = function(elementId, symbol) {
+    const textarea = document.getElementById(elementId);
+    if (!textarea) return;
+    
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const text = textarea.value;
+    
+    const selectedText = text.substring(start, end);
+    const replacement = symbol + selectedText + symbol;
+    
+    textarea.value = text.substring(0, start) + replacement + text.substring(end);
+    textarea.focus();
+    
+    const newPos = start + symbol.length + selectedText.length + symbol.length;
+    textarea.setSelectionRange(newPos, newPos);
+    
+    textarea.dispatchEvent(new Event('input'));
+};
+
+// Save specific group welcome message
+window.saveHostWelcomeMsg = async function() {
+    const select = document.getElementById('host-config-group-select');
+    if (!select) return;
+    const gId = select.value;
+    if (!gId) return;
+
+    const msgVal = document.getElementById('host-group-welcome-msg').value;
+
+    try {
+        const res = await fetch('/api/host-admin/welcome-message', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ groupId: gId, welcomeMessage: msgVal })
+        });
+
+        if (res.ok) {
+            alert('Pesan selamat datang berhasil disimpan!');
+            // Refresh local state
+            const group = hostConfigActiveGroups.find(g => g.id === gId);
+            if (group) {
+                group.config = group.config || {};
+                group.config.welcomeMessage = msgVal;
+            }
+        } else {
+            throw new Error(await res.text());
+        }
+    } catch(err) {
+        alert('Gagal menyimpan pesan selamat datang: ' + err.message);
+    }
+};
+
+// ============================================================
+//  QUICK EDIT PANEL — Edit Cepat Produk via Dashboard
+// ============================================================
+
+let quickEditOpen = false;
+
+function toggleQuickEditPanel() {
+    const panel = document.getElementById('quick-edit-panel');
+    const tree  = document.querySelector('.grp-tree-grid');
+    const btn   = document.getElementById('btn-toggle-quickedit');
+
+    quickEditOpen = !quickEditOpen;
+
+    if (quickEditOpen) {
+        panel.classList.remove('hidden');
+        panel.style.display = 'flex';
+        if (tree) tree.style.display = 'none';
+        btn.style.background = 'var(--blue)';
+        btn.style.color = '#fff';
+        btn.style.borderColor = 'var(--blue)';
+        renderQuickEditList();
+    } else {
+        panel.classList.add('hidden');
+        panel.style.display = 'none';
+        if (tree) tree.style.display = '';
+        btn.style.background = '';
+        btn.style.color = '';
+        btn.style.borderColor = '';
+    }
+}
+
+function _getAllProductsFlat(tree, catPath) {
+    const results = [];
+    const path = catPath || [];
+    const walk = (node, currentPath) => {
+        if (node.type === 'content') {
+            results.push({ ...node, _catPath: currentPath });
+        }
+        if (node.children && Array.isArray(node.children)) {
+            const childPath = (node.type === 'category' && node.id !== 'root')
+                ? [...currentPath, node.name]
+                : currentPath;
+            node.children.forEach(c => walk(c, childPath));
+        }
+    };
+    if (tree) walk(tree, path);
+    return results;
+}
+
+function _escHtml(str) {
+    return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
+function renderQuickEditList() {
+    const container = document.getElementById('quick-edit-list');
+    const searchVal = (document.getElementById('qe-search')?.value || '').toLowerCase().trim();
+    if (!container) return;
+    if (!selectedGroupId || !selectedGroupConfig) {
+        container.innerHTML = '<p style="color:var(--text-secondary);font-size:0.85rem;text-align:center;margin-top:30px;">Pilih grup terlebih dahulu.</p>';
+        return;
+    }
+    const allProducts = _getAllProductsFlat(selectedGroupConfig.menuTree);
+    const filtered = searchVal
+        ? allProducts.filter(p => (p.name||'').toLowerCase().includes(searchVal) || (p.text||'').toLowerCase().includes(searchVal))
+        : allProducts;
+
+    if (filtered.length === 0) {
+        container.innerHTML = '<p style="color:var(--text-secondary);font-size:0.85rem;text-align:center;margin-top:30px;">Tidak ada produk ditemukan.</p>';
+        return;
+    }
+
+    filtered.sort((a, b) => (a.name||'').localeCompare(b.name||'', 'id', { sensitivity: 'base' }));
+
+    container.innerHTML = filtered.map(p => {
+        const stColor = p.status==='Tersedia'?'var(--green)':p.status==='Habis'?'var(--red)':'var(--orange)';
+        const stBg    = p.status==='Tersedia'?'var(--green-soft)':p.status==='Habis'?'var(--red-soft)':'var(--orange-soft)';
+        const promo   = p.isPromo;
+        const cat     = p._catPath && p._catPath.length>0 ? p._catPath.join(' › ') : 'Tanpa Kategori';
+        const desc    = p.text ? p.text.substring(0,90).replace(/\n/g,' ')+(p.text.length>90?'…':'') : '<em style="opacity:.45">Deskripsi kosong</em>';
+        const esc     = _escHtml;
+
+        return `<div class="qe-row" style="border:1px solid var(--border);border-radius:10px;padding:10px 14px;background:var(--surface);transition:box-shadow 0.2s;">
+  <div style="display:flex;align-items:flex-start;gap:10px;flex-wrap:wrap;">
+    <div style="flex:1;min-width:150px;">
+      <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+        <span style="font-weight:700;font-size:0.9rem;">${esc(p.name)}</span>
+        ${promo?'<span style="background:rgba(251,146,60,.18);color:var(--orange);font-size:0.65rem;padding:1px 7px;border-radius:99px;font-weight:700;">🔥 PROMO</span>':''}
+      </div>
+      <div style="font-size:0.7rem;color:var(--text-secondary);margin-top:2px;">${esc(cat)}</div>
+      <div style="font-size:0.78rem;color:var(--text-secondary);margin-top:5px;">${desc}</div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:5px;align-items:flex-end;min-width:130px;">
+      <select onchange="qeUpdateStatus('${esc(p.id)}',this.value)"
+        style="font-size:0.75rem;padding:3px 6px;height:28px;border-radius:6px;cursor:pointer;border:1px solid ${stColor};color:${stColor};background:${stBg};font-weight:600;outline:none;">
+        <option value="Tersedia" ${p.status==='Tersedia'?'selected':''}>✅ Tersedia</option>
+        <option value="Habis"    ${p.status==='Habis'?'selected':''}>❌ Habis</option>
+        <option value="Pre-order"${p.status==='Pre-order'?'selected':''}>⏳ Pre-order</option>
+      </select>
+      <button onclick="qeTogglePromo('${esc(p.id)}')"
+        style="font-size:0.72rem;padding:3px 10px;border-radius:6px;border:1px solid ${promo?'var(--orange)':'var(--border)'};background:${promo?'var(--orange-soft)':'var(--surface2)'};color:${promo?'var(--orange)':'var(--text-secondary)'};cursor:pointer;font-weight:600;transition:all 0.2s;">
+        ${promo?'🔥 Promo Aktif':'➕ Set Promo'}
+      </button>
+      <div style="display:flex;gap:5px;">
+        <button onclick="qeOpenEdit('${esc(p.id)}')"
+          style="font-size:0.72rem;padding:3px 8px;border-radius:6px;border:1px solid var(--blue);background:var(--blue-soft);color:var(--blue);cursor:pointer;font-weight:600;">
+          ✏️ Edit
+        </button>
+        <button onclick="qeDeleteProduct('${esc(p.id)}','${esc(p.name)}')"
+          style="font-size:0.72rem;padding:3px 8px;border-radius:6px;border:1px solid var(--red);background:var(--red-soft);color:var(--red);cursor:pointer;font-weight:600;">
+          🗑️
+        </button>
+      </div>
+    </div>
+  </div>
+  <div id="qe-edit-form-${esc(p.id)}" style="display:none;margin-top:10px;border-top:1px solid var(--border);padding-top:10px;flex-direction:column;gap:8px;">
+    <div>
+      <label style="font-size:0.75rem;font-weight:600;display:block;margin-bottom:3px;">Nama Produk</label>
+      <input type="text" id="qe-name-${esc(p.id)}" value="${esc(p.name)}"
+        style="width:100%;padding:6px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:0.85rem;">
+    </div>
+    <div>
+      <label style="font-size:0.75rem;font-weight:600;display:block;margin-bottom:3px;">Deskripsi / Konten</label>
+      <div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:4px;">
+        <button type="button" onclick="qeInsertFmt('qe-desc-${esc(p.id)}','*')" style="font-size:0.65rem;padding:2px 7px;border-radius:4px;border:1px solid var(--border);background:var(--surface2);cursor:pointer;font-weight:700;">B</button>
+        <button type="button" onclick="qeInsertFmt('qe-desc-${esc(p.id)}','_')" style="font-size:0.65rem;padding:2px 7px;border-radius:4px;border:1px solid var(--border);background:var(--surface2);cursor:pointer;font-style:italic;">I</button>
+        <button type="button" onclick="qeInsertFmt('qe-desc-${esc(p.id)}','~')" style="font-size:0.65rem;padding:2px 7px;border-radius:4px;border:1px solid var(--border);background:var(--surface2);cursor:pointer;text-decoration:line-through;">S</button>
+      </div>
+      <textarea id="qe-desc-${esc(p.id)}" rows="4"
+        style="width:100%;padding:6px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:0.85rem;resize:vertical;font-family:inherit;">${esc(p.text||'')}</textarea>
+    </div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;">
+      <button onclick="qeCloseEdit('${esc(p.id)}')"
+        style="font-size:0.8rem;padding:5px 12px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);cursor:pointer;">Batal</button>
+      <button onclick="qeSaveEdit('${esc(p.id)}')"
+        style="font-size:0.8rem;padding:5px 14px;border-radius:6px;border:none;background:var(--blue);color:#fff;cursor:pointer;font-weight:600;">💾 Simpan</button>
+    </div>
+  </div>
+</div>`;
+    }).join('');
+}
+
+function qeInsertFmt(taId, sym) {
+    const ta = document.getElementById(taId);
+    if (!ta) return;
+    const s = ta.selectionStart, e = ta.selectionEnd;
+    const sel = ta.value.substring(s,e);
+    const wrapped = sel ? `${sym}${sel}${sym}` : `${sym}Teks${sym}`;
+    ta.value = ta.value.substring(0,s) + wrapped + ta.value.substring(e);
+    ta.focus();
+    ta.setSelectionRange(s, s + wrapped.length);
+}
+
+function _findNodeInTree(tree, nodeId) {
+    if (!tree) return null;
+    if (tree.id === nodeId) return tree;
+    if (!tree.children) return null;
+    for (const child of tree.children) {
+        const found = _findNodeInTree(child, nodeId);
+        if (found) return found;
+    }
+    return null;
+}
+
+async function qeUpdateStatus(nodeId, newStatus) {
+    if (!selectedGroupId || !selectedGroupConfig) return;
+    const node = _findNodeInTree(selectedGroupConfig.menuTree, nodeId);
+    if (!node) return;
+    node.status = newStatus;
+    await saveGroupConfiguration();
+    renderQuickEditList();
+}
+
+async function qeTogglePromo(nodeId) {
+    if (!selectedGroupId || !selectedGroupConfig) return;
+    const node = _findNodeInTree(selectedGroupConfig.menuTree, nodeId);
+    if (!node) return;
+    node.isPromo = !node.isPromo;
+    await saveGroupConfiguration();
+    renderQuickEditList();
+}
+
+function qeOpenEdit(nodeId) {
+    const form = document.getElementById(`qe-edit-form-${nodeId}`);
+    if (form) form.style.display = 'flex';
+}
+function qeCloseEdit(nodeId) {
+    const form = document.getElementById(`qe-edit-form-${nodeId}`);
+    if (form) form.style.display = 'none';
+}
+
+async function qeSaveEdit(nodeId) {
+    if (!selectedGroupId || !selectedGroupConfig) return;
+    const node = _findNodeInTree(selectedGroupConfig.menuTree, nodeId);
+    if (!node) return;
+    const nameEl = document.getElementById(`qe-name-${nodeId}`);
+    const descEl = document.getElementById(`qe-desc-${nodeId}`);
+    if (nameEl && nameEl.value.trim()) node.name = nameEl.value.trim();
+    if (descEl) node.text = descEl.value.trim();
+    await saveGroupConfiguration();
+    renderQuickEditList();
+}
+
+async function qeDeleteProduct(nodeId, productName) {
+    if (!confirm(`Yakin hapus produk "${productName}"?\nAksi ini tidak bisa dibatalkan.`)) return;
+    if (!selectedGroupId || !selectedGroupConfig) return;
+    const del = (tree, id) => {
+        if (!tree.children) return false;
+        const idx = tree.children.findIndex(c => c.id === id);
+        if (idx >= 0) { tree.children.splice(idx, 1); return true; }
+        return tree.children.some(c => del(c, id));
+    };
+    del(selectedGroupConfig.menuTree, nodeId);
+    await saveGroupConfiguration();
+    renderQuickEditList();
+}

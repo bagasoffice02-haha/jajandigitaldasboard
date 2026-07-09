@@ -93,23 +93,7 @@
                     </div>
                 </div>
 
-                <!-- Riwayat Keuangan -->
-                <div class="card history-card">
-                    <h2><i data-lucide="trending-up"></i> Catatan Keuangan Terakhir</h2>
-                    <p class="card-subtitle">Riwayat kas masuk/keluar yang dicatat bot</p>
-                    <div id="history-finance-list" class="wa-chat-list">
-                        <div class="file-item-placeholder">Memuat riwayat keuangan…</div>
-                    </div>
-                </div>
 
-                <!-- Riwayat Agenda -->
-                <div class="card history-card">
-                    <h2><i data-lucide="calendar-check"></i> Agenda Terjadwal Terakhir</h2>
-                    <p class="card-subtitle">Riwayat agenda/kegiatan yang dijadwalkan bot</p>
-                    <div id="history-agenda-list" class="wa-chat-list">
-                        <div class="file-item-placeholder">Memuat riwayat agenda…</div>
-                    </div>
-                </div>
 
             </section>
 
@@ -139,14 +123,14 @@
             <!-- PANEL KIRI: Memori & Knowledge -->
             <section class="panel panel-left">
 
-                <!-- Undang-undang AI -->
+                <!-- Panduan & Aturan Bot (Memori) -->
                 <div class="card memory-card">
-                    <h2><i data-lucide="scroll-text"></i> Undang-Undang AI (Konstitusi Bot)</h2>
-                    <p class="card-subtitle">Aturan prioritas tertinggi yang ditulis Bos — dikirim via chat: <code>#akubosmu</code></p>
+                    <h2><i data-lucide="scroll-text"></i> Panduan & Aturan Bot</h2>
+                    <p class="card-subtitle">Aturan & karakter bot toko yang bisa diatur oleh Host Admin — bisa diubah via chat WhatsApp dengan perintah <code>#akubosmu [aturan]</code></p>
 
                     <div class="form-group">
-                        <textarea id="cfg-ai-memory" rows="6" placeholder="Undang-undang AI masih kosong. Tulis aturan bagi bot di sini…"></textarea>
-                        <small>Disimpan di <code>00_memori_otomatis.txt</code>. Memiliki prioritas mutlak di atas panduan kepribadian default.</small>
+                        <textarea id="cfg-ai-memory" rows="6" placeholder="Panduan bot masih kosong. Tulis di sini karakter, cara bicara, atau aturan bot toko Anda…"></textarea>
+                        <small>Disimpan di <code>00_memori_otomatis.txt</code>. Host Admin bisa mengubah ini lewat WhatsApp dengan mengetik <code>#akubosmu [isi aturan]</code>.</small>
                     </div>
 
                     <div style="display:flex; gap:10px; margin-top:14px;">
@@ -159,16 +143,16 @@
                     </div>
                 </div>
 
-                <!-- Knowledge Base -->
+                <!-- Basis Pengetahuan Toko -->
                 <div class="card knowledge-card">
                     <div class="card-header-btn">
-                        <h2><i data-lucide="book-open"></i> Basis Pengetahuan (.txt)</h2>
+                        <h2><i data-lucide="book-open"></i> Basis Pengetahuan Toko</h2>
                         <label for="knowledge-upload" class="btn btn-primary btn-sm">
                             <i data-lucide="upload"></i> Unggah
                         </label>
-                        <input type="file" id="knowledge-upload" accept=".txt" style="display:none;">
+                        <input type="file" id="knowledge-upload" style="display:none;">
                     </div>
-                    <p class="card-subtitle">Dokumen lokal untuk injeksi konteks AI asisten</p>
+                    <p class="card-subtitle">Dokumen info produk, FAQ, katalog, atau SOP toko — dijadikan konteks bot saat menjawab pelanggan (Format bebas)</p>
                     <div id="knowledge-list" class="file-list">
                         <div class="file-item-placeholder">Memuat berkas…</div>
                     </div>
@@ -180,13 +164,13 @@
             <section class="panel panel-right">
                 <div class="card media-card">
                     <div class="card-header-btn">
-                        <h2><i data-lucide="paperclip"></i> Aset Media (.pdf, .png)</h2>
+                        <h2><i data-lucide="paperclip"></i> Aset Media</h2>
                         <label for="media-upload" class="btn btn-primary btn-sm">
                             <i data-lucide="upload"></i> Unggah
                         </label>
-                        <input type="file" id="media-upload" accept=".pdf,.png" style="display:none;">
+                        <input type="file" id="media-upload" style="display:none;">
                     </div>
-                    <p class="card-subtitle">Berkas media dikirim AI lewat tag <code>[KIRIM_MEDIA: nama_file]</code></p>
+                    <p class="card-subtitle">Berkas media dikirim AI lewat tag <code>[KIRIM_MEDIA: nama_file]</code> (Format bebas/apapun)</p>
                     <div id="media-list" class="file-list">
                         <div class="file-item-placeholder">Memuat berkas…</div>
                     </div>
@@ -200,7 +184,7 @@
          TAB 4 — GROUPS
     ══════════════════════════════════════════ -->
     <div id="tab-groups" class="tab-content hidden">
-        <main class="dashboard-grid groups-grid" style="display: grid; grid-template-columns: 280px 1fr; gap: 20px; height: calc(100vh - 120px);">
+        <main class="dashboard-grid groups-grid">
             
             <!-- SIDEBAR: Daftar Grup -->
             <section class="panel card" style="display: flex; flex-direction: column; overflow: hidden; padding: 15px;">
@@ -220,10 +204,10 @@
             </section>
 
             <!-- PANEL UTAMA: Konfigurasi Grup & Editor Menu -->
-            <div id="group-editor-panel" class="hidden" style="display: grid; grid-template-columns: 320px 1fr; gap: 20px; height: 100%;">
+            <div id="group-editor-panel" class="hidden group-editor-inner">
                 
                 <!-- KOLOM KIRI: Pengaturan Grup -->
-                <section class="panel card form-card" style="display: flex; flex-direction: column; overflow-y: auto; padding: 15px;">
+                <section class="panel card form-card grp-settings-col">
                     <h3 style="margin-top: 0; font-size: 1.1rem;"><i data-lucide="settings"></i> Pengaturan Grup</h3>
                     <p class="card-subtitle" style="margin-top: -10px; margin-bottom: 15px; font-size: 0.8rem;" id="selected-group-title">Pilih grup...</p>
                     
@@ -301,6 +285,21 @@
                         <textarea id="grp-universal-footer" placeholder="Contoh: Terimakasih telah menghubungi kami. (kosongkan jika tidak butuh)" rows="2" class="form-control" style="width: 100%; padding: 8px; border-radius: 6px; background: var(--bg-primary); color: var(--text-primary); border: 1px solid var(--border-color); resize: vertical;"></textarea>
                     </div>
 
+                    <!-- Pesan Selamat Datang Anggota Baru (Welcome Message) -->
+                    <div class="form-group" style="margin-bottom: 15px;">
+                        <label for="grp-welcome-message">Pesan Selamat Datang Anggota Baru (Welcome Message)</label>
+                        <!-- Formatting Toolbar -->
+                        <div style="display: flex; gap: 6px; margin-bottom: 6px; background: rgba(255,255,255,0.03); padding: 4px; border-radius: 4px; border: 1px solid var(--border-color);">
+                            <button class="btn btn-secondary" type="button" onclick="window.insertFormatToElement('grp-welcome-message', '*')" style="padding: 2px 6px; font-size: 0.65rem; cursor: pointer; min-height: auto;">Tebal (*)</button>
+                            <button class="btn btn-secondary" type="button" onclick="window.insertFormatToElement('grp-welcome-message', '_')" style="padding: 2px 6px; font-size: 0.65rem; cursor: pointer; min-height: auto;">Miring (_)</button>
+                            <button class="btn btn-secondary" type="button" onclick="window.insertFormatToElement('grp-welcome-message', '~')" style="padding: 2px 6px; font-size: 0.65rem; cursor: pointer; min-height: auto;">Coret (~)</button>
+                        </div>
+                        <textarea id="grp-welcome-message" placeholder="Contoh: Halo @user, selamat bergabung! Ketik list untuk melihat produk." rows="3" class="form-control" style="width: 100%; padding: 8px; border-radius: 6px; background: var(--bg-primary); color: var(--text-primary); border: 1px solid var(--border-color); resize: vertical;"></textarea>
+                        <small style="color: var(--text-secondary); font-size: 0.75rem; display: block; margin-top: 4px;">
+                            Gunakan tag <code>@user</code> untuk menyebut nama panggilan & nomor user baru yang masuk.
+                        </small>
+                    </div>
+
                     <!-- Jadwal Operasional Buka/Tutup Grup -->
                     <div style="border: 1px solid var(--border-color); border-radius: 8px; padding: 12px; margin-bottom: 15px; background: rgba(0,0,0,0.1);">
                         <label class="checkbox-container" style="font-weight: bold; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">
@@ -364,15 +363,20 @@
                 </section>
 
                 <!-- KOLOM KANAN: Editor Pohon Menu -->
-                <section class="panel card" style="display: flex; flex-direction: column; overflow: hidden; padding: 15px;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <section class="panel card grp-editor-col">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 8px;">
                         <h3 style="margin: 0; font-size: 1.1rem;"><i data-lucide="git-fork"></i> Visual Editor Pohon Menu</h3>
-                        <button class="btn btn-primary" onclick="saveGroupConfiguration()" style="padding: 6px 15px; font-size: 0.85rem;">
-                            <i data-lucide="save" style="width: 14px; height: 14px; display: inline; vertical-align: middle; margin-right: 4px;"></i> Simpan Menu
-                        </button>
+                        <div style="display: flex; gap: 8px; align-items: center;">
+                            <button class="btn btn-secondary" id="btn-toggle-quickedit" onclick="toggleQuickEditPanel()" style="padding: 5px 12px; font-size: 0.8rem;">
+                                <i data-lucide="list" style="width:13px;height:13px;display:inline;vertical-align:middle;margin-right:4px;"></i> Edit Cepat
+                            </button>
+                            <button class="btn btn-primary" onclick="saveGroupConfiguration()" style="padding: 6px 15px; font-size: 0.85rem;">
+                                <i data-lucide="save" style="width: 14px; height: 14px; display: inline; vertical-align: middle; margin-right: 4px;"></i> Simpan Menu
+                            </button>
+                        </div>
                     </div>
                     
-                    <div style="display: grid; grid-template-columns: 1fr 280px; gap: 15px; flex: 1; overflow: hidden;">
+                    <div class="grp-tree-grid">
                         
                         <!-- Visual Pohon -->
                         <div style="border: 1px solid var(--border-color); border-radius: 6px; padding: 10px; overflow-y: auto; background: rgba(255,255,255,0.02);" id="menu-tree-visualizer">
@@ -398,8 +402,15 @@
                                 </div>
 
                                 <div class="form-group" style="margin-bottom: 8px;">
-                                    <label for="node-text" style="font-size: 0.75rem;">Isi Balasan Teks / Deskripsi Menu</label>
-                                    <textarea id="node-text" rows="4" class="form-control" style="width: 100%; padding: 6px; font-size: 0.85rem; resize: vertical;"></textarea>
+                                    <label for="node-text" style="font-size: 0.75rem; display: block; margin-bottom: 4px;">Isi Balasan Teks / Deskripsi Menu</label>
+                                    <!-- Formatting Toolbar -->
+                                    <div style="display: flex; gap: 6px; margin-bottom: 6px; background: rgba(255,255,255,0.03); padding: 4px; border-radius: 4px; border: 1px solid var(--border-color);">
+                                        <button class="btn btn-secondary" type="button" onclick="window.insertFormatToElement('node-text', '*')" style="padding: 3px 8px; font-size: 0.7rem; cursor: pointer; font-weight: bold; min-height: auto;">Tebal (*)</button>
+                                        <button class="btn btn-secondary" type="button" onclick="window.insertFormatToElement('node-text', '_')" style="padding: 3px 8px; font-size: 0.7rem; cursor: pointer; font-style: italic; min-height: auto;">Miring (_)</button>
+                                        <button class="btn btn-secondary" type="button" onclick="window.insertFormatToElement('node-text', '~')" style="padding: 3px 8px; font-size: 0.7rem; cursor: pointer; text-decoration: line-through; min-height: auto;">Coret (~)</button>
+                                        <button class="btn btn-secondary" type="button" onclick="window.insertFormatToElement('node-text', '```')" style="padding: 3px 8px; font-size: 0.7rem; cursor: pointer; font-family: monospace; min-height: auto;">Mono (```)</button>
+                                    </div>
+                                    <textarea id="node-text" rows="8" class="form-control" style="width: 100%; padding: 8px; font-size: 0.85rem; resize: vertical; height: 180px; font-family: monospace; background: var(--bg-primary); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 6px;"></textarea>
                                 </div>
                                 <div id="node-media-field" class="hidden" style="margin-bottom: 8px;">
                                     <label for="node-media" style="font-size: 0.75rem;">Lampiran Berkas Media (Nama File)</label>
@@ -414,6 +425,10 @@
                                         <option value="Habis">🔴 Habis</option>
                                         <option value="Pre-order">🟡 Pre-order</option>
                                     </select>
+                                </div>
+                                <div class="form-group" style="margin-bottom: 8px; display: flex; align-items: center; gap: 8px; padding: 4px 0;">
+                                    <input type="checkbox" id="node-promo" style="width: 16px; height: 16px; cursor: pointer; accent-color: #ff9f0a;">
+                                    <label for="node-promo" style="font-size: 0.8rem; cursor: pointer; font-weight: 600; color: #ffd60a;">🔥 Tandai sebagai Promo Spesial</label>
                                 </div>
 
                                 <div style="display: flex; gap: 8px; margin-top: 15px;">
@@ -431,9 +446,24 @@
                                 <p>Klik salah satu node di pohon sebelah kiri untuk mengedit atau menambahkan sub-menu.</p>
                             </div>
                         </div>
-
                     </div>
+
+                    <!-- PANEL EDIT CEPAT (tersembunyi secara default) -->
+                    <div id="quick-edit-panel" class="hidden" style="margin-top: 4px; display: flex; flex-direction: column; gap: 0; flex: 1; overflow: hidden;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                            <span style="font-size: 0.85rem; font-weight: 600; color: var(--text-secondary);">
+                                <i data-lucide="zap" style="width:13px;height:13px;display:inline;vertical-align:middle;"></i>
+                                Edit instan — klik langsung untuk ubah status/promo
+                            </span>
+                            <input type="text" id="qe-search" placeholder="🔍 Cari produk..." oninput="renderQuickEditList()" class="form-control" style="width: 180px; padding: 4px 10px; font-size: 0.8rem; height: 30px;">
+                        </div>
+                        <div id="quick-edit-list" style="overflow-y: auto; flex: 1; display: flex; flex-direction: column; gap: 6px;">
+                            <!-- dirender dinamis -->
+                        </div>
+                    </div>
+
                 </section>
+
             </div>
             
             <div id="no-group-selected-placeholder" style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; border: 1px dashed var(--border-color); border-radius: 6px; background: rgba(255,255,255,0.01);">
@@ -467,10 +497,10 @@
          TAB 5 — TOKO
     ══════════════════════════════════════════ -->
     <div id="tab-shop" class="tab-content hidden">
-        <main class="dashboard-grid shop-grid" style="display: grid; grid-template-columns: 350px 1fr; gap: 20px; height: calc(100vh - 120px);">
+        <main class="shop-grid">
             
             <!-- KOLOM KIRI: Management Host Admin & Broadcast -->
-            <div style="display: flex; flex-direction: column; gap: 20px; overflow: hidden;">
+            <div class="shop-left-col">
                 <!-- PANEL: Host Admin -->
                 <section class="panel card" style="display: flex; flex-direction: column; flex: 1; min-height: 250px; overflow: hidden; padding: 15px;">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
@@ -479,12 +509,7 @@
                             <i data-lucide="rotate-cw" style="width: 14px; height: 14px;"></i>
                         </button>
                     </div>
-                    <p class="card-subtitle" style="margin-top: -10px; margin-bottom: 12px; font-size: 0.8rem;">Daftar admin WhatsApp yang dapat mengontrol bot.</p>
-                    
-                    <div style="display: flex; gap: 8px; margin-bottom: 12px;">
-                        <input type="text" id="shop-admin-input" placeholder="Contoh: 628123456789" class="form-control" style="flex: 1; padding: 6px 10px; font-size: 0.85rem; border-radius: 6px; background: var(--bg-primary); color: var(--text-primary); border: 1px solid var(--border-color);">
-                        <button class="btn btn-primary" onclick="addHostAdmin()" style="padding: 6px 12px; font-size: 0.85rem;">Tambah</button>
-                    </div>
+                    <p class="card-subtitle" style="margin-top: -10px; margin-bottom: 12px; font-size: 0.8rem;">Daftar chat pribadi tersemat (pinned). Aktifkan toggle di sebelah kanan untuk menjadikannya Host Admin. Klik nama/nomor untuk membuka konfigurasi khusus.</p>
                     
                     <div id="shop-admins-list" style="flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 8px;">
                         <!-- Rendered dynamically -->
@@ -514,7 +539,7 @@
             </div>
 
             <!-- KOLOM KANAN: Manajemen Pelanggan -->
-            <section class="panel card" style="display: flex; flex-direction: column; overflow: hidden; padding: 15px;">
+            <section class="panel card shop-right-col">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
                     <h2 style="margin: 0; font-size: 1.1rem;"><i data-lucide="book-open"></i> Manajemen Pelanggan</h2>
                     <button class="btn btn-secondary btn-icon" onclick="loadCustomersList()" title="Refresh Pelanggan">
@@ -551,6 +576,183 @@
             </div>
         </div>
     </div>
+
+    <!-- MODAL: Konfigurasi Host Admin -->
+    <div id="host-config-modal" class="modal hidden" style="z-index: 2000;">
+        <div class="modal-content" style="max-width: 580px; max-height: 85vh; display: flex; flex-direction: column; gap: 15px; overflow-y: auto;">
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 10px; margin-bottom: 5px;">
+                <h3 style="margin: 0; font-size: 1.15rem; display: flex; align-items: center; gap: 8px; color: var(--text-primary);"><i data-lucide="shield" style="color: #30d158;"></i> Konfigurasi Host Admin</h3>
+                <button class="btn btn-secondary btn-icon" onclick="closeHostConfigModal()" style="border: none; background: transparent; padding: 4px; color: var(--text-secondary); cursor: pointer;">
+                    <i data-lucide="x" style="width: 20px; height: 20px;"></i>
+                </button>
+            </div>
+
+            <div>
+                <p style="margin: 0; font-size: 0.8rem; color: var(--text-secondary);">Nomor WhatsApp:</p>
+                <h4 id="host-config-number" style="margin: 2px 0 0 0; font-size: 1.1rem; color: var(--text-primary); font-weight: 700;"></h4>
+                <p style="margin: 4px 0 0 0; font-size: 0.75rem; color: #30d158; font-weight: 500;">🟢 Status: Tersemat (Pinned Chat) - Terverifikasi</p>
+            </div>
+
+            <!-- Bagian 1: Aksi Cepat Toko / Grup -->
+            <div style="border-top: 1px solid var(--border-color); padding-top: 12px;">
+                <h4 style="margin: 0 0 10px 0; font-size: 0.85rem; color: var(--text-primary); display: flex; align-items: center; gap: 6px;"><i data-lucide="zap" style="width: 14px; height: 14px; color: #ffd60a;"></i> Kontrol Cepat Grup & Toko</h4>
+                <div style="display: flex; gap: 10px;">
+                    <button class="btn btn-primary" onclick="triggerHostAction('buka')" style="flex: 1; font-size: 0.8rem; background: #30d158; border-color: #30d158; color: #fff; display: flex; align-items: center; justify-content: center; gap: 6px; cursor: pointer; padding: 8px 10px; border-radius: 6px; font-weight: 600;">
+                        <i data-lucide="unlock" style="width: 12px; height: 12px;"></i> Buka Toko Manual
+                    </button>
+                    <button class="btn btn-danger" onclick="triggerHostAction('tutup')" style="flex: 1; font-size: 0.8rem; background: #ff453a; border-color: #ff453a; color: #fff; display: flex; align-items: center; justify-content: center; gap: 6px; cursor: pointer; padding: 8px 10px; border-radius: 6px; font-weight: 600;">
+                        <i data-lucide="lock" style="width: 12px; height: 12px;"></i> Tutup Toko Manual
+                    </button>
+                </div>
+            </div>
+
+            <!-- Bagian 2: Manajemen Akses Grup & Menu Konten -->
+            <div style="border-top: 1px solid var(--border-color); padding-top: 12px; display: flex; flex-direction: column; gap: 12px;">
+                <h4 style="margin: 0; font-size: 0.85rem; color: var(--text-primary); display: flex; align-items: center; gap: 6px;"><i data-lucide="settings" style="width: 14px; height: 14px; color: var(--accent-color);"></i> Konfigurasi Grup & Menu Konten</h4>
+                
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label for="host-config-group-select" style="font-size: 0.75rem; margin-bottom: 4px; display: block; color: var(--text-secondary); font-weight: 600;">Pilih Grup WA:</label>
+                    <select id="host-config-group-select" onchange="onHostGroupSelectChange()" class="form-control" style="width: 100%; padding: 6px 10px; font-size: 0.85rem; background: var(--bg-primary); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 6px;">
+                        <!-- Populate dynamically -->
+                    </select>
+                </div>
+
+                <!-- Toggle Aktif/Nonaktif Bot Grup -->
+                <div style="display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; background: var(--bg-primary); border: 1px solid var(--border-color); border-radius: 6px;">
+                    <span style="font-size: 0.8rem; font-weight: 600; color: var(--text-primary);">Status Bot di Grup:</span>
+                    <div style="position: relative; display: inline-block; width: 40px; height: 24px;">
+                        <input type="checkbox" id="host-group-active-toggle" onchange="onHostGroupActiveToggleChange(this.checked)" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; z-index: 2;">
+                        <div id="host-group-active-bg" style="width: 100%; height: 100%; background: rgba(255,255,255,0.08); border-radius: 12px; transition: background 0.2s; position: relative; pointer-events: none; border: 1px solid var(--border-color);">
+                            <div id="host-group-active-dot" style="width: 18px; height: 18px; background: white; border-radius: 50%; position: absolute; top: 2px; left: 2px; transition: left 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.3);"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Buka/Tutup Toko Manual khusus grup terpilih -->
+                <div style="padding: 10px; background: var(--bg-primary); border: 1px solid var(--border-color); border-radius: 6px;">
+                    <span style="font-size: 0.75rem; font-weight: 600; color: var(--text-secondary); display: block; margin-bottom: 6px;">Kontrol Buka/Tutup Grup:</span>
+                    <div style="display: flex; gap: 8px;">
+                        <button class="btn btn-primary" onclick="triggerHostActionSpecific('buka')" style="flex: 1; padding: 6px; font-size: 0.75rem; background: #30d158; border-color: #30d158; cursor: pointer; border-radius: 6px; color: #fff;">Buka Grup</button>
+                        <button class="btn btn-danger" onclick="triggerHostActionSpecific('tutup')" style="flex: 1; padding: 6px; font-size: 0.75rem; background: #ff453a; border-color: #ff453a; cursor: pointer; border-radius: 6px; color: #fff;">Tutup Grup</button>
+                    </div>
+                </div>
+
+                <!-- Pesan Selamat Datang (Welcome Message) khusus grup terpilih -->
+                <div style="padding: 10px; background: var(--bg-primary); border: 1px solid var(--border-color); border-radius: 6px; display: flex; flex-direction: column; gap: 6px;">
+                    <label style="font-size: 0.75rem; font-weight: 600; color: var(--text-secondary); display: block; margin-bottom: 0;">Pesan Selamat Datang Grup:</label>
+                    <textarea id="host-group-welcome-msg" rows="3" placeholder="Contoh: Halo @user, selamat bergabung..." class="form-control" style="width: 100%; padding: 6px; font-size: 0.8rem; background: var(--bg-secondary); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 4px; resize: vertical;"></textarea>
+                    
+                    <div style="display: flex; gap: 6px; margin-bottom: 2px;">
+                        <button class="btn btn-secondary" type="button" onclick="window.insertFormatToElement('host-group-welcome-msg', '*')" style="padding: 2px 6px; font-size: 0.65rem; cursor: pointer; min-height: auto;">Tebal (*)</button>
+                        <button class="btn btn-secondary" type="button" onclick="window.insertFormatToElement('host-group-welcome-msg', '_')" style="padding: 2px 6px; font-size: 0.65rem; cursor: pointer; min-height: auto;">Miring (_)</button>
+                        <button class="btn btn-secondary" type="button" onclick="window.insertFormatToElement('host-group-welcome-msg', '~')" style="padding: 2px 6px; font-size: 0.65rem; cursor: pointer; min-height: auto;">Coret (~)</button>
+                    </div>
+                    <button class="btn btn-primary" onclick="saveHostWelcomeMsg()" style="width: 100%; padding: 6px; font-size: 0.75rem; cursor: pointer; border-radius: 6px;">Simpan Pesan Selamat Datang</button>
+                </div>
+
+                <!-- Konfigurasi Jadwal Otomatis (Jadwal Grup) -->
+                <div style="padding: 10px; background: var(--bg-primary); border: 1px solid var(--border-color); border-radius: 6px; display: flex; flex-direction: column; gap: 8px;">
+                    <div style="display: flex; align-items: center; justify-content: space-between;">
+                        <span style="font-size: 0.75rem; font-weight: 600; color: var(--text-secondary);">Mode Jadwal Otomatis:</span>
+                        <div style="position: relative; display: inline-block; width: 34px; height: 20px;">
+                            <input type="checkbox" id="host-scheduler-toggle" onchange="onHostSchedulerToggleChange(this.checked)" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; z-index: 2;">
+                            <div id="host-scheduler-bg" style="width: 100%; height: 100%; background: rgba(255,255,255,0.08); border-radius: 10px; transition: background 0.2s; position: relative; pointer-events: none; border: 1px solid var(--border-color);">
+                                <div id="host-scheduler-dot" style="width: 14px; height: 14px; background: white; border-radius: 50%; position: absolute; top: 2px; left: 2px; transition: left 0.2s;"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 8px; align-items: center;">
+                        <div style="flex: 1;">
+                            <label style="font-size: 0.7rem; color: var(--text-secondary);">Jam Buka:</label>
+                            <input type="time" id="host-scheduler-open" class="form-control" style="width: 100%; padding: 4px; font-size: 0.8rem; background: var(--bg-secondary); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 4px;">
+                        </div>
+                        <div style="flex: 1;">
+                            <label style="font-size: 0.7rem; color: var(--text-secondary);">Jam Tutup:</label>
+                            <input type="time" id="host-scheduler-close" class="form-control" style="width: 100%; padding: 4px; font-size: 0.8rem; background: var(--bg-secondary); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 4px;">
+                        </div>
+                    </div>
+                    <button class="btn btn-primary" onclick="saveHostScheduler()" style="width: 100%; padding: 6px; font-size: 0.75rem; cursor: pointer; border-radius: 6px;">Simpan Konfigurasi Jadwal</button>
+                </div>
+
+                <!-- Input Trigger Baru / Kata Kunci Baru (Teks + Media) -->
+                <div style="padding: 10px; background: var(--bg-primary); border: 1px solid var(--border-color); border-radius: 6px; display: flex; flex-direction: column; gap: 8px;">
+                    <span style="font-size: 0.75rem; font-weight: 600; color: var(--text-secondary);"><i data-lucide="plus" style="width: 12px; height: 12px; display: inline-block; vertical-align: middle;"></i> Tambah Kata Kunci / Trigger Baru:</span>
+                    <div>
+                        <label style="font-size: 0.7rem; color: var(--text-secondary);">Pemicu (Kata Kunci):</label>
+                        <input type="text" id="host-trigger-keyword" placeholder="Contoh: alamat" class="form-control" style="width: 100%; padding: 6px; font-size: 0.8rem; background: var(--bg-secondary); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 4px;">
+                    </div>
+                    <div>
+                        <label style="font-size: 0.7rem; color: var(--text-secondary);">Respons Balasan (Teks):</label>
+                        <textarea id="host-trigger-reply" rows="3" placeholder="Tulis teks balasan..." class="form-control" style="width: 100%; padding: 6px; font-size: 0.8rem; resize: vertical; background: var(--bg-secondary); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 4px;"></textarea>
+                        <div style="display: flex; gap: 6px; margin-top: 4px;">
+                            <button class="btn btn-secondary" type="button" onclick="window.insertFormatToElement('host-trigger-reply', '*')" style="padding: 2px 6px; font-size: 0.65rem; cursor: pointer; min-height: auto;">Tebal (*)</button>
+                            <button class="btn btn-secondary" type="button" onclick="window.insertFormatToElement('host-trigger-reply', '_')" style="padding: 2px 6px; font-size: 0.65rem; cursor: pointer; min-height: auto;">Miring (_)</button>
+                            <button class="btn btn-secondary" type="button" onclick="window.insertFormatToElement('host-trigger-reply', '~')" style="padding: 2px 6px; font-size: 0.65rem; cursor: pointer; min-height: auto;">Coret (~)</button>
+                        </div>
+                    </div>
+                    <div>
+                        <label style="font-size: 0.7rem; color: var(--text-secondary);">File Media Balasan (Opsional - Gambar/Dokumen):</label>
+                        <input type="text" id="host-trigger-media" placeholder="Contoh: brosur.pdf / promo.png" class="form-control" style="width: 100%; padding: 6px; font-size: 0.8rem; background: var(--bg-secondary); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 4px;">
+                    </div>
+                    <div style="display: flex; gap: 15px; margin-top: 4px;">
+                        <label style="font-size: 0.75rem; color: var(--text-primary); display: flex; align-items: center; gap: 6px; cursor: pointer;">
+                            <input type="radio" name="host-trigger-scope" id="host-scope-single" checked style="width: 14px; height: 14px;">
+                            <span>Hanya grup ini</span>
+                        </label>
+                        <label style="font-size: 0.75rem; color: var(--text-primary); display: flex; align-items: center; gap: 6px; cursor: pointer;">
+                            <input type="radio" name="host-trigger-scope" id="host-scope-all" style="width: 14px; height: 14px;">
+                            <span>Semua grup</span>
+                        </label>
+                    </div>
+                    <button class="btn btn-primary" onclick="addHostTrigger()" style="width: 100%; padding: 6px; font-size: 0.75rem; cursor: pointer; border-radius: 6px;">Tambah Kata Kunci</button>
+                </div>
+
+                <!-- Daftar Trigger Aktif di Grup ini -->
+                <div style="padding: 10px; background: var(--bg-primary); border: 1px solid var(--border-color); border-radius: 6px; display: flex; flex-direction: column; gap: 6px;">
+                    <span style="font-size: 0.75rem; font-weight: 600; color: var(--text-secondary);">Daftar Kata Kunci Aktif:</span>
+                    <div id="host-active-triggers-list" style="display: flex; flex-direction: column; gap: 4px; max-height: 120px; overflow-y: auto; padding: 4px;">
+                        <!-- Populate dynamically -->
+                    </div>
+                </div>
+
+                <!-- Status Menu Konten Toko -->
+                <div id="host-menu-items-wrapper">
+                    <p style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 6px; font-weight: 600;">Status Menu Konten Toko:</p>
+                    <div id="host-menu-items-list" style="display: flex; flex-direction: column; gap: 6px; max-height: 180px; overflow-y: auto; padding: 6px; background: var(--bg-primary); border: 1px solid var(--border-color); border-radius: 6px;">
+                        <!-- Populate dynamically -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bagian 3: Panduan & Aturan Bot (Memori) -->
+            <div style="border-top: 1px solid var(--border-color); padding-top: 12px;">
+                <h4 style="margin: 0 0 8px 0; font-size: 0.85rem; color: var(--text-primary); display: flex; align-items: center; gap: 6px;"><i data-lucide="scroll-text" style="width: 14px; height: 14px;"></i> Panduan & Karakter Bot (Memori)</h4>
+                <textarea id="host-config-memory" rows="3" class="form-control" style="width: 100%; padding: 8px; font-size: 0.85rem; background: var(--bg-primary); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 6px; resize: vertical; margin-bottom: 4px;" placeholder="Tulis panduan atau aturan bot..."></textarea>
+                <div style="display: flex; gap: 6px; margin-bottom: 8px;">
+                    <button class="btn btn-secondary" type="button" onclick="window.insertFormatToElement('host-config-memory', '*')" style="padding: 2px 6px; font-size: 0.65rem; cursor: pointer; min-height: auto;">Tebal (*)</button>
+                    <button class="btn btn-secondary" type="button" onclick="window.insertFormatToElement('host-config-memory', '_')" style="padding: 2px 6px; font-size: 0.65rem; cursor: pointer; min-height: auto;">Miring (_)</button>
+                    <button class="btn btn-secondary" type="button" onclick="window.insertFormatToElement('host-config-memory', '~')" style="padding: 2px 6px; font-size: 0.65rem; cursor: pointer; min-height: auto;">Coret (~)</button>
+                </div>
+                <button class="btn btn-primary" onclick="saveHostMemory()" style="width: 100%; font-size: 0.8rem; padding: 6px 12px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;">
+                    <i data-lucide="save" style="width: 12px; height: 12px;"></i> Simpan Panduan
+                </button>
+            </div>
+
+            <!-- Bagian 4: Tes Kirim Pesan -->
+            <div style="border-top: 1px solid var(--border-color); padding-top: 12px; margin-bottom: 5px;">
+                <h4 style="margin: 0 0 8px 0; font-size: 0.85rem; color: var(--text-primary); display: flex; align-items: center; gap: 6px;"><i data-lucide="message-square" style="width: 14px; height: 14px;"></i> Kirim Pesan WA (Personal)</h4>
+                <div style="display: flex; gap: 8px;">
+                    <input type="text" id="host-config-msg" placeholder="Ketik pesan..." class="form-control" style="flex: 1; padding: 8px 12px; font-size: 0.85rem; border-radius: 6px; background: var(--bg-primary); color: var(--text-primary); border: 1px solid var(--border-color);">
+                    <button class="btn btn-primary" onclick="sendHostMsg()" style="padding: 8px 16px; font-size: 0.85rem; border-radius: 6px; cursor: pointer;">Kirim</button>
+                </div>
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; border-top: 1px solid var(--border-color); padding-top: 12px; gap: 10px;">
+                <button class="btn btn-secondary" onclick="closeHostConfigModal()" style="padding: 8px 16px; border-radius: 6px; cursor: pointer;">Tutup</button>
+            </div>
+        </div>
+    </div>
+
 
     <!-- ══════════════════════════════════════════
          TAB 3 — SETTINGS

@@ -149,6 +149,28 @@ function saveShopData() {
     }
 }
 
+global.pinnedHostAdmins = [];
+
+async function syncPinnedHostAdmins() {
+    if (!client) return;
+    try {
+        const chats = await client.getChats();
+        const pinnedAdmins = chats
+            .filter(chat => chat.pinned && !chat.isGroup)
+            .map(chat => chat.id.user + '@c.us');
+        
+        global.pinnedHostAdmins = pinnedAdmins;
+        
+        // Juga sinkronkan ke database lokal
+        shopData.host_admins = pinnedAdmins;
+        saveShopData();
+        
+        console.log(`[Host Admin] Sinkronisasi ${pinnedAdmins.length} Host Admin dari chat tersemat.`);
+    } catch (err) {
+        console.error('[Host Admin] Gagal sinkronisasi chat tersemat:', err.message);
+    }
+}
+
 function parseReminderTime(timeStr) {
     const now = new Date();
     const wibOffset = 7 * 60 * 60 * 1000;
@@ -271,6 +293,8 @@ const PORT = config.port || 3000;
 
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
+app.use('/knowledge', express.static(path.join(__dirname, 'knowledge')));
+app.use('/media', express.static(path.join(__dirname, 'media')));
 
 // Ensure directories exist
 const KNOWLEDGE_DIR = './knowledge';
@@ -490,7 +514,7 @@ app.post('/api/group-config/:groupId', (req, res) => {
             groupName, enabled, useAiFallback, triggerPrefix, allowedKnowledgeFiles, 
             categoryFooter, contentFooter, menuTree,
             categoryEmoji, contentEmoji, enableNumberNavigation,
-            universalHeader, universalFooter, autoCloseSchedule, extraTriggers
+            universalHeader, universalFooter, welcomeMessage, autoCloseSchedule, extraTriggers
         } = req.body;
         
         groupConfigs.group_configs[groupId] = {
@@ -507,6 +531,7 @@ app.post('/api/group-config/:groupId', (req, res) => {
             enableNumberNavigation: enableNumberNavigation !== undefined ? enableNumberNavigation : true,
             universalHeader: universalHeader || '',
             universalFooter: universalFooter || '',
+            welcomeMessage: welcomeMessage || '',
             autoCloseSchedule: autoCloseSchedule || { enabled: false, openTime: '08:00', closeTime: '17:00', activeDays: [1,2,3,4,5] },
             extraTriggers: extraTriggers || []
         };
@@ -517,6 +542,33 @@ app.post('/api/group-config/:groupId', (req, res) => {
     } catch (err) {
         console.error('Gagal menyimpan konfigurasi grup:', err.message);
         res.status(500).send('Gagal menyimpan konfigurasi grup: ' + err.message);
+    }
+});
+
+// REST API: Get Pinned Chats (potential Host Admins)
+app.get('/api/shop/pinned-chats', async (req, res) => {
+    try {
+        if (!client) {
+            return res.json([]);
+        }
+        const chats = await client.getChats();
+        const pinnedChats = chats.filter(chat => chat.pinned && !chat.isGroup);
+        
+        const result = pinnedChats.map(chat => {
+            const jid = chat.id._serialized;
+            const isHostAdmin = (shopData.host_admins || []).includes(jid);
+            return {
+                id: jid,
+                name: chat.name || chat.id.user,
+                phone: chat.id.user,
+                isHostAdmin: isHostAdmin
+            };
+        });
+        
+        res.json(result);
+    } catch (err) {
+        console.error('Gagal mengambil chat tersemat:', err.message);
+        res.status(500).send('Gagal mengambil chat tersemat: ' + err.message);
     }
 });
 
@@ -621,6 +673,295 @@ app.post('/api/shop/broadcast', async (req, res) => {
     } catch (err) {
         console.error('Gagal menjalankan broadcast:', err.message);
         res.status(500).send('Gagal mengirim siaran massal: ' + err.message);
+    }
+});
+
+// REST API: Trigger Open/Close all groups (Shop Action)
+app.post('/api/shop/action', async (req, res) => {
+    try {
+        const { action } = req.body;
+        if (!client) {
+            return res.status(400).send('WhatsApp Client belum siap');
+        }
+        
+        const activeGroupIds = Object.keys(groupConfigs.group_configs).filter(id => {
+            return groupConfigs.group_configs[id].enabled;
+        });
+
+        if (activeGroupIds.length === 0) {
+            return res.status(400).send('Tidak ada grup aktif untuk dikirimi aksi');
+        }
+
+        let successCount = 0;
+        const isClose = (action === 'tutup');
+
+        for (const gId of activeGroupIds) {
+            try {
+                const chat = await client.getChatById(gId);
+                await chat.setMessagesAdminsOnly(isClose);
+                
+                const noticeMsg = isClose 
+                    ? "🔒 *Pemberitahuan:* Toko telah ditutup. Hanya Admin yang dapat mengirim pesan."
+                    : "🔓 *Pemberitahuan:* Toko telah dibuka kembali. Grup dibuka untuk umum.";
+                
+                await client.sendMessage(gId, noticeMsg);
+                successCount++;
+            } catch (err) {
+                console.error(`Gagal ${action} grup ${gId}:`, err.message);
+            }
+        }
+
+        res.json({ success: true, count: successCount });
+    } catch (err) {
+        res.status(500).send('Gagal menjalankan aksi toko: ' + err.message);
+    }
+});
+
+// REST API: Send direct message to contact
+app.post('/api/shop/send-message', async (req, res) => {
+    try {
+        const { to, message } = req.body;
+        if (!client) {
+            return res.status(400).send('WhatsApp Client belum siap');
+        }
+        if (!to || !message) {
+            return res.status(400).send('Tujuan dan pesan tidak boleh kosong');
+        }
+        
+        const cleanTo = to.replace(/\D/g, '') + '@c.us';
+        await client.sendMessage(cleanTo, message);
+        res.json({ success: true });
+    } catch (err) {
+        res.status(500).send('Gagal mengirim pesan: ' + err.message);
+    }
+});
+
+// REST API: Toggle group enabled status safely
+app.post('/api/host-admin/toggle-group', (req, res) => {
+    try {
+        const { groupId, enabled } = req.body;
+        if (!groupId) {
+            return res.status(400).send('Group ID tidak boleh kosong');
+        }
+        
+        let gCfg = groupConfigs.group_configs[groupId];
+        if (!gCfg) {
+            // Inisialisasi default jika belum ada
+            gCfg = {
+                groupName: groupId,
+                enabled: enabled,
+                useAiFallback: true,
+                triggerPrefix: '',
+                allowedKnowledgeFiles: [],
+                categoryFooter: 'Silakan pilih menu dengan mengetik angkanya:',
+                contentFooter: 'Ketik *0* untuk kembali ke menu sebelumnya, atau *#* untuk kembali ke menu utama.',
+                menuTree: { id: "root", name: "Menu Utama", type: "category", text: "Silakan pilih salah satu opsi di bawah ini:", children: [] }
+            };
+            groupConfigs.group_configs[groupId] = gCfg;
+        } else {
+            gCfg.enabled = enabled;
+        }
+        
+        saveGroupConfigs();
+        io.emit('group_config_updated', { groupId });
+        res.json({ success: true, enabled: gCfg.enabled });
+    } catch (err) {
+        console.error('Gagal toggle group status:', err.message);
+        res.status(500).send('Gagal memperbarui status grup: ' + err.message);
+    }
+});
+
+// REST API: Update menu tree node status safely
+app.post('/api/host-admin/update-node-status', (req, res) => {
+    try {
+        const { groupId, nodeId, status } = req.body;
+        if (!groupId || !nodeId || !status) {
+            return res.status(400).send('Input tidak lengkap');
+        }
+        
+        const gCfg = groupConfigs.group_configs[groupId];
+        if (!gCfg || !gCfg.menuTree) {
+            return res.status(400).send('Konfigurasi grup atau menu tree tidak ditemukan');
+        }
+        
+        const node = findNodeById(gCfg.menuTree, nodeId);
+        if (!node) {
+            return res.status(404).send('Menu item tidak ditemukan');
+        }
+        
+        node.status = status;
+        saveGroupConfigs();
+        io.emit('group_config_updated', { groupId });
+        res.json({ success: true, status: node.status });
+    } catch (err) {
+        console.error('Gagal mengubah status node menu:', err.message);
+        res.status(500).send('Gagal mengubah status menu item: ' + err.message);
+    }
+});
+
+// REST API: Open or close specific group manually
+app.post('/api/host-admin/open-close-group', async (req, res) => {
+    try {
+        const { groupId, action } = req.body;
+        if (!client) {
+            return res.status(400).send('WhatsApp Client belum siap');
+        }
+        
+        const chat = await client.getChatById(groupId);
+        const isClose = (action === 'tutup');
+        await chat.setMessagesAdminsOnly(isClose);
+        
+        const noticeMsg = isClose 
+            ? "🔒 *Pemberitahuan:* Toko telah ditutup. Hanya Admin yang dapat mengirim pesan."
+            : "🔓 *Pemberitahuan:* Toko telah dibuka kembali. Grup dibuka untuk umum.";
+        
+        await client.sendMessage(groupId, noticeMsg);
+        res.json({ success: true });
+    } catch (err) {
+        console.error(`Gagal ${action} grup spesifik ${groupId}:`, err.message);
+        res.status(500).send('Gagal mengontrol status grup: ' + err.message);
+    }
+});
+
+// REST API: Save group scheduler config safely
+app.post('/api/host-admin/group-scheduler', (req, res) => {
+    try {
+        const { groupId, schedulerEnabled, openTime, closeTime } = req.body;
+        if (!groupId) {
+            return res.status(400).send('Group ID tidak boleh kosong');
+        }
+        
+        const gCfg = groupConfigs.group_configs[groupId];
+        if (!gCfg) {
+            return res.status(404).send('Grup tidak ditemukan');
+        }
+        
+        gCfg.autoCloseSchedule = gCfg.autoCloseSchedule || { enabled: false, openTime: '08:00', closeTime: '17:00', activeDays: [1,2,3,4,5] };
+        gCfg.autoCloseSchedule.enabled = schedulerEnabled;
+        gCfg.autoCloseSchedule.openTime = openTime || '08:00';
+        gCfg.autoCloseSchedule.closeTime = closeTime || '17:00';
+        
+        saveGroupConfigs();
+        io.emit('group_config_updated', { groupId });
+        res.json({ success: true });
+    } catch (err) {
+        res.status(500).send('Gagal mengubah jadwal: ' + err.message);
+    }
+});
+
+// REST API: Add group trigger with media
+app.post('/api/host-admin/add-trigger', (req, res) => {
+    try {
+        const { groupId, keyword, reply, media, allGroups } = req.body;
+        if (!groupId || !keyword || !reply) {
+            return res.status(400).send('Input tidak lengkap');
+        }
+        
+        const newTrigger = {
+            keyword: keyword.trim(),
+            reply: reply.trim(),
+            media: media ? media.trim() : ''
+        };
+        
+        if (allGroups) {
+            // Terapkan ke semua grup
+            Object.keys(groupConfigs.group_configs).forEach(gId => {
+                const gCfg = groupConfigs.group_configs[gId];
+                if (gCfg) {
+                    gCfg.extraTriggers = gCfg.extraTriggers || [];
+                    gCfg.extraTriggers = gCfg.extraTriggers.filter(t => t.keyword.toLowerCase().trim() !== keyword.toLowerCase().trim());
+                    gCfg.extraTriggers.push(newTrigger);
+                }
+            });
+        } else {
+            // Terapkan ke grup spesifik
+            const gCfg = groupConfigs.group_configs[groupId];
+            if (!gCfg) {
+                return res.status(404).send('Grup tidak ditemukan');
+            }
+            gCfg.extraTriggers = gCfg.extraTriggers || [];
+            gCfg.extraTriggers = gCfg.extraTriggers.filter(t => t.keyword.toLowerCase().trim() !== keyword.toLowerCase().trim());
+            gCfg.extraTriggers.push(newTrigger);
+        }
+        
+        saveGroupConfigs();
+        io.emit('group_config_updated', {});
+        res.json({ success: true });
+    } catch (err) {
+        res.status(500).send('Gagal menambahkan trigger: ' + err.message);
+    }
+});
+
+// REST API: Delete group trigger
+app.post('/api/host-admin/delete-trigger', (req, res) => {
+    try {
+        const { groupId, keyword } = req.body;
+        if (!groupId || !keyword) {
+            return res.status(400).send('Input tidak lengkap');
+        }
+        
+        const gCfg = groupConfigs.group_configs[groupId];
+        if (!gCfg) {
+            return res.status(404).send('Grup tidak ditemukan');
+        }
+        
+        gCfg.extraTriggers = gCfg.extraTriggers || [];
+        gCfg.extraTriggers = gCfg.extraTriggers.filter(t => t.keyword.toLowerCase().trim() !== keyword.toLowerCase().trim());
+        
+        saveGroupConfigs();
+        io.emit('group_config_updated', { groupId });
+        res.json({ success: true });
+    } catch (err) {
+        res.status(500).send('Gagal menghapus trigger: ' + err.message);
+    }
+});
+
+// REST API: Save group welcome message safely
+app.post('/api/host-admin/welcome-message', (req, res) => {
+    try {
+        const { groupId, welcomeMessage } = req.body;
+        if (!groupId) {
+            return res.status(400).send('Group ID tidak boleh kosong');
+        }
+        
+        const gCfg = groupConfigs.group_configs[groupId];
+        if (!gCfg) {
+            return res.status(404).send('Grup tidak ditemukan');
+        }
+        
+        gCfg.welcomeMessage = welcomeMessage;
+        saveGroupConfigs();
+        io.emit('group_config_updated', { groupId });
+        res.json({ success: true });
+    } catch (err) {
+        res.status(500).send('Gagal menyimpan pesan selamat datang: ' + err.message);
+    }
+});
+
+// REST API: Rename file inside storage directories safely
+app.post('/api/files/rename', (req, res) => {
+    try {
+        const { type, oldFilename, newFilename } = req.body;
+        if (!type || !oldFilename || !newFilename) {
+            return res.status(400).send('Input tidak lengkap');
+        }
+        
+        const targetDir = type === 'knowledge' ? KNOWLEDGE_DIR : MEDIA_DIR;
+        const oldPath = path.join(targetDir, oldFilename);
+        const newPath = path.join(targetDir, newFilename);
+        
+        if (!fs.existsSync(oldPath)) {
+            return res.status(404).send('Berkas lama tidak ditemukan');
+        }
+        
+        if (fs.existsSync(newPath)) {
+            return res.status(400).send('Nama berkas baru sudah digunakan');
+        }
+        
+        fs.renameSync(oldPath, newPath);
+        res.json({ success: true });
+    } catch (err) {
+        res.status(500).send('Gagal mengubah nama berkas: ' + err.message);
     }
 });
 
@@ -922,6 +1263,11 @@ function getAllKnowledgeContext() {
 
     return allContent || 'Gunakan pengetahuan umum lembaga yang ramah.';
 }
+
+// ══════════════════════════════════════════════════════
+// FLAG FITUR: Set false untuk menonaktifkan fitur keuangan
+// ══════════════════════════════════════════════════════
+const FITUR_KEUANGAN = false;
 
 // State untuk menyimpan transaksi kuitansi yang menunggu konfirmasi (YA/TIDAK)
 const pendingTransactions = new Map();
@@ -1943,9 +2289,43 @@ function attachClientListeners() {
         currentQrCode = null;
         io.emit('whatsapp_status', { status: currentStatus });
         
+        syncPinnedHostAdmins();
+        // Jalankan sinkronisasi berkala setiap 2 menit
+        setInterval(syncPinnedHostAdmins, 120000);
+        
         startDailyReportScheduler();
         startReminderScheduler();
         startGroupScheduleScheduler();
+
+        // Kirim notifikasi reconnect jika sebelumnya disconnect
+        if (global.wasDisconnected) {
+            setTimeout(async () => {
+                try {
+                    const reconnectMsg = `⚠️ *NOTIFIKASI SISTEM BOT* ⚠️\n\n` +
+                                         `Koneksi bot WhatsApp sempat *TERPUTUS* pada *${global.disconnectTime || 'waktu tidak diketahui'}*.\n\n` +
+                                         `🟢 Saat ini bot telah *BERHASIL TERHUBUNG KEMBALI* dan aktif merespon obrolan.`;
+                    
+                    const adminTargets = new Set();
+                    const cleanBoss = config.boss_number ? (config.boss_number.replace(/\D/g, '') + '@c.us') : '';
+                    if (cleanBoss) adminTargets.add(cleanBoss);
+                    (shopData.host_admins || []).forEach(admin => {
+                        adminTargets.add(admin.replace(/\D/g, '') + '@c.us');
+                    });
+                    
+                    for (const adminTarget of adminTargets) {
+                        try {
+                            await client.sendMessage(adminTarget, reconnectMsg);
+                        } catch(err) {
+                            console.error('Gagal mengirim notifikasi reconnect ke admin:', err.message);
+                        }
+                    }
+                    global.wasDisconnected = false;
+                    global.disconnectTime = null;
+                } catch(err) {
+                    console.error('Gagal memproses notifikasi reconnect:', err.message);
+                }
+            }, 5000); // Tunggu 5 detik agar client benar-benar stabil
+        }
     });
 
     client.on('disconnected', (reason) => {
@@ -1955,6 +2335,56 @@ function attachClientListeners() {
         currentStatus = 'DISCONNECTED';
         currentQrCode = null;
         io.emit('whatsapp_status', { status: currentStatus });
+        
+        // Simpan status terputus untuk dikirim saat reconnect nanti
+        global.wasDisconnected = true;
+        global.disconnectTime = new Date().toLocaleString('id-ID');
+    });
+
+    client.on('group_join', async (notification) => {
+        try {
+            const groupId = notification.chatId;
+            const cfg = groupConfigs.group_configs[groupId];
+            if (!cfg || !cfg.enabled) return;
+            
+            const welcomeTemplate = cfg.welcomeMessage || "Halo @user, selamat bergabung! Disini kami menyediakan berbagai apk paket premium yang murah untuk anda. Ketik *list* untuk melihat produk kami.";
+            
+            // Ambil metadata grup untuk mendapatkan nama tampilan dari profil user itu sendiri
+            let groupChat = null;
+            try { groupChat = await client.getChatById(groupId); } catch(_) {}
+            
+            for (const participantId of notification.recipientIds) {
+                const contact = await client.getContactById(participantId);
+                
+                // Prioritas: nama tampilan di grup (bukan nama kontak tersimpan admin)
+                let displayName = '';
+                if (groupChat && groupChat.participants) {
+                    const participant = groupChat.participants.find(p => 
+                        p.id && p.id._serialized === participantId
+                    );
+                    if (participant && participant.name) {
+                        displayName = participant.name;
+                    }
+                }
+                // Fallback ke pushname (nama profil publik WhatsApp, bukan kontak tersimpan)
+                if (!displayName) {
+                    displayName = contact.pushname || '';
+                }
+                
+                const userMentionId = participantId.split('@')[0];
+                let userTag = `@${userMentionId}`;
+                if (displayName) {
+                    userTag = `${displayName}`;
+                }
+                
+                const finalMessage = welcomeTemplate.replace('@user', userTag);
+                await client.sendMessage(groupId, finalMessage, {
+                    mentions: [contact]
+                });
+            }
+        } catch (err) {
+            console.error('Gagal mengirim pesan selamat datang:', err.message);
+        }
     });
 
     client.on('message', handleIncomingMessage);
@@ -2147,6 +2577,44 @@ function startGroupScheduleScheduler() {
 
 
 
+// Helper: Kirim Menu Detail Grup Konfigurasi untuk Host Admin di WA
+async function sendGroupDetailMenu(msg, groupId, senderId) {
+    const gCfg = groupConfigs.group_configs[groupId];
+    if (!gCfg) {
+        await msg.reply("⚠️ Konfigurasi grup tidak ditemukan.");
+        global.adminMenuStates.delete(senderId);
+        return;
+    }
+    
+    const botStatus = gCfg.enabled ? "🟢 AKTIF" : "🔴 NONAKTIF";
+    const schedInfo = (gCfg.autoCloseSchedule && gCfg.autoCloseSchedule.enabled)
+        ? `🟢 AKTIF (${gCfg.autoCloseSchedule.openTime} - ${gCfg.autoCloseSchedule.closeTime})`
+        : "🔴 NONAKTIF";
+        
+    let detailText = `⚙️ *PENGATURAN GRUP: ${gCfg.groupName || groupId}* ⚙️\n\n` +
+                     `🔌 Status Bot: *${botStatus}*\n` +
+                     `⏰ Jadwal Otomatis: *${schedInfo}*\n\n` +
+                     `Pilih opsi berikut dengan mengetik angkanya:\n\n` +
+                     `1️⃣ 🔌 *Toggle Status Bot* (Aktif/Nonaktif)\n` +
+                     `2️⃣ 🔓 *Buka Grup* (Manual khusus grup ini)\n` +
+                     `3️⃣ 🔒 *Tutup Grup* (Manual khusus grup ini)\n` +
+                     `4️⃣ ⏰ *Kelola Jadwal Otomatis*\n` +
+                     `5️⃣ ➕ *Tambah Trigger Baru* (Khusus grup ini)\n\n` +
+                     `_Ketik *0* untuk kembali ke pilihan grup, atau *batal* untuk keluar._`;
+                     
+    await msg.reply(detailText);
+}
+
+// Helper: Dapatkan emoji status menu (tersedia/habis/pre-order)
+function getStatusEmoji(status) {
+    if (!status) return '';
+    const s = status.trim().toLowerCase();
+    if (s === 'tersedia' || s === 'sedia' || s === 'ready') return ' ✅';
+    if (s === 'habis' || s === 'kosong' || s === 'tidak tersedia') return ' ❌';
+    if (s === 'pre-order' || s === 'preorder' || s === 'po') return ' ⏳';
+    return '';
+}
+
 // Sesi navigasi menu interaktif anggota di grup
 const customerMenuStates = new Map();
 
@@ -2194,7 +2662,9 @@ function getAllContentNodes() {
                     groupName,
                     nodeId: node.id,
                     name: node.name,
-                    status: node.status || ''
+                    status: node.status || '',
+                    text: node.text || '',
+                    isPromo: node.isPromo || false
                 });
             }
             if (node.children && Array.isArray(node.children)) {
@@ -2207,6 +2677,25 @@ function getAllContentNodes() {
         }
     }
     return list;
+}
+
+// Helper: Ambil semua node konten yang berstatus Promo dari sebuah grup
+function getAllPromoNodes(menuTree, categoryPath) {
+    const results = [];
+    const path = categoryPath || [];
+    const collect = (node, currentPath) => {
+        if (node.type === 'content' && node.isPromo === true) {
+            results.push({ node, categoryPath: currentPath });
+        }
+        if (node.children && Array.isArray(node.children)) {
+            const childPath = node.type === 'category' && node.id !== 'root'
+                ? [...currentPath, node.name]
+                : currentPath;
+            node.children.forEach(child => collect(child, childPath));
+        }
+    };
+    if (menuTree) collect(menuTree, path);
+    return results;
 }
 
 // Helper: Render menu untuk grup
@@ -2232,17 +2721,29 @@ function renderGroupMenuMessage(node, cfg = {}) {
     if (node.type === 'category' && node.children && node.children.length > 0) {
         const optionIntro = cfg.categoryFooter || "Silakan pilih menu dengan mengetik angkanya:";
         msg += `${optionIntro}\n\n`;
-        node.children.forEach((child, index) => {
-            const numEmoji = showNumber ? `*${index + 1}*️⃣ ` : '🔹 ';
-            const emoji = child.type === 'category' ? catEmoji : conEmoji;
-            const statusSuffix = (child.type === 'content' && child.status && child.status.trim() !== '') ? ` [_${child.status}_]` : '';
-            msg += `${numEmoji}${emoji} *${child.name}*${statusSuffix}\n`;
+        
+        // Urutkan anak menu berdasarkan abjad A-Z
+        const sortedChildren = [...node.children].sort((a, b) => {
+            return (a.name || '').localeCompare(b.name || '', 'id', { sensitivity: 'base' });
+        });
+        
+        const numMap = ['0️⃣', '1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣', '6️⃣', '7️⃣', '8️⃣', '9️⃣'];
+        const getNumberEmoji = (num) => {
+            return num.toString().split('').map(digit => numMap[parseInt(digit, 10)] || digit).join('');
+        };
+        
+        sortedChildren.forEach((child, index) => {
+            const numEmoji = showNumber ? `${getNumberEmoji(index + 1)} ` : '🔹 ';
+            const emoji = child.type === 'category' ? catEmoji : (child.isPromo ? '🔥' : conEmoji);
+            const statusSuffix = child.type === 'content' ? getStatusEmoji(child.status) : '';
+            const promoBadge = child.isPromo ? ' 🔥' : '';
+            msg += `${numEmoji}${emoji} *${child.name}*${promoBadge}${statusSuffix}\n`;
         });
         
         // Hanya tampilkan navigasi jika bukan root menu utama
         if (node.id !== 'root') {
-            msg += `\n${showNumber ? '*0*️⃣ ' : '🔙 '}*Kembali ke Menu Sebelumnya*`;
-            msg += `\n${showNumber ? '*#*️⃣ ' : '🏠 '}*Kembali ke Menu Utama*`;
+            msg += `\n${showNumber ? '0️⃣ ' : '🔙 '}*Kembali ke Menu Sebelumnya*`;
+            msg += `\n${showNumber ? '#️⃣ ' : '🏠 '}*Kembali ke Menu Utama*`;
         }
     }
     
@@ -2262,11 +2763,24 @@ function getMimeType(filePath) {
         '.png': 'image/png',
         '.jpg': 'image/jpeg',
         '.jpeg': 'image/jpeg',
+        '.webp': 'image/webp',
         '.gif': 'image/gif',
         '.txt': 'text/plain',
         '.zip': 'application/zip',
+        '.rar': 'application/vnd.rar',
         '.mp3': 'audio/mpeg',
-        '.mp4': 'video/mp4'
+        '.mp4': 'video/mp4',
+        '.doc': 'application/msword',
+        '.docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        '.xls': 'application/vnd.ms-excel',
+        '.xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        '.ppt': 'application/vnd.ms-powerpoint',
+        '.pptx': 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+        '.csv': 'text/csv',
+        '.json': 'application/json',
+        '.html': 'text/html',
+        '.css': 'text/css',
+        '.js': 'application/javascript'
     };
     return mimeMap[ext] || 'application/octet-stream';
 }
@@ -2327,26 +2841,30 @@ async function handleIncomingMessage(msg) {
     const adminSession = global.adminMenuStates.get(senderId);
     const textLower = userMessage.toLowerCase().trim();
 
-    // Cek Pemicu Menu Admin Utama
-    if (isSenderHostAdmin && (textLower === '!admin' || textLower === 'admin' || textLower === 'menu admin')) {
+    // Cek Pemicu Menu Admin Utama (Hanya di Chat Pribadi)
+    if (!isGroup && isSenderHostAdmin && (textLower === '!admin' || textLower === 'admin' || textLower === 'menu admin' || textLower === 'menu' || textLower === 'bantuan' || textLower === 'help')) {
         global.adminMenuStates.set(senderId, { step: 'root', lastActive: Date.now() });
         
         let adminMenuText = `🛡️ *MENU UTAMA HOST ADMIN* 🛡️\n\n` +
                             `Silakan pilih perintah dengan mengetik angkanya:\n\n` +
-                            `1️⃣ 🔓 *Buka Toko* (Semua Grup)\n` +
-                            `2️⃣ 🔒 *Tutup Toko* (Semua Grup)\n` +
-                            `3️⃣ 📦 *Kelola Status Stok Barang*\n` +
-                            `4️⃣ 📣 *Kirim Broadcast / Siaran Massal*\n` +
-                            `5️⃣ 👥 *Lihat Daftar Pelanggan*\n` +
-                            `6️⃣ ➕ *Tambah Trigger Kata Kunci Baru*\n\n` +
+                            `1️⃣ 👥 *Kelola Konfigurasi Grup WA*\n` +
+                            `2️⃣ 🔓 *Buka Toko* (Semua Grup)\n` +
+                            `3️⃣ 🔒 *Tutup Toko* (Semua Grup)\n` +
+                            `4️⃣ 📦 *Kelola Status Stok Barang*\n` +
+                            `5️⃣ 📣 *Kirim Broadcast / Siaran Massal*\n` +
+                            `6️⃣ 👥 *Lihat Daftar Pelanggan*\n` +
+                            `7️⃣ ➕ *Tambah Trigger Kata Kunci Baru* (Semua Grup)\n` +
+                            `8️⃣ 📝 *Update Panduan & Aturan Bot*\n` +
+                            `9️⃣ 🛍️ *Tambah Produk ke Menu*\n` +
+                            `🔟 ✏️ *Edit / Hapus Produk Menu*\n\n` +
                             `_Ketik *batal* untuk keluar dari menu admin._`;
         
         await msg.reply(adminMenuText);
         return;
     }
 
-    // Jalankan Sesi Menu Admin Aktif
-    if (isSenderHostAdmin && adminSession && (Date.now() - adminSession.lastActive < 300000)) {
+    // Jalankan Sesi Menu Admin Aktif (Hanya di Chat Pribadi)
+    if (!isGroup && isSenderHostAdmin && adminSession && (Date.now() - adminSession.lastActive < 300000)) {
         adminSession.lastActive = Date.now();
         
         if (textLower === 'batal' || textLower === 'keluar') {
@@ -2357,7 +2875,26 @@ async function handleIncomingMessage(msg) {
 
         if (adminSession.step === 'root') {
             if (userMessage === '1') {
-                // Buka Toko
+                const groupIds = Object.keys(groupConfigs.group_configs);
+                if (groupIds.length === 0) {
+                    await msg.reply("⚠️ Belum ada grup WA yang dikonfigurasi.");
+                    global.adminMenuStates.delete(senderId);
+                    return;
+                }
+                
+                adminSession.step = 'select_group';
+                adminSession.groupIds = groupIds;
+                
+                let listText = `👥 *PILIH GRUP WA UNTUK DIATUR* 👥\n\n` +
+                               `Ketik nomor grup yang ingin Anda atur:\n\n`;
+                groupIds.forEach((gId, idx) => {
+                    const gCfg = groupConfigs.group_configs[gId];
+                    listText += `*${idx + 1}*. ${gCfg.groupName || gId}\n`;
+                });
+                listText += `\n_Ketik *batal* untuk membatalkan._`;
+                await msg.reply(listText);
+                return;
+            } else if (userMessage === '2') {
                 let successCount = 0;
                 const groupIds = Object.keys(groupConfigs.group_configs);
                 for (const gId of groupIds) {
@@ -2373,8 +2910,7 @@ async function handleIncomingMessage(msg) {
                 global.adminMenuStates.delete(senderId);
                 await msg.reply(`🔓 Toko dibuka! Berhasil membuka ${successCount} grup.`);
                 return;
-            } else if (userMessage === '2') {
-                // Tutup Toko
+            } else if (userMessage === '3') {
                 let successCount = 0;
                 const groupIds = Object.keys(groupConfigs.group_configs);
                 for (const gId of groupIds) {
@@ -2390,8 +2926,7 @@ async function handleIncomingMessage(msg) {
                 global.adminMenuStates.delete(senderId);
                 await msg.reply(`🔒 Toko ditutup! Berhasil mengunci ${successCount} grup.`);
                 return;
-            } else if (userMessage === '3') {
-                // Kelola Status Stok Barang
+            } else if (userMessage === '4') {
                 const nodes = getAllContentNodes();
                 if (nodes.length === 0) {
                     await msg.reply("⚠️ Belum ada menu barang bertipe Konten di grup.");
@@ -2415,13 +2950,11 @@ async function handleIncomingMessage(msg) {
                 
                 await msg.reply(replyText);
                 return;
-            } else if (userMessage === '4') {
-                // Broadcast Massal
+            } else if (userMessage === '5') {
                 adminSession.step = 'broadcast_input';
                 await msg.reply("📣 *KIRIM BROADCAST MASSAL*\n\nSilakan ketik pesan siaran yang ingin dikirimkan ke seluruh grup aktif:\n\n_Ketik *batal* untuk membatalkan._");
                 return;
-            } else if (userMessage === '5') {
-                // Lihat Daftar Pelanggan
+            } else if (userMessage === '6') {
                 let replyText = "👥 *DAFTAR PELANGGAN TOKO:*\n\n";
                 if (shopData.customers && shopData.customers.length > 0) {
                     shopData.customers.forEach((c, idx) => {
@@ -2433,17 +2966,215 @@ async function handleIncomingMessage(msg) {
                 global.adminMenuStates.delete(senderId);
                 await msg.reply(replyText);
                 return;
-            } else if (userMessage === '6') {
-                // Tambah Trigger Kata Kunci Baru
+            } else if (userMessage === '7') {
                 adminSession.step = 'trigger_input';
                 await msg.reply("➕ *TAMBAH TRIGGER KATA KUNCI BARU*\n\nSilakan ketik pemicu dan respon dengan format:\n*[kata_kunci] | [respon_balasan]*\n\nContoh: *alamat | Toko kami berlokasi di Jl. Melati No. 5.*\n\n_Ketik *batal* untuk membatalkan._");
                 return;
+            } else if (userMessage === '8') {
+                const fs = require('fs');
+                const path = require('path');
+                const memPath = path.join(__dirname, 'knowledge', '00_memori_otomatis.txt');
+                let currentMem = '';
+                try { currentMem = fs.existsSync(memPath) ? fs.readFileSync(memPath, 'utf-8').trim() : '(Kosong)'; } catch(_) {}
+                adminSession.step = 'panduan_input';
+                await msg.reply(`📝 *UPDATE PANDUAN & ATURAN BOT*\n\nPanduan saat ini:\n_${currentMem || '(Kosong)'}_ \n\nKetik panduan/aturan bot yang baru untuk menggantikannya.\n\nContoh: _Bot ini adalah asisten toko sepatu Bos. Balas dengan ramah, gunakan bahasa santai._\n\n_Ketik *batal* untuk membatalkan._`);
+                return;
+            } else if (userMessage === '9') {
+                const groupIds = Object.keys(groupConfigs.group_configs);
+                if (groupIds.length === 0) {
+                    await msg.reply("⚠️ Belum ada grup WA yang dikonfigurasi. Tambahkan grup dulu lewat dashboard web.");
+                    global.adminMenuStates.delete(senderId);
+                    return;
+                }
+                adminSession.step = 'add_product_select_group';
+                adminSession.groupIds = groupIds;
+                let listText9 = `🛍️ *TAMBAH PRODUK KE MENU*\n\nPilih grup tujuan dengan mengetik nomornya:\n\n`;
+                groupIds.forEach((gId, idx) => {
+                    const gCfg = groupConfigs.group_configs[gId];
+                    listText9 += `${idx + 1}. ${gCfg.groupName || gId}\n`;
+                });
+                listText9 += `\n_Ketik *batal* untuk membatalkan._`;
+                await msg.reply(listText9);
+                return;
+            } else if (userMessage === '10') {
+                const groupIds = Object.keys(groupConfigs.group_configs);
+                if (groupIds.length === 0) {
+                    await msg.reply("⚠️ Belum ada grup WA yang dikonfigurasi.");
+                    global.adminMenuStates.delete(senderId);
+                    return;
+                }
+                adminSession.step = 'edit_product_select_group';
+                adminSession.groupIds = groupIds;
+                let listText10 = `✏️ *EDIT / HAPUS PRODUK MENU*\n\nPilih grup yang produknya ingin diedit:\n\n`;
+                groupIds.forEach((gId, idx) => {
+                    const gCfg = groupConfigs.group_configs[gId];
+                    listText10 += `${idx + 1}. ${gCfg.groupName || gId}\n`;
+                });
+                listText10 += `\n_Ketik *batal* untuk membatalkan._`;
+                await msg.reply(listText10);
+                return;
             } else {
-                await msg.reply("⚠️ Pilihan tidak valid. Silakan ketik angka 1 sampai 6, atau ketik *batal* untuk keluar.");
+                await msg.reply("⚠️ Pilihan tidak valid. Silakan ketik angka 1 sampai 10, atau ketik *batal* untuk keluar.");
                 return;
             }
         }
         
+        if (adminSession.step === 'select_group') {
+            const idx = parseInt(userMessage.trim(), 10) - 1;
+            const groupIds = adminSession.groupIds || [];
+            const targetGroupId = groupIds[idx];
+            if (!targetGroupId) {
+                await msg.reply(`⚠️ Pilihan tidak valid. Masukkan angka antara 1 sampai ${groupIds.length}.`);
+                return;
+            }
+            
+            adminSession.step = 'group_detail';
+            adminSession.selectedGroupId = targetGroupId;
+            await sendGroupDetailMenu(msg, targetGroupId, senderId);
+            return;
+        }
+
+        if (adminSession.step === 'group_detail') {
+            const selectedGroupId = adminSession.selectedGroupId;
+            const gCfg = groupConfigs.group_configs[selectedGroupId];
+            if (!gCfg) {
+                await msg.reply("⚠️ Grup tidak ditemukan.");
+                global.adminMenuStates.delete(senderId);
+                return;
+            }
+            
+            if (userMessage === '0') {
+                const groupIds = Object.keys(groupConfigs.group_configs);
+                adminSession.step = 'select_group';
+                adminSession.groupIds = groupIds;
+                
+                let listText = `👥 *PILIH GRUP WA UNTUK DIATUR* 👥\n\n` +
+                               `Ketik nomor grup yang ingin Anda atur:\n\n`;
+                groupIds.forEach((gId, idx) => {
+                    const cfg = groupConfigs.group_configs[gId];
+                    listText += `*${idx + 1}*. ${cfg.groupName || gId}\n`;
+                });
+                listText += `\n_Ketik *batal* untuk membatalkan._`;
+                await msg.reply(listText);
+                return;
+            }
+            
+            if (userMessage === '1') {
+                gCfg.enabled = !gCfg.enabled;
+                saveGroupConfigs();
+                io.emit('group_config_updated', { groupId: selectedGroupId });
+                await msg.reply(`🔌 Status bot untuk grup *${gCfg.groupName || selectedGroupId}* kini *${gCfg.enabled ? 'AKTIF' : 'NONAKTIF'}*!`);
+                await sendGroupDetailMenu(msg, selectedGroupId, senderId);
+                return;
+            } else if (userMessage === '2') {
+                try {
+                    const chat = await client.getChatById(selectedGroupId);
+                    await chat.setMessagesAdminsOnly(false);
+                    await client.sendMessage(selectedGroupId, "🔓 *Pemberitahuan:* Toko telah dibuka kembali. Grup dibuka untuk umum!");
+                    await msg.reply("🔓 Berhasil membuka grup manual.");
+                } catch(err) {
+                    await msg.reply("❌ Gagal membuka grup: " + err.message);
+                }
+                await sendGroupDetailMenu(msg, selectedGroupId, senderId);
+                return;
+            } else if (userMessage === '3') {
+                try {
+                    const chat = await client.getChatById(selectedGroupId);
+                    await chat.setMessagesAdminsOnly(true);
+                    await client.sendMessage(selectedGroupId, "🔒 *Pemberitahuan:* Toko telah ditutup. Hanya Admin yang dapat mengirim pesan.");
+                    await msg.reply("🔒 Berhasil menutup grup manual.");
+                } catch(err) {
+                    await msg.reply("❌ Gagal menutup grup: " + err.message);
+                }
+                await sendGroupDetailMenu(msg, selectedGroupId, senderId);
+                return;
+            } else if (userMessage === '4') {
+                adminSession.step = 'group_scheduler_input';
+                await msg.reply("⏰ *KELOLA JADWAL OTOMATIS* ⏰\n\nKetik konfigurasi dengan format:\n*[aktif/nonaktif] | [jam_buka] | [jam_tutup]*\n\nContoh: *aktif | 08:00 | 17:00*\nContoh: *nonaktif*\n\n_Ketik *batal* untuk membatalkan._");
+                return;
+            } else if (userMessage === '5') {
+                adminSession.step = 'group_trigger_input';
+                await msg.reply("➕ *TAMBAH TRIGGER BARU GRUP* ➕\n\nKetik trigger baru dengan format:\n*[kata_kunci] | [teks_balasan] | [nama_media_opsional]*\n\nContoh: *alamat | Toko kami di Jl. Melati No. 5*\nContoh: *brosur | Unduh brosur terbaru kami | brosur.pdf*\n\n_Ketik *batal* untuk membatalkan._");
+                return;
+            } else {
+                await msg.reply("⚠️ Pilihan tidak valid. Silakan ketik angka 1 sampai 5, atau 0 untuk kembali.");
+                return;
+            }
+        }
+
+        if (adminSession.step === 'group_scheduler_input') {
+            const selectedGroupId = adminSession.selectedGroupId;
+            const gCfg = groupConfigs.group_configs[selectedGroupId];
+            if (!gCfg) {
+                await msg.reply("⚠️ Grup tidak ditemukan.");
+                global.adminMenuStates.delete(senderId);
+                return;
+            }
+            
+            const parts = userMessage.split('|');
+            const mode = parts[0].trim().toLowerCase();
+            
+            if (mode === 'nonaktif' || mode === 'matikan' || mode === 'off') {
+                gCfg.autoCloseSchedule = gCfg.autoCloseSchedule || { enabled: false, openTime: '08:00', closeTime: '17:00', activeDays: [1,2,3,4,5] };
+                gCfg.autoCloseSchedule.enabled = false;
+                saveGroupConfigs();
+                io.emit('group_config_updated', { groupId: selectedGroupId });
+                await msg.reply("⏰ Jadwal otomatis dinonaktifkan.");
+            } else {
+                if (parts.length < 3) {
+                    await msg.reply("⚠️ Format salah. Gunakan format:\n*aktif | [jam_buka] | [jam_tutup]*\nContoh: *aktif | 08:00 | 17:00*");
+                    return;
+                }
+                const openTime = parts[1].trim();
+                const closeTime = parts[2].trim();
+                
+                gCfg.autoCloseSchedule = gCfg.autoCloseSchedule || { enabled: false, openTime: '08:00', closeTime: '17:00', activeDays: [1,2,3,4,5] };
+                gCfg.autoCloseSchedule.enabled = true;
+                gCfg.autoCloseSchedule.openTime = openTime;
+                gCfg.autoCloseSchedule.closeTime = closeTime;
+                saveGroupConfigs();
+                io.emit('group_config_updated', { groupId: selectedGroupId });
+                await msg.reply(`⏰ Jadwal otomatis diaktifkan (${openTime} - ${closeTime}).`);
+            }
+            
+            adminSession.step = 'group_detail';
+            await sendGroupDetailMenu(msg, selectedGroupId, senderId);
+            return;
+        }
+        
+        if (adminSession.step === 'group_trigger_input') {
+            const selectedGroupId = adminSession.selectedGroupId;
+            const gCfg = groupConfigs.group_configs[selectedGroupId];
+            if (!gCfg) {
+                await msg.reply("⚠️ Grup tidak ditemukan.");
+                global.adminMenuStates.delete(senderId);
+                return;
+            }
+            
+            const parts = userMessage.split('|');
+            if (parts.length < 2) {
+                await msg.reply("⚠️ Format salah. Gunakan format:\n*[kata_kunci] | [teks_balasan] | [nama_media_opsional]*");
+                return;
+            }
+            
+            const keyword = parts[0].trim();
+            const reply = parts[1].trim();
+            const media = parts[2] ? parts[2].trim() : '';
+            
+            gCfg.extraTriggers = gCfg.extraTriggers || [];
+            gCfg.extraTriggers = gCfg.extraTriggers.filter(t => t.keyword.toLowerCase().trim() !== keyword.toLowerCase().trim());
+            gCfg.extraTriggers.push({ keyword, reply, media });
+            saveGroupConfigs();
+            io.emit('group_config_updated', { groupId: selectedGroupId });
+            
+            const mediaInfo = media ? ` dengan media: ${media}` : '';
+            await msg.reply(`✅ Berhasil menambahkan trigger *"${keyword}"*${mediaInfo} khusus untuk grup ini.`);
+            
+            adminSession.step = 'group_detail';
+            await sendGroupDetailMenu(msg, selectedGroupId, senderId);
+            return;
+        }
+
         if (adminSession.step === 'manage_stock') {
             const parts = userMessage.trim().split(/\s+/);
             if (parts.length < 2) {
@@ -2552,14 +3283,359 @@ async function handleIncomingMessage(msg) {
             await msg.reply(`✅ Berhasil menambahkan trigger kata kunci *"${keyword}"* ke ${updateCount} grup!`);
             return;
         }
+
+        if (adminSession.step === 'panduan_input') {
+            const newPanduan = userMessage.trim();
+            const fsM = require('fs');
+            const pathM = require('path');
+            const memPath = pathM.join(__dirname, 'knowledge', '00_memori_otomatis.txt');
+            try {
+                fsM.writeFileSync(memPath, newPanduan, 'utf-8');
+                io.emit('memory_updated', {});
+                global.adminMenuStates.delete(senderId);
+                await msg.reply(`✅ *Panduan & Aturan Bot berhasil diperbarui!*\n\nPanduan baru:\n_${newPanduan}_`);
+            } catch(err) {
+                await msg.reply(`❌ Gagal menyimpan panduan: ${err.message}`);
+                global.adminMenuStates.delete(senderId);
+            }
+            return;
+        }
+
+        // =================== ALUR TAMBAH PRODUK BARU ===================
+        if (adminSession.step === 'add_product_select_group') {
+            const idx = parseInt(userMessage.trim(), 10) - 1;
+            const groupIds = adminSession.groupIds || [];
+            const targetGroupId = groupIds[idx];
+            if (!targetGroupId) {
+                await msg.reply(`⚠️ Pilihan tidak valid. Masukkan angka 1 sampai ${groupIds.length}.`);
+                return;
+            }
+            adminSession.selectedGroupId = targetGroupId;
+            const gCfg = groupConfigs.group_configs[targetGroupId];
+            const menuTree = gCfg.menuTree || { children: [] };
+
+            // Kumpulkan semua kategori yang ada
+            const categories = [];
+            const collectCats = (node) => {
+                if (node.type === 'category') {
+                    categories.push({ id: node.id, name: node.name, ref: node });
+                    if (node.children) node.children.forEach(collectCats);
+                }
+            };
+            collectCats(menuTree);
+            adminSession.categories = categories;
+
+            let catText = `📂 *PILIH KATEGORI*\n\nKetik nomor kategori tujuan produk baru:\n\n`;
+            categories.forEach((c, i) => { catText += `${i + 1}. ${c.name}\n`; });
+            catText += `${categories.length + 1}. ➕ *Buat Kategori Baru*\n\n_Ketik *batal* untuk membatalkan._`;
+            adminSession.step = 'add_product_select_cat';
+            await msg.reply(catText);
+            return;
+        }
+
+        if (adminSession.step === 'add_product_select_cat') {
+            const categories = adminSession.categories || [];
+            const idx = parseInt(userMessage.trim(), 10) - 1;
+
+            if (idx === categories.length) {
+                // Buat kategori baru
+                adminSession.step = 'add_product_new_cat_name';
+                await msg.reply(`📂 *BUAT KATEGORI BARU*\n\nKetik nama kategori baru:\n\n_Ketik *batal* untuk membatalkan._`);
+                return;
+            }
+
+            if (!categories[idx]) {
+                await msg.reply(`⚠️ Pilihan tidak valid. Masukkan angka 1 sampai ${categories.length + 1}.`);
+                return;
+            }
+            adminSession.selectedCatId = categories[idx].id;
+            adminSession.step = 'add_product_name';
+            await msg.reply(`✏️ *NAMA PRODUK*\n\nKetik nama produk yang ingin ditambahkan:\n\n_Ketik *batal* untuk membatalkan._`);
+            return;
+        }
+
+        if (adminSession.step === 'add_product_new_cat_name') {
+            const newCatName = userMessage.trim();
+            if (!newCatName) {
+                await msg.reply('⚠️ Nama kategori tidak boleh kosong.');
+                return;
+            }
+            const newCatId = 'cat_' + Date.now();
+            const newCatNode = { id: newCatId, name: newCatName, type: 'category', text: '', children: [] };
+            const gCfg = groupConfigs.group_configs[adminSession.selectedGroupId];
+            gCfg.menuTree = gCfg.menuTree || { id: 'root', name: 'Menu Utama', type: 'category', text: '', children: [] };
+            gCfg.menuTree.children = gCfg.menuTree.children || [];
+            gCfg.menuTree.children.push(newCatNode);
+            saveGroupConfigs();
+            io.emit('group_config_updated', { groupId: adminSession.selectedGroupId });
+            adminSession.selectedCatId = newCatId;
+            adminSession.step = 'add_product_name';
+            await msg.reply(`✅ Kategori *${newCatName}* berhasil dibuat!\n\n✏️ *NAMA PRODUK*\n\nKetik nama produk yang ingin ditambahkan:\n\n_Ketik *batal* untuk membatalkan._`);
+            return;
+        }
+
+        if (adminSession.step === 'add_product_name') {
+            adminSession.newProduct = { name: userMessage.trim() };
+            adminSession.step = 'add_product_desc';
+            await msg.reply(`📝 *DESKRIPSI / ISI PRODUK*\n\nKetik deskripsi lengkap produk *${adminSession.newProduct.name}*:\n_(Bisa gunakan format WA: *tebal*, _miring_, ~coret~)_\n\n_Ketik *batal* untuk membatalkan._`);
+            return;
+        }
+
+        if (adminSession.step === 'add_product_desc') {
+            adminSession.newProduct.text = userMessage.trim();
+            adminSession.step = 'add_product_status';
+            await msg.reply(`📊 *STATUS KETERSEDIAAN*\n\nKetik status produk *${adminSession.newProduct.name}*:\n\n1. ✅ Tersedia\n2. ❌ Habis\n3. ⏳ Pre-order\n\n_Ketik *batal* untuk membatalkan._`);
+            return;
+        }
+
+        if (adminSession.step === 'add_product_status') {
+            const statusMap = { '1': 'Tersedia', '2': 'Habis', '3': 'Pre-order', 'tersedia': 'Tersedia', 'habis': 'Habis', 'pre-order': 'Pre-order', 'preorder': 'Pre-order' };
+            const status = statusMap[userMessage.trim().toLowerCase()];
+            if (!status) {
+                await msg.reply('⚠️ Pilihan tidak valid. Ketik 1 (Tersedia), 2 (Habis), atau 3 (Pre-order).');
+                return;
+            }
+            adminSession.newProduct.status = status;
+            adminSession.step = 'add_product_promo';
+            await msg.reply(`🔥 *PROMO SPESIAL?*\n\nApakah produk *${adminSession.newProduct.name}* merupakan promo spesial?\n\n1. Ya — tandai sebagai 🔥 Promo\n2. Tidak\n\n_Ketik *batal* untuk membatalkan._`);
+            return;
+        }
+
+        if (adminSession.step === 'add_product_promo') {
+            const isPromoMap = { '1': true, 'ya': true, 'yes': true, 'y': true, '2': false, 'tidak': false, 'no': false, 'n': false };
+            const isPromo = isPromoMap[userMessage.trim().toLowerCase()];
+            if (isPromo === undefined) {
+                await msg.reply('⚠️ Ketik 1 (Ya) atau 2 (Tidak).');
+                return;
+            }
+            adminSession.newProduct.isPromo = isPromo;
+
+            const p = adminSession.newProduct;
+            const promoStr = isPromo ? '🔥 Ya' : 'Tidak';
+            const statusEmoji = { 'Tersedia': '✅', 'Habis': '❌', 'Pre-order': '⏳' }[p.status] || '';
+            const confirmText = `📋 *KONFIRMASI PRODUK BARU*\n\n` +
+                `*Nama:* ${p.name}\n` +
+                `*Status:* ${statusEmoji} ${p.status}\n` +
+                `*Promo:* ${promoStr}\n` +
+                `*Deskripsi:*\n${p.text}\n\n` +
+                `Ketik *simpan* untuk menyimpan, atau *batal* untuk membatalkan.`;
+            adminSession.step = 'add_product_confirm';
+            await msg.reply(confirmText);
+            return;
+        }
+
+        if (adminSession.step === 'add_product_confirm') {
+            if (textLower !== 'simpan') {
+                await msg.reply('❌ Penambahan produk dibatalkan.');
+                global.adminMenuStates.delete(senderId);
+                return;
+            }
+            const p = adminSession.newProduct;
+            const newProductNode = {
+                id: 'prod_' + Date.now(),
+                name: p.name,
+                type: 'content',
+                text: p.text,
+                status: p.status,
+                isPromo: p.isPromo || false,
+                media: ''
+            };
+            const gCfg = groupConfigs.group_configs[adminSession.selectedGroupId];
+            const catNode = findNodeById(gCfg.menuTree, adminSession.selectedCatId);
+            if (!catNode) {
+                await msg.reply('❌ Kategori tidak ditemukan. Silakan coba lagi dari awal.');
+                global.adminMenuStates.delete(senderId);
+                return;
+            }
+            catNode.children = catNode.children || [];
+            catNode.children.push(newProductNode);
+            saveGroupConfigs();
+            io.emit('group_config_updated', { groupId: adminSession.selectedGroupId });
+            global.adminMenuStates.delete(senderId);
+            await msg.reply(`✅ *Produk berhasil ditambahkan!*\n\n🛍️ *${p.name}* telah masuk ke menu grup *${gCfg.groupName || adminSession.selectedGroupId}*.\n\nPelanggan bisa lihat dengan mengetik *list* di grup.`);
+            return;
+        }
+        // ================================================================
+
+        // =================== ALUR EDIT / HAPUS PRODUK ===================
+        if (adminSession.step === 'edit_product_select_group') {
+            const idx = parseInt(userMessage.trim(), 10) - 1;
+            const groupIds = adminSession.groupIds || [];
+            const targetGroupId = groupIds[idx];
+            if (!targetGroupId) { await msg.reply(`⚠️ Pilihan tidak valid. Masukkan angka 1 sampai ${groupIds.length}.`); return; }
+            adminSession.selectedGroupId = targetGroupId;
+            const gCfg = groupConfigs.group_configs[targetGroupId];
+
+            // Kumpulkan semua produk (konten)
+            const allProducts = getAllContentNodes().filter(n => n.groupId === targetGroupId);
+            if (allProducts.length === 0) {
+                await msg.reply('⚠️ Belum ada produk di grup ini. Tambah produk dulu dengan opsi 9.');
+                global.adminMenuStates.delete(senderId);
+                return;
+            }
+            adminSession.editProducts = allProducts;
+
+            const numMap = ['0️⃣','1️⃣','2️⃣','3️⃣','4️⃣','5️⃣','6️⃣','7️⃣','8️⃣','9️⃣'];
+            const getN = (n) => n.toString().split('').map(d => numMap[parseInt(d,10)]||d).join('');
+            const stEmoji = (s) => s==='Tersedia'?'✅':s==='Habis'?'❌':s==='Pre-order'?'⏳':'❔';
+
+            let prodList = `✏️ *DAFTAR PRODUK — ${gCfg.groupName || targetGroupId}*\n\nKetik nomor produk yang ingin diedit:\n\n`;
+            allProducts.forEach((p, i) => {
+                const promo = p.isPromo ? ' 🔥' : '';
+                prodList += `${getN(i+1)} *${p.name}*${promo} ${stEmoji(p.status)}\n`;
+            });
+            prodList += `\n_Ketik *batal* untuk membatalkan._`;
+            adminSession.step = 'edit_product_pick';
+            await msg.reply(prodList);
+            return;
+        }
+
+        if (adminSession.step === 'edit_product_pick') {
+            const idx = parseInt(userMessage.trim(), 10) - 1;
+            const allProducts = adminSession.editProducts || [];
+            if (!allProducts[idx]) { await msg.reply(`⚠️ Pilihan tidak valid. Masukkan angka 1 sampai ${allProducts.length}.`); return; }
+            adminSession.editTargetProduct = allProducts[idx];
+            const p = allProducts[idx];
+            const stEmoji = (s) => s==='Tersedia'?'✅':s==='Habis'?'❌':s==='Pre-order'?'⏳':'❔';
+            const detail = `✏️ *${p.name}* ${p.isPromo?'🔥':''} ${stEmoji(p.status)}\n\n_${p.text ? p.text.substring(0,120)+'...' : '(kosong)'}_\n\nPilih yang ingin diedit:\n\n1️⃣ Ubah Nama\n2️⃣ Ubah Deskripsi / Konten\n3️⃣ Ubah Status Ketersediaan\n4️⃣ Toggle Promo (${p.isPromo ? 'Promo AKTIF → Nonaktifkan' : 'Promo NONAKTIF → Aktifkan'})\n5️⃣ Hapus Produk Ini\n\n0️⃣ Kembali ke Daftar Produk\n\n_Ketik *batal* untuk keluar._`;
+            adminSession.step = 'edit_product_action';
+            await msg.reply(detail);
+            return;
+        }
+
+        if (adminSession.step === 'edit_product_action') {
+            const p = adminSession.editTargetProduct;
+            const gCfg = groupConfigs.group_configs[adminSession.selectedGroupId];
+            const node = findNodeById(gCfg.menuTree, p.nodeId);
+
+            if (userMessage === '0') {
+                // Kembali ke daftar
+                adminSession.step = 'edit_product_select_group';
+                adminSession.groupIds = [adminSession.selectedGroupId];
+                const allProducts = getAllContentNodes().filter(n => n.groupId === adminSession.selectedGroupId);
+                adminSession.editProducts = allProducts;
+                const numMap = ['0️⃣','1️⃣','2️⃣','3️⃣','4️⃣','5️⃣','6️⃣','7️⃣','8️⃣','9️⃣'];
+                const getN = (n) => n.toString().split('').map(d => numMap[parseInt(d,10)]||d).join('');
+                const stEmoji = (s) => s==='Tersedia'?'✅':s==='Habis'?'❌':s==='Pre-order'?'⏳':'❔';
+                let prodList = `✏️ *DAFTAR PRODUK*\n\nKetik nomor produk yang ingin diedit:\n\n`;
+                allProducts.forEach((pr, i) => prodList += `${getN(i+1)} *${pr.name}* ${stEmoji(pr.status)}${pr.isPromo?' 🔥':''}\n`);
+                prodList += `\n_Ketik *batal* untuk membatalkan._`;
+                adminSession.step = 'edit_product_pick';
+                await msg.reply(prodList);
+                return;
+            }
+
+            if (!node) { await msg.reply('❌ Produk tidak ditemukan di pohon menu. Mungkin sudah dihapus.'); global.adminMenuStates.delete(senderId); return; }
+
+            if (userMessage === '1') {
+                adminSession.editAction = 'name';
+                adminSession.step = 'edit_product_input';
+                await msg.reply(`✏️ *UBAH NAMA PRODUK*\n\nNama saat ini: *${node.name}*\n\nKetik nama baru:\n\n_Ketik *batal* untuk membatalkan._`);
+                return;
+            } else if (userMessage === '2') {
+                adminSession.editAction = 'text';
+                adminSession.step = 'edit_product_input';
+                await msg.reply(`📝 *UBAH DESKRIPSI PRODUK*\n\nDeskripsi saat ini:\n_${node.text || '(kosong)'}_\n\nKetik deskripsi baru (bisa pakai format WA: *tebal*, _miring_, ~coret~):\n\n_Ketik *batal* untuk membatalkan._`);
+                return;
+            } else if (userMessage === '3') {
+                adminSession.editAction = 'status';
+                adminSession.step = 'edit_product_input';
+                const cur = node.status || 'Tersedia';
+                await msg.reply(`📊 *UBAH STATUS PRODUK*\n\nStatus saat ini: *${cur}*\n\n1. ✅ Tersedia\n2. ❌ Habis\n3. ⏳ Pre-order\n\n_Ketik *batal* untuk membatalkan._`);
+                return;
+            } else if (userMessage === '4') {
+                // Toggle promo langsung
+                node.isPromo = !node.isPromo;
+                saveGroupConfigs();
+                io.emit('group_config_updated', { groupId: adminSession.selectedGroupId });
+                const state = node.isPromo ? '🔥 *AKTIF*' : '❌ *NONAKTIF*';
+                await msg.reply(`✅ Promo untuk *${node.name}* sekarang ${state}!`);
+                // Kembali ke menu edit produk ini
+                adminSession.editTargetProduct.isPromo = node.isPromo;
+                adminSession.step = 'edit_product_pick';
+                // reload pick
+                const allProducts2 = getAllContentNodes().filter(n => n.groupId === adminSession.selectedGroupId);
+                adminSession.editProducts = allProducts2;
+                const numMap2 = ['0️⃣','1️⃣','2️⃣','3️⃣','4️⃣','5️⃣','6️⃣','7️⃣','8️⃣','9️⃣'];
+                const getN2 = (n) => n.toString().split('').map(d => numMap2[parseInt(d,10)]||d).join('');
+                const st2 = (s) => s==='Tersedia'?'✅':s==='Habis'?'❌':s==='Pre-order'?'⏳':'❔';
+                let prodList2 = `✏️ *DAFTAR PRODUK* (diperbarui)\n\nKetik nomor produk yang ingin diedit:\n\n`;
+                allProducts2.forEach((pr, i) => prodList2 += `${getN2(i+1)} *${pr.name}* ${st2(pr.status)}${pr.isPromo?' 🔥':''}\n`);
+                prodList2 += `\n_Ketik *batal* untuk membatalkan._`;
+                await msg.reply(prodList2);
+                return;
+            } else if (userMessage === '5') {
+                adminSession.editAction = 'delete';
+                adminSession.step = 'edit_product_input';
+                await msg.reply(`🗑️ *HAPUS PRODUK*\n\nAnda yakin ingin menghapus *${node.name}*?\n\nKetik *hapus* untuk konfirmasi, atau *batal* untuk membatalkan.`);
+                return;
+            } else {
+                await msg.reply('⚠️ Pilihan tidak valid. Ketik 1-5 atau 0 untuk kembali.');
+                return;
+            }
+        }
+
+        if (adminSession.step === 'edit_product_input') {
+            const p = adminSession.editTargetProduct;
+            const gCfg = groupConfigs.group_configs[adminSession.selectedGroupId];
+            const node = findNodeById(gCfg.menuTree, p.nodeId);
+            if (!node) { await msg.reply('❌ Produk tidak ditemukan.'); global.adminMenuStates.delete(senderId); return; }
+
+            if (adminSession.editAction === 'name') {
+                const oldName = node.name;
+                node.name = userMessage.trim();
+                saveGroupConfigs();
+                io.emit('group_config_updated', { groupId: adminSession.selectedGroupId });
+                global.adminMenuStates.delete(senderId);
+                await msg.reply(`✅ Nama produk berhasil diubah!\n\n*${oldName}* → *${node.name}*`);
+                return;
+            } else if (adminSession.editAction === 'text') {
+                node.text = userMessage.trim();
+                saveGroupConfigs();
+                io.emit('group_config_updated', { groupId: adminSession.selectedGroupId });
+                global.adminMenuStates.delete(senderId);
+                await msg.reply(`✅ Deskripsi produk *${node.name}* berhasil diperbarui!`);
+                return;
+            } else if (adminSession.editAction === 'status') {
+                const statusMap = { '1': 'Tersedia', '2': 'Habis', '3': 'Pre-order', 'tersedia': 'Tersedia', 'habis': 'Habis', 'pre-order': 'Pre-order', 'preorder': 'Pre-order' };
+                const newStatus = statusMap[userMessage.trim().toLowerCase()];
+                if (!newStatus) { await msg.reply('⚠️ Pilihan tidak valid. Ketik 1, 2, atau 3.'); return; }
+                const oldStatus = node.status;
+                node.status = newStatus;
+                saveGroupConfigs();
+                io.emit('group_config_updated', { groupId: adminSession.selectedGroupId });
+                global.adminMenuStates.delete(senderId);
+                const stEmoji = (s) => s==='Tersedia'?'✅':s==='Habis'?'❌':s==='Pre-order'?'⏳':'❔';
+                await msg.reply(`✅ Status *${node.name}* diubah: ${stEmoji(oldStatus)} ${oldStatus} → ${stEmoji(newStatus)} *${newStatus}*`);
+                return;
+            } else if (adminSession.editAction === 'delete') {
+                if (textLower !== 'hapus') { await msg.reply('❌ Penghapusan dibatalkan.'); global.adminMenuStates.delete(senderId); return; }
+                // Cari parent dan hapus node dari children
+                const deleteNode = (tree, targetId) => {
+                    if (!tree.children) return false;
+                    const idx = tree.children.findIndex(c => c.id === targetId);
+                    if (idx >= 0) { tree.children.splice(idx, 1); return true; }
+                    return tree.children.some(c => deleteNode(c, targetId));
+                };
+                const deleted = deleteNode(gCfg.menuTree, p.nodeId);
+                if (deleted) {
+                    saveGroupConfigs();
+                    io.emit('group_config_updated', { groupId: adminSession.selectedGroupId });
+                    global.adminMenuStates.delete(senderId);
+                    await msg.reply(`🗑️ Produk *${p.name}* berhasil dihapus dari menu.`);
+                } else {
+                    await msg.reply('❌ Gagal menghapus produk.');
+                    global.adminMenuStates.delete(senderId);
+                }
+                return;
+            }
+        }
+        // ================================================================
     }
 
     if (!isGroup) {
-        // Jika chat pribadi, HANYA respon jika pengirim adalah BOS atau HOST ADMIN
-        if (!isSenderBoss && !isSenderHostAdmin) {
-            console.log(`[Akses Ditolak] Chat pribadi dari ${chatId} diabaikan karena bukan Bos/Host Admin.`);
-            return;
-        }
+        // Chat pribadi diabaikan untuk obrolan umum (hanya memproses menu admin di atas)
+        return;
     } else {
         // JIKA CHAT GRUP
         const groupId = chatId;
@@ -2578,9 +3654,108 @@ async function handleIncomingMessage(msg) {
             });
         })();
 
-        // Intersepsi perintah Host Admin
-        if (isSenderHostAdmin && userMessage.startsWith('!')) {
+        // Intersepsi perintah Host Admin (di Grup)
+        if (isSenderHostAdmin && (userMessage.startsWith('!') || userMessage.startsWith('.'))) {
             const cmd = userMessage.toLowerCase().trim();
+            
+            // .buka atau !toko buka
+            if (cmd === '.buka' || cmd === '!toko buka') {
+                try {
+                    const chat = await client.getChatById(groupId);
+                    await chat.setMessagesAdminsOnly(false);
+                    await msg.reply("🔓 *Pemberitahuan:* Toko telah dibuka kembali. Grup dibuka untuk umum!");
+                } catch (err) {
+                    await msg.reply("❌ Gagal membuka grup: " + err.message);
+                }
+                return;
+            }
+            
+            // .tutup atau !toko tutup
+            if (cmd === '.tutup' || cmd === '!toko tutup') {
+                try {
+                    const chat = await client.getChatById(groupId);
+                    await chat.setMessagesAdminsOnly(true);
+                    await msg.reply("🔒 *Pemberitahuan:* Toko telah ditutup. Hanya Admin yang dapat mengirim pesan.");
+                } catch (err) {
+                    await msg.reply("❌ Gagal menutup grup: " + err.message);
+                }
+                return;
+            }
+            
+            // .kick
+            if (cmd === '.kick') {
+                if (msg.hasQuotedMsg) {
+                    try {
+                        const quotedMsg = await msg.getQuotedMessage();
+                        const participantId = quotedMsg.author || quotedMsg.from;
+                        const chat = await msg.getChat();
+                        await chat.removeParticipants([participantId]);
+                        await msg.reply(`✅ Berhasil mengeluarkan user @${participantId.split('@')[0]} dari grup.`, null, {
+                            mentions: [participantId]
+                        });
+                    } catch(err) {
+                        await msg.reply("❌ Gagal mengeluarkan anggota: " + err.message);
+                    }
+                } else {
+                    await msg.reply("⚠️ Balas/quote salah satu pesan anggota yang ingin di-kick dengan mengetik *.kick*");
+                }
+                return;
+            }
+            
+            // .proses & .done (Invoice)
+            if (cmd === '.proses' || cmd === '.done') {
+                if (msg.hasQuotedMsg) {
+                    try {
+                        const quotedMsg = await msg.getQuotedMessage();
+                        const customerId = quotedMsg.author || quotedMsg.from;
+                        const contact = await client.getContactById(customerId);
+                        const customerName = contact.pushname || contact.name || `Pelanggan`;
+                        
+                        const statusVal = cmd === '.proses' ? '🔴 PROSES' : '🟢 DONE';
+                        const invoiceId = 'INV-' + Date.now().toString().substring(6);
+                        
+                        const invoiceText = `📄 *INVOICE PEMBAYARAN* 📄\n\n` +
+                                            `*No Invoice:* ${invoiceId}\n` +
+                                            `*Nama Pelanggan:* ${customerName} (@${customerId.split('@')[0]})\n` +
+                                            `*Status:* *${statusVal}*\n` +
+                                            `*Tanggal:* ${new Date().toLocaleDateString('id-ID')}\n\n` +
+                                            `_Pesanan Anda sedang diproses oleh admin. Harap tunggu info selanjutnya._`;
+                                            
+                        await quotedMsg.reply(invoiceText, null, {
+                            mentions: [customerId]
+                        });
+                    } catch(err) {
+                        await msg.reply("❌ Gagal memproses invoice: " + err.message);
+                    }
+                } else {
+                    await msg.reply("⚠️ Balas/quote pesan bukti pembayaran dari pelanggan dengan mengetik *.proses* atau *.done*");
+                }
+                return;
+            }
+            
+            // .promote & .demote
+            if (cmd === '.promote' || cmd === '.demote') {
+                if (msg.hasQuotedMsg) {
+                    try {
+                        const quotedMsg = await msg.getQuotedMessage();
+                        const participantId = quotedMsg.author || quotedMsg.from;
+                        const chat = await msg.getChat();
+                        if (cmd === '.promote') {
+                            await chat.promoteParticipants([participantId]);
+                            await msg.reply(`✅ Berhasil menjadikan @${participantId.split('@')[0]} sebagai Admin.`, null, { mentions: [participantId] });
+                        } else {
+                            await chat.demoteParticipants([participantId]);
+                            await msg.reply(`✅ Berhasil mencopot jabatan Admin dari @${participantId.split('@')[0]}.`, null, { mentions: [participantId] });
+                        }
+                    } catch(err) {
+                        await msg.reply("❌ Gagal merubah jabatan admin: " + err.message);
+                    }
+                } else {
+                    await msg.reply(`⚠️ Balas/quote pesan anggota dengan mengetik *${cmd}*`);
+                }
+                return;
+            }
+
             if (cmd === '!bot on') {
                 if (!groupConfigs.group_configs[groupId]) {
                     groupConfigs.group_configs[groupId] = {
@@ -2605,24 +3780,6 @@ async function handleIncomingMessage(msg) {
                     saveGroupConfigs();
                 }
                 await msg.reply("⚠️ *Bot Dinonaktifkan:* Bot WhatsApp berhenti merespons di grup ini.");
-                return;
-            } else if (cmd === '!toko buka') {
-                try {
-                    const chat = await client.getChatById(groupId);
-                    await chat.setMessagesAdminsOnly(false);
-                    await msg.reply("🔓 *Toko Dibuka Manual:* Grup WhatsApp dibuka kembali untuk umum.");
-                } catch (err) {
-                    await msg.reply("❌ Gagal membuka grup: " + err.message);
-                }
-                return;
-            } else if (cmd === '!toko tutup') {
-                try {
-                    const chat = await client.getChatById(groupId);
-                    await chat.setMessagesAdminsOnly(true);
-                    await msg.reply("🔒 *Toko Ditutup Manual:* Grup WhatsApp ditutup (hanya admin yang dapat berkirim pesan).");
-                } catch (err) {
-                    await msg.reply("❌ Gagal menutup grup: " + err.message);
-                }
                 return;
             } else if (cmd === '!pelanggan') {
                 let replyText = "👥 *Daftar Pelanggan Toko:*\n\n";
@@ -2720,6 +3877,55 @@ async function handleIncomingMessage(msg) {
             });
             return;
         }
+
+        // ---- PROMO TRIGGER: ketik "promo", "promosi", "diskon", "sale" ----
+        const promoKeywords = ['promo', 'promosi', 'diskon', 'sale', 'promo spesial', 'daftar promo'];
+        if (promoKeywords.includes(text)) {
+            const promoNodes = getAllPromoNodes(cfg.menuTree);
+
+            if (promoNodes.length === 0) {
+                await msg.reply(
+                    `🔍 *Tidak ada promo aktif saat ini.*\n\n` +
+                    `_Pantau terus! Promo spesial akan segera hadir._ 🔔`
+                );
+                return;
+            }
+
+            // Urutkan A-Z per nama produk
+            promoNodes.sort((a, b) => (a.node.name || '').localeCompare(b.node.name || '', 'id', { sensitivity: 'base' }));
+
+            const numMap = ['0️⃣','1️⃣','2️⃣','3️⃣','4️⃣','5️⃣','6️⃣','7️⃣','8️⃣','9️⃣'];
+            const getNumEmoji = (n) => n.toString().split('').map(d => numMap[parseInt(d,10)] || d).join('');
+            const statusEmoji = (s) => s === 'Tersedia' ? '✅' : s === 'Habis' ? '❌' : s === 'Pre-order' ? '⏳' : '❔';
+
+            let promoText = `🔥 *PROMO SPESIAL* 🔥\n`;
+            promoText += `━━━━━━━━━━━━━━━━━━━━\n`;
+            promoText += `✨ Penawaran terbatas — jangan sampai ketinggalan!\n`;
+            promoText += `━━━━━━━━━━━━━━━━━━━━\n\n`;
+
+            promoNodes.forEach(({ node, categoryPath }, idx) => {
+                const catLabel = categoryPath && categoryPath.length > 0
+                    ? `_[${categoryPath.join(' › ')}]_\n   `
+                    : '';
+                promoText += `${getNumEmoji(idx + 1)} 🔥 *${node.name}* ${statusEmoji(node.status)}\n`;
+                if (catLabel) promoText += `   ${catLabel}\n`;
+            });
+
+            promoText += `\n━━━━━━━━━━━━━━━━━━━━\n`;
+            promoText += `📌 Ketik *nama produk* untuk detail & harga promo!\n`;
+            promoText += `🛒 Hubungi admin untuk order sekarang.`;
+
+            await msg.reply(promoText);
+
+            io.emit('message_log', {
+                chatId: groupId,
+                body: `[Daftar Promo dikirim ke ${senderId.split('@')[0]}]`,
+                type: 'outgoing',
+                timestamp: Date.now()
+            });
+            return;
+        }
+        // ---------------------------------------------------------------
         
         // Cek pencocokan nama menu secara langsung (Direct Menu Name Trigger)
         const matchResult = findNodeByName(cfg.menuTree || { id: "root", name: "Menu Utama", type: "category", children: [] }, userMessage);
@@ -2738,9 +3944,10 @@ async function handleIncomingMessage(msg) {
                 const replyMsg = renderGroupMenuMessage(matchedNode, cfg);
                 await msg.reply(replyMsg);
             } else {
-                const conEmoji = cfg.contentEmoji || '📄';
-                const statusSuffix = (matchedNode.status && matchedNode.status.trim() !== '') ? ` [_${matchedNode.status}_]` : '';
-                let replyText = `${conEmoji} *${matchedNode.name}*${statusSuffix}\n\n${matchedNode.text}`;
+                const conEmoji = matchedNode.isPromo ? '🔥' : (cfg.contentEmoji || '📄');
+                const statusSuffix = getStatusEmoji(matchedNode.status);
+                const promoHeader = matchedNode.isPromo ? `⚠️ *PROMO SPESIAL HARI INI!* ⚠️\n\n` : '';
+                let replyText = `${conEmoji} *${matchedNode.name}*${statusSuffix}\n\n${promoHeader}${matchedNode.text}`;
                 const footerText = cfg.contentFooter || `_Ketik *0* untuk kembali ke menu sebelumnya, atau *#* untuk kembali ke menu utama._`;
                 replyText += `\n\n${footerText}`;
                 
@@ -2777,6 +3984,21 @@ async function handleIncomingMessage(msg) {
 
             if (matchedTrigger) {
                 await msg.reply(matchedTrigger.reply);
+                
+                if (matchedTrigger.media && matchedTrigger.media.trim() !== '') {
+                    const mediaPath = path.join('./media', matchedTrigger.media.trim());
+                    if (fs.existsSync(mediaPath)) {
+                        try {
+                            const fileData = fs.readFileSync(mediaPath);
+                            const base64Data = fileData.toString('base64');
+                            const mimeType = getMimeType(mediaPath);
+                            const mediaObj = new MessageMedia(mimeType, base64Data, path.basename(mediaPath));
+                            await client.sendMessage(groupId, mediaObj);
+                        } catch(err) {
+                            console.error('Gagal mengirim media extra trigger:', err.message);
+                        }
+                    }
+                }
                 
                 io.emit('message_log', {
                     chatId: groupId,
@@ -2825,78 +4047,56 @@ async function handleIncomingMessage(msg) {
                 const choiceIndex = parseInt(text, 10) - 1;
                 const currentNode = findNodeById(cfg.menuTree, session.currentNodeId) || cfg.menuTree;
                 
-                if (currentNode && currentNode.children && choiceIndex >= 0 && choiceIndex < currentNode.children.length) {
-                    const chosenNode = currentNode.children[choiceIndex];
-                    
-                    if (chosenNode.type === 'category') {
-                        // Masuk sub-menu
-                        session.parentIds.push(session.currentNodeId);
-                        session.currentNodeId = chosenNode.id;
+                if (currentNode && currentNode.children) {
+                    // Urutkan anak menu berdasarkan abjad A-Z agar sesuai dengan tampilan list
+                    const sortedChildren = [...currentNode.children].sort((a, b) => {
+                        return (a.name || '').localeCompare(b.name || '', 'id', { sensitivity: 'base' });
+                    });
+
+                    if (choiceIndex >= 0 && choiceIndex < sortedChildren.length) {
+                        const chosenNode = sortedChildren[choiceIndex];
                         
-                        const replyMsg = renderGroupMenuMessage(chosenNode, cfg);
-                        await msg.reply(replyMsg);
-                    } else {
-                        // Leaf Node: Kirim konten teks + media
-                        const conEmoji = cfg.contentEmoji || '📄';
-                        const statusSuffix = (chosenNode.status && chosenNode.status.trim() !== '') ? ` [_${chosenNode.status}_]` : '';
-                        let replyText = `${conEmoji} *${chosenNode.name}*${statusSuffix}\n\n${chosenNode.text}`;
-                        const footerText = cfg.contentFooter || `_Ketik *0* untuk kembali ke menu sebelumnya, atau *#* untuk kembali ke menu utama._`;
-                        replyText += `\n\n${footerText}`;
-                        
-                        await msg.reply(replyText);
-                        
-                        if (chosenNode.media && chosenNode.media.trim() !== '') {
-                            const mediaPath = path.join('./media', chosenNode.media.trim());
-                            if (fs.existsSync(mediaPath)) {
-                                const fileData = fs.readFileSync(mediaPath);
-                                const base64Data = fileData.toString('base64');
-                                const mimeType = getMimeType(mediaPath);
-                                const mediaObj = new MessageMedia(mimeType, base64Data, path.basename(mediaPath));
-                                await client.sendMessage(groupId, mediaObj, { quotedMessageId: msg.id._serialized });
+                        if (chosenNode.type === 'category') {
+                            // Masuk sub-menu
+                            session.parentIds.push(session.currentNodeId);
+                            session.currentNodeId = chosenNode.id;
+                            
+                            const replyMsg = renderGroupMenuMessage(chosenNode, cfg);
+                            await msg.reply(replyMsg);
+                        } else {
+                            // Leaf Node: Kirim konten teks + media
+                            const conEmoji = chosenNode.isPromo ? '🔥' : (cfg.contentEmoji || '📄');
+                            const statusSuffix = getStatusEmoji(chosenNode.status);
+                            const promoHeader = chosenNode.isPromo ? `⚠️ *PROMO SPESIAL HARI INI!* ⚠️\n\n` : '';
+                            let replyText = `${conEmoji} *${chosenNode.name}*${statusSuffix}\n\n${promoHeader}${chosenNode.text}`;
+                            const footerText = cfg.contentFooter || `_Ketik *0* untuk kembali ke menu sebelumnya, atau *#* untuk kembali ke menu utama._`;
+                            replyText += `\n\n${footerText}`;
+                            
+                            await msg.reply(replyText);
+                            
+                            if (chosenNode.media && chosenNode.media.trim() !== '') {
+                                const mediaPath = path.join('./media', chosenNode.media.trim());
+                                if (fs.existsSync(mediaPath)) {
+                                    const fileData = fs.readFileSync(mediaPath);
+                                    const base64Data = fileData.toString('base64');
+                                    const mimeType = getMimeType(mediaPath);
+                                    const mediaObj = new MessageMedia(mimeType, base64Data, path.basename(mediaPath));
+                                    await client.sendMessage(groupId, mediaObj, { quotedMessageId: msg.id._serialized });
+                                }
                             }
                         }
-                    }
-                    return;
-                } else {
-                    if (/^\d+$/.test(text)) {
-                        await msg.reply(`⚠️ Pilihan tidak valid. Silakan ketik angka (1-${currentNode.children ? currentNode.children.length : 0}), ketik *0* untuk kembali, atau *#* untuk ke menu utama.`);
                         return;
+                    } else {
+                        if (/^\d+$/.test(text)) {
+                            await msg.reply(`⚠️ Pilihan tidak valid. Silakan ketik angka (1-${sortedChildren.length}), ketik *0* untuk kembali, atau *#* untuk ke menu utama.`);
+                            return;
+                        }
                     }
                 }
             }
         }
         
-        // AI Fallback khusus grup (jika diaktifkan)
-        if (cfg.useAiFallback) {
-            activeLocks.add(chatId);
-            const chat = await msg.getChat();
-            await chat.sendStateTyping();
-            
-            try {
-                console.log(`[Group AI Fallback] Memproses pesan di grup ${groupId} untuk ${senderId}: "${userMessage}"`);
-                
-                const groupKnowledge = getGroupKnowledgeContext(cfg.allowedKnowledgeFiles);
-                const systemPrompt = config.system_prompt_template.replace('{KNOWLEDGE_BASE_CONTENT}', groupKnowledge);
-                
-                const response = await generateGroupAiResponse(userMessage, systemPrompt, chatId);
-                const aiReply = response.reply || response.content || 'Maaf, saya tidak mengerti.';
-                
-                await msg.reply(aiReply);
-                
-                io.emit('message_log', {
-                    chatId: groupId,
-                    body: `[AI Fallback] -> ${senderId.split('@')[0]}: ${aiReply.substring(0, 50)}...`,
-                    type: 'outgoing',
-                    timestamp: Date.now()
-                });
-            } catch (err) {
-                console.error('Gagal memproses AI Fallback Grup:', err.message);
-            } finally {
-                activeLocks.delete(chatId);
-            }
-        }
-        
-        // Hentikan eksekusi untuk grup di sini agar tidak bocor ke logika chat pribadi
+        // AI Fallback khusus grup dinonaktifkan agar di grup hanya merespon list menu dan kata kunci
         return;
     }
 
@@ -2997,8 +4197,8 @@ async function handleIncomingMessage(msg) {
                     return;
                 }
                 
-                // 1. Deteksi kuitansi menggunakan algoritma lokal (0 token!)
-                const isReceipt = isReceiptText(ocrText);
+                // 1. Deteksi kuitansi menggunakan algoritma lokal (0 token!) [DINONAKTIFKAN jika FITUR_KEUANGAN=false]
+                const isReceipt = FITUR_KEUANGAN && isReceiptText(ocrText);
                 console.log('[Local Classifier]: isReceipt =', isReceipt);
                 
                 if (isReceipt) {
@@ -3072,7 +4272,7 @@ async function handleIncomingMessage(msg) {
     }
 
     // 2. PENANGANAN KONFIRMASI TRANSAKSI PENDING (YA/TIDAK)
-    if (pendingTransactions.has(chatId)) {
+    if (FITUR_KEUANGAN && pendingTransactions.has(chatId)) {
         activeLocks.add(chatId);
         const pending = pendingTransactions.get(chatId);
         const replyText = userMessage.toLowerCase().trim();
@@ -3356,8 +4556,8 @@ Ketik obrolan seperti biasa, AI akan mendeteksi otomatis!
         return;
     }
 
-    // 4. PENANGANAN PENCATATAN KEUANGAN TEKS (TEMPLATE PINTASAN)
-    const shortcut = parseShortcutMessage(userMessage);
+    // 4. PENANGANAN PENCATATAN KEUANGAN TEKS (TEMPLATE PINTASAN) [DINONAKTIFKAN jika FITUR_KEUANGAN=false]
+    const shortcut = FITUR_KEUANGAN ? parseShortcutMessage(userMessage) : null;
     if (shortcut) {
         if (shortcut.nominal <= 0) {
             await msg.reply('❌ Nominal uang tidak valid. Pastikan formatnya benar (contoh: 50rb, 1.5jt, 250000).');
@@ -3460,8 +4660,8 @@ Ketik obrolan seperti biasa, AI akan mendeteksi otomatis!
         return;
     }
 
-    // 6. FALLBACK: COBA PARSING ALGORITMA LOKAL DULU (HEMAT TOKEN)
-    const localFinance = localParseFinanceMessage(userMessage);
+    // 6. FALLBACK: COBA PARSING ALGORITMA LOKAL DULU (HEMAT TOKEN) [DINONAKTIFKAN jika FITUR_KEUANGAN=false]
+    const localFinance = FITUR_KEUANGAN ? localParseFinanceMessage(userMessage) : null;
     if (localFinance) {
         console.log(`[Local Parser] Berhasil mendeteksi keuangan locally:`, JSON.stringify(localFinance));
         
@@ -3484,8 +4684,8 @@ Ketik obrolan seperti biasa, AI akan mendeteksi otomatis!
         return;
     }
 
-    // 6.5. FALLBACK: PROSES LAPORAN KEUANGAN SECARA LOKAL (0 TOKEN)
-    const isReportHandled = await handleLocalReportCommands(userMessage, msg);
+    // 6.5. FALLBACK: PROSES LAPORAN KEUANGAN SECARA LOKAL (0 TOKEN) [DINONAKTIFKAN jika FITUR_KEUANGAN=false]
+    const isReportHandled = FITUR_KEUANGAN ? await handleLocalReportCommands(userMessage, msg) : false;
     if (isReportHandled) {
         return;
     }
@@ -3500,7 +4700,7 @@ Ketik obrolan seperti biasa, AI akan mendeteksi otomatis!
         const result = await generateUnifiedAiResponse(userMessage, chatId);
         console.log(`[Unified AI] Hasil analisis:`, JSON.stringify(result));
         
-        if (result.intent === 'finance' && result.data && result.data.nominal > 0) {
+        if (FITUR_KEUANGAN && result.intent === 'finance' && result.data && result.data.nominal > 0) {
             const data = result.data;
             pendingTransactions.set(chatId, {
                 intent: 'finance',
