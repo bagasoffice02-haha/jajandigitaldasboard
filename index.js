@@ -707,6 +707,7 @@ app.get('/api/groups', async (req, res) => {
                 ...g,
                 enabled: cfg.enabled !== undefined ? cfg.enabled : false,
                 useAiFallback: cfg.useAiFallback !== undefined ? cfg.useAiFallback : true,
+                aiNames: cfg.aiNames !== undefined ? cfg.aiNames : 'bot, ai',
                 triggerPrefix: cfg.triggerPrefix !== undefined ? cfg.triggerPrefix : '',
                 allowedKnowledgeFiles: cfg.allowedKnowledgeFiles || []
             };
@@ -723,6 +724,7 @@ app.get('/api/groups', async (req, res) => {
                 unreadCount: 0,
                 enabled: cfg.enabled !== undefined ? cfg.enabled : false,
                 useAiFallback: cfg.useAiFallback !== undefined ? cfg.useAiFallback : true,
+                aiNames: cfg.aiNames !== undefined ? cfg.aiNames : 'bot, ai',
                 triggerPrefix: cfg.triggerPrefix !== undefined ? cfg.triggerPrefix : '',
                 allowedKnowledgeFiles: cfg.allowedKnowledgeFiles || []
             };
@@ -739,6 +741,7 @@ app.get('/api/group-config/:groupId', (req, res) => {
             groupName: groupId,
             enabled: false,
             useAiFallback: true,
+            aiNames: 'bot, ai',
             triggerPrefix: '',
             allowedKnowledgeFiles: [],
             categoryFooter: 'Silakan pilih menu dengan mengetik angkanya:',
@@ -761,7 +764,7 @@ app.post('/api/group-config/:groupId', (req, res) => {
     try {
         const { groupId } = req.params;
         const { 
-            groupName, enabled, useAiFallback, triggerPrefix, allowedKnowledgeFiles, 
+            groupName, enabled, useAiFallback, aiNames, triggerPrefix, allowedKnowledgeFiles, 
             categoryFooter, contentFooter, menuTree,
             categoryEmoji, contentEmoji, enableNumberNavigation,
             universalHeader, universalFooter, welcomeMessage, autoCloseSchedule, extraTriggers
@@ -771,6 +774,7 @@ app.post('/api/group-config/:groupId', (req, res) => {
             groupName: groupName || groupId,
             enabled: enabled !== undefined ? enabled : false,
             useAiFallback: useAiFallback !== undefined ? useAiFallback : true,
+            aiNames: aiNames !== undefined ? aiNames : 'bot, ai',
             triggerPrefix: triggerPrefix !== undefined ? triggerPrefix : '',
             allowedKnowledgeFiles: allowedKnowledgeFiles || [],
             categoryFooter: categoryFooter !== undefined ? categoryFooter : 'Silakan pilih menu dengan mengetik angkanya:',
@@ -4515,12 +4519,23 @@ async function handleIncomingMessage(msg) {
                 return;
             }
             // Di grup, AI Fallback HANYA merespon jika bot di-mention (@) oleh pengirim
-            const botId = client.info ? client.info.wid._serialized : null;
-            const botNumber = client.info ? client.info.wid.user : null;
-            const isMentioned = botId && (
-                (msg.mentionedIds && msg.mentionedIds.includes(botId)) ||
-                (botNumber && msg.body.includes(botNumber))
+            const getDigits = (str) => str ? str.replace(/\D/g, '') : '';
+            const botDigits = client.info ? getDigits(client.info.wid.user) : null;
+            
+            // Konfigurasi kata pemicu kustom (default: bot, ai)
+            const defaultNames = ['bot', 'ai'];
+            const customNames = cfg.aiNames ? cfg.aiNames.split(',').map(n => n.trim().toLowerCase()).filter(n => n) : defaultNames;
+            const escapedNames = customNames.map(n => n.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&'));
+            const nameRegex = new RegExp(`(\\b(${escapedNames.join('|')})\\b)`, 'gi');
+
+            // Periksa apakah bot di-tag dengan @, atau nomor bot disebut, atau ada nama panggilan kustom
+            const isMentioned = botDigits && (
+                (msg.mentionedIds && msg.mentionedIds.some(id => getDigits(id).includes(botDigits))) ||
+                msg.body.includes('@' + botDigits) ||
+                msg.body.includes(botDigits) ||
+                nameRegex.test(msg.body)
             );
+            
             if (!isMentioned) {
                 return; // Abaikan chat biasa jika bot tidak di-mention
             }

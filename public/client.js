@@ -867,6 +867,7 @@ window.selectGroup = async function(groupId) {
         document.getElementById('selected-group-title').textContent = selectedGroupConfig.groupName;
         document.getElementById('grp-enabled').checked = selectedGroupConfig.enabled;
         document.getElementById('grp-ai-fallback').checked = selectedGroupConfig.useAiFallback;
+        document.getElementById('grp-ai-names').value = selectedGroupConfig.aiNames || 'bot, ai';
         document.getElementById('grp-trigger').value = selectedGroupConfig.triggerPrefix || '';
         document.getElementById('grp-category-footer').value = selectedGroupConfig.categoryFooter || 'Silakan pilih menu dengan mengetik angkanya:';
         document.getElementById('grp-content-footer').value = selectedGroupConfig.contentFooter || 'Ketik *0* untuk kembali ke menu sebelumnya, atau *#* untuk kembali ke menu utama.';
@@ -1286,6 +1287,7 @@ window.saveGroupConfiguration = async function() {
     
     const enabled = document.getElementById('grp-enabled').checked;
     const useAiFallback = document.getElementById('grp-ai-fallback').checked;
+    const aiNames = document.getElementById('grp-ai-names').value.trim();
     const triggerPrefix = document.getElementById('grp-trigger').value.trim();
     const categoryFooter = document.getElementById('grp-category-footer').value.trim();
     const contentFooter = document.getElementById('grp-content-footer').value.trim();
@@ -1329,6 +1331,7 @@ window.saveGroupConfiguration = async function() {
         groupName: selectedGroupConfig.groupName,
         enabled,
         useAiFallback,
+        aiNames,
         triggerPrefix,
         categoryFooter,
         contentFooter,
