@@ -1,0 +1,74 @@
+=========================================
+DOKUMEN UTAMA: INFORMASI TOKO, FAQ, KATALOG, & SOP PELAYANAN
+BAGAS OFFICE COFFEE & CO.
+=========================================
+
+-----------------------------------------
+1. PROFIL TOKO & OPERASIONAL
+-----------------------------------------
+- Nama Toko: Bagas Office Coffee & Co.
+- Jam Operasional: Buka Setiap Hari (Senin - Minggu) pukul 08:00 - 22:00 WIB.
+- Alamat Fisik: Jl. Jenderal Sudirman No. 45, Lantai Dasar, Jakarta Pusat (Samping Gedung Bagas Office).
+- Layanan yang Tersedia:
+  * Dine-in (Makan di tempat)
+  * Takeaway (Bawa pulang)
+  * Delivery (Pengantaran via Kurir Instan Gojek / Grab)
+
+-----------------------------------------
+2. METODE PEMBAYARAN & REKENING RESMI
+-----------------------------------------
+Pembayaran pesanan dilakukan secara non-tunai (Transfer Bank) ke rekening resmi berikut:
+- Bank BCA
+  * No. Rekening: 123-456-7890
+  * Atas Nama: Bagas Office
+- QRIS Toko:
+  * Tersedia dengan scan barcode QRIS yang dikirimkan oleh admin/CS saat proses checkout.
+  * Menerima pembayaran via GoPay, OVO, Dana, LinkAja, ShopeePay, dan M-Banking.
+
+*Catatan Keamanan:* Jangan melakukan transfer selain ke nomor rekening resmi di atas. Harap kirimkan bukti transfer ke WhatsApp ini setelah melakukan pembayaran.
+
+-----------------------------------------
+3. DAFTAR KATALOG PRODUK & HARGA
+-----------------------------------------
+A. Kategori Kopi (Signature Coffee)
+- Kopi Latte Premium (Hot/Ice) - Rp 18.000
+  * Espresso premium dicampur susu segar dengan foam lembut. Bisa disajikan panas atau dingin.
+- Espresso Double Shot - Rp 12.000
+  * Ekstraksi kopi Arabika murni 100% yang pekat dan kuat.
+- Kopi Susu Gula Aren (Ice) - Rp 15.000
+  * Kopi susu kekinian dengan manisnya gula aren murni yang pas di lidah. Terlaris!
+
+B. Kategori Camilan (Bakery & Snacks)
+- Croissant Butter Premium - Rp 20.000
+  * Roti pastry Prancis yang renyah di luar, lembut di dalam dengan cita rasa mentega murni yang gurih.
+- Brownies Cokelat Fudgy - Rp 15.000
+  * Kue brownies cokelat panggang padat dengan tekstur lembut di dalam dan taburan choco chips melimpah.
+
+-----------------------------------------
+4. FAQ (PERTANYAAN YANG SERING DIAJUKAN)
+-----------------------------------------
+Q: Bagaimana cara memesan produk lewat WhatsApp ini?
+A: Sangat mudah! Cukup ketik pesan dengan format: pesan: [Nama Produk] [Jumlah]
+   Contoh: pesan: Kopi Susu Gula Aren 2, Croissant Butter 1
+   Setelah itu, asisten AI kami akan mencatat pesanan Anda secara otomatis.
+
+Q: Apakah ada promo yang sedang berlangsung?
+A: Ya! Kami memiliki promo "Friday Coffee Rush" yaitu Beli 2 Kopi Latte gratis 1 Croissant Butter Premium setiap hari Jumat mulai pukul 14:00 hingga 17:00 WIB.
+
+Q: Berapa lama pesanan saya akan disiapkan?
+A: Minuman disiapkan dalam waktu 3-5 menit. Makanan hangat/bakery disiapkan dalam waktu 5-10 menit. Untuk pesanan delivery, waktu pengantaran tergantung dari jarak kurir ke alamat Anda.
+
+Q: Bagaimana jika pesanan yang diterima salah atau kurang?
+A: Silakan langsung kirimkan foto produk yang kurang/salah ke chat WhatsApp ini, Admin CS kami akan segera mengirimkan gantinya secara gratis.
+
+-----------------------------------------
+5. SOP PELAYANAN PELANGGAN (UNTUK BOT AI & CS ADMIN)
+-----------------------------------------
+- Sapaan Pelanggan: Selalu panggil pelanggan dengan sebutan "Kak", "Kakak", atau "Kak [Nama Pelanggan]". JANGAN pernah memanggil dengan sebutan "Bos" atau "Bro".
+- Kesopanan & Nada Bicara: Gunakan tata bahasa Indonesia yang baik, sopan, ramah, dan solutif.
+- Penanganan Pelanggan Bingung:
+  * Jika pelanggan bingung ingin memesan apa, tawarkan menu terlaris kami seperti "Kopi Susu Gula Aren" atau "Croissant Butter".
+  * Arahkan pelanggan untuk mengetik kata *menu* atau angka menu untuk membuka katalog interaktif.
+- Alur Penanganan Bukti Transfer / Pembayaran:
+  * Jika pelanggan mengirimkan gambar bukti transfer, infokan bahwa pesanan mereka akan segera diverifikasi oleh Admin.
+  * Admin akan membalas chat bukti transfer tersebut dengan mengetik *.proses* atau *.done* untuk mencetak invoice pembayaran resmi secara otomatis.
