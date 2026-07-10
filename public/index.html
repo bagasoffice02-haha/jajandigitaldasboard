@@ -967,8 +967,9 @@
                     <!-- Groq -->
                     <div id="group-groq-settings" class="hidden">
                         <div class="form-group">
-                            <label for="cfg-groq-api-key">Groq API Key</label>
-                            <input type="password" id="cfg-groq-api-key" placeholder="gsk_…">
+                            <label for="cfg-groq-api-keys">Stok Groq API Keys (Satu Key Per Baris)</label>
+                            <textarea id="cfg-groq-api-keys" rows="4" placeholder="Masukkan Groq API Keys Anda (satu per baris)&#10;gsk_xxxxx&#10;gsk_yyyyy&#10;gsk_zzzzz"></textarea>
+                            <small>Bot akan rotasi otomatis (round-robin) jika ada key yang limit/error.</small>
                         </div>
                         <div class="form-group" style="margin-top:12px;">
                             <label for="cfg-groq-model">Model Groq</label>

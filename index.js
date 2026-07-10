@@ -623,7 +623,7 @@ app.post('/api/config', (req, res) => {
     try {
         const { 
             provider, gemini_api_keys, api_url, model_name, max_tokens, api_key, google_sheets_url, system_prompt_template,
-            groq_api_key, groq_model,
+            groq_api_keys, groq_model,
             deepseek_api_key, deepseek_model,
             qwen_api_key, qwen_model,
             openrouter_api_key, openrouter_model,
@@ -646,8 +646,10 @@ app.post('/api/config', (req, res) => {
         }
 
         // Save keys for other providers
-        if (groq_api_key !== undefined) config.groq_api_key = groq_api_key;
+        if (groq_api_keys !== undefined) config.groq_api_keys = groq_api_keys;
         if (groq_model !== undefined) config.groq_model = groq_model;
+        // Reset Groq key index on pool update
+        currentGroqKeyIndex = 0;
         
         if (deepseek_api_key !== undefined) config.deepseek_api_key = deepseek_api_key;
         if (deepseek_model !== undefined) config.deepseek_model = deepseek_model;
@@ -1668,6 +1670,7 @@ async function performOCR(imageBuffer) {
 
 // Global pointer untuk rotasi key (round-robin)
 let currentGeminiKeyIndex = 0;
+let currentGroqKeyIndex = 0;
 
 // Fungsi untuk memanggil API Gemini menggunakan satu key tertentu
 async function callGemini(systemPrompt, chatHistory, isJson = false, apiKey) {
@@ -1766,6 +1769,50 @@ async function callGeminiWithPool(systemPrompt, chatHistory, isJson = false) {
     }
     
     throw new Error(`Seluruh API Key di stok gagal digunakan. Error terakhir: ${lastError ? lastError.message : 'Unknown'}`);
+}
+
+// Fungsi pembungkus panggilan Groq dengan dukungan Pool (Stok API Keys) dan Auto-Fallback
+async function callGroqWithPool(systemPrompt, chatHistory, isJson = false) {
+    let keys = config.groq_api_keys || [];
+    
+    // Fallback kompatibilitas ke key tunggal lama
+    if (keys.length === 0 && config.groq_api_key && config.groq_api_key.trim()) {
+        keys = [config.groq_api_key];
+    }
+    
+    // Filter key kosong/tidak valid
+    keys = keys.filter(k => k && k.trim().length > 0);
+    
+    if (keys.length === 0) {
+        throw new Error('Tidak ada API Key Groq yang tersedia di dalam stok (pool).');
+    }
+    
+    const model = config.groq_model || 'llama-3.3-70b-versatile';
+    const url = 'https://api.groq.com/openai/v1/chat/completions';
+    let lastError = null;
+    
+    // Coba memanggil API menggunakan key secara bergantian (round-robin) dan fallback ke key berikutnya jika gagal
+    for (let i = 0; i < keys.length; i++) {
+        const index = (currentGroqKeyIndex + i) % keys.length;
+        const activeKey = keys[index];
+        const maskedKey = activeKey.substring(0, 6) + '...' + activeKey.substring(activeKey.length - 4);
+        
+        try {
+            console.log(`[Groq Pool] Mencoba memanggil API menggunakan Key #${index + 1} (${maskedKey})`);
+            const result = await callOpenAiCompatible(url, activeKey, model, systemPrompt, chatHistory, isJson);
+            
+            // Simpan index key yang berhasil agar digunakan lagi pada panggilan berikutnya
+            currentGroqKeyIndex = index;
+            return result;
+        } catch (err) {
+            console.warn(`[Groq Pool] Key #${index + 1} gagal digunakan: ${err.message}`);
+            lastError = err;
+            // Rotasi ke key berikutnya
+            currentGroqKeyIndex = (index + 1) % keys.length;
+        }
+    }
+    
+    throw new Error(`Seluruh API Key Groq di stok gagal digunakan. Error terakhir: ${lastError ? lastError.message : 'Unknown'}`);
 }
 
 // Fungsi untuk memanggil API LM Studio (Lokal)
@@ -1871,10 +1918,7 @@ async function callAiProvider(systemPrompt, chatHistory, isJson = false) {
     if (config.provider === 'gemini') {
         return await callGeminiWithPool(systemPrompt, chatHistory, isJson);
     } else if (config.provider === 'groq') {
-        const apiKey = config.groq_api_key;
-        const model = config.groq_model || 'llama-3.3-70b-versatile';
-        const url = 'https://api.groq.com/openai/v1/chat/completions';
-        return await callOpenAiCompatible(url, apiKey, model, systemPrompt, chatHistory, isJson);
+        return await callGroqWithPool(systemPrompt, chatHistory, isJson);
     } else if (config.provider === 'deepseek') {
         const apiKey = config.deepseek_api_key;
         const model = config.deepseek_model || 'deepseek-chat';

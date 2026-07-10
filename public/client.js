@@ -459,8 +459,14 @@ async function loadConfig() {
         cfgModelName.value = config.provider === 'local' ? (config.model_name || 'qwen3.5-9b') : 'qwen3.5-9b';
         cfgApiKey.value = config.api_key || '';
         
-        // Memuat keys untuk provider baru
-        document.getElementById('cfg-groq-api-key').value = config.groq_api_key || '';
+        // Memuat stok Groq API Keys (gabungkan dengan newline untuk textarea)
+        let groqKeysList = '';
+        if (config.groq_api_keys && Array.isArray(config.groq_api_keys)) {
+            groqKeysList = config.groq_api_keys.join('\n');
+        } else if (config.groq_api_key) {
+            groqKeysList = config.groq_api_key;
+        }
+        document.getElementById('cfg-groq-api-keys').value = groqKeysList;
         document.getElementById('cfg-groq-model').value = config.groq_model || 'llama-3.3-70b-versatile';
         
         document.getElementById('cfg-deepseek-api-key').value = config.deepseek_api_key || '';
@@ -534,7 +540,7 @@ function setupConfigHandler() {
             system_prompt_template: cfgSystemPrompt.value.trim(),
             
             // Sertakan key & model provider lainnya agar tidak terhapus
-            groq_api_key: document.getElementById('cfg-groq-api-key').value.trim(),
+            groq_api_keys: (document.getElementById('cfg-groq-api-keys').value || '').split('\n').map(k => k.trim()).filter(k => k.length > 0),
             groq_model: document.getElementById('cfg-groq-model').value.trim(),
             deepseek_api_key: document.getElementById('cfg-deepseek-api-key').value.trim(),
             deepseek_model: document.getElementById('cfg-deepseek-model').value.trim(),
