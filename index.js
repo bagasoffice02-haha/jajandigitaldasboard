@@ -35,6 +35,28 @@ if (!fs.existsSync(CONFIG_FILE)) {
 
 const config = JSON.parse(fs.readFileSync(CONFIG_FILE, 'utf-8'));
 
+// Auto-correct path Chrome sesuai OS pada startup (mencegah crash setelah restore)
+let configModified = false;
+if (process.platform === 'linux') {
+    if (config.puppeteer_executable_path && (config.puppeteer_executable_path.includes('\\') || config.puppeteer_executable_path.toLowerCase().includes('program files') || config.puppeteer_executable_path.toLowerCase().includes('chrome.exe'))) {
+        config.puppeteer_executable_path = '/usr/bin/google-chrome-stable';
+        configModified = true;
+    }
+} else if (process.platform === 'win32') {
+    if (config.puppeteer_executable_path && config.puppeteer_executable_path.includes('/')) {
+        config.puppeteer_executable_path = '';
+        configModified = true;
+    }
+}
+if (configModified) {
+    try {
+        fs.writeFileSync(CONFIG_FILE, JSON.stringify(config, null, 2), 'utf-8');
+        console.log('[Config] Path Chrome otomatis disesuaikan dengan Sistem Operasi VPS (Linux).');
+    } catch(e) {
+        console.warn('[Config] Gagal menyimpan penyesuaian path Chrome:', e.message);
+    }
+}
+
 // Sanitize API URL to guarantee it points to the correct Completions endpoint
 let apiEndpoint = config.api_url;
 if (apiEndpoint && !apiEndpoint.includes('/chat/completions') && !apiEndpoint.includes('/api/chat')) {
