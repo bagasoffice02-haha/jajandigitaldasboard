@@ -1054,6 +1054,60 @@
                 </form>
             </section>
 
+            <!-- PANEL KANAN: Export & Migrasi -->
+            <section class="panel panel-right">
+                <div class="card" style="margin-bottom: 20px;">
+                    <h2><i data-lucide="package-open"></i> Export &amp; Migrasi Data</h2>
+                    <p class="card-subtitle">Download semua data bot dalam satu file ZIP untuk dipindahkan ke server lain</p>
+
+                    <div style="display:flex; flex-direction:column; gap:12px; margin-top:16px;">
+
+                        <!-- Export tanpa sesi -->
+                        <div style="background: var(--bg-secondary, #f5f5f5); border-radius: 12px; padding: 16px;">
+                            <div style="display:flex; align-items:center; gap:10px; margin-bottom:8px;">
+                                <i data-lucide="archive" style="color: var(--accent-color, #25d366); width:20px; height:20px;"></i>
+                                <strong>Export Data Bot</strong>
+                            </div>
+                            <p style="font-size:13px; color: var(--text-secondary, #666); margin-bottom:12px; line-height:1.5;">
+                                Ekspor <b>config, database, knowledge, media, presets</b>.<br>
+                                Di server nanti perlu <b>scan QR</b> WhatsApp baru.
+                            </p>
+                            <a href="/api/export" id="btn-export-data" class="btn btn-primary btn-block" style="text-decoration:none; display:flex; align-items:center; justify-content:center; gap:8px;" onclick="handleExportClick(this)">
+                                <i data-lucide="download"></i> Download Backup (.zip)
+                            </a>
+                        </div>
+
+                        <!-- Export dengan sesi -->
+                        <div style="background: var(--bg-secondary, #f5f5f5); border-radius: 12px; padding: 16px;">
+                            <div style="display:flex; align-items:center; gap:10px; margin-bottom:8px;">
+                                <i data-lucide="smartphone" style="color: #f0a500; width:20px; height:20px;"></i>
+                                <strong>Export + Sesi WhatsApp</strong>
+                            </div>
+                            <p style="font-size:13px; color: var(--text-secondary, #666); margin-bottom:12px; line-height:1.5;">
+                                Termasuk folder <b>session</b> WhatsApp — <b>tidak perlu scan QR ulang</b> di server baru.<br>
+                                <span style="color:#e74c3c; font-size:12px;">⚠️ File lebih besar & hanya 1 device yang bisa aktif</span>
+                            </p>
+                            <a href="/api/export?session=1" id="btn-export-session" class="btn btn-block" style="text-decoration:none; display:flex; align-items:center; justify-content:center; gap:8px; background: #f0a500; color:#fff;" onclick="handleExportClick(this)">
+                                <i data-lucide="download"></i> Download + Sesi WA (.zip)
+                            </a>
+                        </div>
+
+                        <!-- Info isi backup -->
+                        <details style="font-size:13px; color: var(--text-secondary, #666);">
+                            <summary style="cursor:pointer; font-weight:600; margin-bottom:8px;">📦 Apa saja isi file backup?</summary>
+                            <ul style="margin: 8px 0 0 16px; line-height:2;">
+                                <li><code>config.json</code> — API keys, pengaturan bot</li>
+                                <li><code>database.sqlite</code> — Order, transaksi, memori</li>
+                                <li><code>presets.json</code> — Template pesan</li>
+                                <li><code>knowledge/</code> — File AI &amp; info toko</li>
+                                <li><code>media/</code> — Foto QRIS &amp; media lain</li>
+                                <li><code>README_RESTORE.txt</code> — Panduan restore</li>
+                            </ul>
+                        </details>
+                    </div>
+                </div>
+            </section>
+
             <!-- PANEL KANAN: Tampilan & Tema -->
             <section class="panel panel-right">
                 <div class="card">

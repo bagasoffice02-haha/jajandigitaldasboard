@@ -15,6 +15,7 @@ const { Server } = require('socket.io');
 const multer = require('multer');
 const pdfParse = require('pdf-parse');
 const { exec } = require('child_process');
+const archiver = require('archiver');
 
 // Definisikan File Penyimpanan Data Persisten
 const CONFIG_FILE = './config.json';
@@ -1271,6 +1272,88 @@ app.post('/api/memory', (req, res) => {
     } catch (err) {
         console.error('Gagal menyimpan memori otomatis:', err.message);
         res.status(500).send('Gagal menyimpan memori otomatis.');
+    }
+});
+
+// GET Export semua data penting ke file ZIP (untuk migrasi server)
+app.get('/api/export', async (req, res) => {
+    try {
+        const now = new Date();
+        const timestamp = now.toISOString().replace(/[:.]/g, '-').slice(0, 19);
+        const zipFilename = `backup-jajan-digital-${timestamp}.zip`;
+
+        res.setHeader('Content-Type', 'application/zip');
+        res.setHeader('Content-Disposition', `attachment; filename="${zipFilename}"`);
+
+        const archive = archiver('zip', { zlib: { level: 9 } });
+        archive.on('error', (err) => {
+            console.error('[Export] Error saat membuat ZIP:', err.message);
+            if (!res.headersSent) res.status(500).send('Gagal membuat file export.');
+        });
+
+        archive.pipe(res);
+
+        // 1. File konfigurasi utama
+        if (fs.existsSync('./config.json')) {
+            archive.file('./config.json', { name: 'config.json' });
+        }
+
+        // 2. Database SQLite (semua data order, transaksi, memori, grup)
+        if (fs.existsSync('./database.sqlite')) {
+            archive.file('./database.sqlite', { name: 'database.sqlite' });
+        }
+
+        // 3. Presets pesan
+        if (fs.existsSync('./presets.json')) {
+            archive.file('./presets.json', { name: 'presets.json' });
+        }
+
+        // 4. Seluruh folder knowledge (file AI & memori toko)
+        if (fs.existsSync('./knowledge')) {
+            archive.directory('./knowledge', 'knowledge');
+        }
+
+        // 5. Folder media (foto QRIS, dll)
+        if (fs.existsSync('./media')) {
+            archive.directory('./media', 'media');
+        }
+
+        // 6. Folder session WhatsApp (opsional, skip jika tidak ada)
+        const includeSession = req.query.session === '1';
+        if (includeSession && fs.existsSync('./session')) {
+            archive.directory('./session', 'session');
+        }
+
+        // Tulis README instruksi migrasi
+        const readmeContent = `BACKUP JAJAN DIGITAL - ${now.toLocaleString('id-ID')}
+========================================
+
+File ini berisi backup data bot WhatsApp Jajan Digital Anda.
+
+ISI BACKUP:
+- config.json       : Konfigurasi bot (API keys, provider, dsb)
+- database.sqlite   : Seluruh data (order, transaksi, memori, grup)
+- presets.json      : Template pesan preset
+- knowledge/        : File pengetahuan & memori AI toko
+- media/            : File media (foto QRIS, dll)
+${includeSession ? '- session/          : Sesi login WhatsApp (tidak perlu scan QR ulang)' : ''}
+
+CARA RESTORE DI SERVER:
+1. Clone repo: git clone https://github.com/bagasoffice02-haha/wa_gatewaygrup.git
+2. cd wa_gatewaygrup && npm install
+3. Ekstrak file backup ini dan copy semua isinya ke folder proyek
+4. Jalankan: node index.js
+${includeSession ? '5. Tidak perlu scan QR (sesi sudah dibawa)' : '5. Scan QR WhatsApp yang muncul'}
+
+Dibuat otomatis oleh sistem bot Jajan Digital.`;
+
+        archive.append(readmeContent, { name: 'README_RESTORE.txt' });
+
+        await archive.finalize();
+        console.log(`[Export] File backup berhasil dibuat: ${zipFilename}`);
+    } catch (err) {
+        console.error('[Export] Gagal export data:', err.message);
+        if (!res.headersSent) res.status(500).send('Gagal export data.');
     }
 });
 

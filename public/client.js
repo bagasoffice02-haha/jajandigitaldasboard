@@ -2943,3 +2943,20 @@ socket.on('invoice_created', (newInv) => {
         }
     }
 });
+
+// ── EXPORT & MIGRASI DATA ─────────────────────────────
+window.handleExportClick = function(el) {
+    const originalHTML = el.innerHTML;
+    el.innerHTML = '<i data-lucide="loader"></i> Sedang menyiapkan file...';
+    el.style.pointerEvents = 'none';
+    el.style.opacity = '0.7';
+    lucide.createIcons();
+
+    // Restore tombol setelah 8 detik (waktu cukup untuk ZIP selesai dibuat)
+    setTimeout(() => {
+        el.innerHTML = originalHTML;
+        el.style.pointerEvents = '';
+        el.style.opacity = '';
+        lucide.createIcons();
+    }, 8000);
+};
