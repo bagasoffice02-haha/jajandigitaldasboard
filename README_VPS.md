@@ -319,6 +319,22 @@ cd ~/wa_gatewaygrup
 npm install    # Install ulang dependencies
 ```
 
+### ❌ Error: `GLIBC_2.38' not found (sqlite3)
+Error ini terjadi karena Bos menyalin folder `node_modules` dari Windows/sistem lain langsung ke VPS. Modul native C++ seperti `sqlite3` harus dikompilasi ulang sesuai versi Linux VPS Bos.
+```bash
+# Masuk ke folder bot
+cd ~/wa_gatewaygrup
+
+# Hapus folder node_modules & lock file lama
+rm -rf node_modules package-lock.json
+
+# Install dependencies bersih di VPS
+npm install
+
+# Jika masih error, kompilasi manual sqlite3:
+npm install sqlite3 --build-from-source
+```
+
 ### ❌ Bot berhenti sendiri / crash
 ```bash
 pm2 logs jajan-digital-bot --lines 50   # Lihat 50 baris log terakhir
