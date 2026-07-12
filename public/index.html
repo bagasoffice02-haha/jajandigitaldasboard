@@ -1108,6 +1108,71 @@
                 </div>
             </section>
 
+            <!-- PANEL KANAN: Import / Restore Backup -->
+            <section class="panel panel-right">
+                <div class="card" style="margin-bottom: 20px;">
+                    <h2><i data-lucide="upload-cloud"></i> Import / Restore Backup</h2>
+                    <p class="card-subtitle">Upload file backup (.zip) untuk memulihkan data ke server ini</p>
+
+                    <div style="display:flex; flex-direction:column; gap:14px; margin-top:16px;">
+
+                        <!-- Drop zone upload -->
+                        <div id="import-dropzone" style="border: 2px dashed var(--border-color, #ddd); border-radius: 12px; padding: 24px; text-align:center; cursor:pointer; transition: all 0.2s;"
+                             onclick="document.getElementById('import-file-input').click()"
+                             ondragover="event.preventDefault(); this.style.borderColor='#25d366'; this.style.background='rgba(37,211,102,0.05)'"
+                             ondragleave="this.style.borderColor=''; this.style.background=''"
+                             ondrop="handleImportDrop(event)">
+                            <i data-lucide="file-archive" style="width:40px; height:40px; color: var(--accent-color, #25d366); margin-bottom:10px;"></i>
+                            <p style="font-weight:600; margin-bottom:4px;">Klik atau seret file backup di sini</p>
+                            <p style="font-size:12px; color: var(--text-secondary, #888);">Format: .zip — Maks 500 MB</p>
+                            <input type="file" id="import-file-input" accept=".zip" style="display:none" onchange="handleImportFileSelect(this)">
+                        </div>
+
+                        <!-- File terpilih info -->
+                        <div id="import-file-info" style="display:none; background: var(--bg-secondary, #f5f5f5); border-radius:10px; padding:12px; font-size:13px;">
+                            <div style="display:flex; align-items:center; gap:8px;">
+                                <i data-lucide="file-zip" style="color:#25d366; width:18px; height:18px;"></i>
+                                <span id="import-file-name" style="font-weight:600;"></span>
+                                <span id="import-file-size" style="color:var(--text-secondary,#888); margin-left:auto;"></span>
+                            </div>
+                        </div>
+
+                        <!-- Opsi import sesi -->
+                        <label style="display:flex; align-items:center; gap:10px; font-size:14px; cursor:pointer; padding: 10px; background: var(--bg-secondary,#f5f5f5); border-radius:10px;">
+                            <input type="checkbox" id="import-session-check" style="width:18px; height:18px;">
+                            <div>
+                                <strong>Restore Sesi WhatsApp</strong>
+                                <p style="font-size:12px; color:var(--text-secondary,#888); margin:2px 0 0;">Centang jika backup mengandung folder session (tidak perlu scan QR)</p>
+                            </div>
+                        </label>
+
+                        <!-- Progress bar -->
+                        <div id="import-progress-wrap" style="display:none;">
+                            <div style="display:flex; justify-content:space-between; font-size:12px; margin-bottom:4px;">
+                                <span>Mengupload & memulihkan data...</span>
+                                <span id="import-progress-pct">0%</span>
+                            </div>
+                            <div style="background: var(--border-color,#eee); border-radius:99px; height:8px; overflow:hidden;">
+                                <div id="import-progress-bar" style="background: #25d366; height:100%; width:0%; transition: width 0.3s; border-radius:99px;"></div>
+                            </div>
+                        </div>
+
+                        <!-- Tombol import -->
+                        <button id="btn-do-import" class="btn btn-primary btn-block" onclick="doImport()" disabled style="opacity:0.5;">
+                            <i data-lucide="upload"></i> Mulai Restore Data
+                        </button>
+
+                        <!-- Hasil import -->
+                        <div id="import-result" style="display:none; border-radius:10px; padding:12px; font-size:13px; line-height:1.7;"></div>
+
+                        <!-- Warning -->
+                        <div style="background: rgba(231,76,60,0.08); border-left: 3px solid #e74c3c; border-radius:8px; padding:10px 12px; font-size:12px; color: #c0392b;">
+                            ⚠️ <strong>Perhatian:</strong> File yang ada (config, database, knowledge) akan <strong>ditimpa</strong> oleh isi backup. Pastikan Bos mengupload file backup yang benar.
+                        </div>
+                    </div>
+                </div>
+            </section>
+
             <!-- PANEL KANAN: Tampilan & Tema -->
             <section class="panel panel-right">
                 <div class="card">

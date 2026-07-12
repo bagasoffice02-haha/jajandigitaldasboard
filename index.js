@@ -16,6 +16,7 @@ const multer = require('multer');
 const pdfParse = require('pdf-parse');
 const { exec } = require('child_process');
 const archiver = require('archiver');
+const unzipper = require('unzipper');
 
 // Definisikan File Penyimpanan Data Persisten
 const CONFIG_FILE = './config.json';
@@ -1298,9 +1299,18 @@ app.get('/api/export', async (req, res) => {
             archive.file('./config.json', { name: 'config.json' });
         }
 
-        // 2. Database SQLite (semua data order, transaksi, memori, grup)
+        // 2. Database SQLite - buat salinan temp dulu agar tidak EBUSY (file sedang dipakai bot)
+        const os = require('os');
+        const dbTempPath = path.join(os.tmpdir(), `db-backup-${Date.now()}.sqlite`);
         if (fs.existsSync('./database.sqlite')) {
-            archive.file('./database.sqlite', { name: 'database.sqlite' });
+            try {
+                fs.copyFileSync('./database.sqlite', dbTempPath);
+                archive.file(dbTempPath, { name: 'database.sqlite' });
+                // Hapus temp setelah ZIP selesai
+                archive.on('finish', () => { try { fs.unlinkSync(dbTempPath); } catch(_) {} });
+            } catch(e) {
+                console.warn('[Export] Tidak bisa copy database.sqlite:', e.message);
+            }
         }
 
         // 3. Presets pesan
@@ -1356,6 +1366,125 @@ Dibuat otomatis oleh sistem bot Jajan Digital.`;
         if (!res.headersSent) res.status(500).send('Gagal export data.');
     }
 });
+
+// Multer config khusus untuk upload backup ZIP
+const uploadZip = multer({
+    storage: multer.diskStorage({
+        destination: (req, file, cb) => cb(null, require('os').tmpdir()),
+        filename: (req, file, cb) => cb(null, `import-backup-${Date.now()}.zip`)
+    }),
+    fileFilter: (req, file, cb) => {
+        if (file.mimetype === 'application/zip' || file.originalname.endsWith('.zip')) {
+            cb(null, true);
+        } else {
+            cb(new Error('Hanya file .zip yang diizinkan'), false);
+        }
+    },
+    limits: { fileSize: 500 * 1024 * 1024 } // max 500 MB
+});
+
+// POST Import/Restore backup dari file ZIP
+app.post('/api/import', uploadZip.single('backup'), async (req, res) => {
+    if (!req.file) {
+        return res.status(400).json({ success: false, message: 'Tidak ada file yang diupload.' });
+    }
+
+    const zipPath = req.file.path;
+    const importSession = req.body.import_session === '1';
+    const results = { restored: [], skipped: [], errors: [] };
+
+    // File/folder yang diizinkan untuk di-restore
+    const ALLOWED_ROOTS = ['config.json', 'database.sqlite', 'presets.json', 'knowledge', 'media'];
+    if (importSession) ALLOWED_ROOTS.push('session');
+
+    try {
+        console.log(`[Import] Memulai restore dari: ${req.file.originalname}`);
+
+        const zip = fs.createReadStream(zipPath).pipe(unzipper.Parse({ forceStream: true }));
+
+        const writePromises = [];
+
+        for await (const entry of zip) {
+            const entryPath = entry.path;
+            const entryType = entry.type; // 'File' or 'Directory'
+
+            // Abaikan README dan file di luar whitelist
+            if (entryPath === 'README_RESTORE.txt' || entryPath.startsWith('__MACOSX')) {
+                entry.autodrain();
+                continue;
+            }
+
+            // Cek apakah entry ini termasuk yang diizinkan
+            const rootName = entryPath.split('/')[0];
+            if (!ALLOWED_ROOTS.includes(rootName)) {
+                entry.autodrain();
+                results.skipped.push(entryPath);
+                continue;
+            }
+
+            // Buat path tujuan yang aman (path traversal protection)
+            const destPath = path.resolve('.', entryPath);
+            const baseDir = path.resolve('.');
+            if (!destPath.startsWith(baseDir)) {
+                entry.autodrain();
+                results.errors.push(`Path tidak aman dilewati: ${entryPath}`);
+                continue;
+            }
+
+            if (entryType === 'Directory') {
+                fs.mkdirSync(destPath, { recursive: true });
+                entry.autodrain();
+            } else {
+                // Buat direktori induk jika belum ada
+                fs.mkdirSync(path.dirname(destPath), { recursive: true });
+
+                const writePromise = new Promise((resolve, reject) => {
+                    const writeStream = fs.createWriteStream(destPath);
+                    entry.pipe(writeStream);
+                    writeStream.on('finish', () => {
+                        results.restored.push(entryPath);
+                        resolve();
+                    });
+                    writeStream.on('error', (err) => {
+                        results.errors.push(`Gagal tulis ${entryPath}: ${err.message}`);
+                        resolve(); // Lanjut meski ada error
+                    });
+                });
+                writePromises.push(writePromise);
+            }
+        }
+
+        await Promise.all(writePromises);
+
+        // Hapus file ZIP sementara
+        try { fs.unlinkSync(zipPath); } catch(_) {}
+
+        // Reload config jika config.json di-restore
+        if (results.restored.includes('config.json')) {
+            try {
+                const newConfig = JSON.parse(fs.readFileSync(CONFIG_FILE, 'utf-8'));
+                Object.assign(config, newConfig);
+                console.log('[Import] config.json berhasil dimuat ulang ke memori.');
+            } catch(e) {
+                console.warn('[Import] Gagal reload config.json:', e.message);
+            }
+        }
+
+        console.log(`[Import] Selesai. Dipulihkan: ${results.restored.length} file, Dilewati: ${results.skipped.length}, Error: ${results.errors.length}`);
+
+        res.json({
+            success: true,
+            message: `Berhasil memulihkan ${results.restored.length} file dari backup!`,
+            details: results
+        });
+
+    } catch (err) {
+        try { fs.unlinkSync(zipPath); } catch(_) {}
+        console.error('[Import] Error saat import:', err.message);
+        res.status(500).json({ success: false, message: `Gagal import: ${err.message}` });
+    }
+});
+
 
 // POST Restart WhatsApp Client (selalu hapus sesi → QR scan baru)
 app.post('/api/whatsapp/restart', async (req, res) => {

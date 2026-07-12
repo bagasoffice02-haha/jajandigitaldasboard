@@ -2960,3 +2960,138 @@ window.handleExportClick = function(el) {
         lucide.createIcons();
     }, 8000);
 };
+
+// ── IMPORT / RESTORE BACKUP ───────────────────────────
+let importSelectedFile = null;
+
+function formatFileSize(bytes) {
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+    return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+}
+
+function setImportFile(file) {
+    if (!file || !file.name.endsWith('.zip')) {
+        alert('Hanya file .zip yang bisa diupload!');
+        return;
+    }
+    importSelectedFile = file;
+
+    // Tampilkan info file
+    document.getElementById('import-file-name').textContent = file.name;
+    document.getElementById('import-file-size').textContent = formatFileSize(file.size);
+    document.getElementById('import-file-info').style.display = 'block';
+
+    // Aktifkan tombol
+    const btn = document.getElementById('btn-do-import');
+    btn.disabled = false;
+    btn.style.opacity = '1';
+
+    // Reset result
+    const result = document.getElementById('import-result');
+    result.style.display = 'none';
+    result.innerHTML = '';
+
+    lucide.createIcons();
+}
+
+window.handleImportFileSelect = function(input) {
+    if (input.files && input.files[0]) setImportFile(input.files[0]);
+};
+
+window.handleImportDrop = function(event) {
+    event.preventDefault();
+    const dropzone = document.getElementById('import-dropzone');
+    dropzone.style.borderColor = '';
+    dropzone.style.background = '';
+    const file = event.dataTransfer.files[0];
+    if (file) setImportFile(file);
+};
+
+window.doImport = function() {
+    if (!importSelectedFile) return;
+
+    const importSession = document.getElementById('import-session-check').checked;
+    const btn = document.getElementById('btn-do-import');
+    const progressWrap = document.getElementById('import-progress-wrap');
+    const progressBar = document.getElementById('import-progress-bar');
+    const progressPct = document.getElementById('import-progress-pct');
+    const resultDiv = document.getElementById('import-result');
+
+    // Konfirmasi
+    if (!confirm(`⚠️ Restore backup dari "${importSelectedFile.name}"?\n\nData yang ada (config, database, knowledge, media) akan DITIMPA.\nLanjutkan?`)) return;
+
+    // Disable tombol & tampilkan progress
+    btn.disabled = true;
+    btn.style.opacity = '0.5';
+    progressWrap.style.display = 'block';
+    progressBar.style.width = '0%';
+    progressPct.textContent = '0%';
+    resultDiv.style.display = 'none';
+
+    const formData = new FormData();
+    formData.append('backup', importSelectedFile);
+    formData.append('import_session', importSession ? '1' : '0');
+
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', '/api/import', true);
+
+    // Progress upload
+    xhr.upload.onprogress = function(e) {
+        if (e.lengthComputable) {
+            const pct = Math.round((e.loaded / e.total) * 90); // Max 90% untuk upload fase
+            progressBar.style.width = pct + '%';
+            progressPct.textContent = pct + '%';
+        }
+    };
+
+    xhr.onload = function() {
+        progressBar.style.width = '100%';
+        progressPct.textContent = '100%';
+
+        setTimeout(() => {
+            progressWrap.style.display = 'none';
+            btn.disabled = false;
+            btn.style.opacity = '1';
+        }, 1000);
+
+        try {
+            const data = JSON.parse(xhr.responseText);
+            resultDiv.style.display = 'block';
+
+            if (data.success) {
+                const restoredCount = data.details?.restored?.length || 0;
+                const errorCount = data.details?.errors?.length || 0;
+                resultDiv.style.background = 'rgba(37,211,102,0.1)';
+                resultDiv.style.borderLeft = '3px solid #25d366';
+                resultDiv.innerHTML = `
+                    <strong>✅ ${data.message}</strong><br>
+                    📁 ${restoredCount} file berhasil dipulihkan<br>
+                    ${errorCount > 0 ? `⚠️ ${errorCount} file gagal<br>` : ''}
+                    <small style="color:#888;">Bot perlu di-restart agar perubahan database aktif sepenuhnya.</small>
+                `;
+            } else {
+                resultDiv.style.background = 'rgba(231,76,60,0.08)';
+                resultDiv.style.borderLeft = '3px solid #e74c3c';
+                resultDiv.innerHTML = `<strong>❌ Gagal:</strong> ${data.message}`;
+            }
+        } catch(e) {
+            resultDiv.style.display = 'block';
+            resultDiv.style.background = 'rgba(231,76,60,0.08)';
+            resultDiv.style.borderLeft = '3px solid #e74c3c';
+            resultDiv.innerHTML = `<strong>❌ Error:</strong> Respon server tidak valid.`;
+        }
+    };
+
+    xhr.onerror = function() {
+        progressWrap.style.display = 'none';
+        btn.disabled = false;
+        btn.style.opacity = '1';
+        resultDiv.style.display = 'block';
+        resultDiv.style.background = 'rgba(231,76,60,0.08)';
+        resultDiv.style.borderLeft = '3px solid #e74c3c';
+        resultDiv.innerHTML = `<strong>❌ Koneksi gagal.</strong> Periksa server dan coba lagi.`;
+    };
+
+    xhr.send(formData);
+};
