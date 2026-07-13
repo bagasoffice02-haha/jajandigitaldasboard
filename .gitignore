@@ -11,5 +11,4 @@ scratch/
 *.log
 *.bak
 *.sqlite
-
-
+knowledge/secret_*

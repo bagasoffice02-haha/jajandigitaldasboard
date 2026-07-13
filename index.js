@@ -3397,6 +3397,7 @@ function getGroupKnowledgeContext(allowedFiles) {
     }
     let context = '';
     allowedFiles.forEach(file => {
+        if (file.startsWith('secret_') || file.startsWith('admin_')) return;
         const filePath = path.join('./knowledge', file);
         if (fs.existsSync(filePath)) {
             const content = fs.readFileSync(filePath, 'utf-8');
@@ -4496,6 +4497,86 @@ async function handleIncomingMessage(msg) {
                 } else {
                     await msg.reply(`⚠️ Balas/quote pesan anggota dengan mengetik *${cmd}*`);
                 }
+                return;
+            }
+            
+            // .akun (Manajemen Akun & Password)
+            if (cmd === '.akun') {
+                const filePath = './knowledge/secret_akun_dan_password.txt';
+                if (!fs.existsSync(filePath)) {
+                    await msg.reply("🔑 *MANAJEMEN AKUN & PASSWORD* 🔑\n\nBelum ada akun yang disimpan.");
+                    return;
+                }
+                const content = fs.readFileSync(filePath, 'utf-8').trim();
+                if (content.length === 0) {
+                    await msg.reply("🔑 *MANAJEMEN AKUN & PASSWORD* 🔑\n\nBelum ada akun yang disimpan.");
+                    return;
+                }
+                await msg.reply(`🔑 *DAFTAR AKUN & PASSWORD* 🔑\n\n${content}`);
+                return;
+            }
+
+            if (cmd.startsWith('.akun ')) {
+                const keyword = userMessage.substring(6).trim().toLowerCase();
+                const filePath = './knowledge/secret_akun_dan_password.txt';
+                if (!fs.existsSync(filePath)) {
+                    await msg.reply("❌ Belum ada akun yang disimpan.");
+                    return;
+                }
+                const content = fs.readFileSync(filePath, 'utf-8');
+                const lines = content.split('\n');
+                const matched = lines.filter(line => line.toLowerCase().includes(keyword));
+                if (matched.length === 0) {
+                    await msg.reply(`❌ Tidak ada akun yang cocok dengan kata kunci: *${keyword}*`);
+                    return;
+                }
+                await msg.reply(`🔑 *HASIL PENCARIAN AKUN* 🔑\n\n${matched.join('\n')}`);
+                return;
+            }
+
+            if (cmd.startsWith('.tambahakun ')) {
+                const params = userMessage.substring(12).split('|').map(p => p.trim());
+                if (params.length < 3) {
+                    await msg.reply("⚠️ *Format salah!*\n\nGunakan: `.tambahakun NamaApp | Username/Email | Password | Keterangan (opsional)`");
+                    return;
+                }
+                const [app, username, password, note = '-'] = params;
+                const filePath = './knowledge/secret_akun_dan_password.txt';
+                
+                if (!fs.existsSync('./knowledge')) {
+                    fs.mkdirSync('./knowledge');
+                }
+                
+                const entry = `• [${app}] User: ${username} | Pass: ${password} | Ket: ${note}\n`;
+                fs.appendFileSync(filePath, entry, 'utf-8');
+                
+                await msg.reply(`✅ *Akun Berhasil Disimpan!*\n\n` +
+                                `📱 *Aplikasi:* ${app}\n` +
+                                `👤 *Username/Email:* ${username}\n` +
+                                `🔑 *Password:* ${password}\n` +
+                                `📝 *Keterangan:* ${note}`);
+                return;
+            }
+
+            if (cmd.startsWith('.hapusakun ')) {
+                const keyword = userMessage.substring(11).trim().toLowerCase();
+                const filePath = './knowledge/secret_akun_dan_password.txt';
+                if (!fs.existsSync(filePath)) {
+                    await msg.reply("❌ Belum ada akun yang disimpan.");
+                    return;
+                }
+                const content = fs.readFileSync(filePath, 'utf-8');
+                const lines = content.split('\n');
+                const remaining = lines.filter(line => line.trim() !== '' && !line.toLowerCase().includes(keyword));
+                const removedCount = lines.length - remaining.length - 1;
+                
+                if (removedCount <= 0) {
+                    await msg.reply(`❌ Tidak ada akun yang cocok dengan kata kunci: *${keyword}*`);
+                    return;
+                }
+                
+                fs.writeFileSync(filePath, remaining.join('\n') + '\n', 'utf-8');
+                await msg.reply(`✅ Berhasil menghapus ${removedCount} akun yang cocok dengan kata kunci: *${keyword}*`);
                 return;
             }
 
