@@ -2092,12 +2092,12 @@ table tr:hover {
     left: 0 !important;
     width: 100vw !important;
     height: 100vh !important;
-    background: rgba(0, 0, 0, 0.6) !important; /* Dimmed backdrop for clarity */
-    backdrop-filter: blur(4px) !important;
-    -webkit-backdrop-filter: blur(4px) !important;
+    background: rgba(0, 0, 0, 0.4) !important; /* Soft backdrop, no blur */
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
     display: flex;
-    align-items: center !important; /* Center vertically */
-    justify-content: center !important; /* Center horizontally */
+    align-items: center !important; 
+    justify-content: center !important; 
     padding: 20px !important; 
     z-index: 999999 !important;
 }
@@ -2107,11 +2107,13 @@ table tr:hover {
     border: 1px solid var(--border) !important;
     border-radius: 16px !important;
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3) !important;
-    width: 460px !important; /* Centered modal width */
+    width: 460px !important; 
     max-width: 100% !important;
     padding: 24px !important;
     max-height: calc(100vh - 40px) !important;
     overflow-y: auto !important;
+    position: relative !important;
+    left: 100px !important; /* Shift right by 100px */
     animation: fadeIn 0.2s ease-out !important;
 }
 
