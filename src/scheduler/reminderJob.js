@@ -11,9 +11,18 @@ const os = require('os');
 let lastSentReportDate = '';
 let lastSentBackupDate = '';
 const groupOpenStates = new Map();
+function resolveClient(clientOrGetClient) {
+    if (typeof clientOrGetClient === 'function') {
+        return clientOrGetClient();
+    }
+    return clientOrGetClient;
+}
 
-async function checkPremiumExpirations(client, io) {
+async function checkPremiumExpirations(clientOrGetClient, io) {
     try {
+        const client = resolveClient(clientOrGetClient);
+        if (!client) return;
+        
         const db = getDb();
         if (!db) return;
         
@@ -123,8 +132,10 @@ async function checkPremiumExpirations(client, io) {
     }
 }
 
-async function sendDailyReport(client, io) {
+async function sendDailyReport(clientOrGetClient, io) {
     try {
+        const client = resolveClient(clientOrGetClient);
+        if (!client) return;
         if (!config.boss_number || config.boss_number.trim() === '') {
             console.log('[Scheduler] Nomor WhatsApp Bos belum dikonfigurasi. Laporan dibatalkan.');
             return;
@@ -175,12 +186,15 @@ async function sendDailyReport(client, io) {
     }
 }
 
-function startReminderScheduler(client, io, getStatus) {
+function startReminderScheduler(clientOrGetClient, io, getStatus) {
     console.log('[Scheduler] Memulai scheduler pengingat otomatis...');
     setInterval(async () => {
         if (getStatus() !== 'CONNECTED') return;
 
         try {
+            const client = resolveClient(clientOrGetClient);
+            if (!client) return;
+            
             const now = new Date();
             const activeReminders = await getReminders();
 
@@ -222,9 +236,11 @@ function startReminderScheduler(client, io, getStatus) {
     }, 30000);
 }
 
-async function checkGroupSchedules(client, getStatus) {
+async function checkGroupSchedules(clientOrGetClient, getStatus) {
     try {
         if (getStatus() !== 'CONNECTED') return;
+        const client = resolveClient(clientOrGetClient);
+        if (!client) return;
 
         const now = new Date();
         const timeParts = now.toLocaleTimeString('en-US', {
@@ -352,8 +368,11 @@ function startDailyReportScheduler(client, io, getStatus) {
     }, 30000);
 }
 
-async function runWeeklyBackup(client, io) {
+async function runWeeklyBackup(clientOrGetClient, io) {
     try {
+        const client = resolveClient(clientOrGetClient);
+        if (!client) return;
+        
         console.log('[Backup Scheduler] Memulai pembuatan backup mingguan otomatis...');
         
         const now = new Date();

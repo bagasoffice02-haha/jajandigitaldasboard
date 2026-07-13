@@ -7,18 +7,14 @@ const { exec } = require('child_process');
 const { config } = require('../../config/config');
 const { addAdmin, getShopData } = require('../../db/models');
 const { handleIncomingMessage, initMessageHandler } = require('./messageHandler');
-const { 
-    startDailyReportScheduler, 
-    startReminderScheduler, 
-    startGroupScheduleScheduler 
-} = require('../../scheduler/reminderJob');
-
 let client = null;
 let currentStatus = 'DISCONNECTED';
 let currentQrCode = null;
 let isRestarting = false;
+let isExplicitRestart = false;
 let initWatchdogTimer = null;
 let ioInstance = null;
+let syncInterval = null;
 
 // Puppeteer Arguments for RAM stability
 const puppeteerOptions = {
@@ -154,12 +150,9 @@ function attachClientListeners() {
             ioInstance.emit('whatsapp_status', { status: currentStatus });
         }
         
+        if (syncInterval) clearInterval(syncInterval);
         syncPinnedHostAdmins();
-        setInterval(syncPinnedHostAdmins, 120000);
-        
-        startDailyReportScheduler(client, ioInstance, getStatus);
-        startReminderScheduler(client, ioInstance, getStatus);
-        startGroupScheduleScheduler(client, getStatus);
+        syncInterval = setInterval(syncPinnedHostAdmins, 120000);
 
         if (global.wasDisconnected) {
             setTimeout(async () => {
@@ -193,17 +186,24 @@ function attachClientListeners() {
         }
     });
 
-    client.on('disconnected', (reason) => {
+    client.on('disconnected', async (reason) => {
         console.log('Koneksi WhatsApp terputus:', reason);
         isRestarting = false;
         currentStatus = 'DISCONNECTED';
         currentQrCode = null;
         if (ioInstance) {
             ioInstance.emit('whatsapp_status', { status: currentStatus });
+            ioInstance.emit('qr', '');
         }
         
         global.wasDisconnected = true;
         global.disconnectTime = new Date().toLocaleString('id-ID');
+
+        if (!isExplicitRestart) {
+            console.log('[WA] Menginisialisasi ulang WhatsApp client secara otomatis...');
+            await new Promise(r => setTimeout(r, 3000));
+            restartClient(false);
+        }
     });
 
     client.on('group_join', async (notification) => {
@@ -311,11 +311,19 @@ function getQrCode() {
 }
 
 async function restartClient(clearSession = false) {
+    if (isExplicitRestart) return;
+    isExplicitRestart = true;
+    
     console.log(`[WA] Restarting client... (clearSession: ${clearSession})`);
     
     if (initWatchdogTimer) {
         clearTimeout(initWatchdogTimer);
         initWatchdogTimer = null;
+    }
+    
+    if (syncInterval) {
+        clearInterval(syncInterval);
+        syncInterval = null;
     }
     
     if (client) {
@@ -353,6 +361,7 @@ async function restartClient(clearSession = false) {
         ioInstance.emit('qr', '');
     }
     
+    isExplicitRestart = false;
     createNewClient(ioInstance);
 }
 

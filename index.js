@@ -1007,8 +1007,6 @@ app.post('/api/import', uploadZip.single('backup'), async (req, res) => {
         }
 
         const zip = fs.createReadStream(zipPath).pipe(unzipper.Parse({ forceStream: true }));
-        const writePromises = [];
-
         for await (const entry of zip) {
             const entryPath = entry.path;
             const entryType = entry.type;
@@ -1039,7 +1037,7 @@ app.post('/api/import', uploadZip.single('backup'), async (req, res) => {
             } else {
                 fs.mkdirSync(path.dirname(destPath), { recursive: true });
 
-                const writePromise = new Promise((resolve, reject) => {
+                await new Promise((resolve) => {
                     const writeStream = fs.createWriteStream(destPath);
                     entry.pipe(writeStream);
                     writeStream.on('finish', () => {
@@ -1051,11 +1049,9 @@ app.post('/api/import', uploadZip.single('backup'), async (req, res) => {
                         resolve();
                     });
                 });
-                writePromises.push(writePromise);
             }
         }
 
-        await Promise.all(writePromises);
         try { fs.unlinkSync(zipPath); } catch(_) {}
 
         if (results.restored.includes('config.json')) {
@@ -1150,4 +1146,15 @@ server.listen(PORT, async () => {
     setSocketIo(io);
     await cleanupHeadlessChrome();
     createNewClient(io);
+
+    // Start Schedulers Once (singleton)
+    const { 
+        startDailyReportScheduler, 
+        startReminderScheduler, 
+        startGroupScheduleScheduler 
+    } = require('./src/scheduler/reminderJob');
+    
+    startDailyReportScheduler(getClient, io, getStatus);
+    startReminderScheduler(getClient, io, getStatus);
+    startGroupScheduleScheduler(getClient, getStatus);
 });
