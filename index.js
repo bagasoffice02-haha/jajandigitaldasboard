@@ -5029,8 +5029,8 @@ async function handleIncomingMessage(msg) {
         timestamp: Date.now()
     });
 
-    // 1. PENANGANAN MEDIA (DOKUMEN & FOTO/GAMBAR)
-    if (msg.hasMedia) {
+    // 1. PENANGANAN MEDIA (DOKUMEN & FOTO/GAMBAR) (Hanya untuk Host Admin/Boss)
+    if (msg.hasMedia && isSenderHostAdmin) {
         activeLocks.add(chatId);
         const chat = await msg.getChat();
         await chat.sendStateTyping();
@@ -5264,160 +5264,162 @@ async function handleIncomingMessage(msg) {
         return;
     }
 
-    // 3. ADMIN TOOLS COMMANDS (RELOAD / RESET)
-    if (userMessage === '!reload') {
-        console.log(`[Admin Command] Melakukan pemindaian ulang folder knowledge...`);
-        await msg.reply('✅ File basis pengetahuan berhasil dimuat ulang di server.');
-        io.emit('message_log', {
-            chatId,
-            body: '!reload (Admin Command)',
-            type: 'system-cmd',
-            timestamp: Date.now()
-        });
-        return;
-    }
-
-    // 3.5. TRIGGER MEMORI OTOMATIS (#akubosmu)
-    if (userMessage.toLowerCase().startsWith('#akubosmu')) {
-        const memoryText = userMessage.substring('#akubosmu'.length).trim();
-        if (!memoryText) {
-            await msg.reply('❌ Memori tidak boleh kosong Bos. Contoh: #akubosmu Sandi wifi kantor adalah "admin123"');
-            return;
-        }
-        
-        activeLocks.add(chatId);
-        const chat = await msg.getChat();
-        await chat.sendStateTyping();
-        
-        try {
-            appendToMemory(memoryText);
-            const replyMsg = `✅ Memori berhasil disimpan, Bos!\n\n🧠 *Memori Baru*:\n"${memoryText}"\n\nSaya akan mengingat hal ini dalam tugas-tugas saya.`;
-            await msg.reply(replyMsg);
-            
+    // 3. ADMIN & BOSS COMMANDS (Hanya untuk Host Admin/Boss)
+    if (isSenderHostAdmin) {
+        // 3. ADMIN TOOLS COMMANDS (RELOAD / RESET)
+        if (userMessage === '!reload') {
+            console.log(`[Admin Command] Melakukan pemindaian ulang folder knowledge...`);
+            await msg.reply('✅ File basis pengetahuan berhasil dimuat ulang di server.');
             io.emit('message_log', {
                 chatId,
-                body: `Memori disimpan: "${memoryText}"`,
-                type: 'outgoing',
+                body: '!reload (Admin Command)',
+                type: 'system-cmd',
                 timestamp: Date.now()
             });
-        } catch (err) {
-            console.error('Gagal menyimpan memori otomatis:', err.message);
-            await msg.reply(`❌ Gagal menyimpan memori: ${err.message}`);
-        } finally {
-            activeLocks.delete(chatId);
-        }
-        return;
-    }
-
-    // 3.5.5. UBAH JADWAL LAPORAN HARIAN (#jadwallaporan)
-    if (userMessage.toLowerCase().startsWith('#jadwallaporan')) {
-        const timeInput = userMessage.substring('#jadwallaporan'.length).trim();
-        const timeRegex = /^([01]\d|2[0-3]):([0-5]\d)$/;
-        
-        if (!timeRegex.test(timeInput)) {
-            await msg.reply('❌ Format waktu salah Bos. Harap gunakan format HH:MM (24 jam). Contoh: *#jadwallaporan 17:00*');
             return;
         }
 
-        activeLocks.add(chatId);
-        const chat = await msg.getChat();
-        await chat.sendStateTyping();
-        
-        try {
-            config.report_time = timeInput;
-            fs.writeFileSync(CONFIG_FILE, JSON.stringify(config, null, 2), 'utf-8');
+        // 3.5. TRIGGER MEMORI OTOMATIS (#akubosmu)
+        if (userMessage.toLowerCase().startsWith('#akubosmu')) {
+            const memoryText = userMessage.substring('#akubosmu'.length).trim();
+            if (!memoryText) {
+                await msg.reply('❌ Memori tidak boleh kosong Bos. Contoh: #akubosmu Sandi wifi kantor adalah "admin123"');
+                return;
+            }
             
-            const replyMsg = `✅ Jadwal laporan harian berhasil diubah, Bos!\n\n🕒 *Waktu Baru*: *${timeInput} WIB*\n\nLaporan berikutnya akan dikirim otomatis setiap hari pada jam tersebut.`;
-            await msg.reply(replyMsg);
+            activeLocks.add(chatId);
+            const chat = await msg.getChat();
+            await chat.sendStateTyping();
             
-            io.emit('message_log', {
-                chatId,
-                body: `Jadwal laporan diubah ke ${timeInput} WIB`,
-                type: 'outgoing',
-                timestamp: Date.now()
-            });
-        } catch (err) {
-            console.error('Gagal memperbarui jadwal laporan via WA:', err.message);
-            await msg.reply(`❌ Gagal memperbarui jadwal: ${err.message}`);
-        } finally {
-            activeLocks.delete(chatId);
-        }
-        return;
-    }
-
-    // 3.5.7. PENANGANAN PINTASAN PENGINGAT (#ingatkan)
-    if (userMessage.toLowerCase().startsWith('#ingatkan')) {
-        const content = userMessage.substring('#ingatkan'.length).trim();
-        let timePart = '';
-        let messagePart = '';
-
-        const parts = content.split('|');
-        if (parts.length >= 2) {
-            timePart = parts[0].trim();
-            messagePart = parts.slice(1).join('|').trim();
-        } else {
-            await msg.reply('❌ Format salah Bos. Gunakan format: *#ingatkan [waktu] | [keterangan]*\nContoh: *#ingatkan jam 15:30 | Telepon Klien*');
+            try {
+                appendToMemory(memoryText);
+                const replyMsg = `✅ Memori berhasil disimpan, Bos!\n\n🧠 *Memori Baru*:\n"${memoryText}"\n\nSaya akan mengingat hal ini dalam tugas-tugas saya.`;
+                await msg.reply(replyMsg);
+                
+                io.emit('message_log', {
+                    chatId,
+                    body: `Memori disimpan: "${memoryText}"`,
+                    type: 'outgoing',
+                    timestamp: Date.now()
+                });
+            } catch (err) {
+                console.error('Gagal menyimpan memori otomatis:', err.message);
+                await msg.reply(`❌ Gagal menyimpan memori: ${err.message}`);
+            } finally {
+                activeLocks.delete(chatId);
+            }
             return;
         }
 
-        const targetDate = parseReminderTime(timePart);
-        if (!targetDate) {
-            await msg.reply('❌ Gagal membaca format waktu Bos. Contoh waktu yang didukung:\n- *15:30* (hari ini)\n- *besok 09:00*\n- *lusa 10:00*\n- *20/06 jam 14:00*');
+        // 3.5.5. UBAH JADWAL LAPORAN HARIAN (#jadwallaporan)
+        if (userMessage.toLowerCase().startsWith('#jadwallaporan')) {
+            const timeInput = userMessage.substring('#jadwallaporan'.length).trim();
+            const timeRegex = /^([01]\d|2[0-3]):([0-5]\d)$/;
+            
+            if (!timeRegex.test(timeInput)) {
+                await msg.reply('❌ Format waktu salah Bos. Harap gunakan format HH:MM (24 jam). Contoh: *#jadwallaporan 17:00*');
+                return;
+            }
+
+            activeLocks.add(chatId);
+            const chat = await msg.getChat();
+            await chat.sendStateTyping();
+            
+            try {
+                config.report_time = timeInput;
+                fs.writeFileSync(CONFIG_FILE, JSON.stringify(config, null, 2), 'utf-8');
+                
+                const replyMsg = `✅ Jadwal laporan harian berhasil diubah, Bos!\n\n🕒 *Waktu Baru*: *${timeInput} WIB*\n\nLaporan berikutnya akan dikirim otomatis setiap hari pada jam tersebut.`;
+                await msg.reply(replyMsg);
+                
+                io.emit('message_log', {
+                    chatId,
+                    body: `Jadwal laporan diubah ke ${timeInput} WIB`,
+                    type: 'outgoing',
+                    timestamp: Date.now()
+                });
+            } catch (err) {
+                console.error('Gagal memperbarui jadwal laporan via WA:', err.message);
+                await msg.reply(`❌ Gagal memperbarui jadwal: ${err.message}`);
+            } finally {
+                activeLocks.delete(chatId);
+            }
             return;
         }
 
-        activeLocks.add(chatId);
-        const chat = await msg.getChat();
-        await chat.sendStateTyping();
+        // 3.5.7. PENANGANAN PINTASAN PENGINGAT (#ingatkan)
+        if (userMessage.toLowerCase().startsWith('#ingatkan')) {
+            const content = userMessage.substring('#ingatkan'.length).trim();
+            let timePart = '';
+            let messagePart = '';
 
-        try {
-            const newReminder = {
-                id: Date.now().toString(),
-                chatId: chatId,
-                time: targetDate.toISOString(),
-                message: messagePart,
-                sent: false
-            };
+            const parts = content.split('|');
+            if (parts.length >= 2) {
+                timePart = parts[0].trim();
+                messagePart = parts.slice(1).join('|').trim();
+            } else {
+                await msg.reply('❌ Format salah Bos. Gunakan format: *#ingatkan [waktu] | [keterangan]*\nContoh: *#ingatkan jam 15:30 | Telepon Klien*');
+                return;
+            }
 
-            reminders.push(newReminder);
-            saveReminders();
+            const targetDate = parseReminderTime(timePart);
+            if (!targetDate) {
+                await msg.reply('❌ Gagal membaca format waktu Bos. Contoh waktu yang didukung:\n- *15:30* (hari ini)\n- *besok 09:00*\n- *lusa 10:00*\n- *20/06 jam 14:00*');
+                return;
+            }
 
-            const formattedTime = targetDate.toLocaleString('id-ID', {
-                weekday: 'long',
-                day: 'numeric',
-                month: 'long',
-                year: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit',
-                timeZone: 'Asia/Jakarta'
-            }) + ' WIB';
+            activeLocks.add(chatId);
+            const chat = await msg.getChat();
+            await chat.sendStateTyping();
 
-            const replyMsg = `✅ Pengingat berhasil dijadwalkan, Bos!\n\n🔔 *Detail Pengingat*:\n- *Pengingat*: ${messagePart}\n- *Waktu*: ${formattedTime}\n\nSaya akan mengirim pesan WhatsApp kepada Bos secara otomatis pada waktu tersebut.`;
-            await msg.reply(replyMsg);
+            try {
+                const newReminder = {
+                    id: Date.now().toString(),
+                    chatId: chatId,
+                    time: targetDate.toISOString(),
+                    message: messagePart,
+                    sent: false
+                };
 
-            io.emit('message_log', {
-                chatId,
-                body: `Menjadwalkan Pengingat: "${messagePart}" untuk ${formattedTime}`,
-                type: 'outgoing',
-                timestamp: Date.now()
-            });
-        } catch (err) {
-            console.error('Gagal menambahkan pengingat:', err.message);
-            await msg.reply(`❌ Gagal menambahkan pengingat: ${err.message}`);
-        } finally {
-            activeLocks.delete(chatId);
+                reminders.push(newReminder);
+                saveReminders();
+
+                const formattedTime = targetDate.toLocaleString('id-ID', {
+                    weekday: 'long',
+                    day: 'numeric',
+                    month: 'long',
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    timeZone: 'Asia/Jakarta'
+                }) + ' WIB';
+
+                const replyMsg = `✅ Pengingat berhasil dijadwalkan, Bos!\n\n🔔 *Detail Pengingat*:\n- *Pengingat*: ${messagePart}\n- *Waktu*: ${formattedTime}\n\nSaya akan mengirim pesan WhatsApp kepada Bos secara otomatis pada waktu tersebut.`;
+                await msg.reply(replyMsg);
+
+                io.emit('message_log', {
+                    chatId,
+                    body: `Menjadwalkan Pengingat: "${messagePart}" untuk ${formattedTime}`,
+                    type: 'outgoing',
+                    timestamp: Date.now()
+                });
+            } catch (err) {
+                console.error('Gagal menambahkan pengingat:', err.message);
+                await msg.reply(`❌ Gagal menambahkan pengingat: ${err.message}`);
+            } finally {
+                activeLocks.delete(chatId);
+            }
+            return;
         }
-        return;
-    }
 
-    // 3.6. MANUAL BANTUAN / PETUNJUK PENGGUNAAN
-    const helpKeywords = ['help', 'bantuan', 'menu', '#bantuan', '/help'];
-    if (helpKeywords.includes(userMessage.toLowerCase().trim())) {
-        activeLocks.add(chatId);
-        const chat = await msg.getChat();
-        await chat.sendStateTyping();
-        
-        const helpMsg = `💼 *Asisten Manager Pribadi*
+        // 3.6. MANUAL BANTUAN / PETUNJUK PENGGUNAAN
+        const helpKeywords = ['help', 'bantuan', 'menu', '#bantuan', '/help'];
+        if (helpKeywords.includes(userMessage.toLowerCase().trim())) {
+            activeLocks.add(chatId);
+            const chat = await msg.getChat();
+            await chat.sendStateTyping();
+            
+            const helpMsg = `💼 *Asisten Manager Pribadi*
 Halo Bos! Saya siap membantu mencatat Keuangan & Agenda Anda ke Google Spreadsheet.
 
 👉 *Bahasa Alami (Tanpa Template)*:
@@ -5454,16 +5456,17 @@ Ketik obrolan seperti biasa, AI akan mendeteksi otomatis!
 - Contoh: \`#ingatkan besok jam 09:00 | Bayar gaji karyawan\`
 (Untuk membuat pengingat WhatsApp otomatis kapan saja)`;
 
-        await msg.reply(helpMsg);
-        
-        io.emit('message_log', {
-            chatId,
-            body: helpMsg,
-            type: 'outgoing',
-            timestamp: Date.now()
-        });
-        activeLocks.delete(chatId);
-        return;
+            await msg.reply(helpMsg);
+            
+            io.emit('message_log', {
+                chatId,
+                body: helpMsg,
+                type: 'outgoing',
+                timestamp: Date.now()
+            });
+            activeLocks.delete(chatId);
+            return;
+        }
     }
 
     // 4. PENANGANAN PENCATATAN KEUANGAN TEKS (TEMPLATE PINTASAN) [DINONAKTIFKAN jika FITUR_KEUANGAN=false]
@@ -5515,8 +5518,8 @@ Ketik obrolan seperti biasa, AI akan mendeteksi otomatis!
         return;
     }
 
-    // 5. PENANGANAN PENCATATAN AGENDA TEKS (TEMPLATE PINTASAN)
-    if (userMessage.toLowerCase().startsWith('#agenda')) {
+    // 5. PENANGANAN PENCATATAN AGENDA TEKS (TEMPLATE PINTASAN) (Hanya untuk Host Admin/Boss)
+    if (isSenderHostAdmin && userMessage.toLowerCase().startsWith('#agenda')) {
         const content = userMessage.substring('#agenda'.length).trim();
         let waktu = '';
         let acara = '';
@@ -5571,7 +5574,7 @@ Ketik obrolan seperti biasa, AI akan mendeteksi otomatis!
     }
 
     // --- MEKANISME CUSTOMER SERVICE AI FALLBACK ---
-    if (!isSenderBoss) {
+    if (!isSenderHostAdmin) {
         // Jika pembeli mengirim chat bebas (dan tidak/belum memilih menu)
         // Jalankan Customer Service AI untuk menjawab & mengarahkan mereka
         activeLocks.add(chatId);
