@@ -2113,7 +2113,7 @@ table tr:hover {
     max-height: calc(100vh - 40px) !important;
     overflow-y: auto !important;
     position: relative !important;
-    left: 100px !important; /* Shift right by 100px */
+    left: 250px !important; /* Shift right by 250px */
     animation: fadeIn 0.2s ease-out !important;
 }
 
