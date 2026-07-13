@@ -1573,22 +1573,23 @@ window.loadHostAdmins = async function() {
 
 window.toggleHostAdmin = async function(jid, isChecked) {
     try {
+        const cleanJid = jid.replace('@c.us', '');
         const resAdmins = await fetch('/api/shop/admins');
         if (!resAdmins.ok) throw new Error('Gagal mengambil daftar admin');
         let adminsList = await resAdmins.json();
         
         if (isChecked) {
-            if (!adminsList.includes(jid)) {
-                adminsList.push(jid);
+            if (!adminsList.includes(cleanJid)) {
+                adminsList.push(cleanJid);
             }
         } else {
-            adminsList = adminsList.filter(a => a !== jid);
+            adminsList = adminsList.filter(a => a !== cleanJid);
         }
         
         const saveRes = await fetch('/api/shop/admins', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ host_admins: adminsList })
+            body: JSON.stringify({ admins: adminsList })
         });
         
         if (!saveRes.ok) throw new Error(await saveRes.text());

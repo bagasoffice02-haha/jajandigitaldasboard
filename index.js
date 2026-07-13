@@ -648,8 +648,16 @@ app.post('/api/shop/admins', async (req, res) => {
         const { admins } = req.body;
         if (!Array.isArray(admins)) return res.status(400).json({ error: 'Format salah' });
         
+        const db = getDb();
+        if (!db) return res.status(500).json({ error: 'Database belum siap' });
+        
+        // Hapus semua admin terlebih dahulu
+        await db.run('DELETE FROM shop_admins');
+        
+        // Tambahkan admin yang baru
         for (const phone of admins) {
-            await addAdmin(phone, 'Admin Host');
+            const cleanPhone = phone.split('@')[0];
+            await addAdmin(cleanPhone, 'Admin Host');
         }
         res.json({ success: true });
     } catch(err) {
