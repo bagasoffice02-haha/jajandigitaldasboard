@@ -12,7 +12,7 @@ const path = require('path');
 const archiver = require('archiver');
 const unzipper = require('unzipper');
 
-const { config, loadConfig, saveConfig } = require('./src/config/config');
+const { config, updateConfig: saveConfig } = require('./src/config/config');
 const { initDatabase, getDb } = require('./src/db/sqlite');
 const { 
     getGroupConfigs, 
