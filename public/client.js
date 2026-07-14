@@ -1999,6 +1999,19 @@ window.onHostGroupSelectChange = function() {
     if (openInput) openInput.value = schedConfig.openTime || '08:00';
     if (closeInput) closeInput.value = schedConfig.closeTime || '17:00';
 
+    // Update Payment Settings UI
+    const pType = document.getElementById('host-payment-type');
+    const pMedia = document.getElementById('host-payment-media');
+    const pText = document.getElementById('host-payment-text');
+    
+    if (pType) pType.value = (group.config && group.config.paymentType) || 'qris';
+    if (pMedia) pMedia.value = (group.config && group.config.paymentMedia) || 'Qris.jpeg';
+    if (pText) pText.value = (group.config && group.config.paymentText) || '';
+    
+    if (window.togglePaymentFields) {
+        window.togglePaymentFields();
+    }
+
     // Clear Trigger inputs
     const keyInp = document.getElementById('host-trigger-keyword');
     const repInp = document.getElementById('host-trigger-reply');
@@ -2301,6 +2314,53 @@ window.saveHostWelcomeMsg = async function() {
         }
     } catch(err) {
         alert('Gagal menyimpan pesan selamat datang: ' + err.message);
+    }
+};
+
+window.togglePaymentFields = function() {
+    const typeSelect = document.getElementById('host-payment-type');
+    const mediaGroup = document.getElementById('payment-media-group');
+    if (typeSelect && mediaGroup) {
+        if (typeSelect.value === 'custom') {
+            mediaGroup.style.display = 'none';
+        } else {
+            mediaGroup.style.display = 'block';
+        }
+    }
+};
+
+window.saveHostPaymentSettings = async function() {
+    const select = document.getElementById('host-config-group-select');
+    if (!select) return;
+    const gId = select.value;
+    if (!gId) return;
+
+    const pType = document.getElementById('host-payment-type').value;
+    const pMedia = document.getElementById('host-payment-media').value.trim();
+    const pText = document.getElementById('host-payment-text').value;
+
+    try {
+        const res = await fetch('/api/host-admin/payment-settings', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ groupId: gId, paymentType: pType, paymentMedia: pMedia, paymentText: pText })
+        });
+
+        if (res.ok) {
+            alert('Metode pembayaran berhasil disimpan!');
+            // Refresh local state
+            const group = hostConfigActiveGroups.find(g => g.id === gId);
+            if (group) {
+                group.config = group.config || {};
+                group.config.paymentType = pType;
+                group.config.paymentMedia = pMedia;
+                group.config.paymentText = pText;
+            }
+        } else {
+            throw new Error(await res.text());
+        }
+    } catch(err) {
+        alert('Gagal menyimpan metode pembayaran: ' + err.message);
     }
 };
 

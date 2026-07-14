@@ -819,6 +819,26 @@ app.post('/api/host-admin/welcome-message', async (req, res) => {
     }
 });
 
+app.post('/api/host-admin/payment-settings', async (req, res) => {
+    try {
+        const { groupId, paymentType, paymentMedia, paymentText } = req.body;
+        const { group_configs: gConfigs } = await getGroupConfigs();
+        const gCfg = gConfigs[groupId];
+        if (gCfg) {
+            gCfg.paymentType = paymentType;
+            gCfg.paymentMedia = paymentMedia;
+            gCfg.paymentText = paymentText;
+            await saveGroupConfig(groupId, gCfg);
+            io.emit('group_config_updated', { groupId });
+            res.json({ success: true });
+        } else {
+            res.status(404).json({ error: 'Grup tidak ditemukan' });
+        }
+    } catch(err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
 // API: Manual Scheduler Actions
 app.post('/api/scheduler/daily-report', async (req, res) => {
     try {

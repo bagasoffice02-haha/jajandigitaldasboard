@@ -1684,35 +1684,50 @@ async function handleIncomingMessage(msg) {
     // QRIS/PAYMENT TRIGGER
     const paymentKeywords = ['bayar', 'qris', 'pembayaran', 'cara bayar'];
     if (paymentKeywords.includes(text)) {
-        const mediaPath = path.join(__dirname, '../../../media', 'Qris.jpeg');
-        if (fs.existsSync(mediaPath)) {
-            try {
-                const fileData = fs.readFileSync(mediaPath);
-                const base64Data = fileData.toString('base64');
-                const mimeType = getMimeType(mediaPath);
-                const mediaObj = new MessageMedia(mimeType, base64Data, path.basename(mediaPath));
-                await msg.reply(`💵 *QRIS PEMBAYARAN RESMI JAJAN DIGITAL* 💵\n\n` +
-                                `Silakan scan QRIS di atas untuk melakukan pembayaran.\n\n` +
-                                `*⚠️ Penting:* Setelah melakukan pembayaran, silakan kirimkan bukti transfer/pembayaran berupa foto/screenshot di grup ini.`);
-                await clientInstance.sendMessage(groupId, mediaObj, { quotedMessageId: msg.id._serialized });
-                
-                if (ioInstance) {
-                    ioInstance.emit('message_log', {
-                        chatId: groupId,
-                        body: `[QRIS Pembayaran dikirim ke ${senderId.split('@')[0]}]`,
-                        type: 'outgoing',
-                        timestamp: Date.now()
-                    });
+        const pType = activeCfg.paymentType || 'qris';
+        const pText = activeCfg.paymentText || `💵 *QRIS PEMBAYARAN RESMI JAJAN DIGITAL* 💵\n\n` +
+                                            `Silakan scan QRIS di atas untuk melakukan pembayaran.\n\n` +
+                                            `*⚠️ Penting:* Setelah melakukan pembayaran, silakan kirimkan bukti transfer/pembayaran berupa foto/screenshot di grup ini.`;
+        const pMedia = activeCfg.paymentMedia !== undefined ? activeCfg.paymentMedia : 'Qris.jpeg';
+
+        if (pType === 'qris' && pMedia) {
+            const mediaPath = path.join(__dirname, '../../../media', pMedia);
+            if (fs.existsSync(mediaPath)) {
+                try {
+                    const fileData = fs.readFileSync(mediaPath);
+                    const base64Data = fileData.toString('base64');
+                    const mimeType = getMimeType(mediaPath);
+                    const mediaObj = new MessageMedia(mimeType, base64Data, path.basename(mediaPath));
+                    await msg.reply(pText);
+                    await clientInstance.sendMessage(groupId, mediaObj, { quotedMessageId: msg.id._serialized });
+                    
+                    if (ioInstance) {
+                        ioInstance.emit('message_log', {
+                            chatId: groupId,
+                            body: `[Media Pembayaran dikirim ke ${senderId.split('@')[0]}]`,
+                            type: 'outgoing',
+                            timestamp: Date.now()
+                        });
+                    }
+                    return;
+                } catch (err) {
+                    console.error('Gagal mengirim media pembayaran:', err.message);
                 }
-                return;
-            } catch (err) {
-                console.error('Gagal mengirim media QRIS:', err.message);
             }
-        } else {
-            await msg.reply(`💵 *PEMBAYARAN JAJAN DIGITAL* 💵\n\n` +
-                            `Silakan hubungi admin untuk mendapatkan QRIS atau info rekening pembayaran resmi kami.`);
-            return;
         }
+
+        // Fallback or custom text-only payment info
+        await msg.reply(pText);
+        
+        if (ioInstance) {
+            ioInstance.emit('message_log', {
+                chatId: groupId,
+                body: pText,
+                type: 'outgoing',
+                timestamp: Date.now()
+            });
+        }
+        return;
     }
     
     // Direct Menu Name Matching

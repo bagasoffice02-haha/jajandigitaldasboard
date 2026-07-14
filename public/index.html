@@ -685,6 +685,36 @@
                     <button class="btn btn-primary" onclick="saveHostWelcomeMsg()" style="width: 100%; padding: 6px; font-size: 0.75rem; cursor: pointer; border-radius: 6px;">Simpan Pesan Selamat Datang</button>
                 </div>
 
+                <!-- Konfigurasi Metode Pembayaran (Grup Terpilih) -->
+                <div style="padding: 10px; background: var(--bg-primary); border: 1px solid var(--border-color); border-radius: 6px; display: flex; flex-direction: column; gap: 8px;">
+                    <span style="font-size: 0.75rem; font-weight: 600; color: var(--text-secondary);"><i data-lucide="wallet" style="width: 12px; height: 12px; display: inline-block; vertical-align: middle;"></i> Metode Pembayaran:</span>
+                    
+                    <div>
+                        <label style="font-size: 0.7rem; color: var(--text-secondary);">Tipe Pembayaran:</label>
+                        <select id="host-payment-type" onchange="togglePaymentFields()" class="form-control" style="width: 100%; padding: 6px; font-size: 0.8rem; background: var(--bg-secondary); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 4px;">
+                            <option value="qris">Barcode QRIS (Kirim Gambar + Teks)</option>
+                            <option value="custom">Teks Kustom (Nomor Rekening/E-Wallet/dll)</option>
+                        </select>
+                    </div>
+
+                    <div id="payment-media-group">
+                        <label style="font-size: 0.7rem; color: var(--text-secondary);">Nama File Gambar Pembayaran (dari Aset Media):</label>
+                        <input type="text" id="host-payment-media" placeholder="Contoh: Qris.jpeg / bca.png" class="form-control" style="width: 100%; padding: 6px; font-size: 0.8rem; background: var(--bg-secondary); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 4px;">
+                    </div>
+
+                    <div>
+                        <label style="font-size: 0.7rem; color: var(--text-secondary);">Teks Instruksi / Rekening Pembayaran:</label>
+                        <textarea id="host-payment-text" rows="4" placeholder="Tulis instruksi pembayaran, misal rekening BCA, Dana, atau petunjuk transfer..." class="form-control" style="width: 100%; padding: 6px; font-size: 0.8rem; resize: vertical; background: var(--bg-secondary); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 4px;"></textarea>
+                        <div style="display: flex; gap: 6px; margin-top: 4px;">
+                            <button class="btn btn-secondary" type="button" onclick="window.insertFormatToElement('host-payment-text', '*')" style="padding: 2px 6px; font-size: 0.65rem; cursor: pointer; min-height: auto;">Tebal (*)</button>
+                            <button class="btn btn-secondary" type="button" onclick="window.insertFormatToElement('host-payment-text', '_')" style="padding: 2px 6px; font-size: 0.65rem; cursor: pointer; min-height: auto;">Miring (_)</button>
+                            <button class="btn btn-secondary" type="button" onclick="window.insertFormatToElement('host-payment-text', '~')" style="padding: 2px 6px; font-size: 0.65rem; cursor: pointer; min-height: auto;">Coret (~)</button>
+                        </div>
+                    </div>
+
+                    <button class="btn btn-primary" onclick="saveHostPaymentSettings()" style="width: 100%; padding: 6px; font-size: 0.75rem; cursor: pointer; border-radius: 6px;">Simpan Metode Pembayaran</button>
+                </div>
+
                 <!-- Konfigurasi Jadwal Otomatis (Jadwal Grup) -->
                 <div style="padding: 10px; background: var(--bg-primary); border: 1px solid var(--border-color); border-radius: 6px; display: flex; flex-direction: column; gap: 8px;">
                     <div style="display: flex; align-items: center; justify-content: space-between;">
