@@ -1306,7 +1306,13 @@ async function handleIncomingMessage(msg) {
     }
 
     const { group_configs: gConfigs } = await getGroupConfigs();
-    const configGroupId = isGroup ? chatId : (config.private_chat_sync_group_id || Object.keys(gConfigs || {})[0]);
+    let configGroupId = isGroup ? chatId : config.private_chat_sync_group_id;
+    if (!isGroup && !configGroupId) {
+        configGroupId = Object.keys(gConfigs || {}).find(id => {
+            const mTree = gConfigs[id].menuTree;
+            return mTree && mTree.children && mTree.children.length > 0;
+        }) || Object.keys(gConfigs || {})[0];
+    }
     const cfg = configGroupId ? gConfigs[configGroupId] : null;
     
     let activeCfg = cfg;
@@ -2594,7 +2600,7 @@ Pelanggan yang Anda hadapi saat ini bernama: ${customerName}.
 
 [PANDUAN UTAMA CS JAJAN DIGITAL]
 1. Sapa pelanggan dengan panggilan "Kak", "Kakak", atau "Kak ${customerName}". JANGAN PERNAH panggil mereka "Bos".
-2. INFORMASI PRODUK & HARGA: Anda sangat dipersilakan untuk membaca [DAFTAR MENU & PRODUK AKTIF SAAT INI] serta [DOKUMEN PENDUKUNG / PENGETAHUAN TOKO] di bawah. Gunakan data tersebut untuk menjawab pertanyaan pelanggan secara langsung, detail, dan akurat mengenai ketersediaan produk, harga, paket, spesifikasi akun, maupun status stoknya.
+2. INFORMASI PRODUK & HARGA: Anda sangat dipersilakan untuk membaca [DAFTAR MENU & PRODUK AKTIF SAAT INI] serta [DOKUMEN PENDUKUNG / PENGETAHUAN TOKO] di bawah. Gunakan data tersebut untuk menjawab pertanyaan pelanggan secara langsung, detail, dan akurat mengenai ketersediaan produk, harga, paket, spesifikasi akun, maupun status stoknya. JANGAN PERNAH merekomendasikan, menawarkan, atau mengarang produk/aplikasi premium yang tidak ada pada daftar menu aktif di bawah (misalnya Disney+ atau produk lainnya jika tidak tertera di daftar). Jika produk tidak tertera di daftar, katakan bahwa produk tersebut belum tersedia.
 3. JAWAB LANGSUNG: Jika pelanggan menanyakan produk tertentu (misal: "Ada Netflix?", "Berapa harga Canva?", dll), jawablah secara langsung dengan detail harga dan deskripsi dari database di bawah. Jangan memaksa mereka untuk mengetik perintah "list" jika mereka bertanya langsung, tetapi Anda tetap boleh menawarkan perintah "list" sebagai info tambahan untuk melihat seluruh produk.
 4. Alur Pemesanan Cepat (Terangkan jika pelanggan ingin order):
    - Pertama: Pelanggan melihat produk (baik bertanya langsung kepada Anda atau mengetik perintah *list*).
