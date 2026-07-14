@@ -337,6 +337,64 @@ async function generateUnifiedAiResponse(userMessage, chatId) {
     }
     const knowledgeContext = getAllKnowledgeContext();
     
+    let groupContext = '';
+    try {
+        const { getGroupConfigs } = require('../../db/models');
+        const { group_configs: gConfigs } = await getGroupConfigs();
+        
+        let configGroupId = config.private_chat_sync_group_id;
+        if (!configGroupId) {
+            configGroupId = Object.keys(gConfigs || {}).find(id => {
+                const mTree = gConfigs[id].menuTree;
+                return mTree && mTree.children && mTree.children.length > 0;
+            }) || Object.keys(gConfigs || {})[0];
+        }
+        
+        const activeCfg = configGroupId ? gConfigs[configGroupId] : null;
+        if (activeCfg) {
+            const serializeMenuTree = (node, depth = 0) => {
+                if (!node) return '';
+                const typeLabel = node.type === 'category' ? 'Kategori' : 'Produk';
+                const statusLabel = node.status ? ` [Status: ${node.status}]` : '';
+                const promoLabel = node.isPromo ? ' [🔥 PROMO]' : '';
+                
+                let res = '  '.repeat(depth) + `- ${node.name} (${typeLabel})${statusLabel}${promoLabel}`;
+                if (node.text) {
+                    res += `: ${node.text.replace(/\n/g, ' ')}`;
+                }
+                res += '\n';
+                
+                if (node.children && node.children.length > 0) {
+                    node.children.forEach(child => {
+                        res += serializeMenuTree(child, depth + 1);
+                    });
+                }
+                return res;
+            };
+            const serializedMenu = serializeMenuTree(activeCfg.menuTree) || 'Belum ada menu produk terkonfigurasi.';
+            
+            const schedule = activeCfg.autoCloseSchedule || { enabled: false };
+            let scheduleText = 'Toko buka 24 jam.';
+            if (schedule.enabled) {
+                const daysMap = { 1: 'Senin', 2: 'Selasa', 3: 'Rabu', 4: 'Kamis', 5: 'Jumat', 6: 'Sabtu', 0: 'Minggu', 7: 'Minggu' };
+                const activeDaysStr = schedule.activeDays ? schedule.activeDays.map(d => daysMap[d]).join(', ') : 'Setiap Hari';
+                scheduleText = `Toko buka & beroperasi pada hari: ${activeDaysStr} mulai jam ${schedule.openTime || '08:00'} sampai ${schedule.closeTime || '22:00'} WIB. Di luar jam operasional tersebut sistem toko tutup/offline otomatis.`;
+            }
+            
+            groupContext = `
+[DATA GRUP RUJUKAN & OPERASIONAL AKTIF]
+- Nama Grup Rujukan: ${activeCfg.groupName}
+- ID Grup Rujukan: ${configGroupId}
+- Jadwal Operasional Toko: ${scheduleText}
+
+[DAFTAR MENU & KATALOG PRODUK AKTIF]
+${serializedMenu}
+`.trim();
+        }
+    } catch (err) {
+        console.error('Gagal memproses groupContext untuk Unified AI:', err.message);
+    }
+
     let sheetsContext = '';
     try {
         const summary = await fetchSheetsSummary();
@@ -346,7 +404,7 @@ async function generateUnifiedAiResponse(userMessage, chatId) {
 - Total Pemasukan: Rp ${summary.totalPemasukan.toLocaleString('id-ID')}
 - Total Pengeluaran: Rp ${summary.totalPengeluaran.toLocaleString('id-ID')}
 - Saldo Kas Saat Ini (Uang Anda): Rp ${summary.saldoKas.toLocaleString('id-ID')}
-
+ 
 10 Transaksi Keuangan Terakhir:
 ${summary.financeList && summary.financeList.length > 0 
     ? summary.financeList.slice(0, 10).map(f => `- ${f.tipe === 'Pemasukan' ? 'Masuk' : 'Keluar'}: Rp ${f.nominal.toLocaleString('id-ID')} (${f.keterangan})`).join('\n')
@@ -364,7 +422,7 @@ ${summary.agendaList && summary.agendaList.length > 0
     
     const timeString = getCurrentTimeString();
     const currentTimeContext = `[INFORMASI WAKTU SEKARANG]\n- Hari, Tanggal & Jam saat ini: ${timeString}\n- Zona Waktu: UTC+7 (WIB)\n\n`;
-    const combinedContext = `${currentTimeContext}[MEMORI PRIBADI BOS]\n${memoryContent}\n\n[DOKUMEN PENDUKUNG]\n${knowledgeContext}\n\n${sheetsContext}`.trim();
+    const combinedContext = `${currentTimeContext}[DATA GRUP & KATALOG PRODUK]\n${groupContext}\n\n[MEMORI PRIBADI BOS]\n${memoryContent}\n\n[DOKUMEN PENDUKUNG]\n${knowledgeContext}\n\n${sheetsContext}`.trim();
     
     const systemPromptTemplate = config.system_prompt_template || 'Kamu adalah asisten virtual bernama Sania. Berikut info pendukung:\n{KNOWLEDGE_BASE_CONTENT}';
     let systemPrompt = systemPromptTemplate.replace('{KNOWLEDGE_BASE_CONTENT}', combinedContext);
