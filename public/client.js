@@ -432,7 +432,8 @@ async function loadConfig() {
         
         cfgApiUrl.value = config.api_url || '';
         cfgModelName.value = config.provider === 'local' ? (config.model_name || 'qwen3.5-9b') : 'qwen3.5-9b';
-        cfgApiKey.value = config.api_key || '';
+        const isPlaceholder = (config.api_key || '').includes('YOUR_LOCAL') || (config.api_key || '').includes('TOKEN');
+        cfgApiKey.value = isPlaceholder ? '' : (config.api_key || '');
         
         // Memuat stok Groq API Keys (gabungkan dengan newline untuk textarea)
         let groqKeysList = '';
@@ -513,7 +514,7 @@ function setupConfigHandler() {
             provider: provider,
             gemini_api_keys: geminiKeys,
             api_url: cfgApiUrl.value.trim(),
-            api_key: cfgApiKey.value.trim(),
+            api_key: (cfgApiKey.value.trim() && !cfgApiKey.value.includes('YOUR_LOCAL') && !cfgApiKey.value.includes('TOKEN')) ? cfgApiKey.value.trim() : (config && config.api_key && !config.api_key.includes('YOUR_LOCAL') ? config.api_key : ''),
             model_name: activeModel,
             max_tokens: parseInt(cfgMaxTokens.value, 10),
             google_sheets_url: cfgSheetsUrl.value.trim(),

@@ -555,6 +555,11 @@ app.get('/api/config', (req, res) => {
 app.post('/api/config', (req, res) => {
     try {
         const newConfig = req.body;
+        // Jangan timpa api_key jika yang dikirim adalah placeholder atau kosong
+        const isPlaceholder = (v) => !v || v.includes('YOUR_LOCAL') || v.includes('TOKEN');
+        if (isPlaceholder(newConfig.api_key)) {
+            delete newConfig.api_key; // Pertahankan nilai lama
+        }
         Object.assign(config, newConfig);
         saveConfig(config);
         res.json({ success: true });
@@ -562,6 +567,7 @@ app.post('/api/config', (req, res) => {
         res.status(500).json({ error: err.message });
     }
 });
+
 
 // API: Groups configs
 app.get('/api/groups', async (req, res) => {
