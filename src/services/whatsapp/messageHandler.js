@@ -2017,10 +2017,13 @@ async function handleIncomingMessage(msg) {
     // 1. MEDIA HANDLING (PDF & PICTURES) (Only for Host Admin/Boss)
     if (msg.hasMedia && isSenderHostAdmin) {
         activeLocks.add(chatId);
-        const chat = await msg.getChat();
-        await chat.sendStateTyping();
-        
         try {
+            try {
+                const chat = await msg.getChat();
+                await chat.sendStateTyping();
+            } catch (chatErr) {
+                console.warn('[Media Chat Warning] Gagal mengirim status typing:', chatErr.message);
+            }
             const media = await msg.downloadMedia();
             if (!media) {
                 await msg.reply('❌ Maaf Bos, gagal mengunduh berkas media.');
@@ -2466,10 +2469,14 @@ Ketik obrolan seperti biasa, AI akan mendeteksi otomatis!
         }
 
         activeLocks.add(chatId);
-        const chat = await msg.getChat();
-        await chat.sendStateTyping();
-
         try {
+            try {
+                const chat = await msg.getChat();
+                await chat.sendStateTyping();
+            } catch (chatErr) {
+                console.warn('[Finance Chat Warning] Gagal mengirim status typing:', chatErr.message);
+            }
+
             await sendToGoogleSheets({
                 action: 'add_finance',
                 type: shortcut.type,
@@ -2527,10 +2534,14 @@ Ketik obrolan seperti biasa, AI akan mendeteksi otomatis!
         }
 
         activeLocks.add(chatId);
-        const chat = await msg.getChat();
-        await chat.sendStateTyping();
-
         try {
+            try {
+                const chat = await msg.getChat();
+                await chat.sendStateTyping();
+            } catch (chatErr) {
+                console.warn('[Agenda Chat Warning] Gagal mengirim status typing:', chatErr.message);
+            }
+
             await sendToGoogleSheets({
                 action: 'add_agenda',
                 waktu: waktu,
@@ -2565,9 +2576,13 @@ Ketik obrolan seperti biasa, AI akan mendeteksi otomatis!
     // 6. CUSTOMER SERVICE AI FALLBACK FOR CLIENTS
     if (!isSenderHostAdmin) {
         activeLocks.add(chatId);
-        const chat = await msg.getChat();
-        await chat.sendStateTyping();
         try {
+            try {
+                const chat = await msg.getChat();
+                await chat.sendStateTyping();
+            } catch (chatErr) {
+                console.warn('[CS AI Warning] Gagal mengirim status typing:', chatErr.message);
+            }
             const knowledge = getGroupKnowledgeContext(activeCfg ? activeCfg.allowedKnowledgeFiles : []);
             
             const serializeMenuTree = (node, depth = 0) => {
@@ -2655,10 +2670,13 @@ ${knowledge}
 
     // 7. UNIFIED AI CLASSIFICATION AND DISPATCHER FOR BOSS
     activeLocks.add(chatId);
-    const chat = await msg.getChat();
-    await chat.sendStateTyping();
-    
     try {
+        try {
+            const chat = await msg.getChat();
+            await chat.sendStateTyping();
+        } catch (chatErr) {
+            console.warn('[Unified AI Warning] Gagal mengirim status typing:', chatErr.message);
+        }
         console.log(`[Unified AI] Memproses pesan dari ${chatId}: "${userMessage}"`);
         const result = await generateUnifiedAiResponse(userMessage, chatId);
         console.log(`[Unified AI] Hasil analisis:`, JSON.stringify(result));
