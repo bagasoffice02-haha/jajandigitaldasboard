@@ -678,20 +678,32 @@ app.delete('/api/group-config/:groupId', async (req, res) => {
 app.get('/api/shop/pinned-chats', async (req, res) => {
     try {
         const client = getClient();
-        if (!client || getStatus() !== 'CONNECTED') return res.json([]);
+        const db = getDb();
+        const admins = await db.all('SELECT phone FROM shop_admins') || [];
+        const adminPhones = new Set(admins.map(a => a.phone));
+        
+        const fallbackToDbAdmins = () => {
+            return admins.map(a => ({
+                id: `${a.phone}@c.us`,
+                name: a.phone,
+                phone: a.phone,
+                isHostAdmin: true
+            }));
+        };
+        
+        if (!client || getStatus() !== 'CONNECTED') {
+            return res.json(fallbackToDbAdmins());
+        }
         
         let chats = [];
         try {
             chats = await client.getChats();
         } catch (err) {
-            console.warn('[API Pinned Chats] Gagal mengambil chats via client.getChats(), fallback ke []:', err.message);
-            return res.json([]);
+            console.warn('[API Pinned Chats] Gagal mengambil chats via client.getChats(), fallback ke DB:', err.message);
+            return res.json(fallbackToDbAdmins());
         }
         
-        const db = getDb();
-        const admins = await db.all('SELECT phone FROM shop_admins') || [];
-        const adminPhones = new Set(admins.map(a => a.phone));
-        
+        // Chat pribadi tersemat (pinned & not group)
         const pinned = chats.filter(chat => chat.pinned && !chat.isGroup).map(chat => {
             const phone = chat.id.user || '';
             return {
@@ -701,6 +713,20 @@ app.get('/api/shop/pinned-chats', async (req, res) => {
                 isHostAdmin: adminPhones.has(phone)
             };
         });
+        
+        // Gabungkan dengan admin terdaftar di DB yang tidak ada di daftar tersemat agar tetap muncul
+        const pinnedPhones = new Set(pinned.map(p => p.phone));
+        admins.forEach(a => {
+            if (!pinnedPhones.has(a.phone)) {
+                pinned.push({
+                    id: `${a.phone}@c.us`,
+                    name: a.phone,
+                    phone: a.phone,
+                    isHostAdmin: true
+                });
+            }
+        });
+        
         res.json(pinned);
     } catch(err) {
         res.status(500).json({ error: err.message });
