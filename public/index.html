@@ -537,14 +537,14 @@
             <!-- KOLOM KIRI: Management Host Admin & Broadcast -->
             <div class="shop-left-col">
                 <!-- PANEL: Host Admin -->
-                <section class="panel card" style="display: flex; flex-direction: column; flex: 1; min-height: 250px; overflow: hidden; padding: 15px;">
+                <section class="panel card" style="display: flex; flex-direction: column; padding: 15px;">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
                         <h2 style="margin: 0; font-size: 1.1rem;"><i data-lucide="shield-alert"></i> Host Admin</h2>
                         <button class="btn btn-secondary btn-icon" onclick="loadHostAdmins()" title="Refresh Admin">
                             <i data-lucide="rotate-cw" style="width: 14px; height: 14px;"></i>
                         </button>
                     </div>
-                    <p class="card-subtitle" style="margin-top: -10px; margin-bottom: 12px; font-size: 0.8rem;">Daftar chat pribadi tersemat (pinned). Aktifkan toggle di sebelah kanan untuk menjadikannya Host Admin. Klik nama/nomor untuk membuka konfigurasi khusus.</p>
+                    <p class="card-subtitle" style="margin-top: -10px; margin-bottom: 12px; font-size: 0.8rem;">Daftar admin yang terdaftar. Tambah nomor HP untuk menjadikannya Host Admin.</p>
                     
                     <div style="display: flex; gap: 6px; margin-bottom: 12px;">
                         <input type="text" id="new-host-admin-phone" placeholder="Nomor HP (misal: 628123456789)" style="flex: 1; padding: 6px 10px; font-size: 0.8rem; border-radius: 6px; background: var(--bg-primary); border: 1px solid var(--border-color); color: var(--text-primary);">
@@ -553,7 +553,7 @@
                         </button>
                     </div>
                     
-                    <div id="shop-admins-list" style="flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 8px;">
+                    <div id="shop-admins-list" style="display: flex; flex-direction: column; gap: 4px;">
                         <!-- Rendered dynamically -->
                         <p style="text-align: center; color: var(--text-secondary); font-size: 0.8rem; margin-top: 30px;">Belum ada Host Admin...</p>
                     </div>
