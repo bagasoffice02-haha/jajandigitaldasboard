@@ -1563,60 +1563,114 @@ let activeHostAdmins = [];
 let selectedHostAdmin = null;
 
 window.loadHostAdmins = async function() {
+    const list = document.getElementById('shop-admins-list');
+    if (!list) return;
+    list.innerHTML = '<p style="text-align:center;color:var(--text-secondary);font-size:0.8rem;margin-top:20px;">Memuat daftar admin...</p>';
+
     try {
-        const res = await fetch('/api/shop/pinned-chats');
-        if (!res.ok) throw new Error('Gagal memuat chat tersemat');
-        const pinnedChats = await res.json();
-        
-        const list = document.getElementById('shop-admins-list');
-        if (!list) return;
+        // Selalu ambil admin dari DB dulu (pasti ada meski WA belum connect)
+        const resDb = await fetch('/api/shop/admins');
+        if (!resDb.ok) throw new Error('Gagal memuat daftar admin dari database');
+        const dbAdmins = await resDb.json(); // array of phone strings (digits only)
+
+        // Coba ambil pinned chats dari WA (mungkin gagal jika WA belum connect)
+        let pinnedChats = [];
+        try {
+            const resWa = await fetch('/api/shop/pinned-chats');
+            if (resWa.ok) {
+                pinnedChats = await resWa.json();
+            }
+        } catch(e) { /* WA belum connect, ok */ }
+
         list.innerHTML = '';
-        
-        if (pinnedChats.length === 0) {
-            list.innerHTML = `<p style="text-align: center; color: var(--text-secondary); font-size: 0.8rem; margin-top: 30px;">Belum ada chat pribadi tersemat (pinned) di WhatsApp...</p>`;
-            return;
+
+        // ── Bagian 1: Daftar Admin Tersimpan ──
+        const sectionTitle1 = document.createElement('p');
+        sectionTitle1.style = 'font-size:0.72rem;font-weight:700;color:var(--text-secondary);text-transform:uppercase;letter-spacing:0.05em;margin:0 0 6px;';
+        sectionTitle1.textContent = '🛡️ Admin Tersimpan di Database';
+        list.appendChild(sectionTitle1);
+
+        if (dbAdmins.length === 0) {
+            const emptyMsg = document.createElement('p');
+            emptyMsg.style = 'text-align:center;color:var(--text-secondary);font-size:0.8rem;padding:10px;background:var(--bg-secondary);border-radius:8px;';
+            emptyMsg.textContent = 'Belum ada Host Admin yang terdaftar. Tambahkan nomor di atas.';
+            list.appendChild(emptyMsg);
+        } else {
+            dbAdmins.forEach(phone => {
+                const cleanPhone = (phone || '').replace(/\D/g, '');
+                const row = document.createElement('div');
+                row.style = 'display:flex;justify-content:space-between;align-items:center;padding:10px 14px;border:1px solid #30d158;border-radius:8px;background:var(--bg-secondary);margin-bottom:6px;';
+                row.innerHTML = `
+                    <div style="display:flex;flex-direction:column;gap:2px;">
+                        <span style="font-weight:600;font-size:0.85rem;color:var(--text-primary);display:flex;align-items:center;gap:6px;">
+                            <i data-lucide="shield-check" style="width:14px;height:14px;color:#30d158;"></i>
+                            +${cleanPhone}
+                        </span>
+                        <span style="font-size:0.72rem;color:#30d158;">✅ Aktif sebagai Host Admin</span>
+                    </div>
+                    <button onclick="window.removeHostAdminDirect('${cleanPhone}@c.us')" title="Hapus Admin" style="background:transparent;border:1px solid #ff453a;padding:5px 8px;border-radius:6px;color:#ff453a;cursor:pointer;display:flex;align-items:center;gap:4px;font-size:0.75rem;">
+                        <i data-lucide="trash-2" style="width:12px;height:12px;"></i> Hapus
+                    </button>
+                `;
+                list.appendChild(row);
+            });
         }
-        
-        pinnedChats.forEach(chat => {
-            const cleanPhone = (chat.phone || '').replace(/\D/g, '');
-            const row = document.createElement('div');
-            row.style = 'display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; border: 1px solid var(--border-color); border-radius: 8px; background: var(--bg-secondary); margin-bottom: 8px; transition: all 0.2s ease;';
-            row.className = 'host-admin-item-row';
-            
-            row.innerHTML = `
-                <div style="cursor: pointer; flex: 1; display: flex; flex-direction: column; gap: 2px;" onclick="window.openHostConfig('${chat.id}')">
-                    <span style="font-weight: 500; font-size: 0.85rem; display: flex; align-items: center; gap: 6px; color: var(--text-primary);">
-                        <i data-lucide="message-square" style="width: 14px; height: 14px; color: ${chat.isHostAdmin ? '#30d158' : 'var(--text-secondary)'};"></i> 
-                        ${chat.name}
-                    </span>
-                    <span style="font-size: 0.75rem; color: var(--text-secondary);">+${cleanPhone} ${chat.isHostAdmin ? '🛡️ (Host Admin)' : ''}</span>
-                </div>
-                <div style="display: flex; align-items: center; gap: 10px;">
-                    <div style="position: relative; display: inline-block; width: 40px; height: 24px;">
-                        <input type="checkbox" id="toggle-${cleanPhone}" ${chat.isHostAdmin ? 'checked' : ''} onchange="window.toggleHostAdmin('${chat.id}', this.checked)" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; z-index: 2;">
-                        <div style="width: 100%; height: 100%; background: ${chat.isHostAdmin ? '#30d158' : 'rgba(255,255,255,0.08)'}; border-radius: 12px; transition: background 0.2s; position: relative; pointer-events: none; border: 1px solid var(--border-color);">
-                            <div style="width: 18px; height: 18px; background: white; border-radius: 50%; position: absolute; top: 2px; left: ${chat.isHostAdmin ? '18px' : '2px'}; transition: left 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.3);"></div>
+
+        // ── Bagian 2: Pinned Chats dari WhatsApp ──
+        const divider = document.createElement('div');
+        divider.style = 'border-top:1px solid var(--border-color);margin:12px 0 8px;';
+        list.appendChild(divider);
+
+        const sectionTitle2 = document.createElement('p');
+        sectionTitle2.style = 'font-size:0.72rem;font-weight:700;color:var(--text-secondary);text-transform:uppercase;letter-spacing:0.05em;margin:0 0 6px;';
+        list.appendChild(sectionTitle2);
+
+        // Filter pinned chats yang belum di-admin (bisa ditambahkan)
+        const dbAdminSet = new Set(dbAdmins.map(p => (p || '').replace(/\D/g, '')));
+        const unpinnedForToggle = pinnedChats.filter(chat => {
+            const cp = (chat.phone || '').replace(/\D/g, '');
+            return cp && !dbAdminSet.has(cp);
+        });
+
+        if (pinnedChats.length === 0) {
+            sectionTitle2.textContent = '📌 Chat Tersemat WA (WhatsApp belum connect / tidak ada)';
+            const waMsg = document.createElement('p');
+            waMsg.style = 'text-align:center;color:var(--text-secondary);font-size:0.78rem;padding:8px;background:var(--bg-secondary);border-radius:8px;';
+            waMsg.textContent = 'WhatsApp belum terkoneksi atau tidak ada chat yang di-pin. Sambungkan WA untuk menampilkan daftar ini.';
+            list.appendChild(waMsg);
+        } else {
+            sectionTitle2.textContent = `📌 Chat Tersemat WA (${pinnedChats.length} ditemukan)`;
+            pinnedChats.forEach(chat => {
+                const cleanPhone = (chat.phone || '').replace(/\D/g, '');
+                const isAdmin = dbAdminSet.has(cleanPhone);
+                const row = document.createElement('div');
+                row.style = `display:flex;justify-content:space-between;align-items:center;padding:10px 14px;border:1px solid ${isAdmin ? '#30d158' : 'var(--border-color)'};border-radius:8px;background:var(--bg-secondary);margin-bottom:6px;transition:all 0.2s;`;
+                row.className = 'host-admin-item-row';
+                row.innerHTML = `
+                    <div style="cursor:pointer;flex:1;display:flex;flex-direction:column;gap:2px;" onclick="window.openHostConfig('${chat.id}')">
+                        <span style="font-weight:500;font-size:0.85rem;display:flex;align-items:center;gap:6px;color:var(--text-primary);">
+                            <i data-lucide="message-square" style="width:14px;height:14px;color:${isAdmin ? '#30d158' : 'var(--text-secondary)'};"></i>
+                            ${chat.name || cleanPhone}
+                        </span>
+                        <span style="font-size:0.75rem;color:var(--text-secondary);">+${cleanPhone} ${isAdmin ? '🛡️ (Host Admin)' : ''}</span>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:10px;">
+                        <div style="position:relative;display:inline-block;width:40px;height:24px;">
+                            <input type="checkbox" id="toggle-${cleanPhone}" ${isAdmin ? 'checked' : ''} onchange="window.toggleHostAdmin('${chat.id}', this.checked)" style="position:absolute;top:0;left:0;width:100%;height:100%;opacity:0;cursor:pointer;z-index:2;">
+                            <div style="width:100%;height:100%;background:${isAdmin ? '#30d158' : 'rgba(255,255,255,0.08)'};border-radius:12px;transition:background 0.2s;position:relative;pointer-events:none;border:1px solid var(--border-color);">
+                                <div style="width:18px;height:18px;background:white;border-radius:50%;position:absolute;top:2px;left:${isAdmin ? '18px' : '2px'};transition:left 0.2s;box-shadow:0 2px 4px rgba(0,0,0,0.3);"></div>
+                            </div>
                         </div>
                     </div>
-                    <button class="btn btn-icon" onclick="window.removeHostAdminDirect('${chat.id}')" title="Hapus Admin" style="background: transparent; border: none; padding: 4px; color: #ff453a; cursor: pointer; display: flex; align-items: center; justify-content: center;">
-                        <i data-lucide="trash-2" style="width: 14px; height: 14px;"></i>
-                    </button>
-                </div>
-            `;
-            
-            row.onmouseover = () => {
-                row.style.borderColor = chat.isHostAdmin ? '#30d158' : 'var(--accent-color)';
-            };
-            row.onmouseout = () => {
-                row.style.borderColor = 'var(--border-color)';
-            };
-            
-            list.appendChild(row);
-        });
+                `;
+                list.appendChild(row);
+            });
+        }
         
         if (window.lucide) lucide.createIcons();
     } catch (err) {
         console.error('Error loadHostAdmins:', err);
+        if (list) list.innerHTML = `<p style="text-align:center;color:#ff453a;font-size:0.8rem;margin-top:20px;">❌ Gagal memuat: ${err.message}</p>`;
     }
 };
 
