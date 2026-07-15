@@ -268,7 +268,7 @@ async function checkGroupSchedules(clientOrGetClient, getStatus) {
         
         for (const groupId of groupIds) {
             const cfg = gConfigs[groupId];
-            if (!cfg || !cfg.bot_active || !cfg.autoCloseSchedule || !cfg.autoCloseSchedule.enabled) {
+            if (!cfg || !cfg.enabled || !cfg.autoCloseSchedule || !cfg.autoCloseSchedule.enabled) {
                 continue;
             }
 

@@ -831,6 +831,70 @@ app.post('/api/shop/send-message', async (req, res) => {
     }
 });
 
+app.post('/api/host-admin/open-close-group', async (req, res) => {
+    try {
+        const { groupId, action } = req.body;
+        if (!groupId || !action) return res.status(400).json({ error: 'groupId dan action wajib diisi.' });
+        
+        const client = getClient();
+        if (!client || getStatus() !== 'CONNECTED') {
+            return res.status(500).json({ error: 'WhatsApp client tidak terhubung.' });
+        }
+        
+        const chat = await client.getChatById(groupId);
+        const shouldAdminsOnly = action !== 'buka';
+        await chat.setMessagesAdminsOnly(shouldAdminsOnly);
+        
+        const msgText = shouldAdminsOnly 
+            ? "🔔 *Pemberitahuan Manual:* Grup ini ditutup sementara oleh Admin. Hanya Admin yang dapat mengirim pesan."
+            : "🔔 *Pemberitahuan Manual:* Jam operasional toko telah dimulai. Grup dibuka kembali untuk umum. Silakan ajukan pesanan Anda!";
+        await client.sendMessage(groupId, msgText);
+        
+        res.json({ success: true });
+    } catch(err) {
+        console.error('Gagal mengontrol grup secara manual:', err.message);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+app.post('/api/shop/action', async (req, res) => {
+    try {
+        const { action } = req.body;
+        if (!action) return res.status(400).json({ error: 'action wajib diisi.' });
+        
+        const client = getClient();
+        if (!client || getStatus() !== 'CONNECTED') {
+            return res.status(500).json({ error: 'WhatsApp client tidak terhubung.' });
+        }
+        
+        const { group_configs: gConfigs } = await getGroupConfigs();
+        const activeGroupIds = Object.keys(gConfigs).filter(id => gConfigs[id].enabled);
+        
+        let count = 0;
+        const shouldAdminsOnly = action !== 'buka';
+        
+        for (const gid of activeGroupIds) {
+            try {
+                const chat = await client.getChatById(gid);
+                await chat.setMessagesAdminsOnly(shouldAdminsOnly);
+                
+                const msgText = shouldAdminsOnly 
+                    ? "🔔 *Pemberitahuan Manual:* Toko ditutup sementara. Grup ini ditutup untuk umum. Hanya Admin yang dapat mengirim pesan."
+                    : "🔔 *Pemberitahuan Manual:* Toko dibuka kembali. Grup dibuka untuk umum. Silakan ajukan pesanan Anda!";
+                await client.sendMessage(gid, msgText);
+                count++;
+            } catch(e) {
+                console.error(`Gagal kontrol grup ${gid} massal:`, e.message);
+            }
+        }
+        
+        res.json({ success: true, count });
+    } catch(err) {
+        console.error('Gagal menjalankan aksi massal toko:', err.message);
+        res.status(500).json({ error: err.message });
+    }
+});
+
 app.post('/api/host-admin/toggle-group', async (req, res) => {
     try {
         const { groupId, enabled } = req.body;
