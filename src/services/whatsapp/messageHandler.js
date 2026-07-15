@@ -48,6 +48,15 @@ const activeLocks = new Set();
 const pendingTransactions = new Map();
 const customerMenuStates = new Map();
 
+function normalizePhone(phone) {
+    if (!phone) return '';
+    let clean = phone.replace(/\D/g, '');
+    if (clean.startsWith('0')) {
+        clean = '62' + clean.slice(1);
+    }
+    return clean;
+}
+
 function initMessageHandler(client, io) {
     clientInstance = client;
     ioInstance = io;
@@ -404,9 +413,8 @@ async function handleIncomingMessage(msg) {
     
     const isSenderBoss = (() => {
         if (!config.boss_number || config.boss_number.trim() === '') return false;
-        const cleanBoss = config.boss_number.replace(/\D/g, '');
-        const sender = msg.author || msg.from;
-        const cleanSender = sender.split('@')[0].replace(/\D/g, '');
+        const cleanBoss = normalizePhone(config.boss_number);
+        const cleanSender = normalizePhone(senderId);
         return cleanSender === cleanBoss;
     })();
 
@@ -417,8 +425,9 @@ async function handleIncomingMessage(msg) {
     
     const shopData = await getShopData();
     const isPinnedAdmin = (shopData.host_admins || []).some(admin => {
-        const cleanAdmin = admin.replace(/\D/g, '');
-        return cleanAdmin === sender.split('@')[0] || cleanAdmin === senderLid.split('@')[0];
+        const cleanAdmin = normalizePhone(admin);
+        const cleanSender = normalizePhone(senderId);
+        return cleanAdmin === cleanSender;
     });
     isSenderHostAdmin = isPinnedAdmin || isSenderBoss;
 
