@@ -1578,7 +1578,7 @@ window.loadHostAdmins = async function() {
         }
         
         pinnedChats.forEach(chat => {
-            const cleanPhone = chat.phone.replace(/\D/g, '');
+            const cleanPhone = (chat.phone || '').replace(/\D/g, '');
             const row = document.createElement('div');
             row.style = 'display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; border: 1px solid var(--border-color); border-radius: 8px; background: var(--bg-secondary); margin-bottom: 8px; transition: all 0.2s ease;';
             row.className = 'host-admin-item-row';
