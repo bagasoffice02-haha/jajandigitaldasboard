@@ -1433,8 +1433,14 @@ async function handleIncomingMessage(msg) {
                         const quotedMsg = await msg.getQuotedMessage();
                         const customerId = quotedMsg.author || quotedMsg.from;
                         const customerNumber = customerId.split('@')[0];
-                        const contact = await clientInstance.getContactById(customerId);
-                        const customerName = contact.pushname || contact.name || `Pelanggan`;
+                        
+                        let customerName = 'Pelanggan';
+                        try {
+                            const contact = await clientInstance.getContactById(customerId);
+                            customerName = contact.pushname || contact.name || `Pelanggan`;
+                        } catch (contactErr) {
+                            console.warn('[Invoice Warning] Gagal mendapatkan nama kontak, menggunakan default:', contactErr.message);
+                        }
                         
                         const now = new Date();
                         const timeOptions = { hour: '2-digit', minute: '2-digit', second: '2-digit', timeZone: 'Asia/Jakarta' };
@@ -1481,9 +1487,16 @@ async function handleIncomingMessage(msg) {
                                             `━━━━━━━━━━━━━━━━━━━━\n` +
                                             `_Terima kasih atas pembayaran Anda! Pesanan Anda telah diverifikasi oleh admin._`;
                                              
-                        await quotedMsg.reply(invoiceText, null, {
-                            mentions: [customerId]
-                        });
+                        try {
+                            await quotedMsg.reply(invoiceText, null, {
+                                mentions: [customerId]
+                            });
+                        } catch (replyErr) {
+                            console.warn('[Invoice Warning] Gagal mereply quoted msg, kirim langsung:', replyErr.message);
+                            await msg.reply(invoiceText, null, {
+                                mentions: [customerId]
+                            });
+                        }
                     } catch(err) {
                         await msg.reply("❌ Gagal memproses invoice: " + err.message);
                     }
