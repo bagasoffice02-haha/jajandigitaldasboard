@@ -355,7 +355,7 @@ async function handleIncomingMessage(msg) {
         const isCommand = userMessage.startsWith('!') || 
                           userMessage.startsWith('.') || 
                           cleanMsg.startsWith('#agenda') ||
-                          (msg.hasQuotedMsg && ['done', 'doen', 'proses', 'process'].includes(cleanMsg));
+                          (msg.hasQuotedMsg && ['done', 'doen', 'proses', 'process'].some(kw => cleanMsg.startsWith(kw)));
         if (!isCommand) return;
     }
 
@@ -438,8 +438,9 @@ async function handleIncomingMessage(msg) {
     // Auto-prefix dot for invoice command if it's a quote/reply and matches keywords
     if (isSenderHostAdmin && msg.hasQuotedMsg) {
         const cleanMsg = userMessage.toLowerCase().trim();
-        if (['done', 'doen', 'proses', 'process'].includes(cleanMsg)) {
-            userMessage = '.' + cleanMsg;
+        const foundKw = ['done', 'doen', 'proses', 'process'].find(kw => cleanMsg.startsWith(kw));
+        if (foundKw && !cleanMsg.startsWith('.')) {
+            userMessage = '.' + userMessage;
             console.log(`[Auto-Command] Mengubah pesan admin "${cleanMsg}" menjadi "${userMessage}" karena mendeteksi balasan bukti pembayaran.`);
         }
     }
@@ -1412,7 +1413,9 @@ async function handleIncomingMessage(msg) {
                 return;
             }
             
-            if (cmd === '.proses' || cmd === '.done' || cmd === '.doen' || cmd === '.process') {
+            const isProcessCmd = cmd.startsWith('.proses') || cmd.startsWith('.process');
+            const isDoneCmd = cmd.startsWith('.done') || cmd.startsWith('.doen');
+            if (isProcessCmd || isDoneCmd) {
                 if (msg.hasQuotedMsg) {
                     try {
                         const quotedMsg = await msg.getQuotedMessage();
@@ -1427,7 +1430,6 @@ async function handleIncomingMessage(msg) {
                         const waktuStr = now.toLocaleTimeString('id-ID', timeOptions) + ' WIB';
                         const tanggalStr = now.toLocaleDateString('id-ID', dateOptions);
                         
-                        const isProcessCmd = cmd === '.proses' || cmd === '.process';
                         const statusVal = isProcessCmd ? '🔴 PROSES' : '🟢 LUNAS / DONE';
                         const statusKey = isProcessCmd ? 'PROSES' : 'SELESAI';
                         const invoiceId = 'INV-' + Date.now().toString().substring(6);
