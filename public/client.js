@@ -2271,9 +2271,14 @@ window.closeShopChatModal = function() {
 window.onBroadcastTargetTypeChange = async function(val) {
     const customGrp = document.getElementById('broadcast-custom-numbers-group');
     const membersGrp = document.getElementById('broadcast-group-members-group');
+    const extractResult = document.getElementById('extract-members-result');
     
     if (customGrp) customGrp.classList.toggle('hidden', val !== 'custom_numbers');
     if (membersGrp) membersGrp.classList.toggle('hidden', val !== 'group_members');
+    
+    if (extractResult && val !== 'group_members') {
+        extractResult.classList.add('hidden');
+    }
     
     if (val === 'group_members') {
         if (typeof loadGroupsList === 'function') {
@@ -2298,11 +2303,59 @@ window.updateBroadcastGroupDropdown = function() {
     }
 };
 
+let lastExtractedMembers = [];
+
+window.extractGroupMembers = async function() {
+    const groupId = document.getElementById('broadcast-target-group').value;
+    const btn = document.getElementById('btn-extract-members');
+    const resultContainer = document.getElementById('extract-members-result');
+    const countText = document.getElementById('extract-count-text');
+    const previewList = document.getElementById('extract-preview-list');
+    
+    if (!groupId) {
+        alert('Silakan pilih grup asal terlebih dahulu!');
+        return;
+    }
+    
+    const originalText = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = `<span style="display: inline-block; width: 10px; height: 10px; border: 1.5px solid var(--text-primary); border-top-color: transparent; border-radius: 50%; animation: spin 0.8s linear infinite; margin-right: 6px;"></span> Mengekstrak Anggota...`;
+    
+    if (resultContainer) resultContainer.classList.add('hidden');
+    lastExtractedMembers = [];
+    
+    try {
+        const res = await fetch(`/api/groups/${encodeURIComponent(groupId)}/members`);
+        if (!res.ok) {
+            const errText = await res.text();
+            throw new Error(errText || 'Gagal mengekstrak anggota');
+        }
+        
+        const data = await res.json();
+        lastExtractedMembers = data.members || [];
+        
+        if (countText) countText.innerText = `${data.count} Anggota Ditemukan`;
+        if (previewList) {
+            previewList.innerHTML = lastExtractedMembers
+                .map((m, idx) => `${idx + 1}. ${m.phone} ${m.isAdmin ? '(Admin)' : ''}`)
+                .join('<br>');
+        }
+        if (resultContainer) resultContainer.classList.remove('hidden');
+        
+        alert(`Berhasil mengekstrak ${data.count} anggota dari grup!`);
+    } catch (err) {
+        alert('Gagal mengambil anggota grup: ' + err.message);
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+    }
+};
+
 // Advanced Broadcast
 // Advanced Broadcast
 window.sendBroadcast = async function() {
-    const targetType = document.getElementById('broadcast-target-type').value;
-    const customNumbersVal = document.getElementById('broadcast-custom-numbers').value.trim();
+    let targetType = document.getElementById('broadcast-target-type').value;
+    let customNumbersVal = document.getElementById('broadcast-custom-numbers').value.trim();
     const targetGroup = document.getElementById('broadcast-target-group').value;
     const msgInput = document.getElementById('broadcast-msg');
     const mediaInput = document.getElementById('broadcast-media');
@@ -2317,13 +2370,21 @@ window.sendBroadcast = async function() {
         return;
     }
     
+    if (targetType === 'group_members') {
+        if (!lastExtractedMembers || lastExtractedMembers.length === 0) {
+            alert('Silakan klik tombol "Ekstrak & Hitung Anggota" terlebih dahulu sebelum mengirim siaran!');
+            return;
+        }
+        // Ubah targetType menjadi custom_numbers dan gunakan nomor hasil ekstraksi
+        targetType = 'custom_numbers';
+        customNumbersVal = lastExtractedMembers.map(m => m.phone).join(',');
+    }
+    
     let confirmMsg = 'Apakah Anda yakin ingin mengirim pesan siaran ini?';
     if (targetType === 'groups') {
         confirmMsg = 'Apakah Anda yakin ingin mengirim pesan siaran ini ke SELURUH grup WhatsApp aktif?';
     } else if (targetType === 'custom_numbers') {
-        confirmMsg = 'Apakah Anda yakin ingin mengirim pesan siaran ini (PM) ke daftar nomor kustom?';
-    } else if (targetType === 'group_members') {
-        confirmMsg = 'Apakah Anda yakin ingin mengirim pesan siaran ini (PM) ke seluruh anggota dari grup terpilih?';
+        confirmMsg = 'Apakah Anda yakin ingin mengirim pesan siaran ini (PM) ke daftar nomor penerima?';
     }
     
     if (!confirm(confirmMsg)) return;
