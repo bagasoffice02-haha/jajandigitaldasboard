@@ -133,12 +133,20 @@ async function handleSlashCommand(bot, msg, io) {
         configGroupId = groupConfigKey;
     } else {
         if (!configGroupId) {
-            configGroupId = Object.keys(group_configs).find(id => {
-                const mTree = group_configs[id].menuTree;
-                return mTree && mTree.children && mTree.children.length > 0 && !id.startsWith('tg_grp_');
-            }) || Object.keys(group_configs).find(id => !id.startsWith('tg_grp_')) || Object.keys(group_configs)[0];
+            configGroupId = Object.keys(group_configs || {}).find(id => {
+                const mTree = group_configs[id] ? group_configs[id].menuTree : null;
+                return mTree && mTree.children && mTree.children.length > 0;
+            }) || Object.keys(group_configs || {})[0];
         }
         activeCfg = configGroupId ? group_configs[configGroupId] : null;
+    }
+    if (!activeCfg && !isGroup) {
+        activeCfg = {
+            groupName: "Jajan Digital",
+            enabled: true,
+            useAiFallback: true,
+            menuTree: { id: "root", name: "Menu Utama", type: "category", children: [] }
+        };
     }
 
     switch (command) {
@@ -358,12 +366,21 @@ async function handleTextMessage(bot, msg, io) {
         // Chat Personal
         if (config.telegram_private_bot_enabled === false) return;
         if (!configGroupId) {
-            configGroupId = Object.keys(group_configs).find(id => {
-                const mTree = group_configs[id].menuTree;
-                return mTree && mTree.children && mTree.children.length > 0 && !id.startsWith('tg_grp_');
-            }) || Object.keys(group_configs).find(id => !id.startsWith('tg_grp_')) || Object.keys(group_configs)[0];
+            configGroupId = Object.keys(group_configs || {}).find(id => {
+                const mTree = group_configs[id] ? group_configs[id].menuTree : null;
+                return mTree && mTree.children && mTree.children.length > 0;
+            }) || Object.keys(group_configs || {})[0];
         }
         activeCfg = configGroupId ? group_configs[configGroupId] : null;
+    }
+
+    if (!activeCfg && !isGroup) {
+        activeCfg = {
+            groupName: "Jajan Digital",
+            enabled: true,
+            useAiFallback: true,
+            menuTree: { id: "root", name: "Menu Utama", type: "category", children: [] }
+        };
     }
 
     // 5. Trigger Menu

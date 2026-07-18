@@ -7,7 +7,7 @@ router.get('/config', (req, res) => {
     res.json(config);
 });
 
-router.post('/config', (req, res) => {
+router.post('/config', async (req, res) => {
     try {
         const newConfig = req.body;
         // Jangan timpa api_key jika yang dikirim adalah placeholder atau kosong
@@ -17,11 +17,31 @@ router.post('/config', (req, res) => {
         }
         Object.assign(config, newConfig);
         saveConfig(config);
+
+        // Auto restart/start Bot Telegram jika enabled
+        const io = req.app.get('io');
+        if (config.telegram_bot_enabled && config.telegram_bot_token) {
+            try {
+                const { restartTelegramBot } = require('../services/telegram/client');
+                const { startTelegramScheduler } = require('../services/telegram/scheduler');
+                await restartTelegramBot(io);
+                startTelegramScheduler();
+            } catch (tgErr) {
+                console.error('[Telegram] Error saat auto-restart bot:', tgErr.message);
+            }
+        } else {
+            try {
+                const { stopTelegramBot } = require('../services/telegram/client');
+                await stopTelegramBot();
+            } catch (_) {}
+        }
+
         res.json({ success: true });
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
 });
+
 
 // ─── Test Koneksi Token Bot Telegram ─────────────────────────────────────────
 router.post('/telegram/test-connection', async (req, res) => {

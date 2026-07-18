@@ -35,7 +35,17 @@ async function sendWithTyping(chatId, text, options = {}) {
         await botInstance.sendChatAction(chatId, 'typing');
     } catch (_) {}
     await new Promise(resolve => setTimeout(resolve, 1500));
-    return botInstance.sendMessage(chatId, text, { parse_mode: 'HTML', ...options });
+
+    try {
+        return await botInstance.sendMessage(chatId, text, { parse_mode: 'HTML', ...options });
+    } catch (err) {
+        // Fallback jika HTML parse error: kirim sebagai teks biasa agar pesan tetap terkirim
+        console.warn('[Telegram] Warning: Gagal kirim mode HTML, fallback ke plain text:', err.message);
+        const plainText = text.replace(/<[^>]*>/g, '');
+        const cleanOpts = { ...options };
+        delete cleanOpts.parse_mode;
+        return await botInstance.sendMessage(chatId, plainText, cleanOpts).catch(e => console.error('[Telegram] Error kirim fallback:', e.message));
+    }
 }
 
 /**
@@ -50,7 +60,7 @@ async function sendPhotoWithAction(chatId, photo, options = {}) {
         await botInstance.sendChatAction(chatId, 'upload_photo');
     } catch (_) {}
     await new Promise(resolve => setTimeout(resolve, 1000));
-    return botInstance.sendPhoto(chatId, photo, { ...options });
+    return botInstance.sendPhoto(chatId, photo, { ...options }).catch(e => console.error('[Telegram] Error kirim foto:', e.message));
 }
 
 /**
@@ -86,11 +96,13 @@ async function initTelegramBot(io) {
 
     if (!config.telegram_bot_token || !config.telegram_bot_enabled) {
         console.log('[Telegram] Bot Telegram dinonaktifkan atau token belum diatur.');
+        if (io) io.emit('telegram_status', { status: 'DISABLED' });
         return;
     }
 
     if (botInstance) {
-        console.log('[Telegram] Bot sudah berjalan, skip inisialisasi ulang.');
+        console.log('[Telegram] Bot sudah berjalan.');
+        if (io) io.emit('telegram_status', { status: 'CONNECTED' });
         return;
     }
 
@@ -108,6 +120,7 @@ async function initTelegramBot(io) {
             const msg = err.message || '';
             if (msg.includes('ETELEGRAM: 401')) {
                 console.error('[Telegram] Token bot tidak valid! Periksa konfigurasi token.');
+                if (io) io.emit('telegram_status', { status: 'ERROR', message: 'Token tidak valid' });
             } else if (!msg.includes('EFATAL')) {
                 console.warn('[Telegram] Polling error (minor):', msg);
             }
@@ -124,7 +137,7 @@ async function initTelegramBot(io) {
         if (io) io.emit('telegram_status', { status: 'CONNECTED' });
 
         const me = await botInstance.getMe();
-        console.log(`[Telegram] Bot aktif: @${me.username} (${me.first_name})`);
+        console.log(`[Telegram] ✅ Bot Telegram aktif: @${me.username} (${me.first_name})`);
 
     } catch (err) {
         console.error('[Telegram] Gagal menginisialisasi bot:', err.message);
@@ -147,11 +160,21 @@ async function stopTelegramBot() {
     }
 }
 
+/**
+ * Restart bot Telegram (hentikan lalu inisialisasi ulang dengan token/config baru)
+ */
+async function restartTelegramBot(io) {
+    await stopTelegramBot();
+    await initTelegramBot(io);
+}
+
 module.exports = {
     getTelegramBot,
     getTelegramStatus,
     initTelegramBot,
     stopTelegramBot,
+    restartTelegramBot,
     sendWithTyping,
     sendPhotoWithAction
 };
+
