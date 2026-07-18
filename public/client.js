@@ -478,6 +478,11 @@ async function loadConfig() {
             privateBotEnabled.checked = config.private_chat_bot_enabled !== false;
         }
 
+        const groupBotEnabled = document.getElementById('cfg-group-chat-bot-enabled');
+        if (groupBotEnabled) {
+            groupBotEnabled.checked = config.group_chat_bot_enabled !== false;
+        }
+
         const groupAiEnabled = document.getElementById('cfg-group-ai-enabled');
         if (groupAiEnabled) {
             groupAiEnabled.checked = config.group_ai_enabled !== false;
@@ -551,6 +556,7 @@ function setupConfigHandler() {
             system_prompt_template: cfgSystemPrompt.value.trim(),
             private_chat_sync_group_id: document.getElementById('cfg-private-chat-sync-group-id').value,
             private_chat_bot_enabled: document.getElementById('cfg-private-chat-bot-enabled') ? document.getElementById('cfg-private-chat-bot-enabled').checked : true,
+            group_chat_bot_enabled: document.getElementById('cfg-group-chat-bot-enabled') ? document.getElementById('cfg-group-chat-bot-enabled').checked : true,
             group_ai_enabled: document.getElementById('cfg-group-ai-enabled') ? document.getElementById('cfg-group-ai-enabled').checked : true,
             private_ai_enabled: document.getElementById('cfg-private-ai-enabled') ? document.getElementById('cfg-private-ai-enabled').checked : true,
             auto_send_vcard: document.getElementById('cfg-auto-send-vcard').checked,
@@ -794,10 +800,32 @@ let selectedNodeId = null;
 
 // Ambil Daftar Grup dari API
 window.loadGroupsList = async function() {
+    const container = document.getElementById('groups-list-container');
+    if (container) {
+        container.innerHTML = `
+            <div class="progress-bar-container" style="padding: 20px 10px; text-align: center;">
+                <p style="font-size: 0.8rem; color: var(--text-color-muted); margin-bottom: 8px;">Menghubungkan &amp; menyelaraskan data grup...</p>
+                <div style="background: rgba(255,255,255,0.05); height: 6px; border-radius: 3px; overflow: hidden; border: 1px solid var(--border-color);">
+                    <div id="group-loading-progress" style="width: 10%; height: 100%; background: linear-gradient(90deg, var(--primary-color), #5856d6); transition: width 0.8s ease-in-out; box-shadow: 0 0 8px var(--primary-color);"></div>
+                </div>
+            </div>
+        `;
+        setTimeout(() => {
+            const prog = document.getElementById('group-loading-progress');
+            if (prog) prog.style.width = '85%';
+        }, 50);
+    }
+
     try {
         const res = await fetch('/api/groups');
         if (!res.ok) throw new Error('Gagal mengambil daftar grup');
         
+        const prog = document.getElementById('group-loading-progress');
+        if (prog) {
+            prog.style.width = '100%';
+            await new Promise(resolve => setTimeout(resolve, 300));
+        }
+
         activeGroups = await res.json();
         renderGroupsListSidebar();
         

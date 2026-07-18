@@ -1461,16 +1461,20 @@
                         </div>
                     </div>
 
-                    <!-- Private Chat Settings Container -->
+                    <!-- Global Bot Keaktifan Settings Container -->
                     <div style="background: rgba(10, 132, 255, 0.08); border-radius: 8px; padding: 12px; border: 1px solid rgba(10, 132, 255, 0.2); margin-top: 15px; margin-bottom: 15px;">
                         <h3 style="margin: 0 0 10px 0; font-size: 0.85rem; color: #0a84ff; display: flex; align-items: center; gap: 6px;">
-                            <i data-lucide="message-square" style="width: 16px; height: 16px; color: #0a84ff;"></i> Pengaturan Chat Pribadi (PM)
+                            <i data-lucide="power" style="width: 16px; height: 16px; color: #0a84ff;"></i> Kontrol Keaktifan Chatbot (Global)
                         </h3>
                         <div class="form-group" style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
-                            <input type="checkbox" id="cfg-private-chat-bot-enabled" checked style="width: 18px; height: 18px; margin: 0; cursor: pointer;">
-                            <label for="cfg-private-chat-bot-enabled" style="margin: 0; font-size: 0.8rem; cursor: pointer; font-weight: 600; color: var(--text-primary);">Aktifkan Chatbot Respon untuk Chat Pribadi</label>
+                            <input type="checkbox" id="cfg-group-chat-bot-enabled" checked style="width: 18px; height: 18px; margin: 0; cursor: pointer;">
+                            <label for="cfg-group-chat-bot-enabled" style="margin: 0; font-size: 0.8rem; cursor: pointer; font-weight: 600; color: var(--text-primary);">Aktifkan Chatbot untuk Chat Grup (Semua Grup)</label>
                         </div>
-                        <div class="form-group" style="margin-bottom: 0;">
+                        <div class="form-group" style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px;">
+                            <input type="checkbox" id="cfg-private-chat-bot-enabled" checked style="width: 18px; height: 18px; margin: 0; cursor: pointer;">
+                            <label for="cfg-private-chat-bot-enabled" style="margin: 0; font-size: 0.8rem; cursor: pointer; font-weight: 600; color: var(--text-primary);">Aktifkan Chatbot untuk Chat Pribadi (PM / Japri)</label>
+                        </div>
+                        <div class="form-group" style="margin-bottom: 0; border-top: 1px solid rgba(10, 132, 255, 0.15); padding-top: 10px;">
                             <label for="cfg-private-chat-sync-group-id" style="font-size: 0.75rem; margin-bottom: 4px; display: block; color: var(--text-secondary); font-weight: 600;">Sinkronisasi Chat Pribadi dengan Grup</label>
                             <select id="cfg-private-chat-sync-group-id" class="form-control" style="width: 100%; padding: 6px; font-size: 0.85rem; background: var(--bg-primary); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 4px;">
                                 <option value="">-- Pilih Grup Penyelaras --</option>

@@ -451,6 +451,11 @@ async function handleIncomingMessage(msg) {
         return;
     }
 
+    // Jika ini adalah chat grup, bot dinonaktifkan untuk semua grup secara global, dan pengirim BUKAN admin/boss, abaikan pesan
+    if (isGroup && config.group_chat_bot_enabled === false && !isSenderHostAdmin && !isSenderBoss) {
+        return;
+    }
+
     if (!isSenderHostAdmin && isGroup) {
         try {
             const chat = await msg.getChat();
