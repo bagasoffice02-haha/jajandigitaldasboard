@@ -215,14 +215,16 @@ async function handleSlashCommand(bot, msg, io) {
 
         case '/qris': {
             const pType = activeCfg ? (activeCfg.paymentType || 'qris') : 'qris';
-            const pText = activeCfg ? (activeCfg.paymentText || '💵 <b>QRIS PEMBAYARAN RESMI</b>\n\nSilakan scan QRIS untuk melakukan pembayaran.\n\n<b>⚠️ Penting:</b> Setelah membayar, kirimkan bukti transfer ke grup.') : '💵 Info pembayaran belum dikonfigurasi.';
-            const pMedia = activeCfg ? (activeCfg.paymentMedia || '') : '';
+            const pText = waToTelegramHtml(activeCfg ? (activeCfg.paymentText || '💵 <b>QRIS PEMBAYARAN RESMI</b>\n\nSilakan scan QRIS untuk melakukan pembayaran.\n\n<b>⚠️ Penting:</b> Setelah membayar, kirimkan bukti transfer ke grup.') : '💵 Info pembayaran belum dikonfigurasi.');
+            const pMedia = (activeCfg && activeCfg.paymentMedia && activeCfg.paymentMedia.trim()) ? activeCfg.paymentMedia.trim() : 'Qris.jpeg';
 
             if (pType === 'qris' && pMedia) {
                 const mediaPath = path.join(__dirname, '../../../media', pMedia);
                 if (fs.existsSync(mediaPath)) {
-                    await sendWithTyping(chatId, pText);
-                    await sendPhotoWithAction(chatId, mediaPath, { caption: '📲 Scan QRIS di atas untuk membayar.' });
+                    await sendPhotoWithAction(chatId, fs.createReadStream(mediaPath), {
+                        caption: pText,
+                        parse_mode: 'HTML'
+                    });
                     break;
                 }
             }
@@ -427,13 +429,17 @@ async function handleTextMessage(bot, msg, io) {
     // 7. Keyword QRIS/Pembayaran
     const paymentKeywords = ['bayar', 'qris', 'pembayaran', 'cara bayar'];
     if (paymentKeywords.includes(textLower) && activeCfg) {
-        const pText = waToTelegramHtml(activeCfg.paymentText || '💵 <b>Info Pembayaran</b>\n\nSilakan hubungi admin untuk info pembayaran.');
-        const pMedia = activeCfg.paymentMedia || '';
-        if (pMedia) {
+        const pType = activeCfg.paymentType || 'qris';
+        const pText = waToTelegramHtml(activeCfg.paymentText || '💵 <b>QRIS PEMBAYARAN RESMI</b>\n\nSilakan scan QRIS untuk melakukan pembayaran.\n\n<b>⚠️ Penting:</b> Setelah membayar, kirimkan bukti transfer ke grup.');
+        const pMedia = (activeCfg.paymentMedia && activeCfg.paymentMedia.trim()) ? activeCfg.paymentMedia.trim() : 'Qris.jpeg';
+
+        if (pType === 'qris' && pMedia) {
             const mediaPath = path.join(__dirname, '../../../media', pMedia);
             if (fs.existsSync(mediaPath)) {
-                await sendWithTyping(chatId, pText);
-                await sendPhotoWithAction(chatId, mediaPath);
+                await sendPhotoWithAction(chatId, fs.createReadStream(mediaPath), {
+                    caption: pText,
+                    parse_mode: 'HTML'
+                });
                 return;
             }
         }
@@ -503,7 +509,7 @@ async function handleTextMessage(bot, msg, io) {
                             if (chosenNode.media && chosenNode.media.trim()) {
                                 const mediaPath = path.join(__dirname, '../../../media', chosenNode.media.trim());
                                 if (fs.existsSync(mediaPath)) {
-                                    await sendPhotoWithAction(chatId, mediaPath);
+                                    await sendPhotoWithAction(chatId, fs.createReadStream(mediaPath));
                                 }
                             }
                         }
@@ -531,7 +537,7 @@ async function handleTextMessage(bot, msg, io) {
                 await sendWithTyping(chatId, replyText);
                 if (matchedNode.media && matchedNode.media.trim()) {
                     const mediaPath = path.join(__dirname, '../../../media', matchedNode.media.trim());
-                    if (fs.existsSync(mediaPath)) await sendPhotoWithAction(chatId, mediaPath);
+                    if (fs.existsSync(mediaPath)) await sendPhotoWithAction(chatId, fs.createReadStream(mediaPath));
                 }
             }
             return;
@@ -554,7 +560,7 @@ async function handleTextMessage(bot, msg, io) {
             await sendWithTyping(chatId, waToTelegramHtml(matchedTrigger.reply));
             if (matchedTrigger.media && matchedTrigger.media.trim()) {
                 const mediaPath = path.join(__dirname, '../../../media', matchedTrigger.media.trim());
-                if (fs.existsSync(mediaPath)) await sendPhotoWithAction(chatId, mediaPath);
+                if (fs.existsSync(mediaPath)) await sendPhotoWithAction(chatId, fs.createReadStream(mediaPath));
             }
             return;
         }
