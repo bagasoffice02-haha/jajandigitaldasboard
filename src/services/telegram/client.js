@@ -2,7 +2,10 @@
 // Inisialisasi dan manajemen instance Bot Telegram
 'use strict';
 
-const TelegramBot = require('node-telegram-bot-api');
+const rawTelegramBot = require('node-telegram-bot-api');
+const TelegramBot = typeof rawTelegramBot === 'function'
+    ? rawTelegramBot
+    : (rawTelegramBot.default || rawTelegramBot.TelegramBot);
 const { config } = require('../../config/config');
 
 let botInstance = null;
