@@ -54,5 +54,26 @@ router.post('/telegram/test-connection', async (req, res) => {
     }
 });
 
+// ─── Status Bot Telegram saat ini ────────────────────────────────────────────
+router.get('/telegram/status', (req, res) => {
+    try {
+        // Cek apakah bot Telegram aktif dan instance-nya berjalan
+        if (!config.telegram_bot_enabled || !config.telegram_bot_token) {
+            return res.json({ status: 'DISABLED' });
+        }
+        // Coba ambil instance bot (jika sudah diinisialisasi)
+        try {
+            const { getTelegramStatus } = require('../services/telegram/client');
+            const status = getTelegramStatus();
+            return res.json({ status });
+        } catch (_) {
+            // Modul telegram belum di-require (bot belum pernah diaktifkan di sesi ini)
+            return res.json({ status: config.telegram_bot_enabled ? 'DISCONNECTED' : 'DISABLED' });
+        }
+    } catch (err) {
+        res.status(500).json({ status: 'ERROR', error: err.message });
+    }
+});
+
 module.exports = router;
 

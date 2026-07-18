@@ -113,6 +113,9 @@ window.switchTab = function(tabId) {
         loadPremiumData();
     } else if (tabId === 'notes') {
         loadLocalNotes();
+    } else if (tabId === 'settings') {
+        // Auto-load konfigurasi Telegram setiap kali tab Settings dibuka
+        setTimeout(() => { if (typeof loadTelegramConfig === 'function') loadTelegramConfig(); }, 150);
     }
 };// Real-time Socket.io Connection Events
 socket.on('connect', () => {
@@ -4335,14 +4338,25 @@ async function loadTelegramConfig() {
         if (el('tg-auto-delete-welcome')) el('tg-auto-delete-welcome').value = tgCfg.auto_delete_welcome_seconds ?? 0;
         if (el('tg-auto-delete-schedule'))el('tg-auto-delete-schedule').value= tgCfg.auto_delete_schedule_seconds ?? 0;
 
-        // Update indikator status
-        const statusVal = cfg.telegram_bot_enabled ? 'CONNECTED' : 'DISABLED';
-        updateTelegramStatusUI(statusVal);
+        // Cek status bot langsung dari backend (bukan asumsi)
+        try {
+            const statusRes = await fetch('/api/telegram/status');
+            if (statusRes.ok) {
+                const statusData = await statusRes.json();
+                updateTelegramStatusUI(statusData.status, statusData.error);
+            } else {
+                updateTelegramStatusUI(cfg.telegram_bot_enabled ? 'DISCONNECTED' : 'DISABLED');
+            }
+        } catch (_) {
+            updateTelegramStatusUI(cfg.telegram_bot_enabled ? 'DISCONNECTED' : 'DISABLED');
+        }
 
     } catch (err) {
         console.error('[TG Config] Gagal memuat konfigurasi Telegram:', err.message);
+        updateTelegramStatusUI('ERROR', err.message);
     }
 }
+
 
 // Simpan pengaturan Telegram ke server (menulis ke config.json)
 window.saveTelegramConfig = async function() {
@@ -4467,11 +4481,10 @@ window.toggleWhitelistUI = function() {
     }
 };
 
-// Auto-load konfigurasi Telegram saat tab Settings dibuka
-const originalSwitchTab = window.switchTab;
-window.switchTab = function(tabName) {
-    if (originalSwitchTab) originalSwitchTab(tabName);
-    if (tabName === 'settings') {
-        setTimeout(loadTelegramConfig, 200);
+// Auto-load saat halaman pertama kali terbuka jika tab aktif adalah settings
+document.addEventListener('DOMContentLoaded', () => {
+    const activeTab = document.querySelector('.tab-content:not(.hidden)');
+    if (activeTab && activeTab.id === 'tab-settings') {
+        setTimeout(() => { if (typeof loadTelegramConfig === 'function') loadTelegramConfig(); }, 300);
     }
-};
+});
