@@ -467,6 +467,9 @@ async function loadConfig() {
         cfgReportTime.value = config.report_time || '08:00';
         cfgSystemPrompt.value = config.system_prompt_template || '';
         
+        document.getElementById('cfg-auto-send-vcard').checked = config.auto_send_vcard !== false;
+        document.getElementById('cfg-vcard-name').value = config.vcard_name || 'CS Jajan Digital';
+        
         // Update header badge with current provider name and model
         let providerLabel = 'Gemini';
         if (config.provider === 'local') providerLabel = 'LM Studio';
@@ -522,6 +525,8 @@ function setupConfigHandler() {
             report_time: cfgReportTime.value.trim(),
             system_prompt_template: cfgSystemPrompt.value.trim(),
             private_chat_sync_group_id: document.getElementById('cfg-private-chat-sync-group-id').value,
+            auto_send_vcard: document.getElementById('cfg-auto-send-vcard').checked,
+            vcard_name: document.getElementById('cfg-vcard-name').value.trim(),
             
             // Sertakan key & model provider lainnya agar tidak terhapus
             groq_api_keys: (document.getElementById('cfg-groq-api-keys').value || '').split('\n').map(k => k.trim()).filter(k => k.length > 0),
@@ -1908,6 +1913,30 @@ window.sendHostMsg = async function() {
     } catch(err) {
         alert('Gagal mengirim pesan: ' + err.message);
     }
+};
+
+// Download VCF (vCard) containing all active customers
+window.downloadVcf = function() {
+    if (!activeCustomers || activeCustomers.length === 0) {
+        alert('Belum ada pelanggan terdaftar untuk diekspor!');
+        return;
+    }
+    
+    let vcfContent = '';
+    activeCustomers.forEach(cust => {
+        const name = cust.name || `Pelanggan ${cust.phone}`;
+        const phone = cust.phone.replace(/\D/g, '');
+        vcfContent += `BEGIN:VCARD\nVERSION:3.0\nFN:${name}\nTEL;TYPE=CELL:+${phone}\nEND:VCARD\n`;
+    });
+    
+    const blob = new Blob([vcfContent], { type: 'text/vcard;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = 'daftar_pelanggan_wa.vcf';
+    link.style.display = 'none';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
 };
 
 // Customers

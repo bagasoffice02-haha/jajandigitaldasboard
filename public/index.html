@@ -629,9 +629,14 @@
             <section class="panel card shop-right-col">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
                     <h2 style="margin: 0; font-size: 1.1rem;"><i data-lucide="book-open"></i> Manajemen Pelanggan</h2>
-                    <button class="btn btn-secondary btn-icon" onclick="loadCustomersList()" title="Refresh Pelanggan">
-                        <i data-lucide="rotate-cw" style="width: 14px; height: 14px;"></i>
-                    </button>
+                    <div style="display: flex; gap: 6px;">
+                        <button class="btn btn-secondary btn-icon" onclick="window.downloadVcf()" title="Ekspor Kontak VCF" style="background: rgba(48, 209, 88, 0.15); color: #30d158; border-color: rgba(48, 209, 88, 0.3); padding: 4px 8px; font-size: 0.75rem; display: flex; align-items: center; gap: 4px;">
+                            <i data-lucide="download" style="width: 14px; height: 14px;"></i> Ekspor VCF
+                        </button>
+                        <button class="btn btn-secondary btn-icon" onclick="loadCustomersList()" title="Refresh Pelanggan">
+                            <i data-lucide="rotate-cw" style="width: 14px; height: 14px;"></i>
+                        </button>
+                    </div>
                 </div>
                 <p class="card-subtitle" style="margin-top: -10px; margin-bottom: 15px; font-size: 0.8rem;">Daftar pelanggan toko yang terdeteksi oleh sistem.</p>
                 
@@ -1391,6 +1396,22 @@
                         <label for="cfg-report-time">Waktu Laporan Harian (Format HH:MM)</label>
                         <input type="text" id="cfg-report-time" placeholder="Contoh: 08:00">
                         <small>Waktu kirim otomatis rekap kas & agenda harian ke nomor Bos.</small>
+                    </div>
+
+                    <!-- Auto Save & Send VCard Settings -->
+                    <div style="background: rgba(48, 209, 88, 0.08); border-radius: 8px; padding: 12px; border: 1px solid rgba(48, 209, 88, 0.2); margin-top: 15px; margin-bottom: 15px;">
+                        <h3 style="margin: 0 0 10px 0; font-size: 0.85rem; color: #30d158; display: flex; align-items: center; gap: 6px;">
+                            <i data-lucide="contact" style="width: 16px; height: 16px;"></i> Auto-Kirim Kontak Toko (Auto Save)
+                        </h3>
+                        <div class="form-group" style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+                            <input type="checkbox" id="cfg-auto-send-vcard" style="width: 18px; height: 18px; margin: 0; cursor: pointer;">
+                            <label for="cfg-auto-send-vcard" style="margin: 0; font-size: 0.8rem; cursor: pointer;">Aktifkan Auto-Kirim Kontak ke Pelanggan Baru</label>
+                        </div>
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label for="cfg-vcard-name" style="font-size: 0.75rem;">Nama Kontak Bisnis Anda (vCard Name)</label>
+                            <input type="text" id="cfg-vcard-name" placeholder="Contoh: CS Jajan Digital" style="width: 100%; padding: 6px; font-size: 0.85rem; background: var(--bg-primary); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 4px;">
+                            <small>Kontak kartu nama VCard akan otomatis dikirim agar pelanggan baru tinggal klik 'Add/Save Contact' di HP mereka.</small>
+                        </div>
                     </div>
 
                     <div class="form-group">

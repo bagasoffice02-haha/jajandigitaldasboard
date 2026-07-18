@@ -1686,6 +1686,22 @@ async function handleIncomingMessage(msg) {
             const contact = await msg.getContact();
             const customerName = contact.pushname || contact.name || `Pelanggan ${senderPhone}`;
             await addCustomer(senderPhone, customerName);
+            
+            // Auto-send business vCard to new customers
+            if (config.auto_send_vcard !== false) {
+                const businessName = config.vcard_name || 'CS Jajan Digital';
+                const myNumber = (client && client.info && client.info.wid && client.info.wid.user) 
+                    ? client.info.wid.user 
+                    : '';
+                
+                if (myNumber) {
+                    const vcard = `BEGIN:VCARD\nVERSION:3.0\nFN:${businessName}\nORG:${businessName}\nTEL;TYPE=CELL;waid=${myNumber}:+${myNumber}\nEND:VCARD`;
+                    
+                    console.log(`[Auto Save VCard] Mengirim kontak bisnis ke pelanggan baru: ${senderPhone}`);
+                    await client.sendMessage(senderId, vcard);
+                    await client.sendMessage(senderId, `Halo Kak! Kontak kami di atas otomatis dikirim agar Kakak bisa menyimpannya. Silakan simpan nomor kami agar tidak ketinggalan info promo menarik di status/story WhatsApp kami ya! 🙏`);
+                }
+            }
         } catch (err) {
             console.error('Gagal merekam data pelanggan otomatis:', err.message);
         }
