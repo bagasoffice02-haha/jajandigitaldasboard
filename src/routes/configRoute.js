@@ -23,4 +23,36 @@ router.post('/config', (req, res) => {
     }
 });
 
+// ─── Test Koneksi Token Bot Telegram ─────────────────────────────────────────
+router.post('/telegram/test-connection', async (req, res) => {
+    const { token } = req.body;
+    if (!token || token.trim().length === 0) {
+        return res.status(400).json({ success: false, error: 'Token tidak boleh kosong.' });
+    }
+
+    try {
+        const TelegramBot = require('node-telegram-bot-api');
+        // Buat instance sementara untuk validasi token
+        const testBot = new TelegramBot(token.trim(), { polling: false });
+        const me = await testBot.getMe();
+        res.json({
+            success: true,
+            username: me.username,
+            first_name: me.first_name,
+            id: me.id
+        });
+    } catch (err) {
+        const errMsg = err.message || '';
+        res.json({
+            success: false,
+            error: errMsg.includes('401')
+                ? 'Token tidak valid atau sudah kadaluarsa. Periksa kembali token dari @BotFather.'
+                : errMsg.includes('ETELEGRAM')
+                    ? 'Tidak dapat terhubung ke server Telegram. Periksa koneksi internet.'
+                    : err.message
+        });
+    }
+});
+
 module.exports = router;
+
