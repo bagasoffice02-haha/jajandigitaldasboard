@@ -15,6 +15,15 @@ router.post('/config', async (req, res) => {
         if (isPlaceholder(newConfig.api_key)) {
             delete newConfig.api_key;
         }
+
+        // Proteksi token bot telegram agar tidak terhapus jika string kosong / placeholder titik
+        if (newConfig.telegram_bot_token !== undefined) {
+            const tok = (newConfig.telegram_bot_token || '').trim();
+            if (!tok || /^\.+$/.test(tok) || tok.includes('YOUR_') || tok.includes('TOKEN')) {
+                delete newConfig.telegram_bot_token;
+            }
+        }
+
         Object.assign(config, newConfig);
         saveConfig(config);
 
@@ -41,6 +50,7 @@ router.post('/config', async (req, res) => {
         res.status(500).json({ error: err.message });
     }
 });
+
 
 
 // ─── Test Koneksi Token Bot Telegram ─────────────────────────────────────────

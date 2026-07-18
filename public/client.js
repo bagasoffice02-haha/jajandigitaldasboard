@@ -4315,6 +4315,8 @@ function updateTelegramStatusUI(status, message) {
     text.style.color = s.color;
 }
 
+let cachedTgToken = '';
+
 // Muat data konfigurasi Telegram dari server ke form dasbor
 async function loadTelegramConfig() {
     try {
@@ -4323,6 +4325,8 @@ async function loadTelegramConfig() {
         const cfg = await res.json();
 
         const el = (id) => document.getElementById(id);
+
+        if (cfg.telegram_bot_token) cachedTgToken = cfg.telegram_bot_token;
 
         if (el('tg-enabled-toggle'))      el('tg-enabled-toggle').checked    = cfg.telegram_bot_enabled === true;
         if (el('tg-bot-token'))           el('tg-bot-token').value           = cfg.telegram_bot_token || '';
@@ -4338,7 +4342,7 @@ async function loadTelegramConfig() {
         if (el('tg-auto-delete-welcome')) el('tg-auto-delete-welcome').value = tgCfg.auto_delete_welcome_seconds ?? 0;
         if (el('tg-auto-delete-schedule'))el('tg-auto-delete-schedule').value= tgCfg.auto_delete_schedule_seconds ?? 0;
 
-        // Cek status bot langsung dari backend (bukan asumsi)
+        // Cek status bot langsung dari backend
         try {
             const statusRes = await fetch('/api/telegram/status');
             if (statusRes.ok) {
@@ -4371,8 +4375,13 @@ window.saveTelegramConfig = async function() {
     const parseIdList = (str) =>
         (str || '').split(',').map(s => s.trim()).filter(s => s.length > 0);
 
+    let inputToken = el('tg-bot-token') ? el('tg-bot-token').value.trim() : '';
+    if (!inputToken || /^\.+$/.test(inputToken)) {
+        inputToken = cachedTgToken;
+    }
+
     const payload = {
-        telegram_bot_token:        el('tg-bot-token')      ? el('tg-bot-token').value.trim() : '',
+        telegram_bot_token:        inputToken,
         telegram_bot_enabled:      el('tg-enabled-toggle') ? el('tg-enabled-toggle').checked : false,
         telegram_boss_id:          el('tg-boss-id')        ? el('tg-boss-id').value.trim()   : '',
         telegram_private_bot_enabled: el('tg-private-enabled') ? el('tg-private-enabled').checked : true,
@@ -4396,6 +4405,8 @@ window.saveTelegramConfig = async function() {
 
         if (!res.ok) throw new Error(await res.text());
 
+        if (inputToken) cachedTgToken = inputToken;
+
         btn.innerHTML = `<i data-lucide="check" style="width:15px;height:15px;"></i> Tersimpan!`;
         btn.style.background = '#10b981';
 
@@ -4408,13 +4419,16 @@ window.saveTelegramConfig = async function() {
             if (window.lucide) lucide.createIcons();
         }, 2000);
 
-        // Restart bot jika enabled, atau tampilkan notifikasi
-        if (payload.telegram_bot_enabled && payload.telegram_bot_token) {
-            updateTelegramStatusUI('CONNECTED');
-            console.log('[TG] Konfigurasi disimpan. Restart server agar bot Telegram aktif.');
-        } else {
-            updateTelegramStatusUI('DISABLED');
-        }
+        // Fetch status terbaru
+        setTimeout(async () => {
+            try {
+                const sRes = await fetch('/api/telegram/status');
+                if (sRes.ok) {
+                    const sData = await sRes.json();
+                    updateTelegramStatusUI(sData.status);
+                }
+            } catch (_) {}
+        }, 1000);
 
     } catch (err) {
         alert('Gagal menyimpan pengaturan Telegram: ' + err.message);
@@ -4425,9 +4439,13 @@ window.saveTelegramConfig = async function() {
 
 // Test koneksi: validasi token bot dengan memanggil getMe() via backend
 window.testTelegramConnection = async function() {
-    const token = document.getElementById('tg-bot-token')?.value.trim();
+    let token = document.getElementById('tg-bot-token')?.value.trim();
+    if (!token || /^\.+$/.test(token)) {
+        token = cachedTgToken;
+    }
+
     if (!token) {
-        alert('Isi token bot terlebih dahulu sebelum test koneksi!');
+        alert('Isi token bot terlebih dahulu dari @BotFather!');
         return;
     }
 
@@ -4446,8 +4464,10 @@ window.testTelegramConnection = async function() {
 
         const data = await res.json();
         if (data.success) {
+            cachedTgToken = token;
+            if (document.getElementById('tg-bot-token')) document.getElementById('tg-bot-token').value = token;
             updateTelegramStatusUI('CONNECTED');
-            alert(`✅ Koneksi berhasil!\n\nBot: @${data.username}\nNama: ${data.first_name}\n\nToken valid dan siap digunakan.`);
+            alert(`✅ Koneksi berhasil!\n\nBot: @${data.username}\nNama: ${data.first_name}\n\nToken valid! Jangan lupa klik "Simpan Pengaturan Telegram".`);
         } else {
             updateTelegramStatusUI('ERROR', data.error || 'Token tidak valid');
             alert('❌ Koneksi gagal: ' + (data.error || 'Token tidak valid atau kadaluarsa.'));

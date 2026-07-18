@@ -757,6 +757,8 @@ function registerMessageHandlers(bot, io) {
             if (!msg || !msg.from) return;
             if (msg.from.is_bot) return; // Abaikan pesan dari bot lain
 
+            console.log(`[Telegram Recv] Pesan dari ${msg.from.first_name || msg.from.id} (${msg.chat.id}): "${msg.text || ''}"`);
+
             // Welcome/Goodbye member (event khusus Telegram)
             if (msg.new_chat_members) {
                 await handleNewMembers(bot, msg, io);
