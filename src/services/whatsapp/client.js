@@ -257,7 +257,16 @@ function attachClientListeners() {
             let groupChat = null;
             try { groupChat = await client.getChatById(groupId); } catch(_) {}
             
-            for (const participantId of notification.recipientIds) {
+            let targetIds = notification.recipientIds || [];
+            if (!Array.isArray(targetIds) || targetIds.length === 0) {
+                if (notification.author) {
+                    targetIds = [notification.author];
+                }
+            }
+            
+            console.log(`[WA Group Update] Tipe: ${notification.type} | Grup: ${groupId} | Target:`, targetIds);
+            
+            for (const participantId of targetIds) {
                 let contact = { id: { _serialized: participantId } };
                 let displayName = '';
                 
