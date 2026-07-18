@@ -94,7 +94,7 @@ async function registerCommands() {
 async function initTelegramBot(io) {
     telegramIo = io;
 
-    if (!config.telegram_bot_token || !config.telegram_bot_enabled) {
+    if (!config.telegram_bot_token || config.telegram_bot_enabled === false) {
         console.log('[Telegram] Bot Telegram dinonaktifkan atau token belum diatur.');
         if (io) io.emit('telegram_status', { status: 'DISABLED' });
         return;
@@ -107,40 +107,52 @@ async function initTelegramBot(io) {
     }
 
     try {
-        botInstance = new TelegramBot(config.telegram_bot_token, {
-            polling: {
-                interval: 300,
-                autoStart: true,
-                params: { timeout: 10 }
-            }
+        console.log('[Telegram] Memulai inisialisasi bot Telegram...');
+        botInstance = new TelegramBot(config.telegram_bot_token, { polling: false });
+
+        // 1. Bersihkan Webhook lama jika ada (mencegah Error 409 Conflict getUpdates)
+        try {
+            await botInstance.deleteWebHook();
+            console.log('[Telegram] Webhook lama dibersihkan.');
+        } catch (whErr) {
+            console.warn('[Telegram] Warning deleteWebHook:', whErr.message);
+        }
+
+        // 2. Mulai Polling secara resmi
+        await botInstance.startPolling({
+            interval: 300,
+            params: { timeout: 10 }
         });
 
-        // Tangani error polling agar tidak crash server
-        botInstance.on('polling_error', (err) => {
+        // 3. Tangani error polling
+        botInstance.on('polling_error', async (err) => {
             const msg = err.message || '';
-            if (msg.includes('ETELEGRAM: 401')) {
-                console.error('[Telegram] Token bot tidak valid! Periksa konfigurasi token.');
+            console.error('[Telegram Polling Error]:', msg);
+
+            if (msg.includes('ETELEGRAM: 401') || msg.includes('Unauthorized')) {
+                console.error('[Telegram] Token bot tidak valid!');
                 if (io) io.emit('telegram_status', { status: 'ERROR', message: 'Token tidak valid' });
-            } else if (!msg.includes('EFATAL')) {
-                console.warn('[Telegram] Polling error (minor):', msg);
+            } else if (msg.includes('409') || msg.includes('Conflict')) {
+                console.warn('[Telegram] Terdeteksi 409 Conflict, mencoba hapus webhook ulang...');
+                try { await botInstance.deleteWebHook(); } catch (_) {}
             }
         });
 
-        // Daftarkan handler pesan dari messageHandler.js
+        // 4. Daftarkan handler pesan
         const { registerMessageHandlers } = require('./messageHandler');
         registerMessageHandlers(botInstance, io);
 
-        // Daftarkan slash commands
+        // 5. Daftarkan slash commands
         await registerCommands();
 
-        // Emit status ke dasbor
+        // 6. Emit status sukses ke dasbor
         if (io) io.emit('telegram_status', { status: 'CONNECTED' });
 
         const me = await botInstance.getMe();
-        console.log(`[Telegram] ✅ Bot Telegram aktif: @${me.username} (${me.first_name})`);
+        console.log(`[Telegram] ✅ Bot Telegram BERHASIL AKTIF: @${me.username} (${me.first_name})`);
 
     } catch (err) {
-        console.error('[Telegram] Gagal menginisialisasi bot:', err.message);
+        console.error('[Telegram] ❌ Gagal menginisialisasi bot:', err.message);
         botInstance = null;
         if (io) io.emit('telegram_status', { status: 'ERROR', message: err.message });
     }
@@ -152,9 +164,12 @@ async function initTelegramBot(io) {
 async function stopTelegramBot() {
     if (botInstance) {
         try {
-            await botInstance.stopPolling();
+            if (botInstance.isPolling()) {
+                await botInstance.stopPolling({ cancel: true });
+            }
         } catch (_) {}
         botInstance = null;
+        await new Promise(r => setTimeout(r, 500));
         console.log('[Telegram] Bot Telegram dihentikan.');
         if (telegramIo) telegramIo.emit('telegram_status', { status: 'DISCONNECTED' });
     }
@@ -177,4 +192,5 @@ module.exports = {
     sendWithTyping,
     sendPhotoWithAction
 };
+
 
