@@ -13,3 +13,4 @@ scratch/
 *.sqlite
 knowledge/secret_*
 *.backup.js
+sessions.json
