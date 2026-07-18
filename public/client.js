@@ -900,13 +900,13 @@ window.selectGroup = async function(groupId) {
         document.getElementById('grp-goodbye-message').value = selectedGroupConfig.goodbyeMessage || '';
         
         // Auto Close Schedule
-        const schedule = selectedGroupConfig.autoCloseSchedule || { enabled: false, openTime: '08:00', closeTime: '17:00', activeDays: [1,2,3,4,5] };
+        const schedule = selectedGroupConfig.autoCloseSchedule || { enabled: false, openTime: '08:00', closeTime: '17:00', activeDays: [1,2,3,4,5,6,7] };
         document.getElementById('grp-auto-close-enable').checked = schedule.enabled;
         document.getElementById('grp-open-time').value = schedule.openTime || '08:00';
         document.getElementById('grp-close-time').value = schedule.closeTime || '17:00';
         
         // Day checkboxes
-        const activeDays = schedule.activeDays || [1,2,3,4,5];
+        const activeDays = schedule.activeDays || [1,2,3,4,5,6,7];
         document.querySelectorAll('.grp-active-day-cb').forEach(cb => {
             cb.checked = activeDays.includes(parseInt(cb.value, 10));
         });
@@ -2413,8 +2413,9 @@ window.saveHostScheduler = async function() {
             // Refresh local state config
             const group = hostConfigActiveGroups.find(g => g.id === gId);
             if (group) {
+                const existingDays = (group.config && group.config.autoCloseSchedule && group.config.autoCloseSchedule.activeDays) || [1,2,3,4,5,6,7];
                 group.config = group.config || {};
-                group.config.autoCloseSchedule = { enabled, openTime, closeTime, activeDays: [1,2,3,4,5] };
+                group.config.autoCloseSchedule = { enabled, openTime, closeTime, activeDays: existingDays };
             }
         } else {
             throw new Error(await res.text());

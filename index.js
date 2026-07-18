@@ -1213,7 +1213,7 @@ app.post('/api/host-admin/group-scheduler', async (req, res) => {
                 enabled: schedulerEnabled === true,
                 openTime: openTime || '08:00',
                 closeTime: closeTime || '17:00',
-                activeDays: (gCfg.autoCloseSchedule && gCfg.autoCloseSchedule.activeDays) || [1,2,3,4,5]
+                activeDays: (gCfg.autoCloseSchedule && gCfg.autoCloseSchedule.activeDays) || [1,2,3,4,5,6,7]
             };
             await saveGroupConfig(groupId, gCfg);
             io.emit('group_config_updated', { groupId });
