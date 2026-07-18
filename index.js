@@ -835,11 +835,48 @@ app.post('/api/shop/broadcast', async (req, res) => {
                 return res.status(400).json({ error: 'Grup asal anggota wajib dipilih.' });
             }
             try {
-                const chat = await client.getChatById(targetGroup);
+                console.log(`[Broadcast] Mengambil anggota grup untuk ${targetGroup}...`);
+                let chat = null;
+                try {
+                    chat = await client.getChatById(targetGroup);
+                } catch (errId) {
+                    console.warn('[Broadcast Warning] Gagal menggunakan getChatById, mencoba alternatif direct page evaluate:', errId.message);
+                }
+
                 if (chat && chat.participants) {
                     targetIds = chat.participants.map(p => p.id._serialized);
                 } else {
-                    return res.status(400).json({ error: 'Grup tidak ditemukan atau tidak memiliki anggota.' });
+                    console.log('[Broadcast] Menggunakan Tipe Cadangan A (Direct Store fetch)...');
+                    const directParticipants = await client.pupPage.evaluate((chatId) => {
+                        try {
+                            const chatInstance = window.Store.Chat.get(chatId);
+                            if (chatInstance && chatInstance.groupMetadata && chatInstance.groupMetadata.participants) {
+                                return chatInstance.groupMetadata.participants.map(p => {
+                                    if (p.id && p.id._serialized) return p.id._serialized;
+                                    if (typeof p.id === 'string') return p.id;
+                                    return p.id;
+                                }).filter(Boolean);
+                            }
+                        } catch (e) {
+                            console.error('Error in direct store evaluate:', e);
+                        }
+                        return null;
+                    }, targetGroup);
+
+                    if (directParticipants && directParticipants.length > 0) {
+                        targetIds = directParticipants;
+                        console.log(`[Broadcast Success] Berhasil mengambil ${targetIds.length} anggota via Tipe Cadangan A.`);
+                    } else {
+                        console.log('[Broadcast] Menggunakan Tipe Cadangan B (Search loaded chats)...');
+                        const chats = await client.getChats();
+                        const matchingChat = chats.find(c => c.id._serialized === targetGroup);
+                        if (matchingChat && matchingChat.participants) {
+                            targetIds = matchingChat.participants.map(p => p.id._serialized);
+                            console.log(`[Broadcast Success] Berhasil mengambil ${targetIds.length} anggota via Tipe Cadangan B.`);
+                        } else {
+                            return res.status(400).json({ error: 'Grup tidak ditemukan di daftar chat aktif WhatsApp Anda.' });
+                        }
+                    }
                 }
             } catch (chatErr) {
                 return res.status(400).json({ error: 'Gagal mengambil anggota grup: ' + chatErr.message });
