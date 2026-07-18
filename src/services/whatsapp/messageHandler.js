@@ -1916,7 +1916,16 @@ async function handleIncomingMessage(msg) {
         const matchedTrigger = activeCfg.extraTriggers.find(t => {
             if (!t.keyword) return false;
             const kw = t.keyword.toLowerCase().trim();
-            return text === kw;
+            if (text !== kw) return false;
+            
+            // Cek filter lingkup pemicuan (scope)
+            const scope = t.scope || 'all';
+            if (scope === 'private') {
+                return !isGroup;
+            } else if (scope === 'group') {
+                return isGroup;
+            }
+            return true; // scope 'all' cocok untuk keduanya
         });
 
         if (matchedTrigger) {

@@ -829,7 +829,7 @@
                         <label style="font-size: 0.7rem; color: var(--text-secondary);">File Media Balasan (Opsional - Gambar/Dokumen):</label>
                         <input type="text" id="host-trigger-media" placeholder="Contoh: brosur.pdf / promo.png" class="form-control" style="width: 100%; padding: 6px; font-size: 0.8rem; background: var(--bg-secondary); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 4px;">
                     </div>
-                    <div style="display: flex; gap: 15px; margin-top: 4px;">
+                    <div style="display: flex; gap: 12px; margin-top: 4px; flex-wrap: wrap;">
                         <label style="font-size: 0.75rem; color: var(--text-primary); display: flex; align-items: center; gap: 6px; cursor: pointer;">
                             <input type="radio" name="host-trigger-scope" id="host-scope-single" checked style="width: 14px; height: 14px;">
                             <span>Hanya grup ini</span>
@@ -837,6 +837,10 @@
                         <label style="font-size: 0.75rem; color: var(--text-primary); display: flex; align-items: center; gap: 6px; cursor: pointer;">
                             <input type="radio" name="host-trigger-scope" id="host-scope-all" style="width: 14px; height: 14px;">
                             <span>Semua grup</span>
+                        </label>
+                        <label style="font-size: 0.75rem; color: var(--text-primary); display: flex; align-items: center; gap: 6px; cursor: pointer;">
+                            <input type="radio" name="host-trigger-scope" id="host-scope-private" style="width: 14px; height: 14px;">
+                            <span>Hanya chat pribadi</span>
                         </label>
                     </div>
                     <button class="btn btn-primary" onclick="addHostTrigger()" style="width: 100%; padding: 6px; font-size: 0.75rem; cursor: pointer; border-radius: 6px;">Tambah Kata Kunci</button>

@@ -1233,6 +1233,84 @@ app.post('/api/host-admin/payment-settings', async (req, res) => {
     }
 });
 
+app.post('/api/host-admin/add-trigger', async (req, res) => {
+    try {
+        const { groupId, keyword, reply, media, scope, allGroups } = req.body;
+        if (!groupId || !keyword || !reply) {
+            return res.status(400).json({ error: 'GroupId, keyword, dan reply wajib diisi.' });
+        }
+
+        const { group_configs: gConfigs } = await getGroupConfigs();
+        const isAllGroups = allGroups === true || scope === 'all';
+        const finalScope = scope || (isAllGroups ? 'all' : 'group');
+
+        // Jika scope === 'all', update semua grup
+        // Jika tidak, hanya update groupId terpilih
+        const targetGroupIds = isAllGroups ? Object.keys(gConfigs) : [groupId];
+        if (targetGroupIds.length === 0) {
+            targetGroupIds.push(groupId);
+        }
+
+        for (const gid of targetGroupIds) {
+            let gCfg = gConfigs[gid];
+            if (!gCfg) {
+                gCfg = {
+                    groupId: gid,
+                    groupName: gid,
+                    enabled: true,
+                    useAiFallback: true,
+                    triggerPrefix: '',
+                    allowedKnowledgeFiles: [],
+                    categoryFooter: 'Silakan pilih menu dengan mengetik angkanya:',
+                    contentFooter: 'Ketik *0* untuk kembali ke menu sebelumnya, atau *#* untuk kembali ke menu utama.',
+                    menuTree: { id: "root", name: "Menu Utama", type: "category", text: "Silakan pilih salah satu opsi di bawah ini:", children: [] }
+                };
+            }
+            
+            gCfg.extraTriggers = gCfg.extraTriggers || [];
+            gCfg.extraTriggers = gCfg.extraTriggers.filter(t => t.keyword.toLowerCase().trim() !== keyword.toLowerCase().trim());
+            gCfg.extraTriggers.push({
+                keyword: keyword.trim(),
+                reply: reply.trim(),
+                media: media ? media.trim() : '',
+                scope: finalScope
+            });
+
+            await saveGroupConfig(gid, gCfg);
+            io.emit('group_config_updated', { groupId: gid });
+        }
+
+        res.json({ success: true });
+    } catch (err) {
+        console.error('Gagal menambahkan trigger:', err.message);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+app.post('/api/host-admin/delete-trigger', async (req, res) => {
+    try {
+        const { groupId, keyword } = req.body;
+        if (!groupId || !keyword) {
+            return res.status(400).json({ error: 'GroupId dan keyword wajib diisi.' });
+        }
+
+        const { group_configs: gConfigs } = await getGroupConfigs();
+        const gCfg = gConfigs[groupId];
+        if (gCfg) {
+            gCfg.extraTriggers = gCfg.extraTriggers || [];
+            gCfg.extraTriggers = gCfg.extraTriggers.filter(t => t.keyword.toLowerCase().trim() !== keyword.toLowerCase().trim());
+            await saveGroupConfig(groupId, gCfg);
+            io.emit('group_config_updated', { groupId });
+            res.json({ success: true });
+        } else {
+            res.status(404).json({ error: 'Grup tidak ditemukan' });
+        }
+    } catch (err) {
+        console.error('Gagal menghapus trigger:', err.message);
+        res.status(500).json({ error: err.message });
+    }
+});
+
 // API: Manual Scheduler Actions
 app.post('/api/scheduler/daily-report', async (req, res) => {
     try {

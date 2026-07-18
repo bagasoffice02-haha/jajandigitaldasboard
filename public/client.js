@@ -2248,9 +2248,10 @@ window.onHostGroupSelectChange = function() {
                 row.style = 'display: flex; justify-content: space-between; align-items: center; padding: 4px 8px; background: var(--bg-secondary); border-radius: 4px; border: 1px solid var(--border-color); margin-bottom: 4px;';
                 
                 const mediaSuffix = t.media ? ` 📁 (${t.media})` : '';
+                const scopeLabel = t.scope === 'private' ? ' [Pribadi]' : (t.scope === 'all' ? ' [Semua]' : ' [Grup]');
                 row.innerHTML = `
                     <div style="font-size: 0.75rem; text-overflow: ellipsis; overflow: hidden; white-space: nowrap; max-width: 80%; color: var(--text-primary);">
-                        <strong>${t.keyword}</strong>: ${t.reply}${mediaSuffix}
+                        <strong>${t.keyword}</strong><span style="color: var(--text-secondary); font-size: 0.65rem;">${scopeLabel}</span>: ${t.reply}${mediaSuffix}
                     </div>
                     <button class="btn btn-secondary btn-icon" onclick="window.deleteHostTrigger('${gId}', '${t.keyword}')" style="padding: 2px; color: #ff453a; border: none; background: transparent; cursor: pointer;">
                         <i data-lucide="trash" style="width: 12px; height: 12px;"></i>
@@ -2408,7 +2409,13 @@ window.addHostTrigger = async function() {
     const keyword = document.getElementById('host-trigger-keyword').value.trim();
     const reply = document.getElementById('host-trigger-reply').value.trim();
     const media = document.getElementById('host-trigger-media').value.trim();
-    const allGroups = document.getElementById('host-scope-all').checked;
+    
+    let scope = 'group';
+    if (document.getElementById('host-scope-all') && document.getElementById('host-scope-all').checked) {
+        scope = 'all';
+    } else if (document.getElementById('host-scope-private') && document.getElementById('host-scope-private').checked) {
+        scope = 'private';
+    }
 
     if (!keyword || !reply) {
         alert('Kata kunci dan balasan teks wajib diisi!');
@@ -2419,7 +2426,7 @@ window.addHostTrigger = async function() {
         const res = await fetch('/api/host-admin/add-trigger', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ groupId: gId, keyword, reply, media, allGroups })
+            body: JSON.stringify({ groupId: gId, keyword, reply, media, scope })
         });
 
         if (res.ok) {
