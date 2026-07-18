@@ -836,47 +836,95 @@ app.post('/api/shop/broadcast', async (req, res) => {
             }
             try {
                 console.log(`[Broadcast] Mengambil anggota grup untuk ${targetGroup}...`);
-                let chat = null;
-                try {
-                    chat = await client.getChatById(targetGroup);
-                } catch (errId) {
-                    console.warn('[Broadcast Warning] Gagal menggunakan getChatById, mencoba alternatif direct page evaluate:', errId.message);
-                }
+                let resolvedParticipants = [];
 
-                if (chat && chat.participants) {
-                    targetIds = chat.participants.map(p => p.id._serialized);
-                } else {
-                    console.log('[Broadcast] Menggunakan Tipe Cadangan A (Direct Store fetch)...');
-                    const directParticipants = await client.pupPage.evaluate((chatId) => {
+                // Strategi 1: Direct GroupMetadata find (paling cepat & aman untuk grup besar)
+                try {
+                    const strategy1 = await client.pupPage.evaluate(async (chatId) => {
                         try {
-                            const chatInstance = window.Store.Chat.get(chatId);
-                            if (chatInstance && chatInstance.groupMetadata && chatInstance.groupMetadata.participants) {
-                                return chatInstance.groupMetadata.participants.map(p => {
-                                    if (p.id && p.id._serialized) return p.id._serialized;
-                                    if (typeof p.id === 'string') return p.id;
-                                    return p.id;
-                                }).filter(Boolean);
+                            if (window.Store && window.Store.GroupMetadata) {
+                                const metadata = await window.Store.GroupMetadata.find(chatId);
+                                if (metadata && metadata.participants) {
+                                    return metadata.participants.map(p => {
+                                        const id = p.id || p;
+                                        return typeof id === 'object' ? (id._serialized || id.toString()) : id;
+                                    }).filter(Boolean);
+                                }
                             }
                         } catch (e) {
-                            console.error('Error in direct store evaluate:', e);
+                            // ignore
                         }
                         return null;
                     }, targetGroup);
+                    
+                    if (strategy1 && strategy1.length > 0) {
+                        resolvedParticipants = strategy1;
+                        console.log(`[Broadcast] Strategi 1 (GroupMetadata) Sukses: ${resolvedParticipants.length} anggota ditemukan.`);
+                    }
+                } catch (s1Err) {
+                    console.warn('[Broadcast Warning] Strategi 1 Error:', s1Err.message);
+                }
 
-                    if (directParticipants && directParticipants.length > 0) {
-                        targetIds = directParticipants;
-                        console.log(`[Broadcast Success] Berhasil mengambil ${targetIds.length} anggota via Tipe Cadangan A.`);
-                    } else {
-                        console.log('[Broadcast] Menggunakan Tipe Cadangan B (Search loaded chats)...');
+                // Strategi 2: Direct Chat Store get
+                if (resolvedParticipants.length === 0) {
+                    try {
+                        const strategy2 = await client.pupPage.evaluate((chatId) => {
+                            try {
+                                if (window.Store && window.Store.Chat) {
+                                    const chatInstance = window.Store.Chat.get(chatId);
+                                    if (chatInstance && chatInstance.groupMetadata && chatInstance.groupMetadata.participants) {
+                                        return chatInstance.groupMetadata.participants.map(p => {
+                                            const id = p.id || p;
+                                            return typeof id === 'object' ? (id._serialized || id.toString()) : id;
+                                        }).filter(Boolean);
+                                    }
+                                }
+                            } catch (e) {
+                                // ignore
+                            }
+                            return null;
+                        }, targetGroup);
+
+                        if (strategy2 && strategy2.length > 0) {
+                            resolvedParticipants = strategy2;
+                            console.log(`[Broadcast] Strategi 2 (Chat Store get) Sukses: ${resolvedParticipants.length} anggota ditemukan.`);
+                        }
+                    } catch (s2Err) {
+                        console.warn('[Broadcast Warning] Strategi 2 Error:', s2Err.message);
+                    }
+                }
+
+                // Strategi 3: client.getChatById (Standard WWebJS)
+                if (resolvedParticipants.length === 0) {
+                    try {
+                        const chat = await client.getChatById(targetGroup);
+                        if (chat && chat.participants) {
+                            resolvedParticipants = chat.participants.map(p => p.id._serialized);
+                            console.log(`[Broadcast] Strategi 3 (getChatById) Sukses: ${resolvedParticipants.length} anggota ditemukan.`);
+                        }
+                    } catch (s3Err) {
+                        console.warn('[Broadcast Warning] Strategi 3 Error:', s3Err.message);
+                    }
+                }
+
+                // Strategi 4: client.getChats search
+                if (resolvedParticipants.length === 0) {
+                    try {
                         const chats = await client.getChats();
                         const matchingChat = chats.find(c => c.id._serialized === targetGroup);
                         if (matchingChat && matchingChat.participants) {
-                            targetIds = matchingChat.participants.map(p => p.id._serialized);
-                            console.log(`[Broadcast Success] Berhasil mengambil ${targetIds.length} anggota via Tipe Cadangan B.`);
-                        } else {
-                            return res.status(400).json({ error: 'Grup tidak ditemukan di daftar chat aktif WhatsApp Anda.' });
+                            resolvedParticipants = matchingChat.participants.map(p => p.id._serialized);
+                            console.log(`[Broadcast] Strategi 4 (getChats search) Sukses: ${resolvedParticipants.length} anggota ditemukan.`);
                         }
+                    } catch (s4Err) {
+                        console.warn('[Broadcast Warning] Strategi 4 Error:', s4Err.message);
                     }
+                }
+
+                if (resolvedParticipants && resolvedParticipants.length > 0) {
+                    targetIds = resolvedParticipants;
+                } else {
+                    return res.status(400).json({ error: 'Gagal mengambil daftar anggota grup. Silakan coba kirim pesan manual ke grup tersebut terlebih dahulu agar sistem me-load datanya.' });
                 }
             } catch (chatErr) {
                 return res.status(400).json({ error: 'Gagal mengambil anggota grup: ' + chatErr.message });
