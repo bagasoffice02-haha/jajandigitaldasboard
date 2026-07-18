@@ -30,9 +30,22 @@ router.post('/telegram/test-connection', async (req, res) => {
         return res.status(400).json({ success: false, error: 'Token tidak boleh kosong.' });
     }
 
+    // Cek apakah package sudah terinstall di server
+    let TelegramBot;
     try {
-        const TelegramBot = require('node-telegram-bot-api');
-        // Buat instance sementara untuk validasi token
+        const pkg = require('node-telegram-bot-api');
+        // Package bisa mengekspor class langsung atau via .default (ES module wrapper)
+        TelegramBot = (typeof pkg === 'function') ? pkg : (pkg.default || pkg.TelegramBot);
+        if (typeof TelegramBot !== 'function') throw new Error('NOT_INSTALLED');
+    } catch (pkgErr) {
+        return res.json({
+            success: false,
+            error: 'Package node-telegram-bot-api belum terinstall di server. Jalankan: npm install di VPS lalu restart.'
+        });
+    }
+
+    try {
+        // Buat instance sementara hanya untuk validasi token (tanpa polling)
         const testBot = new TelegramBot(token.trim(), { polling: false });
         const me = await testBot.getMe();
         res.json({
@@ -45,14 +58,15 @@ router.post('/telegram/test-connection', async (req, res) => {
         const errMsg = err.message || '';
         res.json({
             success: false,
-            error: errMsg.includes('401')
+            error: errMsg.includes('401') || errMsg.includes('Unauthorized')
                 ? 'Token tidak valid atau sudah kadaluarsa. Periksa kembali token dari @BotFather.'
-                : errMsg.includes('ETELEGRAM')
-                    ? 'Tidak dapat terhubung ke server Telegram. Periksa koneksi internet.'
-                    : err.message
+                : errMsg.includes('ETELEGRAM') || errMsg.includes('ENOTFOUND')
+                    ? 'Tidak dapat terhubung ke server Telegram. Periksa koneksi internet server VPS.'
+                    : errMsg
         });
     }
 });
+
 
 // ─── Status Bot Telegram saat ini ────────────────────────────────────────────
 router.get('/telegram/status', (req, res) => {
