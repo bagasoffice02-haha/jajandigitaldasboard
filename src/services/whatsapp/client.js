@@ -233,11 +233,18 @@ function attachClientListeners() {
         }
     });
 
-    client.on('group_participants_update', async (notification) => {
-        const isJoin = ['add', 'invite', 'linked_group_join'].includes(notification.type);
-        const isLeave = ['remove', 'leave'].includes(notification.type);
-        if (!isJoin && !isLeave) return;
+    // Handler untuk menyambut anggota baru (Welcome Message)
+    client.on('group_join', async (notification) => {
+        await handleGroupParticipantUpdate(notification, true);
+    });
 
+    // Handler untuk melepas anggota keluar (Goodbye Message)
+    client.on('group_leave', async (notification) => {
+        await handleGroupParticipantUpdate(notification, false);
+    });
+
+    // Fungsi pemroses event masuk/keluar anggota grup
+    async function handleGroupParticipantUpdate(notification, isJoin) {
         try {
             const groupId = notification.chatId;
             const { group_configs: gConfigs } = await getGroupConfigs();
@@ -264,7 +271,7 @@ function attachClientListeners() {
                 }
             }
             
-            console.log(`[WA Group Update] Tipe: ${notification.type} | Grup: ${groupId} | Target:`, targetIds);
+            console.log(`[WA Group Update] Event: ${isJoin ? 'Join' : 'Leave'} | Grup: ${groupId} | Target:`, targetIds);
             
             for (const participantId of targetIds) {
                 let contact = { id: { _serialized: participantId } };
@@ -305,7 +312,7 @@ function attachClientListeners() {
         } catch (err) {
             console.error('Gagal mengirim pesan welcome/goodbye:', err.message);
         }
-    });
+    }
 
     client.on('message_create', handleIncomingMessage);
 }
