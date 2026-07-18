@@ -192,4 +192,19 @@ server.listen(PORT, async () => {
     startDailyReportScheduler(getClient, io, getStatus);
     startReminderScheduler(getClient, io, getStatus);
     startGroupScheduleScheduler(getClient, getStatus);
+
+    // ─── Inisialisasi Bot Telegram (kondisional) ───────────────────────────
+    if (config.telegram_bot_enabled && config.telegram_bot_token) {
+        try {
+            const { initTelegramBot } = require('./src/services/telegram/client');
+            const { startTelegramScheduler } = require('./src/services/telegram/scheduler');
+            await initTelegramBot(io);
+            startTelegramScheduler();
+            console.log('[Telegram] ✅ Bot Telegram & Scheduler berhasil diaktifkan.');
+        } catch (tgErr) {
+            console.error('[Telegram] ❌ Gagal menginisialisasi Bot Telegram:', tgErr.message);
+        }
+    } else {
+        console.log('[Telegram] Bot Telegram tidak aktif. Atur telegram_bot_enabled: true di Pengaturan Dasbor.');
+    }
 });
