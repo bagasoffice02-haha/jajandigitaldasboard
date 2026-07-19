@@ -132,33 +132,83 @@ function getStatusEmoji(status) {
     return '';
 }
 
+function getSortedGroupedChildren(children) {
+    if (!children) return { categories: [], promos: [], ready: [], preOrder: [], habis: [], flatList: [] };
+    
+    // Sort alphabetically by name first
+    const sorted = [...children].sort((a, b) => (a.name || '').localeCompare(b.name || '', 'id', { sensitivity: 'base' }));
+    
+    const categories = sorted.filter(c => c.type === 'category');
+    const promos = sorted.filter(c => c.type === 'content' && c.isPromo);
+    const ready = sorted.filter(c => c.type === 'content' && !c.isPromo && (c.status === 'Tersedia' || !c.status));
+    const preOrder = sorted.filter(c => c.type === 'content' && !c.isPromo && c.status === 'Pre-order');
+    const habis = sorted.filter(c => c.type === 'content' && !c.isPromo && c.status === 'Habis');
+    
+    return {
+        categories,
+        promos,
+        ready,
+        preOrder,
+        habis,
+        flatList: [...promos, ...ready, ...preOrder, ...habis, ...categories]
+    };
+}
+
 function renderGroupMenuMessage(node, cfg = {}) {
-    const catEmoji = cfg.categoryEmoji || '📁';
-    const conEmoji = cfg.contentEmoji || '📄';
-    const showNumber = cfg.enableNumberNavigation !== false;
     let msg = '';
-    if (cfg.universalHeader && cfg.universalHeader.trim() !== '') msg += `${cfg.universalHeader.trim()}\n\n`;
-    msg += `${catEmoji} *${node.name}*\n\n`;
-    if (node.text && node.text.trim() !== '') msg += `${node.text.trim()}\n\n`;
+    
+    // Header Dekoratif Kustom
+    msg += `━━━━━━━━━━━━━━━━━━━━━━\n`;
+    msg += ` 🛒 *DAFTAR PRODUK DIGITAL*\n`;
+    msg += `━━━━━━━━━━━━━━━━━━━━━━\n`;
+    msg += `📂 \`${node.name}\` | Total Menu: ${node.children ? node.children.length : 0}\n\n`;
+    
+    if (node.text && node.text.trim() !== '') {
+        msg += `${node.text.trim()}\n\n`;
+    }
+    
     if (node.type === 'category' && node.children && node.children.length > 0) {
-        const optionIntro = cfg.categoryFooter || "Silakan pilih menu dengan mengetik angkanya:";
-        msg += `${optionIntro}\n\n`;
-        const sortedChildren = [...node.children].sort((a, b) => (a.name || '').localeCompare(b.name || '', 'id', { sensitivity: 'base' }));
-        const numMap = ['0️⃣', '1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣', '6️⃣', '7️⃣', '8️⃣', '9️⃣'];
-        const getNumberEmoji = (num) => num.toString().split('').map(d => numMap[parseInt(d, 10)] || d).join('');
-        sortedChildren.forEach((child, index) => {
-            const numEmoji = showNumber ? `${getNumberEmoji(index + 1)} ` : '🔹 ';
-            const emoji = child.type === 'category' ? catEmoji : (child.isPromo ? '🔥' : conEmoji);
-            const statusSuffix = child.type === 'content' ? getStatusEmoji(child.status) : '';
-            const promoBadge = child.isPromo ? ' 🔥' : '';
-            msg += `${numEmoji}${emoji} *${child.name}*${promoBadge}${statusSuffix}\n`;
-        });
+        const showNumber = cfg.enableNumberNavigation !== false;
+        const { categories, promos, ready, preOrder, habis } = getSortedGroupedChildren(node.children);
+        
+        let currentOverallIndex = 1;
+        
+        // Helper to render a group
+        const renderGroup = (title, items) => {
+            if (items.length === 0) return '';
+            let groupMsg = `${title}\n`;
+            items.forEach(child => {
+                const numPrefix = showNumber ? ` ${currentOverallIndex}. ` : ' ‣ ';
+                currentOverallIndex++;
+                
+                if (child.type === 'category') {
+                    groupMsg += `${numPrefix}📁 *${child.name}*\n`;
+                } else {
+                    const statusText = child.status || 'Tersedia';
+                    groupMsg += `${numPrefix}${child.name} ―― ${statusText}\n`;
+                }
+            });
+            groupMsg += `\n`;
+            return groupMsg;
+        };
+        
+        msg += renderGroup(`[ 🔥 PROMO SPESIAL ]`, promos);
+        msg += renderGroup(`[ 🟢 READY STOK / TERSEDIA ]`, ready);
+        msg += renderGroup(`[ 🟡 PRE-ORDER / ANTRI ]`, preOrder);
+        msg += renderGroup(`[ 🔴 OUT OF STOCK / HABIS ]`, habis);
+        msg += renderGroup(`[ 📁 KATEGORI LAIN ]`, categories);
+        
+        // Navigation footer
         if (node.id !== 'root') {
-            msg += `\n${showNumber ? '0️⃣ ' : '🔙 '}*Kembali ke Menu Sebelumnya*`;
-            msg += `\n${showNumber ? '#️⃣ ' : '🏠 '}*Kembali ke Menu Utama*`;
+            msg += `\n${showNumber ? '0. ' : '🔙 '}*Kembali ke Menu Sebelumnya*`;
+            msg += `\n${showNumber ? '#. ' : '🏠 '}*Kembali ke Menu Utama*`;
         }
     }
-    if (cfg.universalFooter && cfg.universalFooter.trim() !== '') msg += `\n\n${cfg.universalFooter.trim()}`;
+    
+    if (cfg.universalFooter && cfg.universalFooter.trim() !== '') {
+        msg += `\n\n${cfg.universalFooter.trim()}`;
+    }
+    
     return msg;
 }
 
@@ -185,6 +235,7 @@ module.exports = {
     findNodeByName,
     getAllPromoNodes,
     getStatusEmoji,
+    getSortedGroupedChildren,
     renderGroupMenuMessage,
     getGroupKnowledgeContext
 };

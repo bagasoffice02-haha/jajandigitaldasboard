@@ -11,6 +11,7 @@ const {
     findNodeByName,
     getAllPromoNodes,
     getStatusEmoji,
+    getSortedGroupedChildren,
     renderGroupMenuMessage,
     getGroupKnowledgeContext
 } = require('./helpers');
@@ -245,9 +246,7 @@ async function handleCustomerMessage(msg, {
             const currentNode = findNodeById(activeCfg.menuTree, session.currentNodeId) || activeCfg.menuTree;
             
             if (currentNode && currentNode.children) {
-                const sortedChildren = [...currentNode.children].sort((a, b) => {
-                    return (a.name || '').localeCompare(b.name || '', 'id', { sensitivity: 'base' });
-                });
+                const { flatList: sortedChildren } = getSortedGroupedChildren(currentNode.children);
 
                 if (choiceIndex >= 0 && choiceIndex < sortedChildren.length) {
                     const chosenNode = sortedChildren[choiceIndex];
