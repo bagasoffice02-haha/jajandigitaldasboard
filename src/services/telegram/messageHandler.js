@@ -276,6 +276,8 @@ async function handleSlashCommand(bot, msg, io) {
                 `💬 Mode Respons: <b>${responseMode}</b>\n` +
                 `📨 Mode Balas: <b>${replyMode}</b>\n` +
                 `🧠 AI Fallback: <b>${grpCfg.useAiFallback ? '✅ Aktif' : '❌ Nonaktif'}</b>\n` +
+                `👋 Pesan Sambutan: <b>${grpCfg.welcomeMessage ? '✅ Ada' : '❌ Belum diatur'}</b>\n` +
+                `👋 Pesan Perpisahan: <b>${grpCfg.goodbyeMessage ? '✅ Ada' : '❌ Belum diatur'}</b>\n` +
                 `🕐 Jadwal: <b>${schedCfg.enabled ? `${schedCfg.openTime} - ${schedCfg.closeTime}` : 'Tidak Aktif'}</b>`
             );
             break;
@@ -285,12 +287,105 @@ async function handleSlashCommand(bot, msg, io) {
             if (!isGroup) { await sendWithTyping(chatId, '⚠️ Perintah ini hanya berlaku di dalam grup.'); break; }
             const adminCheck = await isUserGroupAdmin(bot, chatId, userId);
             if (!adminCheck) { await sendWithTyping(chatId, '⛔ Hanya admin grup yang dapat menjalankan perintah ini.'); break; }
-            const newWelcome = (msg.text || '').replace('/setwelcome', '').trim();
-            if (!newWelcome) { await sendWithTyping(chatId, '⚠️ Format: <code>/setwelcome [pesan sambutan]</code>'); break; }
+            const newWelcome = (msg.text || '').replace('/setwelcome', '').replace('@' + (await bot.getMe().catch(() => ({username: ''})).then(m => m.username || '')), '').trim();
+            if (!newWelcome) {
+                await sendWithTyping(chatId,
+                    '⚠️ Format: <code>/setwelcome [pesan sambutan]</code>\n\n' +
+                    'Variabel yang tersedia:\n' +
+                    '<code>{nama}</code> — Nama anggota baru\n' +
+                    '<code>{username}</code> — Username (@handle)\n' +
+                    '<code>{grup}</code> — Nama grup'
+                );
+                break;
+            }
             const grpCfg = group_configs[groupConfigKey] || {};
             grpCfg.welcomeMessage = newWelcome;
             await saveGroupConfig(groupConfigKey, grpCfg);
             await sendWithTyping(chatId, `✅ <b>Pesan sambutan berhasil diperbarui!</b>\n\nPreview:\n${newWelcome}`);
+            break;
+        }
+
+        case '/setgoodbye': {
+            if (!isGroup) { await sendWithTyping(chatId, '⚠️ Perintah ini hanya berlaku di dalam grup.'); break; }
+            const adminCheck = await isUserGroupAdmin(bot, chatId, userId);
+            if (!adminCheck) { await sendWithTyping(chatId, '⛔ Hanya admin grup yang dapat menjalankan perintah ini.'); break; }
+            const newGoodbye = (msg.text || '').replace('/setgoodbye', '').replace('@' + (await bot.getMe().catch(() => ({username: ''})).then(m => m.username || '')), '').trim();
+            if (!newGoodbye) {
+                await sendWithTyping(chatId,
+                    '⚠️ Format: <code>/setgoodbye [pesan perpisahan]</code>\n\n' +
+                    'Variabel yang tersedia:\n' +
+                    '<code>{nama}</code> — Nama anggota keluar\n' +
+                    '<code>{username}</code> — Username (@handle)\n' +
+                    '<code>{grup}</code> — Nama grup'
+                );
+                break;
+            }
+            const grpCfg = group_configs[groupConfigKey] || {};
+            grpCfg.goodbyeMessage = newGoodbye;
+            await saveGroupConfig(groupConfigKey, grpCfg);
+            await sendWithTyping(chatId, `✅ <b>Pesan perpisahan berhasil diperbarui!</b>\n\nPreview:\n${newGoodbye}`);
+            break;
+        }
+
+        case '/kick': {
+            if (!isGroup) { await sendWithTyping(chatId, '⚠️ Perintah ini hanya berlaku di dalam grup.'); break; }
+            const adminCheck = await isUserGroupAdmin(bot, chatId, userId);
+            if (!adminCheck) { await sendWithTyping(chatId, '⛔ Hanya admin grup yang dapat menggunakan /kick.'); break; }
+
+            // Harus reply ke pesan member yang ingin di-kick
+            const replyMsg = msg.reply_to_message;
+            if (!replyMsg || !replyMsg.from) {
+                await sendWithTyping(chatId,
+                    '⚠️ Cara pakai: <b>Reply</b> ke pesan anggota yang ingin dikeluarkan, lalu ketik <code>/kick</code>\n\n' +
+                    'Contoh: Reply pesan seseorang → /kick'
+                );
+                break;
+            }
+
+            const targetUser = replyMsg.from;
+            if (targetUser.is_bot) { await sendWithTyping(chatId, '⚠️ Tidak dapat mengeluarkan bot.'); break; }
+            if (targetUser.id === userId) { await sendWithTyping(chatId, '⚠️ Kamu tidak bisa mengeluarkan dirimu sendiri.'); break; }
+
+            // Cek apakah target juga admin
+            const targetIsAdmin = await isUserGroupAdmin(bot, chatId, targetUser.id);
+            if (targetIsAdmin) { await sendWithTyping(chatId, '⛔ Tidak dapat mengeluarkan admin grup.'); break; }
+
+            try {
+                // banChatMember → unbanChatMember (kick tanpa blacklist permanen)
+                await bot.banChatMember(chatId, targetUser.id);
+                await bot.unbanChatMember(chatId, targetUser.id);
+                const targetName = targetUser.first_name || targetUser.username || String(targetUser.id);
+                await sendWithTyping(chatId, `✅ <b>${targetName}</b> telah dikeluarkan dari grup.`);
+            } catch (kickErr) {
+                console.error('[TG Kick] Gagal kick:', kickErr.message);
+                await sendWithTyping(chatId, `❌ Gagal mengeluarkan anggota: ${kickErr.message}\n\n<i>Pastikan bot sudah menjadi admin grup dengan hak "Hapus Anggota".</i>`);
+            }
+            break;
+        }
+
+        case '/ban': {
+            if (!isGroup) { await sendWithTyping(chatId, '⚠️ Perintah ini hanya berlaku di dalam grup.'); break; }
+            const adminCheck = await isUserGroupAdmin(bot, chatId, userId);
+            if (!adminCheck) { await sendWithTyping(chatId, '⛔ Hanya admin grup yang dapat menggunakan /ban.'); break; }
+
+            const replyMsg = msg.reply_to_message;
+            if (!replyMsg || !replyMsg.from) {
+                await sendWithTyping(chatId, '⚠️ Cara pakai: <b>Reply</b> ke pesan anggota yang ingin di-ban, lalu ketik <code>/ban</code>');
+                break;
+            }
+
+            const targetUser = replyMsg.from;
+            if (targetUser.is_bot) { await sendWithTyping(chatId, '⚠️ Tidak dapat mem-ban bot.'); break; }
+            const targetIsAdmin = await isUserGroupAdmin(bot, chatId, targetUser.id);
+            if (targetIsAdmin) { await sendWithTyping(chatId, '⛔ Tidak dapat mem-ban admin grup.'); break; }
+
+            try {
+                await bot.banChatMember(chatId, targetUser.id);
+                const targetName = targetUser.first_name || targetUser.username || String(targetUser.id);
+                await sendWithTyping(chatId, `🚫 <b>${targetName}</b> telah di-ban dari grup secara permanen.`);
+            } catch (banErr) {
+                await sendWithTyping(chatId, `❌ Gagal mem-ban anggota: ${banErr.message}`);
+            }
             break;
         }
 
@@ -777,6 +872,16 @@ function registerMessageHandlers(bot, io) {
 
             const text = msg.text || '';
 
+            // ── .kick plain text command (alternatif /kick) ──
+            if (text.trim().toLowerCase() === '.kick') {
+                const isGroup = msg.chat.type !== 'private';
+                if (isGroup) {
+                    const fakeMsg = { ...msg, text: '/kick' };
+                    await handleSlashCommand(bot, { ...fakeMsg, text: '/kick' }, io);
+                    return;
+                }
+            }
+
             // Slash Commands
             if (text.startsWith('/')) {
                 await handleSlashCommand(bot, msg, io);
@@ -814,8 +919,8 @@ async function handleNewMembers(bot, msg, io) {
 
     if (!cfg || cfg.enabled === false) return;
 
-    const welcomeMsg = cfg.welcomeMessage;
-    if (!welcomeMsg) return;
+    const welcomeMsg = cfg.welcomeMessage ||
+        `👋 Halo {nama}, selamat datang di {grup}! 🎉\n\nSilakan ketik /menu untuk melihat produk kami.`;
 
     for (const newMember of msg.new_chat_members) {
         if (newMember.is_bot) continue;
@@ -825,15 +930,19 @@ async function handleNewMembers(bot, msg, io) {
             .replace(/\{username\}/gi, newMember.username ? `@${newMember.username}` : name)
             .replace(/\{grup\}/gi, msg.chat.title || 'Grup Ini');
 
-        const sentMsg = await sendWithTyping(chatId, waToTelegramHtml(personalizedMsg));
+        try {
+            const sentMsg = await sendWithTyping(chatId, waToTelegramHtml(personalizedMsg));
 
-        // Auto-delete welcome message jika dikonfigurasi
-        const telegramCfg = config.telegram_config || {};
-        const autoDeleteSecs = telegramCfg.auto_delete_welcome_seconds || 0;
-        if (autoDeleteSecs > 0 && sentMsg) {
-            setTimeout(() => {
-                bot.deleteMessage(chatId, sentMsg.message_id).catch(() => {});
-            }, autoDeleteSecs * 1000);
+            // Auto-delete welcome message jika dikonfigurasi
+            const telegramCfg = config.telegram_config || {};
+            const autoDeleteSecs = telegramCfg.auto_delete_welcome_seconds || 0;
+            if (autoDeleteSecs > 0 && sentMsg) {
+                setTimeout(() => {
+                    bot.deleteMessage(chatId, sentMsg.message_id).catch(() => {});
+                }, autoDeleteSecs * 1000);
+            }
+        } catch (err) {
+            console.error('[TG Welcome] Gagal kirim pesan sambutan:', err.message);
         }
     }
 }
@@ -844,23 +953,30 @@ async function handleNewMembers(bot, msg, io) {
 async function handleLeftMember(bot, msg, io) {
     const chatId = msg.chat.id;
     const groupConfigKey = getTgGroupConfigKey(chatId);
-    const { group_configs } = await getGroupConfigs();
-    const cfg = group_configs[groupConfigKey];
 
-    if (!cfg || cfg.enabled === false) return;
+    try {
+        await ensureGroupRegistered(chatId, msg.chat.title);
+        const { group_configs } = await getGroupConfigs();
+        const cfg = group_configs[groupConfigKey];
 
-    const goodbyeMsg = cfg.goodbyeMessage;
-    if (!goodbyeMsg) return;
+        if (!cfg || cfg.enabled === false) return;
 
-    const member = msg.left_chat_member;
-    if (member.is_bot) return;
-    const name = member.first_name || member.username || 'Anggota';
+        const goodbyeMsg = cfg.goodbyeMessage ||
+            `👋 Sampai jumpa, {nama}! Semoga kita bertemu lagi. 🙏`;
 
-    const personalizedMsg = goodbyeMsg
-        .replace(/\{nama\}/gi, name)
-        .replace(/\{username\}/gi, member.username ? `@${member.username}` : name);
+        const member = msg.left_chat_member;
+        if (member.is_bot) return;
+        const name = member.first_name || member.username || 'Anggota';
 
-    await sendWithTyping(chatId, waToTelegramHtml(personalizedMsg));
+        const personalizedMsg = goodbyeMsg
+            .replace(/\{nama\}/gi, name)
+            .replace(/\{username\}/gi, member.username ? `@${member.username}` : name)
+            .replace(/\{grup\}/gi, msg.chat.title || 'Grup Ini');
+
+        await sendWithTyping(chatId, waToTelegramHtml(personalizedMsg));
+    } catch (err) {
+        console.error('[TG Goodbye] Gagal kirim pesan perpisahan:', err.message);
+    }
 }
 
 module.exports = { registerMessageHandlers };

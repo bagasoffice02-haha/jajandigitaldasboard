@@ -73,16 +73,20 @@ async function registerCommands() {
     if (!botInstance) return;
     try {
         await botInstance.setMyCommands([
-            { command: 'start',   description: 'Mulai & perkenalan bot' },
-            { command: 'menu',    description: 'Tampilkan menu produk' },
-            { command: 'promo',   description: 'Lihat daftar promo aktif' },
-            { command: 'qris',    description: 'Info QRIS & cara pembayaran' },
-            { command: 'status',  description: 'Cek status bot & layanan' },
-            { command: 'reset',   description: 'Reset sesi percakapan AI' },
-            { command: 'help',    description: 'Tampilkan daftar perintah' },
-            { command: 'boton',   description: '[Admin] Aktifkan bot di grup ini' },
-            { command: 'botoff',  description: '[Admin] Nonaktifkan bot di grup ini' },
-            { command: 'infogrup',description: '[Admin] Info konfigurasi bot di grup ini' },
+            { command: 'start',      description: 'Mulai & perkenalan bot' },
+            { command: 'menu',       description: 'Tampilkan menu produk' },
+            { command: 'promo',      description: 'Lihat daftar promo aktif' },
+            { command: 'qris',       description: 'Info QRIS & cara pembayaran' },
+            { command: 'status',     description: 'Cek status bot & layanan' },
+            { command: 'reset',      description: 'Reset sesi percakapan AI' },
+            { command: 'help',       description: 'Tampilkan daftar perintah' },
+            { command: 'boton',      description: '[Admin] Aktifkan bot di grup ini' },
+            { command: 'botoff',     description: '[Admin] Nonaktifkan bot di grup ini' },
+            { command: 'infogrup',   description: '[Admin] Info konfigurasi bot di grup ini' },
+            { command: 'kick',       description: '[Admin] Keluarkan anggota (reply ke pesannya)' },
+            { command: 'ban',        description: '[Admin] Ban permanen anggota (reply ke pesannya)' },
+            { command: 'setwelcome', description: '[Admin] Atur pesan sambutan anggota baru' },
+            { command: 'setgoodbye', description: '[Admin] Atur pesan perpisahan anggota keluar' },
         ]);
         console.log('[Telegram] Slash commands terdaftar di BotFather.');
     } catch (err) {
