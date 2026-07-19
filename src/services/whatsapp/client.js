@@ -169,6 +169,7 @@ function attachClientListeners() {
         console.log('======================================================\n');
 
         isRestarting = false;
+        isExplicitRestart = false;
         if (initWatchdogTimer) { clearTimeout(initWatchdogTimer); initWatchdogTimer = null; }
 
         currentStatus = 'CONNECTED';
@@ -178,7 +179,11 @@ function attachClientListeners() {
         }
         
         if (syncInterval) clearInterval(syncInterval);
-        syncPinnedHostAdmins();
+        
+        // Tunda 15 detik sebelum sync pinned admins agar WhatsApp Web selesai loading 100%
+        setTimeout(() => {
+            syncPinnedHostAdmins();
+        }, 15000);
         syncInterval = setInterval(syncPinnedHostAdmins, 120000);
 
         if (global.wasDisconnected) {
