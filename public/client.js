@@ -3080,8 +3080,8 @@ function renderQuickEditList() {
         <button type="button" onclick="qeInsertFmt('qe-desc-${esc(p.id)}','_')" style="font-size:0.65rem;padding:2px 7px;border-radius:4px;border:1px solid var(--border);background:var(--surface2);cursor:pointer;font-style:italic;">I</button>
         <button type="button" onclick="qeInsertFmt('qe-desc-${esc(p.id)}','~')" style="font-size:0.65rem;padding:2px 7px;border-radius:4px;border:1px solid var(--border);background:var(--surface2);cursor:pointer;text-decoration:line-through;">S</button>
       </div>
-      <textarea id="qe-desc-${esc(p.id)}" rows="4"
-        style="width:100%;padding:6px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:0.85rem;resize:vertical;font-family:inherit;">${esc(p.text||'')}</textarea>
+      <textarea id="qe-desc-${esc(p.id)}" rows="8"
+        style="width:100%;padding:6px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:0.85rem;resize:vertical;min-height:160px;font-family:inherit;">${esc(p.text||'')}</textarea>
     </div>
     <div style="display:flex;gap:8px;justify-content:flex-end;">
       <button onclick="qeCloseEdit('${esc(p.id)}')"

@@ -1808,50 +1808,7 @@ textarea.form-control, input.form-control {
         gap: 12px;
     }
 
-    /* Group list sidebar: short scrollable box */
-    .groups-grid > .panel:first-child {
-        max-height: 220px !important;
-        overflow-y: auto !important;
-    }
 
-    /* Inner editor panel (settings col + tree col): 1 column */
-    .group-editor-inner {
-        display: flex !important;
-        flex-direction: column !important;
-        height: auto !important;
-        gap: 12px;
-    }
-
-    /* Settings column: full width, scrollable */
-    .grp-settings-col {
-        width: 100% !important;
-        max-height: none !important;
-        overflow-y: visible !important;
-        flex-shrink: 0;
-    }
-
-    /* Editor column: full width */
-    .grp-editor-col {
-        width: 100% !important;
-        overflow: visible !important;
-        flex-shrink: 0;
-    }
-
-    /* Inner tree grid: stack tree above node editor */
-    .grp-tree-grid {
-        display: flex !important;
-        flex-direction: column !important;
-        overflow: visible !important;
-        gap: 12px;
-        min-height: 0;
-    }
-
-    /* Visual menu tree: fixed height + scroll */
-    #menu-tree-visualizer {
-        min-height: 200px !important;
-        max-height: 300px !important;
-        overflow-y: auto !important;
-    }
 
     /* Node editor form: full width */
     #active-node-editor {
@@ -1965,13 +1922,15 @@ textarea.form-control, input.form-control {
     }
     .stat-value { font-size: 1.2rem !important; }
 
-    /* Groups sidebar even shorter on very small screens */
+    /* Groups sidebar natural height on mobile */
     .groups-grid > .panel:first-child {
-        max-height: 160px !important;
+        max-height: none !important;
+        overflow-y: visible !important;
     }
     #menu-tree-visualizer {
-        min-height: 150px !important;
-        max-height: 220px !important;
+        min-height: none !important;
+        max-height: none !important;
+        overflow-y: visible !important;
     }
 }
 
@@ -2652,6 +2611,7 @@ table tr:hover {
     .premium-modal-content {
         width: 100% !important;
         max-height: 75vh !important;
+        left: 0 !important;
         animation: slideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1) !important;
     }
 }
