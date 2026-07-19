@@ -130,120 +130,27 @@
     </div>
 
     <!-- ══════════════════════════════════════════
-         TAB - BROADCAST (SIARAN MASSAL)
+         TAB - BROADCAST (DINONAKTIFKAN)
     ══════════════════════════════════════════ -->
     <div id="tab-broadcast" class="tab-content hidden">
-        <main class="dashboard-grid">
-            <!-- PANEL KIRI: Setelan Broadcast -->
-            <section class="panel panel-left card" style="padding: 24px; display: flex; flex-direction: column; gap: 15px;">
-                <h2 style="margin: 0; font-size: 1.15rem;"><i data-lucide="megaphone"></i> Siaran Massal (Broadcast)</h2>
-                <p class="card-subtitle" style="margin-top: -5px; font-size: 0.82rem;">Kirim pengumuman, promosi, atau info produk secara massal ke nomor/grup terpilih.</p>
-                
-                <!-- Pilihan Target Broadcast -->
-                <div class="form-group" style="margin-bottom: 0;">
-                    <label for="broadcast-target-type" style="font-size: 0.8rem; font-weight: 600; display: block; margin-bottom: 6px;">Target Penerima</label>
-                    <select id="broadcast-target-type" class="form-control" style="width: 100%; padding: 8px; font-size: 0.85rem; background: var(--bg-primary); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 8px;" onchange="window.onBroadcastTargetTypeChange(this.value)">
-                        <option value="groups">Seluruh Grup Aktif</option>
-                        <option value="custom_numbers">Daftar Nomor HP Kustom (Kirim PM)</option>
-                        <option value="group_members">Seluruh Anggota dari Grup Tertentu (Kirim PM)</option>
-                    </select>
+        <main class="dashboard-grid" style="place-items: center;">
+            <section class="panel card" style="grid-column: 1 / -1; padding: 60px 40px; display: flex; flex-direction: column; align-items: center; gap: 20px; text-align: center; max-width: 520px; margin: 0 auto;">
+                <div style="width: 72px; height: 72px; border-radius: 50%; background: rgba(255, 69, 58, 0.12); display: flex; align-items: center; justify-content: center;">
+                    <i data-lucide="shield-off" style="width: 36px; height: 36px; color: #ff453a; stroke-width: 1.5px;"></i>
                 </div>
-
-                <!-- Input List Nomor Kustom (Hidden by default) -->
-                <div id="broadcast-custom-numbers-group" class="form-group hidden" style="margin-bottom: 0;">
-                    <label for="broadcast-custom-numbers" style="font-size: 0.8rem; font-weight: 600; display: block; margin-bottom: 6px;">Daftar Nomor HP (Pisahkan dengan koma atau baris baru)</label>
-                    <textarea id="broadcast-custom-numbers" rows="3" placeholder="Contoh:&#10;628123456789&#10;628998877665" class="form-control" style="width: 100%; padding: 10px; font-size: 0.85rem; background: var(--bg-primary); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 8px; resize: vertical;"></textarea>
-                </div>
-
-                <!-- Pilihan Grup Tertentu (Hidden by default) -->
-                <div id="broadcast-group-members-group" class="form-group hidden" style="margin-bottom: 0; display: flex; flex-direction: column; gap: 8px;">
-                    <div>
-                        <label for="broadcast-target-group" style="font-size: 0.8rem; font-weight: 600; display: block; margin-bottom: 6px;">Pilih Grup Asal Anggota</label>
-                        <select id="broadcast-target-group" class="form-control" style="width: 100%; padding: 8px; font-size: 0.85rem; background: var(--bg-primary); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 8px;">
-                            <!-- Akan diisi otomatis dari JS -->
-                        </select>
-                    </div>
-                    <button id="btn-extract-members" class="btn btn-secondary" onclick="extractGroupMembers()" style="width: 100%; padding: 8px; font-size: 0.8rem; border-radius: 8px; display: flex; align-items: center; justify-content: center; gap: 6px; cursor: pointer; border: 1px solid var(--border-color); color: var(--text-primary); background: rgba(255,255,255,0.02);">
-                        <i data-lucide="users" style="width: 14px; height: 14px;"></i> Ekstrak &amp; Hitung Anggota
-                    </button>
-                    <div id="extract-members-result" class="hidden" style="background: rgba(10, 132, 255, 0.05); border: 1px solid rgba(10, 132, 255, 0.15); border-radius: 8px; padding: 12px; font-size: 0.8rem;">
-                        <span id="extract-count-text" style="font-weight: 600; color: #0a84ff; display: block;">0 Anggota Ditemukan</span>
-                        <div id="extract-preview-list" style="margin-top: 6px; max-height: 80px; overflow-y: auto; color: var(--text-color-muted); font-family: monospace; font-size: 0.72rem; line-height: 1.4; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 6px;">
-                            <!-- Daftar preview nomor hp -->
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="form-group" style="margin-bottom: 0;">
-                    <label for="broadcast-msg" style="font-size: 0.8rem; font-weight: 600; display: block; margin-bottom: 6px;">Pesan Siaran (Gunakan {name} untuk personalisasi)</label>
-                    <textarea id="broadcast-msg" rows="4" placeholder="Tulis pesan promosi Anda di sini..." class="form-control" style="width: 100%; padding: 10px; font-size: 0.85rem; background: var(--bg-primary); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 8px; resize: vertical;"></textarea>
-                </div>
-                
-                <div class="form-group" style="margin-bottom: 0;">
-                    <label for="broadcast-media" style="font-size: 0.8rem; font-weight: 600; display: block; margin-bottom: 6px;">File Media Pendukung (Opsional)</label>
-                    <input type="text" id="broadcast-media" placeholder="Contoh: brosur.pdf / promo.jpg" class="form-control" style="width: 100%; padding: 8px; font-size: 0.85rem; background: var(--bg-primary); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 8px;">
-                    <small style="color: var(--text-muted); font-size: 0.75rem;">Pastikan file sudah diunggah di tab Aset Media.</small>
-                </div>
-
-                <!-- Delay Anti-Ban -->
-                <div class="form-group" style="margin-bottom: 0;">
-                    <label for="broadcast-delay" style="font-size: 0.8rem; font-weight: 600; display: block; margin-bottom: 6px;">Jeda Waktu Kirim (Detik per Pesan - Mencegah Banned)</label>
-                    <input type="number" id="broadcast-delay" value="5" min="1" max="60" class="form-control" style="width: 100%; padding: 8px; font-size: 0.85rem; background: var(--bg-primary); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 8px;">
-                </div>
-                
-                <button class="btn btn-primary" onclick="sendBroadcast()" style="width: 100%; padding: 10px; font-size: 0.88rem; margin-top: 10px; border-radius: 8px;">
-                    <i data-lucide="send" style="width: 14px; height: 14px; display: inline-block; vertical-align: middle; margin-right: 6px;"></i> Mulai Siaran Massal
-                </button>
-            </section>
-
-            <!-- PANEL KANAN: Status Progres & Logger -->
-            <section class="panel panel-right card" style="padding: 24px; display: flex; flex-direction: column; gap: 15px;">
-                <h2 style="margin: 0; font-size: 1.15rem;"><i data-lucide="activity"></i> Status Pengiriman</h2>
-                <p class="card-subtitle" style="margin-top: -5px; font-size: 0.82rem;">Pantau proses pengiriman pesan massal secara real-time.</p>
-                
-                <!-- Progress Loading Bar -->
-                <div id="broadcast-progress-container" class="hidden" style="margin-top: 10px;">
-                    <div style="display: flex; justify-content: space-between; font-size: 0.85rem; margin-bottom: 8px;">
-                        <span id="broadcast-progress-status" style="font-weight: 600; color: var(--blue);">Sedang Mengirim...</span>
-                        <span id="broadcast-progress-percent" style="font-weight: 700;">0%</span>
-                    </div>
-                    <div style="width: 100%; height: 12px; background: var(--surface2); border-radius: 6px; overflow: hidden; border: 1px solid var(--border-color);">
-                        <div id="broadcast-progress-bar" style="width: 0%; height: 100%; background: var(--blue-gradient); transition: width 0.3s ease;"></div>
-                    </div>
-                    
-                    <!-- Status Grid -->
-                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 15px; text-align: center;">
-                        <div style="background: rgba(59, 130, 246, 0.05); padding: 8px; border-radius: 8px; border: 1px solid var(--border-color);">
-                            <span style="font-size: 0.72rem; color: var(--text-secondary); display: block;">Total Target</span>
-                            <strong id="broadcast-stat-total" style="font-size: 1.1rem;">0</strong>
-                        </div>
-                        <div style="background: rgba(16, 185, 129, 0.05); padding: 8px; border-radius: 8px; border: 1px solid var(--border-color);">
-                            <span style="font-size: 0.72rem; color: var(--text-secondary); display: block;">Terkirim</span>
-                            <strong id="broadcast-stat-success" style="font-size: 1.1rem; color: var(--green);">0</strong>
-                        </div>
-                        <div style="background: rgba(239, 68, 68, 0.05); padding: 8px; border-radius: 8px; border: 1px solid var(--border-color);">
-                            <span style="font-size: 0.72rem; color: var(--text-secondary); display: block;">Gagal</span>
-                            <strong id="broadcast-stat-fail" style="font-size: 1.1rem; color: var(--red);">0</strong>
-                        </div>
-                    </div>
-                    
-                    <!-- Cancel Button -->
-                    <button class="btn btn-danger" onclick="stopBroadcast()" style="width: 100%; padding: 10px; font-size: 0.85rem; margin-top: 15px; background: #ff453a; border-color: #ff453a; border-radius: 8px;">
-                        <i data-lucide="square" style="width: 14px; height: 14px; display: inline-block; vertical-align: middle; margin-right: 6px;"></i> Hentikan Broadcast
-                    </button>
-                </div>
-                
-                <!-- Placeholder jika tidak ada broadcast aktif -->
-                <div id="broadcast-progress-placeholder" style="text-align: center; padding: 40px 20px; color: var(--text-secondary);">
-                    <i data-lucide="megaphone-off" style="width: 48px; height: 48px; color: var(--text-soft); stroke-width: 1.5px; margin-bottom: 10px;"></i>
-                    <p style="font-size: 0.85rem; font-weight: 500;">Tidak ada broadcast aktif</p>
-                    <span style="font-size: 0.75rem;">Mulai siaran di sebelah kiri untuk melihat progres real-time.</span>
-                </div>
-                
-                <!-- Log Terminal -->
-                <div style="display: flex; flex-direction: column; gap: 6px; flex: 1;">
-                    <label style="font-size: 0.75rem; font-weight: 600; color: var(--text-secondary);">Terminal Aktivitas Kirim</label>
-                    <div id="broadcast-terminal" style="background: #090a10; color: #34d399; font-family: monospace; font-size: 0.75rem; padding: 12px; border-radius: 8px; border: 1px solid var(--border-color); height: 180px; overflow-y: auto; white-space: pre-wrap; line-height: 1.4;">[System] Siap mengirim siaran massal...</div>
+                <h2 style="margin: 0; font-size: 1.25rem; color: var(--text-primary);">Fitur Siaran Massal Dinonaktifkan</h2>
+                <p style="margin: 0; font-size: 0.88rem; color: var(--text-secondary); line-height: 1.6; max-width: 400px;">
+                    Fitur broadcast/siaran massal telah <strong style="color: #ff453a;">dinonaktifkan secara permanen</strong> untuk melindungi akun WhatsApp Anda dari risiko pemblokiran.<br><br>
+                    Pengiriman pesan massal ke banyak nomor sekaligus merupakan salah satu penyebab utama akun WhatsApp diblokir oleh Meta.
+                </p>
+                <div style="background: rgba(255, 159, 10, 0.08); border: 1px solid rgba(255, 159, 10, 0.2); border-radius: 12px; padding: 16px 20px; text-align: left; width: 100%; max-width: 420px;">
+                    <p style="margin: 0 0 8px; font-size: 0.8rem; font-weight: 700; color: #ff9f0a;">⚠️ Mengapa Fitur Ini Berbahaya?</p>
+                    <ul style="margin: 0; padding-left: 18px; font-size: 0.78rem; color: var(--text-secondary); line-height: 1.7;">
+                        <li>Mengirim DM ke nomor yang tidak kenal = laporan spam</li>
+                        <li>Pola pengiriman massal terdeteksi oleh sistem Meta</li>
+                        <li>Risiko ban permanen pada akun WhatsApp</li>
+                        <li>Tidak ada jeda yang cukup aman antar pesan massal</li>
+                    </ul>
                 </div>
             </section>
         </main>
@@ -2304,10 +2211,7 @@
             <i data-lucide="message-circle"></i>
             <span>Chats</span>
         </button>
-        <button id="btn-tab-broadcast" class="ios-tab-btn" onclick="switchTab('broadcast')" title="Siaran">
-            <i data-lucide="megaphone"></i>
-            <span>Siaran</span>
-        </button>
+
         <button id="btn-tab-memory" class="ios-tab-btn" onclick="switchTab('memory')" title="Memory">
             <i data-lucide="database"></i>
             <span>Memory</span>

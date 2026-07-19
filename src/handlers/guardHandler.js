@@ -60,17 +60,21 @@ async function checkAndProcessGuards(msg, {
                     if (phone && phone.length > 5) {
                         await addCustomer(phone, name);
                         
-                        // Send VCard
+                        // Send VCard — hanya ke DM, delay antar pesan agar tidak terdeteksi spam
                         if (config.auto_send_vcard !== false) {
                             const businessName = config.vcard_name || 'CS Jajan Digital';
                             const myNumber = (clientInstance && clientInstance.info && clientInstance.info.wid && clientInstance.info.wid.user) 
                                 ? clientInstance.info.wid.user 
                                 : '';
                             
-                            if (myNumber) {
+                            // Hanya kirim ke DM (bukan grup) agar tidak flagged sebagai spam
+                            const isGroupSender = senderId.includes('@g.us');
+                            if (myNumber && !isGroupSender) {
                                 const vcard = `BEGIN:VCARD\nVERSION:3.0\nFN:${businessName}\nORG:${businessName}\nTEL;TYPE=CELL;waid=${myNumber}:+${myNumber}\nEND:VCARD`;
                                 console.log(`[Auto Save VCard] Mengirim kontak bisnis ke pelanggan baru: ${senderPhone}`);
                                 await clientInstance.sendMessage(senderId, vcard);
+                                // Delay 4 detik antara vcard dan teks agar tidak terdeteksi bot
+                                await new Promise(r => setTimeout(r, 4000));
                                 await clientInstance.sendMessage(senderId, `Halo Kak! Kontak kami di atas otomatis dikirim agar Kakak bisa menyimpannya. Silakan simpan nomor kami agar tidak ketinggalan info promo menarik di status/story WhatsApp kami ya! 🙏`);
                             }
                         }
@@ -83,8 +87,15 @@ async function checkAndProcessGuards(msg, {
     }
 
     // 4. Auto order notify to host admins
-    const orderKeywords = /\b(beli|pesan|order|daftar|payment|transfer|cod|harga|pembayaran|list|checkout|boking|booking)\b/i;
-    if (orderKeywords.test(userMessage) && !isSenderHostAdmin && senderId !== 'status@broadcast' && !msg.fromMe) {
+    // Keyword lebih spesifik dan ada cooldown 60 detik per sender agar tidak spam notif
+    const orderKeywords = /\b(beli|pesan|order|payment|transfer|cod|checkout|boking|booking)\b/i;
+    if (!global._orderNotifCooldown) global._orderNotifCooldown = new Map();
+    const nowTs = Date.now();
+    const lastNotifTime = global._orderNotifCooldown.get(senderId) || 0;
+    const cooldownMs = 60 * 1000; // 60 detik cooldown per sender
+    
+    if (orderKeywords.test(userMessage) && !isSenderHostAdmin && senderId !== 'status@broadcast' && !msg.fromMe && (nowTs - lastNotifTime > cooldownMs)) {
+        global._orderNotifCooldown.set(senderId, nowTs);
         (async () => {
             try {
                 const contact = await msg.getContact();
