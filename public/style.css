@@ -1573,34 +1573,122 @@ textarea.form-control, input.form-control {
     height: calc(100vh - 120px);
 }
 
-/* When group editor panel is shown it fills the main slot */
+/* Group editor wrapper is now a column flex layout */
 .group-editor-inner {
-    display: grid;
-    grid-template-columns: 320px 1fr;
-    gap: 20px;
-    height: 100%;
-}
-
-/* Left settings column */
-.grp-settings-col {
     display: flex;
     flex-direction: column;
-    overflow-y: auto;
-    padding: 15px;
+    gap: 15px;
+    height: 100%;
+    overflow: hidden;
 }
 
-/* Right editor column */
+/* Segmented Control Header */
+.grp-workspace-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 12px 20px;
+    flex-shrink: 0;
+}
+
+.grp-workspace-header .group-meta-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.grp-workspace-header .group-meta-info h3 {
+    margin: 0;
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.grp-segmented-control {
+    display: flex;
+    background: rgba(0, 0, 0, 0.15);
+    padding: 4px;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+}
+
+.grp-segment-btn {
+    background: none;
+    border: none;
+    outline: none;
+    color: var(--text-secondary);
+    padding: 6px 18px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    border-radius: 6px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.grp-segment-btn:hover {
+    color: var(--text-primary);
+}
+
+.grp-segment-btn.active {
+    background: var(--bg-card);
+    color: var(--blue);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* Settings tab content wrapper: 3-column scrollable grid */
+.grp-settings-col {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 20px;
+    overflow-y: auto;
+    flex: 1;
+    padding: 5px;
+    min-height: 0;
+}
+
+/* Modern setting card */
+.grp-settings-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.grp-settings-card h4 {
+    margin: 0;
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 10px;
+    margin-bottom: 5px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* Visual Tree column fits the whole space */
 .grp-editor-col {
     display: flex;
     flex-direction: column;
     overflow: hidden;
-    padding: 15px;
+    flex: 1;
+    height: 100%;
 }
 
-/* Inner tree + node editor grid */
+/* Inner tree layout has a wider node editor and visualizer */
 .grp-tree-grid {
     display: grid;
-    grid-template-columns: 1fr 280px;
+    grid-template-columns: 1fr 320px;
     gap: 15px;
     flex: 1;
     overflow: hidden;

@@ -237,285 +237,286 @@
             <section class="panel card" style="display: flex; flex-direction: column; overflow: hidden; padding: 15px;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
                     <h2 style="margin: 0; font-size: 1.1rem;"><i data-lucide="users"></i> Grup WA</h2>
-                    <button class="btn btn-secondary btn-icon" onclick="loadGroupsList()" title="Refresh Grup">
-                        <i data-lucide="rotate-cw" style="width: 14px; height: 14px;"></i>
-                    </button>
-                </div>
-                <p class="card-subtitle" style="margin-top: -10px; margin-bottom: 15px; font-size: 0.8rem;">Daftar grup WhatsApp Anda</p>
-                <div id="groups-list-container" style="flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; padding-right: 5px;">
-                    <div style="text-align: center; color: var(--text-secondary); margin-top: 50px; font-size: 0.9rem;">
-                        <i data-lucide="users" style="width: 24px; height: 24px; opacity: 0.5; margin-bottom: 8px;"></i>
-                        <p>Memuat daftar grup...</p>
-                    </div>
-                </div>
-            </section>
-
-            <!-- PANEL UTAMA: Konfigurasi Grup & Editor Menu -->
+                    <button class="btn btn-secondary bt            <!-- PANEL UTAMA: Konfigurasi Grup & Editor Menu -->
             <div id="group-editor-panel" class="hidden group-editor-inner">
                 
-                <!-- KOLOM KIRI: Pengaturan Grup -->
-                <section class="panel card form-card grp-settings-col">
-                    <h3 style="margin-top: 0; font-size: 1.1rem;"><i data-lucide="settings"></i> Pengaturan Grup</h3>
-                    <p class="card-subtitle" style="margin-top: -10px; margin-bottom: 15px; font-size: 0.8rem;" id="selected-group-title">Pilih grup...</p>
+                <!-- WORKSPACE HEADER: Group Title & Sub-tabs -->
+                <div class="grp-workspace-header">
+                    <div class="group-meta-info">
+                        <h3 id="selected-group-title" style="margin: 0; font-size: 1.1rem; font-weight: 700; color: var(--text-primary);">Nama Grup</h3>
+                        <span id="selected-group-jid" style="font-size: 0.72rem; color: var(--text-secondary); font-family: monospace; display: block; margin-top: 2px;"></span>
+                    </div>
+                    <div class="grp-segmented-control">
+                        <button class="grp-segment-btn active" id="grp-btn-settings" onclick="switchGroupSubTab('settings')">
+                            <i data-lucide="settings" style="width: 14px; height: 14px;"></i> Pengaturan Bot &amp; AI
+                        </button>
+                        <button class="grp-segment-btn" id="grp-btn-tree" onclick="switchGroupSubTab('tree')">
+                            <i data-lucide="git-fork" style="width: 14px; height: 14px;"></i> Visual Editor Menu
+                        </button>
+                    </div>
+                </div>
+
+                <!-- TAB CONTENT 1: PENGATURAN BOT & AI (3-Card Layout) -->
+                <div id="grp-tab-content-settings" class="grp-settings-col">
                     
-                    <div class="form-group" style="margin-bottom: 15px;">
-                        <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; font-weight: 600;">
-                            <input type="checkbox" id="grp-enabled" style="width: 16px; height: 16px;">
-                            <span>Aktifkan Bot di Grup</span>
-                        </label>
-                    </div>
-
-                    <div class="form-group" style="margin-bottom: 15px;">
-                        <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; font-weight: 600;">
-                            <input type="checkbox" id="grp-ai-fallback" style="width: 16px; height: 16px;">
-                            <span>Aktifkan AI Fallback</span>
-                        </label>
-                        <small style="color: var(--text-secondary); font-size: 0.75rem; display: block; margin-top: 4px;">
-                            Jawab dengan AI jika input tidak cocok dengan menu.
-                        </small>
-                    </div>
-
-                    <div class="form-group" style="margin-bottom: 15px;">
-                        <label for="grp-ai-names">Nama Panggilan AI (Pemicu Chat Grup)</label>
-                        <input type="text" id="grp-ai-names" placeholder="Contoh: bot, ai, asisten" class="form-control" style="width: 100%; padding: 8px; border-radius: 6px; background: var(--bg-primary); color: var(--text-primary); border: 1px solid var(--border-color);">
-                        <small style="color: var(--text-secondary); font-size: 0.75rem; display: block; margin-top: 4px;">
-                            Pisahkan dengan koma. Kata-kata ini memicu respon AI di grup tanpa tag @ nomor (default: bot, ai).
-                        </small>
-                    </div>
-
-                    <div class="form-group" style="margin-bottom: 15px;">
-                        <label for="grp-trigger">Pemicu Menu (Trigger Command)</label>
-                        <input type="text" id="grp-trigger" placeholder="Contoh: menu (kosongkan untuk default)" class="form-control" style="width: 100%; padding: 8px; border-radius: 6px;">
-                        <small style="color: var(--text-secondary); font-size: 0.75rem; display: block; margin-top: 4px;">
-                            Ketik kata ini di grup untuk menampilkan menu (default: menu/bantuan).
-                        </small>
-                    </div>
-
-                    <div class="form-group" style="margin-bottom: 15px;">
-                        <label for="grp-category-footer">Teks Petunjuk Pilihan (Category Footer)</label>
-                        <input type="text" id="grp-category-footer" placeholder="Default: Silakan pilih menu dengan mengetik angkanya:" class="form-control" style="width: 100%; padding: 8px; border-radius: 6px; background: var(--bg-primary); color: var(--text-primary); border: 1px solid var(--border-color);">
-                        <small style="color: var(--text-secondary); font-size: 0.75rem; display: block; margin-top: 4px;">
-                            Instruksi memilih sub-menu / kategori.
-                        </small>
-                    </div>
-
-                    <div class="form-group" style="margin-bottom: 15px;">
-                        <label for="grp-content-footer">Teks Petunjuk Kembali (Content Footer)</label>
-                        <textarea id="grp-content-footer" placeholder="Default: Ketik 0 untuk kembali..." rows="2" class="form-control" style="width: 100%; padding: 8px; border-radius: 6px; background: var(--bg-primary); color: var(--text-primary); border: 1px solid var(--border-color); resize: vertical;"></textarea>
-                        <small style="color: var(--text-secondary); font-size: 0.75rem; display: block; margin-top: 4px;">
-                            Petunjuk kembali ke menu atas setelah membaca konten.
-                        </small>
-                    </div>
-
-                    <!-- Kustomisasi Emoji & Navigasi -->
-                    <div style="display: flex; gap: 10px; margin-bottom: 15px;">
-                        <div class="form-group" style="flex: 1;">
-                            <label for="grp-category-emoji">Emoji Kategori</label>
-                            <input type="text" id="grp-category-emoji" placeholder="📁" class="form-control" style="width: 100%; padding: 8px; border-radius: 6px; text-align: center; background: var(--bg-primary); color: var(--text-primary); border: 1px solid var(--border-color);">
-                        </div>
-                        <div class="form-group" style="flex: 1;">
-                            <label for="grp-content-emoji">Emoji Konten</label>
-                            <input type="text" id="grp-content-emoji" placeholder="📄" class="form-control" style="width: 100%; padding: 8px; border-radius: 6px; text-align: center; background: var(--bg-primary); color: var(--text-primary); border: 1px solid var(--border-color);">
-                        </div>
-                    </div>
-
-                    <div class="form-group" style="margin-bottom: 15px;">
-                        <label class="checkbox-container">
-                            <input type="checkbox" id="grp-number-nav-enable" checked>
-                            <span>Aktifkan Navigasi Angka (1, 2, dst)</span>
-                        </label>
-                        <small style="color: var(--text-secondary); font-size: 0.75rem; display: block; margin-top: 4px;">
-                            Jika dimatikan, pengguna harus mengetik nama menu secara langsung.
-                        </small>
-                    </div>
-
-                    <!-- Header & Footer Universal -->
-                    <div class="form-group" style="margin-bottom: 15px;">
-                        <label for="grp-universal-header">Header Balasan Universal (Teks Pembuka)</label>
-                        <textarea id="grp-universal-header" placeholder="Contoh: Selamat datang di Toko Kami! (kosongkan jika tidak butuh)" rows="2" class="form-control" style="width: 100%; padding: 8px; border-radius: 6px; background: var(--bg-primary); color: var(--text-primary); border: 1px solid var(--border-color); resize: vertical;"></textarea>
-                    </div>
-
-                    <div class="form-group" style="margin-bottom: 15px;">
-                        <label for="grp-universal-footer">Footer Balasan Universal (Teks Penutup)</label>
-                        <textarea id="grp-universal-footer" placeholder="Contoh: Terimakasih telah menghubungi kami. (kosongkan jika tidak butuh)" rows="2" class="form-control" style="width: 100%; padding: 8px; border-radius: 6px; background: var(--bg-primary); color: var(--text-primary); border: 1px solid var(--border-color); resize: vertical;"></textarea>
-                    </div>
-
-                    <!-- Pesan Selamat Datang Anggota Baru (Welcome Message) -->
-                    <div class="form-group" style="margin-bottom: 15px;">
-                        <label for="grp-welcome-message">Pesan Selamat Datang Anggota Baru (Welcome Message)</label>
-                        <!-- Formatting Toolbar -->
-                        <div style="display: flex; gap: 6px; margin-bottom: 6px; background: rgba(255,255,255,0.03); padding: 4px; border-radius: 4px; border: 1px solid var(--border-color);">
-                            <button class="btn btn-secondary" type="button" onclick="window.insertFormatToElement('grp-welcome-message', '*')" style="padding: 2px 6px; font-size: 0.65rem; cursor: pointer; min-height: auto;">Tebal (*)</button>
-                            <button class="btn btn-secondary" type="button" onclick="window.insertFormatToElement('grp-welcome-message', '_')" style="padding: 2px 6px; font-size: 0.65rem; cursor: pointer; min-height: auto;">Miring (_)</button>
-                            <button class="btn btn-secondary" type="button" onclick="window.insertFormatToElement('grp-welcome-message', '~')" style="padding: 2px 6px; font-size: 0.65rem; cursor: pointer; min-height: auto;">Coret (~)</button>
-                        </div>
-                        <textarea id="grp-welcome-message" placeholder="Contoh: Halo @user, selamat bergabung! Ketik list untuk melihat produk." rows="3" class="form-control" style="width: 100%; padding: 8px; border-radius: 6px; background: var(--bg-primary); color: var(--text-primary); border: 1px solid var(--border-color); resize: vertical;"></textarea>
-                        <small style="color: var(--text-secondary); font-size: 0.75rem; display: block; margin-top: 4px;">
-                            Gunakan tag <code>@user</code> untuk menyebut nama panggilan & nomor user baru yang masuk.
-                        </small>
-                    </div>
-
-                    <!-- Pesan Selamat Tinggal Anggota Keluar (Goodbye Message) -->
-                    <div class="form-group" style="margin-bottom: 15px;">
-                        <label for="grp-goodbye-message">Pesan Selamat Tinggal Anggota Keluar (Goodbye Message)</label>
-                        <!-- Formatting Toolbar -->
-                        <div style="display: flex; gap: 6px; margin-bottom: 6px; background: rgba(255,255,255,0.03); padding: 4px; border-radius: 4px; border: 1px solid var(--border-color);">
-                            <button class="btn btn-secondary" type="button" onclick="window.insertFormatToElement('grp-goodbye-message', '*')" style="padding: 2px 6px; font-size: 0.65rem; cursor: pointer; min-height: auto;">Tebal (*)</button>
-                            <button class="btn btn-secondary" type="button" onclick="window.insertFormatToElement('grp-goodbye-message', '_')" style="padding: 2px 6px; font-size: 0.65rem; cursor: pointer; min-height: auto;">Miring (_)</button>
-                            <button class="btn btn-secondary" type="button" onclick="window.insertFormatToElement('grp-goodbye-message', '~')" style="padding: 2px 6px; font-size: 0.65rem; cursor: pointer; min-height: auto;">Coret (~)</button>
-                        </div>
-                        <textarea id="grp-goodbye-message" placeholder="Contoh: Selamat tinggal @user, terima kasih atas waktu Anda!" rows="3" class="form-control" style="width: 100%; padding: 8px; border-radius: 6px; background: var(--bg-primary); color: var(--text-primary); border: 1px solid var(--border-color); resize: vertical;"></textarea>
-                        <small style="color: var(--text-secondary); font-size: 0.75rem; display: block; margin-top: 4px;">
-                            Gunakan tag <code>@user</code> untuk menyebut nama panggilan & nomor user yang keluar/dikeluarkan.
-                        </small>
-                    </div>
-
-                    <!-- Jadwal Operasional Buka/Tutup Grup -->
-                    <div style="border: 1px solid var(--border-color); border-radius: 8px; padding: 12px; margin-bottom: 15px; background: rgba(0,0,0,0.1);">
-                        <label class="checkbox-container" style="font-weight: bold; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">
-                            <input type="checkbox" id="grp-auto-close-enable" onchange="toggleScheduleFields()">
-                            <span>Jadwal Tutup Grup Otomatis</span>
-                        </label>
+                    <!-- CARD 1: ⚙/🧠 Konfigurasi Utama & AI -->
+                    <div class="grp-settings-card">
+                        <h4><i data-lucide="cpu" style="width:16px;height:16px;color:var(--blue);"></i> Konfigurasi Utama &amp; AI</h4>
                         
-                        <div id="grp-schedule-fields" class="hidden" style="display: flex; flex-direction: column; gap: 8px; margin-top: 8px;">
-                            <div style="display: flex; gap: 10px;">
-                                <div style="flex: 1;">
-                                    <label style="font-size: 0.75rem;">Jam Buka</label>
-                                    <input type="time" id="grp-open-time" value="08:00" class="form-control" style="width: 100%; padding: 6px; background: var(--bg-primary); color: var(--text-primary); border: 1px solid var(--border-color);">
-                                </div>
-                                <div style="flex: 1;">
-                                    <label style="font-size: 0.75rem;">Jam Tutup</label>
-                                    <input type="time" id="grp-close-time" value="17:00" class="form-control" style="width: 100%; padding: 6px; background: var(--bg-primary); color: var(--text-primary); border: 1px solid var(--border-color);">
-                                </div>
+                        <div class="form-group" style="margin-bottom: 10px;">
+                            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-weight: 600;">
+                                <input type="checkbox" id="grp-enabled" style="width: 16px; height: 16px;">
+                                <span>Aktifkan Bot di Grup Ini</span>
+                            </label>
+                        </div>
+
+                        <div class="form-group" style="margin-bottom: 12px;">
+                            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-weight: 600;">
+                                <input type="checkbox" id="grp-ai-fallback" style="width: 16px; height: 16px;">
+                                <span>Aktifkan AI Fallback</span>
+                            </label>
+                            <small style="color: var(--text-secondary); font-size: 0.72rem; display: block; margin-top: 4px;">
+                                Jawab otomatis dengan AI jika input user tidak terdaftar di pohon menu.
+                            </small>
+                        </div>
+
+                        <div class="form-group" style="margin-bottom: 12px;">
+                            <label for="grp-ai-names" style="font-size: 0.8rem; font-weight: 600;">Pemicu Obrolan AI (Nama Panggilan)</label>
+                            <input type="text" id="grp-ai-names" placeholder="Contoh: bot, ai, asisten" class="form-control" style="width: 100%; padding: 8px; border-radius: 6px; background: var(--bg-primary); color: var(--text-primary); border: 1px solid var(--border-color); font-size: 0.82rem;">
+                            <small style="color: var(--text-secondary); font-size: 0.72rem; display: block; margin-top: 4px;">
+                                Pisahkan dengan koma. Kata-kata ini memicu respon AI di grup tanpa perlu tag @ (default: bot, ai).
+                            </small>
+                        </div>
+
+                        <div class="form-group" style="margin-bottom: 12px;">
+                            <label for="grp-trigger" style="font-size: 0.8rem; font-weight: 600;">Pemicu Menu Utama (Trigger Command)</label>
+                            <input type="text" id="grp-trigger" placeholder="Contoh: menu (kosongkan untuk default)" class="form-control" style="width: 100%; padding: 8px; border-radius: 6px; font-size: 0.82rem;">
+                            <small style="color: var(--text-secondary); font-size: 0.72rem; display: block; margin-top: 4px;">
+                                Ketik kata ini di grup untuk menampilkan menu awal (default: menu/bantuan).
+                            </small>
+                        </div>
+
+                        <div class="form-group" style="margin-bottom: 12px; display: flex; flex-direction: column;">
+                            <label style="font-size: 0.8rem; font-weight: 600; margin-bottom: 6px;">Referensi File AI (Knowledge Base)</label>
+                            <div id="grp-knowledge-files" style="border: 1px solid var(--border-color); border-radius: 6px; padding: 10px; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; max-height: 120px; background: rgba(0,0,0,0.15);">
+                                <p style="color: var(--text-secondary); font-size: 0.8rem; text-align: center;">Memuat berkas referensi...</p>
                             </div>
-                            
-                            <div>
-                                <label style="font-size: 0.75rem; display: block; margin-bottom: 4px;">Hari Aktif</label>
-                                <div style="display: flex; flex-wrap: wrap; gap: 8px; font-size: 0.75rem;">
-                                    <label style="display: flex; align-items: center; gap: 2px;"><input type="checkbox" value="1" class="grp-active-day-cb" checked> Sen</label>
-                                    <label style="display: flex; align-items: center; gap: 2px;"><input type="checkbox" value="2" class="grp-active-day-cb" checked> Sel</label>
-                                    <label style="display: flex; align-items: center; gap: 2px;"><input type="checkbox" value="3" class="grp-active-day-cb" checked> Rab</label>
-                                    <label style="display: flex; align-items: center; gap: 2px;"><input type="checkbox" value="4" class="grp-active-day-cb" checked> Kam</label>
-                                    <label style="display: flex; align-items: center; gap: 2px;"><input type="checkbox" value="5" class="grp-active-day-cb" checked> Jum</label>
-                                    <label style="display: flex; align-items: center; gap: 2px;"><input type="checkbox" value="6" class="grp-active-day-cb"> Sab</label>
-                                    <label style="display: flex; align-items: center; gap: 2px;"><input type="checkbox" value="7" class="grp-active-day-cb"> Min</label>
-                                </div>
+                            <small style="color: var(--text-secondary); font-size: 0.72rem; display: block; margin-top: 4px;">
+                                Pilih berkas teks panduan produk khusus untuk referensi AI di grup ini.
+                            </small>
+                        </div>
+
+                        <div class="form-group" style="margin-bottom: 8px;">
+                            <label class="checkbox-container" style="font-size: 0.8rem;">
+                                <input type="checkbox" id="grp-number-nav-enable" checked>
+                                <span>Aktifkan Navigasi Angka (1, 2, dst)</span>
+                            </label>
+                            <small style="color: var(--text-secondary); font-size: 0.72rem; display: block; margin-top: 4px;">
+                                Jika dimatikan, pengguna harus mengetik nama menu secara tepat.
+                            </small>
+                        </div>
+
+                        <div style="display: flex; gap: 10px;">
+                            <div class="form-group" style="flex: 1;">
+                                <label for="grp-category-emoji" style="font-size: 0.75rem;">Emoji Kategori</label>
+                                <input type="text" id="grp-category-emoji" placeholder="📁" class="form-control" style="width: 100%; padding: 6px; border-radius: 6px; text-align: center; font-size: 0.82rem;">
+                            </div>
+                            <div class="form-group" style="flex: 1;">
+                                <label for="grp-content-emoji" style="font-size: 0.75rem;">Emoji Konten</label>
+                                <input type="text" id="grp-content-emoji" placeholder="📄" class="form-control" style="width: 100%; padding: 6px; border-radius: 6px; text-align: center; font-size: 0.82rem;">
                             </div>
                         </div>
                     </div>
 
-                    <!-- Penjadwalan Mengirim Pesan (Scheduled Message) -->
-                    <div style="border: 1px solid var(--border-color); border-radius: 8px; padding: 12px; margin-bottom: 15px; background: rgba(0,0,0,0.1);">
-                        <label class="checkbox-container" style="font-weight: bold; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">
-                            <input type="checkbox" id="grp-sched-msg-enable" onchange="toggleSchedMsgFields()">
-                            <span>Kirim Pesan Terjadwal Otomatis</span>
-                        </label>
+                    <!-- CARD 2: 💬 Pesan & Notifikasi Otomatis -->
+                    <div class="grp-settings-card">
+                        <h4><i data-lucide="message-square" style="width:16px;height:16px;color:var(--green);"></i> Pesan &amp; Notifikasi Otomatis</h4>
                         
-                        <div id="grp-sched-msg-fields" class="hidden" style="display: flex; flex-direction: column; gap: 8px; margin-top: 8px;">
-                            <div style="display: flex; gap: 10px;">
-                                <div style="flex: 1;">
-                                    <label style="font-size: 0.75rem;">Waktu Pengiriman (HH:MM)</label>
-                                    <input type="time" id="grp-sched-msg-time" value="12:00" class="form-control" style="width: 100%; padding: 6px; background: var(--bg-primary); color: var(--text-primary); border: 1px solid var(--border-color);">
-                                </div>
-                            </div>
-                            
-                            <div>
-                                <label style="font-size: 0.75rem; display: block; margin-bottom: 4px;">Hari Aktif</label>
-                                <div style="display: flex; flex-wrap: wrap; gap: 8px; font-size: 0.75rem;">
-                                    <label style="display: flex; align-items: center; gap: 2px;"><input type="checkbox" value="1" class="grp-sched-msg-day-cb" checked> Sen</label>
-                                    <label style="display: flex; align-items: center; gap: 2px;"><input type="checkbox" value="2" class="grp-sched-msg-day-cb" checked> Sel</label>
-                                    <label style="display: flex; align-items: center; gap: 2px;"><input type="checkbox" value="3" class="grp-sched-msg-day-cb" checked> Rab</label>
-                                    <label style="display: flex; align-items: center; gap: 2px;"><input type="checkbox" value="4" class="grp-sched-msg-day-cb" checked> Kam</label>
-                                    <label style="display: flex; align-items: center; gap: 2px;"><input type="checkbox" value="5" class="grp-sched-msg-day-cb" checked> Jum</label>
-                                    <label style="display: flex; align-items: center; gap: 2px;"><input type="checkbox" value="6" class="grp-sched-msg-day-cb" checked> Sab</label>
-                                    <label style="display: flex; align-items: center; gap: 2px;"><input type="checkbox" value="7" class="grp-sched-msg-day-cb" checked> Min</label>
-                                </div>
-                            </div>
-
-                            <div>
-                                <label style="font-size: 0.75rem;">Isi Pesan Terjadwal</label>
-                                <textarea id="grp-sched-msg-content" placeholder="Contoh: Selamat siang kaka semua! Jangan lupa untuk mampir belanja ya..." rows="3" class="form-control" style="width: 100%; padding: 8px; border-radius: 6px; background: var(--bg-primary); color: var(--text-primary); border: 1px solid var(--border-color); resize: vertical;"></textarea>
-                            </div>
+                        <div class="form-group" style="margin-bottom: 12px;">
+                            <label for="grp-category-footer" style="font-size: 0.8rem; font-weight: 600;">Petunjuk Pilih Menu (Category Footer)</label>
+                            <input type="text" id="grp-category-footer" placeholder="Default: Silakan pilih menu dengan mengetik angkanya:" class="form-control" style="width: 100%; padding: 8px; border-radius: 6px; font-size: 0.82rem;">
                         </div>
-                    </div>
 
-                    <!-- Trigger Kata Kunci Kustom Luar Menu -->
-                    <div style="border: 1px solid var(--border-color); border-radius: 8px; padding: 12px; margin-bottom: 15px; background: rgba(0,0,0,0.1);">
-                        <label style="font-weight: bold; display: block; margin-bottom: 6px;">Kata Kunci Kustom (Luar Menu)</label>
-                        <div id="grp-extra-triggers-list" style="display: flex; flex-direction: column; gap: 6px; margin-bottom: 8px;">
-                            <!-- Rendered dynamically -->
+                        <div class="form-group" style="margin-bottom: 12px;">
+                            <label for="grp-content-footer" style="font-size: 0.8rem; font-weight: 600;">Petunjuk Kembali (Content Footer)</label>
+                            <textarea id="grp-content-footer" placeholder="Default: Ketik 0 untuk kembali..." rows="2" class="form-control" style="width: 100%; padding: 8px; border-radius: 6px; font-size: 0.82rem; resize: vertical;"></textarea>
                         </div>
-                        <button type="button" class="btn btn-secondary" onclick="addExtraTriggerRow()" style="font-size: 0.75rem; padding: 4px 8px; width: auto;">
-                            <i data-lucide="plus" style="width: 10px; height: 10px; display: inline-align: middle;"></i> Tambah Kata Kunci
-                        </button>
-                    </div>
 
-                    <div class="form-group" style="flex: 1; display: flex; flex-direction: column;">
-                        <label>Referensi File AI (Knowledge Base)</label>
-                        <div id="grp-knowledge-files" style="flex: 1; border: 1px solid var(--border-color); border-radius: 6px; padding: 10px; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; max-height: 150px;">
-                            <p style="color: var(--text-secondary); font-size: 0.8rem; text-align: center;">Memuat berkas referensi...</p>
+                        <div class="form-group" style="margin-bottom: 12px;">
+                            <label for="grp-universal-header" style="font-size: 0.8rem; font-weight: 600;">Header Balasan Universal (Teks Pembuka)</label>
+                            <textarea id="grp-universal-header" placeholder="Contoh: Selamat datang di Toko Kami! (kosongkan jika tidak butuh)" rows="2" class="form-control" style="width: 100%; padding: 8px; border-radius: 6px; font-size: 0.82rem; resize: vertical;"></textarea>
                         </div>
-                        <small style="color: var(--text-secondary); font-size: 0.75rem; display: block; margin-top: 4px;">
-                            Pilih berkas referensi AI khusus untuk grup ini.
-                        </small>
-                    </div>
 
-                    <div style="margin-top: 15px; display: flex; gap: 10px;">
-                        <button class="btn btn-secondary" onclick="showCloneConfigModal()" style="flex: 1; font-size: 0.8rem; padding: 8px;">
-                            <i data-lucide="copy" style="width: 12px; height: 12px; display: inline; vertical-align: middle; margin-right: 4px;"></i> Salin Konfig
-                        </button>
-                        <button class="btn btn-secondary" onclick="deleteGroupConfiguration()" style="flex: 1; font-size: 0.8rem; padding: 8px; color: #ff453a; border-color: rgba(255,69,58,0.3);">
-                            <i data-lucide="trash-2" style="width: 12px; height: 12px; display: inline; vertical-align: middle; margin-right: 4px;"></i> Hapus Konfig
-                        </button>
-                    </div>
-                </section>
+                        <div class="form-group" style="margin-bottom: 12px;">
+                            <label for="grp-universal-footer" style="font-size: 0.8rem; font-weight: 600;">Footer Balasan Universal (Teks Penutup)</label>
+                            <textarea id="grp-universal-footer" placeholder="Contoh: Terimakasih telah menghubungi kami. (kosongkan jika tidak butuh)" rows="2" class="form-control" style="width: 100%; padding: 8px; border-radius: 6px; font-size: 0.82rem; resize: vertical;"></textarea>
+                        </div>
 
-                <!-- KOLOM KANAN: Editor Pohon Menu -->
-                <section class="panel card grp-editor-col">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 8px;">
-                        <h3 style="margin: 0; font-size: 1.1rem;"><i data-lucide="git-fork"></i> Visual Editor Pohon Menu</h3>
-                        <div style="display: flex; gap: 8px; align-items: center;">
-                            <button class="btn btn-secondary" id="btn-toggle-quickedit" onclick="toggleQuickEditPanel()" style="padding: 5px 12px; font-size: 0.8rem;">
-                                <i data-lucide="list" style="width:13px;height:13px;display:inline;vertical-align:middle;margin-right:4px;"></i> Edit Cepat
+                        <div class="form-group" style="margin-bottom: 12px;">
+                            <label for="grp-welcome-message" style="font-size: 0.8rem; font-weight: 600;">Pesan Penyambutan Anggota Baru (Welcome Message)</label>
+                            <div style="display: flex; gap: 6px; margin-bottom: 6px; background: rgba(255,255,255,0.03); padding: 4px; border-radius: 4px; border: 1px solid var(--border-color);">
+                                <button class="btn btn-secondary" type="button" onclick="window.insertFormatToElement('grp-welcome-message', '*')" style="padding: 2px 6px; font-size: 0.65rem; cursor: pointer; min-height: auto;">Tebal (*)</button>
+                                <button class="btn btn-secondary" type="button" onclick="window.insertFormatToElement('grp-welcome-message', '_')" style="padding: 2px 6px; font-size: 0.65rem; cursor: pointer; min-height: auto;">Miring (_)</button>
+                                <button class="btn btn-secondary" type="button" onclick="window.insertFormatToElement('grp-welcome-message', '~')" style="padding: 2px 6px; font-size: 0.65rem; cursor: pointer; min-height: auto;">Coret (~)</button>
+                            </div>
+                            <textarea id="grp-welcome-message" placeholder="Contoh: Halo @user, selamat bergabung! Ketik list untuk melihat produk." rows="2" class="form-control" style="width: 100%; padding: 8px; border-radius: 6px; font-size: 0.82rem; resize: vertical;"></textarea>
+                            <small style="color: var(--text-secondary); font-size: 0.72rem; display: block; margin-top: 4px;">Gunakan tag <code>@user</code> untuk menyebut nama, atau <code>@nama</code> untuk nama WhatsApp pushname.</small>
+                        </div>
+
+                        <div class="form-group" style="margin-bottom: 12px;">
+                            <label for="grp-goodbye-message" style="font-size: 0.8rem; font-weight: 600;">Pesan Perpisahan Anggota Keluar (Goodbye Message)</label>
+                            <div style="display: flex; gap: 6px; margin-bottom: 6px; background: rgba(255,255,255,0.03); padding: 4px; border-radius: 4px; border: 1px solid var(--border-color);">
+                                <button class="btn btn-secondary" type="button" onclick="window.insertFormatToElement('grp-goodbye-message', '*')" style="padding: 2px 6px; font-size: 0.65rem; cursor: pointer; min-height: auto;">Tebal (*)</button>
+                                <button class="btn btn-secondary" type="button" onclick="window.insertFormatToElement('grp-goodbye-message', '_')" style="padding: 2px 6px; font-size: 0.65rem; cursor: pointer; min-height: auto;">Miring (_)</button>
+                                <button class="btn btn-secondary" type="button" onclick="window.insertFormatToElement('grp-goodbye-message', '~')" style="padding: 2px 6px; font-size: 0.65rem; cursor: pointer; min-height: auto;">Coret (~)</button>
+                            </div>
+                            <textarea id="grp-goodbye-message" placeholder="Contoh: Selamat tinggal @user, terima kasih atas waktu Anda!" rows="2" class="form-control" style="width: 100%; padding: 8px; border-radius: 6px; font-size: 0.82rem; resize: vertical;"></textarea>
+                        </div>
+
+                        <!-- Trigger Kata Kunci Kustom Luar Menu -->
+                        <div style="border: 1px solid var(--border-color); border-radius: 8px; padding: 12px; background: rgba(0,0,0,0.15);">
+                            <label style="font-weight: bold; display: block; margin-bottom: 6px; font-size: 0.8rem;">Kata Kunci Kustom (Luar Menu)</label>
+                            <div id="grp-extra-triggers-list" style="display: flex; flex-direction: column; gap: 6px; margin-bottom: 8px;">
+                                <!-- Rendered dynamically -->
+                            </div>
+                            <button type="button" class="btn btn-secondary" onclick="addExtraTriggerRow()" style="font-size: 0.75rem; padding: 4px 8px; width: auto; min-height: auto;">
+                                <i data-lucide="plus" style="width: 12px; height: 12px; display: inline-block; vertical-align: middle;"></i> Tambah Kata Kunci
                             </button>
-                            <button class="btn btn-primary" onclick="saveGroupConfiguration()" style="padding: 6px 15px; font-size: 0.85rem;">
-                                <i data-lucide="save" style="width: 14px; height: 14px; display: inline; vertical-align: middle; margin-right: 4px;"></i> Simpan Menu
+                        </div>
+                    </div>
+
+                    <!-- CARD 3: ⏱️ Penjadwalan & Aksi Grup -->
+                    <div class="grp-settings-card" style="justify-content: space-between;">
+                        <div>
+                            <h4><i data-lucide="clock" style="width:16px;height:16px;color:var(--orange);"></i> Penjadwalan &amp; Aksi</h4>
+                            
+                            <!-- Jadwal Operasional Buka/Tutup Grup -->
+                            <div style="border: 1px solid var(--border-color); border-radius: 8px; padding: 12px; margin-bottom: 15px; background: rgba(0,0,0,0.15);">
+                                <label class="checkbox-container" style="font-weight: bold; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; font-size: 0.8rem;">
+                                    <input type="checkbox" id="grp-auto-close-enable" onchange="toggleScheduleFields()">
+                                    <span>Jadwal Tutup Grup Otomatis</span>
+                                </label>
+                                
+                                <div id="grp-schedule-fields" class="hidden" style="display: flex; flex-direction: column; gap: 8px; margin-top: 8px;">
+                                    <div style="display: flex; gap: 10px;">
+                                        <div style="flex: 1;">
+                                            <label style="font-size: 0.75rem;">Jam Buka</label>
+                                            <input type="time" id="grp-open-time" value="08:00" class="form-control" style="width: 100%; padding: 6px; background: var(--bg-primary); color: var(--text-primary); border: 1px solid var(--border-color); font-size: 0.82rem;">
+                                        </div>
+                                        <div style="flex: 1;">
+                                            <label style="font-size: 0.75rem;">Jam Tutup</label>
+                                            <input type="time" id="grp-close-time" value="17:00" class="form-control" style="width: 100%; padding: 6px; background: var(--bg-primary); color: var(--text-primary); border: 1px solid var(--border-color); font-size: 0.82rem;">
+                                        </div>
+                                    </div>
+                                    
+                                    <div>
+                                        <label style="font-size: 0.75rem; display: block; margin-bottom: 4px;">Hari Aktif</label>
+                                        <div style="display: flex; flex-wrap: wrap; gap: 8px; font-size: 0.75rem;">
+                                            <label style="display: flex; align-items: center; gap: 2px;"><input type="checkbox" value="1" class="grp-active-day-cb" checked> Sen</label>
+                                            <label style="display: flex; align-items: center; gap: 2px;"><input type="checkbox" value="2" class="grp-active-day-cb" checked> Sel</label>
+                                            <label style="display: flex; align-items: center; gap: 2px;"><input type="checkbox" value="3" class="grp-active-day-cb" checked> Rab</label>
+                                            <label style="display: flex; align-items: center; gap: 2px;"><input type="checkbox" value="4" class="grp-active-day-cb" checked> Kam</label>
+                                            <label style="display: flex; align-items: center; gap: 2px;"><input type="checkbox" value="5" class="grp-active-day-cb" checked> Jum</label>
+                                            <label style="display: flex; align-items: center; gap: 2px;"><input type="checkbox" value="6" class="grp-active-day-cb"> Sab</label>
+                                            <label style="display: flex; align-items: center; gap: 2px;"><input type="checkbox" value="7" class="grp-active-day-cb"> Min</label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Penjadwalan Mengirim Pesan (Scheduled Message) -->
+                            <div style="border: 1px solid var(--border-color); border-radius: 8px; padding: 12px; margin-bottom: 15px; background: rgba(0,0,0,0.15);">
+                                <label class="checkbox-container" style="font-weight: bold; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; font-size: 0.8rem;">
+                                    <input type="checkbox" id="grp-sched-msg-enable" onchange="toggleSchedMsgFields()">
+                                    <span>Kirim Pesan Terjadwal Otomatis</span>
+                                </label>
+                                
+                                <div id="grp-sched-msg-fields" class="hidden" style="display: flex; flex-direction: column; gap: 8px; margin-top: 8px;">
+                                    <div style="display: flex; gap: 10px;">
+                                        <div style="flex: 1;">
+                                            <label style="font-size: 0.75rem;">Waktu Pengiriman (HH:MM)</label>
+                                            <input type="time" id="grp-sched-msg-time" value="12:00" class="form-control" style="width: 100%; padding: 6px; background: var(--bg-primary); color: var(--text-primary); border: 1px solid var(--border-color); font-size: 0.82rem;">
+                                        </div>
+                                    </div>
+                                    
+                                    <div>
+                                        <label style="font-size: 0.75rem; display: block; margin-bottom: 4px;">Hari Aktif</label>
+                                        <div style="display: flex; flex-wrap: wrap; gap: 8px; font-size: 0.75rem;">
+                                            <label style="display: flex; align-items: center; gap: 2px;"><input type="checkbox" value="1" class="grp-sched-msg-day-cb" checked> Sen</label>
+                                            <label style="display: flex; align-items: center; gap: 2px;"><input type="checkbox" value="2" class="grp-sched-msg-day-cb" checked> Sel</label>
+                                            <label style="display: flex; align-items: center; gap: 2px;"><input type="checkbox" value="3" class="grp-sched-msg-day-cb" checked> Rab</label>
+                                            <label style="display: flex; align-items: center; gap: 2px;"><input type="checkbox" value="4" class="grp-sched-msg-day-cb" checked> Kam</label>
+                                            <label style="display: flex; align-items: center; gap: 2px;"><input type="checkbox" value="5" class="grp-sched-msg-day-cb" checked> Jum</label>
+                                            <label style="display: flex; align-items: center; gap: 2px;"><input type="checkbox" value="6" class="grp-sched-msg-day-cb" checked> Sab</label>
+                                            <label style="display: flex; align-items: center; gap: 2px;"><input type="checkbox" value="7" class="grp-sched-msg-day-cb" checked> Min</label>
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <label style="font-size: 0.75rem;">Isi Pesan Terjadwal</label>
+                                        <textarea id="grp-sched-msg-content" placeholder="Contoh: Selamat siang kaka semua!..." rows="2" class="form-control" style="width: 100%; padding: 8px; border-radius: 6px; background: var(--bg-primary); color: var(--text-primary); border: 1px solid var(--border-color); resize: vertical; font-size: 0.82rem;"></textarea>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Tombol Aksi Bawah -->
+                        <div style="margin-top: 15px; display: flex; gap: 10px; width: 100%;">
+                            <button class="btn btn-secondary" onclick="showCloneConfigModal()" style="flex: 1; font-size: 0.8rem; padding: 10px; border-radius: 8px; cursor: pointer;">
+                                <i data-lucide="copy" style="width: 14px; height: 14px; display: inline-block; vertical-align: middle; margin-right: 4px;"></i> Salin Konfig
+                            </button>
+                            <button class="btn btn-secondary" onclick="deleteGroupConfiguration()" style="flex: 1; font-size: 0.8rem; padding: 10px; color: #ff453a; border-color: rgba(255,69,58,0.3); border-radius: 8px; cursor: pointer;">
+                                <i data-lucide="trash-2" style="width: 14px; height: 14px; display: inline-block; vertical-align: middle; margin-right: 4px;"></i> Hapus Konfig
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB CONTENT 2: EDITOR POHON MENU (Lebar & Terfokus) -->
+                <div id="grp-tab-content-tree" class="grp-editor-col hidden">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
+                        <h3 style="margin: 0; font-size: 1.05rem; font-weight: 700; color: var(--text-primary);"><i data-lucide="git-fork" style="width: 16px; height: 16px; display: inline-block; vertical-align: middle; margin-right: 4px;"></i> Visual Editor Pohon Menu</h3>
+                        <div style="display: flex; gap: 8px; align-items: center;">
+                            <button class="btn btn-secondary" id="btn-toggle-quickedit" onclick="toggleQuickEditPanel()" style="padding: 6px 12px; font-size: 0.8rem; border-radius: 6px; min-height: auto; cursor: pointer;">
+                                <i data-lucide="list" style="width:13px;height:13px;display:inline-block;vertical-align:middle;margin-right:4px;"></i> Edit Cepat
+                            </button>
+                            <button class="btn btn-primary" onclick="saveGroupConfiguration()" style="padding: 7px 16px; font-size: 0.85rem; border-radius: 6px; min-height: auto; cursor: pointer;">
+                                <i data-lucide="save" style="width: 14px; height: 14px; display: inline-block; vertical-align: middle; margin-right: 4px;"></i> Simpan Menu
                             </button>
                         </div>
                     </div>
                     
                     <div class="grp-tree-grid">
-                        
                         <!-- Visual Pohon -->
-                        <div style="border: 1px solid var(--border-color); border-radius: 6px; padding: 10px; overflow-y: auto; background: rgba(255,255,255,0.02);" id="menu-tree-visualizer">
+                        <div style="border: 1px solid var(--border-color); border-radius: 12px; padding: 15px; overflow-y: auto; background: rgba(0,0,0,0.15); height: 100%;" id="menu-tree-visualizer">
                             <!-- Visual pohon menu dirender dinamis -->
                         </div>
 
                         <!-- Form Pengeditan Node Aktif -->
-                        <div id="active-node-editor" style="border: 1px solid var(--border-color); border-radius: 6px; padding: 12px; display: flex; flex-direction: column; gap: 10px; background: rgba(255,255,255,0.01); overflow-y: auto;">
-                            <h4 style="margin: 0; font-size: 0.9rem; text-transform: uppercase; color: var(--text-secondary);" id="node-editor-title">Edit Menu Pilihan</h4>
+                        <div id="active-node-editor" style="border: 1px solid var(--border-color); border-radius: 12px; padding: 15px; display: flex; flex-direction: column; gap: 12px; background: var(--bg-card); overflow-y: auto; height: 100%;">
+                            <h4 style="margin: 0; font-size: 0.85rem; text-transform: uppercase; color: var(--text-secondary); font-weight: 700; border-bottom: 1px solid var(--border-color); padding-bottom: 8px; margin-bottom: 4px;" id="node-editor-title">Edit Menu Pilihan</h4>
                             
-                            <div id="node-editor-fields" class="hidden">
-                                <div class="form-group" style="margin-bottom: 8px;">
-                                    <label for="node-name" style="font-size: 0.75rem;">Nama Menu / Label</label>
-                                    <input type="text" id="node-name" class="form-control" style="width: 100%; padding: 6px; font-size: 0.85rem;">
+                            <div id="node-editor-fields" class="hidden" style="display: flex; flex-direction: column; gap: 10px;">
+                                <div class="form-group">
+                                    <label for="node-name" style="font-size: 0.75rem; font-weight: 600;">Nama Menu / Label</label>
+                                    <input type="text" id="node-name" class="form-control" style="width: 100%; padding: 6px; font-size: 0.82rem; border-radius: 6px;">
                                 </div>
 
-                                <div class="form-group" style="margin-bottom: 8px;">
-                                    <label for="node-aliases" style="font-size: 0.75rem;">Kata Kunci Alternatif (Aliases) — Pisahkan dengan koma</label>
-                                    <input type="text" id="node-aliases" class="form-control" placeholder="kopi, espresso, latte" style="width: 100%; padding: 6px; font-size: 0.85rem;">
+                                <div class="form-group">
+                                    <label for="node-aliases" style="font-size: 0.75rem; font-weight: 600;">Kata Kunci Alternatif (Aliases) — Pisahkan dengan koma</label>
+                                    <input type="text" id="node-aliases" class="form-control" placeholder="kopi, espresso, latte" style="width: 100%; padding: 6px; font-size: 0.82rem; border-radius: 6px;">
                                 </div>
 
-                                <div class="form-group" style="margin-bottom: 8px;">
-                                    <label for="node-type" style="font-size: 0.75rem;">Tipe Menu</label>
-                                    <select id="node-type" onchange="toggleNodeFields()" style="width: 100%; padding: 6px; font-size: 0.85rem; border-radius: 4px; border: 1px solid var(--border-color); background: var(--bg-primary); color: var(--text-primary);">
+                                <div class="form-group">
+                                    <label for="node-type" style="font-size: 0.75rem; font-weight: 600;">Tipe Menu</label>
+                                    <select id="node-type" onchange="toggleNodeFields()" style="width: 100%; padding: 6px; font-size: 0.82rem; border-radius: 6px; border: 1px solid var(--border-color); background: var(--bg-primary); color: var(--text-primary);">
                                         <option value="category">📁 Kategori (Milik sub-menu)</option>
                                         <option value="content">📄 Konten (Teks / Media Akhir)</option>
                                     </select>
                                 </div>
 
-                                <div class="form-group" style="margin-bottom: 8px;">
-                                    <label for="node-text" style="font-size: 0.75rem; display: block; margin-bottom: 4px;">Isi Balasan Teks / Deskripsi Menu</label>
+                                <div class="form-group">
+                                    <label for="node-text" style="font-size: 0.75rem; display: block; margin-bottom: 4px; font-weight: 600;">Isi Balasan Teks / Deskripsi Menu</label>
                                     <!-- Formatting Toolbar -->
                                     <div style="display: flex; gap: 6px; margin-bottom: 6px; background: rgba(255,255,255,0.03); padding: 4px; border-radius: 4px; border: 1px solid var(--border-color);">
                                         <button class="btn btn-secondary" type="button" onclick="window.insertFormatToElement('node-text', '*')" style="padding: 3px 8px; font-size: 0.7rem; cursor: pointer; font-weight: bold; min-height: auto;">Tebal (*)</button>
@@ -523,37 +524,40 @@
                                         <button class="btn btn-secondary" type="button" onclick="window.insertFormatToElement('node-text', '~')" style="padding: 3px 8px; font-size: 0.7rem; cursor: pointer; text-decoration: line-through; min-height: auto;">Coret (~)</button>
                                         <button class="btn btn-secondary" type="button" onclick="window.insertFormatToElement('node-text', '```')" style="padding: 3px 8px; font-size: 0.7rem; cursor: pointer; font-family: monospace; min-height: auto;">Mono (```)</button>
                                     </div>
-                                    <textarea id="node-text" rows="8" class="form-control" style="width: 100%; padding: 8px; font-size: 0.85rem; resize: vertical; height: 180px; font-family: monospace; background: var(--bg-primary); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 6px;"></textarea>
+                                    <textarea id="node-text" rows="6" class="form-control" style="width: 100%; padding: 8px; font-size: 0.82rem; resize: vertical; height: 140px; font-family: monospace; background: var(--bg-primary); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 6px;"></textarea>
                                 </div>
-                                <div id="node-media-field" class="hidden" style="margin-bottom: 8px;">
-                                    <label for="node-media" style="font-size: 0.75rem;">Lampiran Berkas Media (Nama File)</label>
+
+                                <div id="node-media-field" class="hidden">
+                                    <label for="node-media" style="font-size: 0.75rem; font-weight: 600;">Lampiran Berkas Media (Nama File)</label>
                                     <div style="display: flex; gap: 6px;">
-                                        <input type="text" id="node-media" class="form-control" placeholder="brosur.pdf" style="flex: 1; padding: 6px; font-size: 0.85rem;">
-                                        <button type="button" class="btn btn-secondary" onclick="document.getElementById('node-media-file').click()" style="padding: 6px 10px; font-size: 0.8rem; min-height: auto;">Pilih File</button>
+                                        <input type="text" id="node-media" class="form-control" placeholder="brosur.pdf" style="flex: 1; padding: 6px; font-size: 0.82rem; border-radius: 6px;">
+                                        <button type="button" class="btn btn-secondary" onclick="document.getElementById('node-media-file').click()" style="padding: 6px 10px; font-size: 0.8rem; min-height: auto; border-radius: 6px;">Pilih File</button>
                                     </div>
                                     <input type="file" id="node-media-file" onchange="uploadNodeMediaFile(this)" style="display: none;">
-                                    <small style="color: var(--text-secondary); font-size: 0.65rem;">Masukkan nama file, atau klik tombol untuk mengunggah berkas baru ke folder media.</small>
+                                    <small style="color: var(--text-secondary); font-size: 0.65rem;">Masukkan nama file di folder media.</small>
                                 </div>
-                                <div id="node-status-field" class="hidden" style="margin-bottom: 8px;">
-                                    <label for="node-status" style="font-size: 0.75rem;">Status Konten (Stok/Ketersediaan)</label>
-                                    <select id="node-status" class="form-control" style="width: 100%; padding: 6px; font-size: 0.85rem; background: var(--bg-primary); color: var(--text-primary); border: 1px solid var(--border-color);">
+
+                                <div id="node-status-field" class="hidden">
+                                    <label for="node-status" style="font-size: 0.75rem; font-weight: 600;">Status Konten (Stok/Ketersediaan)</label>
+                                    <select id="node-status" class="form-control" style="width: 100%; padding: 6px; font-size: 0.82rem; background: var(--bg-primary); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 6px;">
                                         <option value="">(Tanpa Status)</option>
                                         <option value="Tersedia">🟢 Tersedia</option>
                                         <option value="Habis">🔴 Habis</option>
                                         <option value="Pre-order">🟡 Pre-order</option>
                                     </select>
                                 </div>
-                                <div class="form-group" style="margin-bottom: 8px; display: flex; align-items: center; gap: 8px; padding: 4px 0;">
+
+                                <div class="form-group" style="display: flex; align-items: center; gap: 8px; padding: 2px 0;">
                                     <input type="checkbox" id="node-promo" style="width: 16px; height: 16px; cursor: pointer; accent-color: #ff9f0a;">
-                                    <label for="node-promo" style="font-size: 0.8rem; cursor: pointer; font-weight: 600; color: #ffd60a;">🔥 Tandai sebagai Promo Spesial</label>
+                                    <label for="node-promo" style="font-size: 0.78rem; cursor: pointer; font-weight: 600; color: #ffd60a;">🔥 Promo Spesial</label>
                                 </div>
 
-                                <div style="display: flex; gap: 8px; margin-top: 15px;">
-                                    <button id="btn-add-child" class="btn btn-secondary" onclick="addChildNode()" style="flex: 1; font-size: 0.75rem; padding: 5px;">
-                                        <i data-lucide="plus-circle" style="width: 12px; height: 12px; display: inline;"></i> Tambah Anak
+                                <div style="display: flex; gap: 8px; margin-top: 10px;">
+                                    <button id="btn-add-child" class="btn btn-secondary" onclick="addChildNode()" style="flex: 1; font-size: 0.75rem; padding: 6px; border-radius: 6px; min-height: auto; cursor: pointer;">
+                                        <i data-lucide="plus-circle" style="width: 12px; height: 12px; display: inline-block; vertical-align: middle;"></i> Tambah Anak
                                     </button>
-                                    <button class="btn btn-secondary" onclick="deleteNode()" style="flex: 1; font-size: 0.75rem; padding: 5px; color: #ff453a; border-color: rgba(255,69,58,0.3);">
-                                        <i data-lucide="trash" style="width: 12px; height: 12px; display: inline;"></i> Hapus
+                                    <button class="btn btn-secondary" onclick="deleteNode()" style="flex: 1; font-size: 0.75rem; padding: 6px; color: #ff453a; border-color: rgba(255,69,58,0.3); border-radius: 6px; min-height: auto; cursor: pointer;">
+                                        <i data-lucide="trash" style="width: 12px; height: 12px; display: inline-block; vertical-align: middle;"></i> Hapus
                                     </button>
                                 </div>
                             </div>
@@ -569,6 +573,18 @@
                     <div id="quick-edit-panel" class="hidden" style="margin-top: 4px; display: flex; flex-direction: column; gap: 0; flex: 1; overflow: hidden;">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
                             <span style="font-size: 0.85rem; font-weight: 600; color: var(--text-secondary);">
+                                <i data-lucide="zap" style="width:13px;height:13px;display:inline-block;vertical-align:middle;"></i>
+                                Edit instan — klik langsung untuk ubah status/promo
+                            </span>
+                            <input type="text" id="qe-search" placeholder="🔍 Cari produk..." oninput="renderQuickEditList()" class="form-control" style="width: 180px; padding: 4px 10px; font-size: 0.8rem; height: 30px; border-radius: 6px;">
+                        </div>
+                        <div id="quick-edit-list" style="overflow-y: auto; flex: 1; display: flex; flex-direction: column; gap: 6px;">
+                            <!-- dirender dinamis -->
+                        </div>
+                    </div>
+                </div>
+
+            </div>           <span style="font-size: 0.85rem; font-weight: 600; color: var(--text-secondary);">
                                 <i data-lucide="zap" style="width:13px;height:13px;display:inline;vertical-align:middle;"></i>
                                 Edit instan — klik langsung untuk ubah status/promo
                             </span>

@@ -998,6 +998,13 @@ window.selectGroup = async function(groupId) {
     document.getElementById('no-group-selected-placeholder').classList.add('hidden');
     document.getElementById('group-editor-panel').classList.remove('hidden');
     
+    // Set JID and default tab
+    const jidEl = document.getElementById('selected-group-jid');
+    if (jidEl) jidEl.textContent = groupId;
+    if (typeof window.switchGroupSubTab === 'function') {
+        window.switchGroupSubTab('settings');
+    }
+    
     // Highlight list sidebar
     renderGroupsListSidebar();
     
@@ -4508,3 +4515,22 @@ document.addEventListener('DOMContentLoaded', () => {
         setTimeout(() => { if (typeof loadTelegramConfig === 'function') loadTelegramConfig(); }, 300);
     }
 });
+
+// Switch group sub-tabs (Settings vs Menu Tree)
+window.switchGroupSubTab = function(tabName) {
+    // Switch active states on segment buttons
+    document.querySelectorAll('.grp-segment-btn').forEach(btn => btn.classList.remove('active'));
+    document.getElementById(`grp-btn-${tabName}`)?.classList.add('active');
+    
+    // Switch active states on tab panes
+    if (tabName === 'settings') {
+        document.getElementById('grp-tab-content-settings').classList.remove('hidden');
+        document.getElementById('grp-tab-content-tree').classList.add('hidden');
+    } else {
+        document.getElementById('grp-tab-content-settings').classList.add('hidden');
+        document.getElementById('grp-tab-content-tree').classList.remove('hidden');
+    }
+    
+    // Re-trigger Lucide icons render just in case
+    if (window.lucide) lucide.createIcons();
+};
