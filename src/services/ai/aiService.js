@@ -317,23 +317,23 @@ async function callLMStudio(systemPrompt, chatHistory, isJson = false) {
     }
 }
 
-// Global Ai Provider Dispatcher
-async function callAiProvider(systemPrompt, chatHistory, isJson = false) {
-    if (config.provider === 'gemini') {
+// Helper to call a single AI Provider directly
+async function callSingleProvider(providerName, systemPrompt, chatHistory, isJson) {
+    if (providerName === 'gemini') {
         return await callGeminiWithPool(systemPrompt, chatHistory, isJson);
-    } else if (config.provider === 'groq') {
+    } else if (providerName === 'groq') {
         return await callGroqWithPool(systemPrompt, chatHistory, isJson);
-    } else if (config.provider === 'deepseek') {
+    } else if (providerName === 'deepseek') {
         const apiKey = config.deepseek_api_key;
         const model = config.deepseek_model || 'deepseek-chat';
         const url = 'https://api.deepseek.com/chat/completions';
         return await callOpenAiCompatible(url, apiKey, model, systemPrompt, chatHistory, isJson);
-    } else if (config.provider === 'qwen') {
+    } else if (providerName === 'qwen') {
         const apiKey = config.qwen_api_key;
         const model = config.qwen_model || 'qwen-plus';
         const url = 'https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions';
         return await callOpenAiCompatible(url, apiKey, model, systemPrompt, chatHistory, isJson);
-    } else if (config.provider === 'openrouter') {
+    } else if (providerName === 'openrouter') {
         const apiKey = config.openrouter_api_key;
         const model = config.openrouter_model || 'meta-llama/llama-3.3-70b-instruct';
         const url = 'https://openrouter.ai/api/v1/chat/completions';
@@ -341,6 +341,57 @@ async function callAiProvider(systemPrompt, chatHistory, isJson = false) {
     } else {
         return await callLMStudio(systemPrompt, chatHistory, isJson);
     }
+}
+
+// Global Ai Provider Dispatcher with Auto Provider Failover Rotation
+async function callAiProvider(systemPrompt, chatHistory, isJson = false) {
+    const primaryProvider = config.provider || 'gemini';
+    const allProviders = ['gemini', 'groq', 'deepseek', 'qwen', 'openrouter', 'lokal'];
+    
+    // Shift primaryProvider to the front of execution queue
+    const executionOrder = [primaryProvider];
+    allProviders.forEach(p => {
+        if (p !== primaryProvider) executionOrder.push(p);
+    });
+    
+    let lastError = null;
+    
+    for (const provider of executionOrder) {
+        // Skip check if no key/URL is configured for this backup provider to avoid useless network attempts
+        if (provider === 'gemini') {
+            let keys = config.gemini_api_keys || [];
+            if (keys.length === 0 && config.gemini_api_key) keys = [config.gemini_api_key];
+            if (keys.length === 0 && config.api_key) keys = [config.api_key];
+            keys = keys.filter(k => k && k.trim().length > 0);
+            if (keys.length === 0) continue;
+        } else if (provider === 'groq') {
+            let keys = config.groq_api_keys || [];
+            if (keys.length === 0 && config.groq_api_key) keys = [config.groq_api_key];
+            keys = keys.filter(k => k && k.trim().length > 0);
+            if (keys.length === 0) continue;
+        } else if (provider === 'deepseek') {
+            if (!config.deepseek_api_key || !config.deepseek_api_key.trim()) continue;
+        } else if (provider === 'qwen') {
+            if (!config.qwen_api_key || !config.qwen_api_key.trim()) continue;
+        } else if (provider === 'openrouter') {
+            if (!config.openrouter_api_key || !config.openrouter_api_key.trim()) continue;
+        } else if (provider === 'lokal') {
+            if (!config.api_url) continue;
+        }
+        
+        try {
+            if (provider !== primaryProvider) {
+                console.log(`[AI Failover] Provider utama (${primaryProvider.toUpperCase()}) gagal/tidak merespon. Mengalihkan ke provider cadangan: ${provider.toUpperCase()}`);
+            }
+            const result = await callSingleProvider(provider, systemPrompt, chatHistory, isJson);
+            return result;
+        } catch (err) {
+            console.warn(`[AI Failover] Provider ${provider.toUpperCase()} gagal digunakan: ${err.message}`);
+            lastError = err;
+        }
+    }
+    
+    throw new Error(`Seluruh provider AI (utama & cadangan) gagal digunakan. Error terakhir: ${lastError ? lastError.message : 'Unknown'}`);
 }
 
 // AI Extraction helper for Receipt OCR
