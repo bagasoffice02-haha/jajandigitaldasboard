@@ -237,7 +237,20 @@
             <section class="panel card" style="display: flex; flex-direction: column; overflow: hidden; padding: 15px;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
                     <h2 style="margin: 0; font-size: 1.1rem;"><i data-lucide="users"></i> Grup WA</h2>
-                    <button class="btn btn-secondary bt            <!-- PANEL UTAMA: Konfigurasi Grup & Editor Menu -->
+                    <button class="btn btn-secondary btn-icon" onclick="loadGroupsList()" title="Refresh Grup">
+                        <i data-lucide="rotate-cw" style="width: 14px; height: 14px;"></i>
+                    </button>
+                </div>
+                <p class="card-subtitle" style="margin-top: -10px; margin-bottom: 15px; font-size: 0.8rem;">Daftar grup WhatsApp Anda</p>
+                <div id="groups-list-container" style="flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; padding-right: 5px;">
+                    <div style="text-align: center; color: var(--text-secondary); margin-top: 50px; font-size: 0.9rem;">
+                        <i data-lucide="users" style="width: 24px; height: 24px; opacity: 0.5; margin-bottom: 8px;"></i>
+                        <p>Memuat daftar grup...</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- PANEL UTAMA: Konfigurasi Grup & Editor Menu -->
             <div id="group-editor-panel" class="hidden group-editor-inner">
                 
                 <!-- WORKSPACE HEADER: Group Title & Sub-tabs -->
