@@ -122,6 +122,34 @@ async function initDatabase() {
             )
         `);
 
+        // Check and add updated_at and mute_ai columns to shop_customers if they don't exist
+        try {
+            const tableInfo = await db.all("PRAGMA table_info(shop_customers)");
+            const columns = tableInfo.map(c => c.name);
+            if (!columns.includes('updated_at')) {
+                await db.exec("ALTER TABLE shop_customers ADD COLUMN updated_at DATETIME DEFAULT CURRENT_TIMESTAMP");
+                console.log('[DB] Added updated_at column to shop_customers');
+            }
+            if (!columns.includes('mute_ai')) {
+                await db.exec("ALTER TABLE shop_customers ADD COLUMN mute_ai INTEGER DEFAULT 0");
+                console.log('[DB] Added mute_ai column to shop_customers');
+            }
+            if (!columns.includes('notes')) {
+                await db.exec("ALTER TABLE shop_customers ADD COLUMN notes TEXT");
+                console.log('[DB] Added notes column to shop_customers');
+            }
+            if (!columns.includes('labels')) {
+                await db.exec("ALTER TABLE shop_customers ADD COLUMN labels TEXT");
+                console.log('[DB] Added labels column to shop_customers');
+            }
+            if (!columns.includes('order_count')) {
+                await db.exec("ALTER TABLE shop_customers ADD COLUMN order_count INTEGER DEFAULT 0");
+                console.log('[DB] Added order_count column to shop_customers');
+            }
+        } catch (colErr) {
+            console.error('[DB Column Migration Error]:', colErr.message);
+        }
+
         await db.exec(`
             CREATE TABLE IF NOT EXISTS reminders (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,

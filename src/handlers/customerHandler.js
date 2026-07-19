@@ -324,9 +324,22 @@ async function handleCustomerMessage(msg, {
         }
     }
     
+    // Check if the customer has muted the AI bot
+    let isAiMutedForCustomer = false;
+    try {
+        const { getDb } = require('../db/sqlite');
+        const db = getDb();
+        const customerRow = await db.get('SELECT mute_ai FROM shop_customers WHERE phone = ?', senderId.split('@')[0]);
+        if (customerRow && customerRow.mute_ai === 1) {
+            isAiMutedForCustomer = true;
+        }
+    } catch (dbErr) {
+        console.error('[CRM Check Mute AI Error]:', dbErr.message);
+    }
+
     // AI Fallback inside Group (CS AI Fallback)
-    const canUseGroupAi = isGroup && config.group_ai_enabled !== false && activeCfg && activeCfg.useAiFallback;
-    const canUsePrivateAi = !isGroup && config.private_ai_enabled !== false;
+    const canUseGroupAi = !isAiMutedForCustomer && isGroup && config.group_ai_enabled !== false && activeCfg && activeCfg.useAiFallback;
+    const canUsePrivateAi = !isAiMutedForCustomer && !isGroup && config.private_ai_enabled !== false;
     
     if (canUseGroupAi || canUsePrivateAi) {
         let shouldTriggerAi = false;

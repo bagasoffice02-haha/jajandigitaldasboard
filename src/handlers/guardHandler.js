@@ -1,7 +1,7 @@
 // src/handlers/guardHandler.js
 'use strict';
 const { config } = require('../config/config');
-const { addCustomer } = require('../db/models');
+const { addCustomer, touchCustomer } = require('../db/models');
 const { normalizePhone } = require('./helpers');
 
 async function checkAndProcessGuards(msg, {
@@ -24,6 +24,17 @@ async function checkAndProcessGuards(msg, {
         return cleanAdmin === cleanSender;
     });
     isSenderHostAdmin = isPinnedAdmin || isSenderBoss;
+
+    // Touch customer to update last interaction time
+    if (!isSenderHostAdmin && senderId !== 'status@broadcast' && !msg.fromMe) {
+        (async () => {
+            try {
+                await touchCustomer(senderPhone);
+            } catch (err) {
+                console.error('[CRM Touch Warning] Gagal meng-update interaksi terakhir:', err.message);
+            }
+        })();
+    }
 
     if (!isSenderHostAdmin && isGroup) {
         try {

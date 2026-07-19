@@ -65,10 +65,26 @@ async function clearChatSession(sessionId) {
 async function getShopData() {
     const db = getDb();
     const admins = await db.all('SELECT * FROM shop_admins');
-    const customers = await db.all('SELECT * FROM shop_customers');
+    const customers = await db.all('SELECT * FROM shop_customers ORDER BY updated_at DESC, created_at DESC');
     return {
         host_admins: admins.map(a => a.phone),
-        customers: customers.map(c => ({ phone: c.phone, name: c.name }))
+        customers: customers.map(c => {
+            let parsedLabels = [];
+            try {
+                parsedLabels = JSON.parse(c.labels || '[]');
+            } catch (e) {
+                parsedLabels = c.labels ? c.labels.split(',').map(s => s.trim()).filter(Boolean) : [];
+            }
+            return {
+                phone: c.phone,
+                name: c.name,
+                notes: c.notes || '',
+                labels: parsedLabels,
+                orderCount: c.order_count || 0,
+                updated_at: c.updated_at,
+                mute_ai: c.mute_ai || 0
+            };
+        })
     };
 }
 
@@ -82,14 +98,42 @@ async function removeAdmin(phone) {
     await db.run('DELETE FROM shop_admins WHERE phone = ?', phone);
 }
 
-async function addCustomer(phone, name) {
+async function addCustomer(phone, name, notes = '', labels = [], orderCount = 0) {
     const db = getDb();
-    await db.run('INSERT OR REPLACE INTO shop_customers (phone, name) VALUES (?, ?)', phone, name || '');
+    const labelsStr = Array.isArray(labels) ? JSON.stringify(labels) : '[]';
+    
+    const existing = await db.get('SELECT * FROM shop_customers WHERE phone = ?', phone);
+    if (existing) {
+        const updatedName = name || existing.name || '';
+        const updatedNotes = notes !== undefined ? notes : (existing.notes || '');
+        const updatedLabels = labels !== undefined ? labelsStr : (existing.labels || '[]');
+        const updatedOrderCount = orderCount !== undefined ? orderCount : (existing.order_count || 0);
+        
+        await db.run(
+            'UPDATE shop_customers SET name = ?, notes = ?, labels = ?, order_count = ?, updated_at = CURRENT_TIMESTAMP WHERE phone = ?',
+            updatedName, updatedNotes, updatedLabels, updatedOrderCount, phone
+        );
+    } else {
+        await db.run(
+            'INSERT INTO shop_customers (phone, name, notes, labels, order_count) VALUES (?, ?, ?, ?, ?)',
+            phone, name || '', notes || '', labelsStr, orderCount || 0
+        );
+    }
 }
 
 async function removeCustomer(phone) {
     const db = getDb();
     await db.run('DELETE FROM shop_customers WHERE phone = ?', phone);
+}
+
+async function touchCustomer(phone) {
+    const db = getDb();
+    await db.run('UPDATE shop_customers SET updated_at = CURRENT_TIMESTAMP WHERE phone = ?', phone);
+}
+
+async function setCustomerMuteAi(phone, muteAi) {
+    const db = getDb();
+    await db.run('UPDATE shop_customers SET mute_ai = ? WHERE phone = ?', muteAi ? 1 : 0, phone);
 }
 
 // 4. Log History (Finance & Agenda) Helpers
@@ -143,6 +187,8 @@ module.exports = {
     removeAdmin,
     addCustomer,
     removeCustomer,
+    touchCustomer,
+    setCustomerMuteAi,
     getLogHistory,
     saveLogHistory,
     getReminders,

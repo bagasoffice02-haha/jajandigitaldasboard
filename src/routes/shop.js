@@ -3,7 +3,7 @@ const express = require('express');
 const router = express.Router();
 const fs = require('fs');
 const { getDb } = require('../db/sqlite');
-const { getGroupConfigs, getShopData, addAdmin, addCustomer } = require('../db/models');
+const { getGroupConfigs, getShopData, addAdmin, addCustomer, setCustomerMuteAi } = require('../db/models');
 const { getClient, getStatus, setMessagesAdminsOnlyHelper } = require('../services/whatsapp/client');
 
 let cancelBroadcastFlag = false;
@@ -97,7 +97,10 @@ router.post('/customers', async (req, res) => {
         const { customers } = req.body;
         if (!Array.isArray(customers)) return res.status(400).json({ error: 'Format salah' });
         for (const cust of customers) {
-            await addCustomer(cust.phone, cust.name);
+            await addCustomer(cust.phone, cust.name, cust.notes, cust.labels, cust.orderCount);
+            if (cust.mute_ai !== undefined) {
+                await setCustomerMuteAi(cust.phone, cust.mute_ai);
+            }
         }
         res.json({ success: true });
     } catch(err) {
