@@ -118,16 +118,21 @@ async function initDatabase() {
             CREATE TABLE IF NOT EXISTS shop_customers (
                 phone TEXT PRIMARY KEY,
                 name TEXT,
+                updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                mute_ai INTEGER DEFAULT 0,
+                notes TEXT,
+                labels TEXT,
+                order_count INTEGER DEFAULT 0,
                 created_at DATETIME DEFAULT CURRENT_TIMESTAMP
             )
         `);
 
-        // Check and add updated_at and mute_ai columns to shop_customers if they don't exist
+        // Check and add updated_at and other columns to shop_customers if they don't exist
         try {
             const tableInfo = await db.all("PRAGMA table_info(shop_customers)");
             const columns = tableInfo.map(c => c.name);
             if (!columns.includes('updated_at')) {
-                await db.exec("ALTER TABLE shop_customers ADD COLUMN updated_at DATETIME DEFAULT CURRENT_TIMESTAMP");
+                await db.exec("ALTER TABLE shop_customers ADD COLUMN updated_at DATETIME");
                 console.log('[DB] Added updated_at column to shop_customers');
             }
             if (!columns.includes('mute_ai')) {
