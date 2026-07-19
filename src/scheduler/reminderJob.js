@@ -379,6 +379,105 @@ function startDailyReportScheduler(client, io, getStatus) {
     }, 30000);
 }
 
+async function runAutoMaintenance() {
+    try {
+        console.log('[Maintenance] Memulai pembersihan berkas & optimasi database otomatis...');
+        const db = getDb();
+        if (!db) return;
+
+        // 1. Optimasi Database SQLite (VACUUM)
+        await db.run('VACUUM');
+        console.log('[Maintenance] ✅ Database SQLite berhasil di-VACUUM (optimasi penyimpanan).');
+
+        // Ambil seluruh konfigurasi grup untuk memindai file media & knowledge aktif
+        const rows = await db.all('SELECT settings FROM group_configs');
+        
+        const activeMediaFiles = new Set();
+        const activeKnowledgeFiles = new Set([
+            '00_memori_otomatis.txt',
+            'secret_akun_dan_password.txt'
+        ]);
+
+        // Fungsi bantu rekursif untuk mengumpulkan file media aktif dari menuTree
+        function collectActiveMedia(node) {
+            if (!node) return;
+            if (node.media && typeof node.media === 'string') {
+                const cleanName = path.basename(node.media.trim());
+                if (cleanName) activeMediaFiles.add(cleanName);
+            }
+            if (node.children && Array.isArray(node.children)) {
+                node.children.forEach(collectActiveMedia);
+            }
+        }
+
+        rows.forEach(r => {
+            try {
+                const settings = JSON.parse(r.settings || '{}');
+                // Koleksi media dari menuTree
+                if (settings.menuTree) {
+                    collectActiveMedia(settings.menuTree);
+                }
+                // Koleksi berkas knowledge aktif
+                if (settings.allowedKnowledgeFiles && Array.isArray(settings.allowedKnowledgeFiles)) {
+                    settings.allowedKnowledgeFiles.forEach(file => {
+                        if (typeof file === 'string') {
+                            const cleanName = path.basename(file.trim());
+                            if (cleanName) activeKnowledgeFiles.add(cleanName);
+                        }
+                    });
+                }
+            } catch (e) {}
+        });
+
+        // 2. Pembersihan Folder Media (./media)
+        const mediaDir = './media';
+        if (fs.existsSync(mediaDir)) {
+            const files = fs.readdirSync(mediaDir);
+            let deletedMediaCount = 0;
+            files.forEach(file => {
+                const filePath = path.join(mediaDir, file);
+                const stat = fs.statSync(filePath);
+                if (stat.isFile()) {
+                    if (!activeMediaFiles.has(file)) {
+                        try {
+                            fs.unlinkSync(filePath);
+                            deletedMediaCount++;
+                        } catch (err) {
+                            console.error(`[Maintenance] Gagal menghapus media usang ${file}:`, err.message);
+                        }
+                    }
+                }
+            });
+            console.log(`[Maintenance] ✅ Pembersihan Media: Berhasil menghapus ${deletedMediaCount} berkas media usang.`);
+        }
+
+        // 3. Pembersihan Folder Knowledge (./knowledge)
+        const knowledgeDir = './knowledge';
+        if (fs.existsSync(knowledgeDir)) {
+            const files = fs.readdirSync(knowledgeDir);
+            let deletedKnowledgeCount = 0;
+            files.forEach(file => {
+                const filePath = path.join(knowledgeDir, file);
+                const stat = fs.statSync(filePath);
+                if (stat.isFile()) {
+                    if (!activeKnowledgeFiles.has(file)) {
+                        try {
+                            fs.unlinkSync(filePath);
+                            deletedKnowledgeCount++;
+                        } catch (err) {
+                            console.error(`[Maintenance] Gagal menghapus berkas knowledge usang ${file}:`, err.message);
+                        }
+                    }
+                }
+            });
+            console.log(`[Maintenance] ✅ Pembersihan Knowledge: Berhasil menghapus ${deletedKnowledgeCount} berkas knowledge usang.`);
+        }
+
+    } catch (err) {
+        console.error('[Maintenance] Gagal melakukan pemeliharaan berkas otomatis:', err.message);
+    }
+}
+
 async function runWeeklyBackup(clientOrGetClient, io) {
     try {
         const client = resolveClient(clientOrGetClient);
@@ -468,6 +567,9 @@ async function runWeeklyBackup(clientOrGetClient, io) {
                 try { fs.unlinkSync(filePath); console.log(`[Backup Cleanup] Menghapus backup lama: ${file}`); } catch(_) {}
             }
         });
+
+        // Jalankan pemeliharaan dan optimasi berkas otomatis mingguan setelah backup selesai
+        await runAutoMaintenance();
         
     } catch (err) {
         console.error('[Backup Scheduler] Gagal membuat/mengirim backup:', err.message);

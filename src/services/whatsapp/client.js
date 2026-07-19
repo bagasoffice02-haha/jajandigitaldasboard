@@ -47,6 +47,24 @@ if (process.platform === 'android') {
     console.log(`[WhatsApp] Menggunakan custom puppeteer executablePath: ${puppeteerOptions.executablePath}`);
 }
 
+function cleanupChromeCache(sessionPath) {
+    const cacheDirs = [
+        path.join(sessionPath, 'Default', 'Cache'),
+        path.join(sessionPath, 'Default', 'Code Cache'),
+        path.join(sessionPath, 'Default', 'GPUCache')
+    ];
+    cacheDirs.forEach(dir => {
+        if (fs.existsSync(dir)) {
+            try {
+                fs.rmSync(dir, { recursive: true, force: true });
+                console.log(`[Cleanup Cache] Berhasil menghapus cache: ${path.basename(dir)}`);
+            } catch (err) {
+                // Abaikan jika sedang dikunci
+            }
+        }
+    });
+}
+
 function cleanupHeadlessChrome() {
     return new Promise((resolve) => {
         const sessionPath = path.join(__dirname, '../../../session');
@@ -72,6 +90,7 @@ function cleanupHeadlessChrome() {
                             } catch(_) {}
                         };
                         removeLocks(sessionPath);
+                        cleanupChromeCache(sessionPath);
                         console.log('[Cleanup Linux] Chrome dihentikan & semua file LOCK sesi dihapus.');
                     }
                     resolve();
@@ -107,6 +126,7 @@ function cleanupHeadlessChrome() {
                         } catch(_) {}
                     };
                     removeLocks(sessionPath);
+                    cleanupChromeCache(sessionPath);
                     console.log('[Cleanup] Chrome dihentikan & semua file LOCK sesi dihapus.');
                 } else {
                     console.log('[Cleanup] Chrome dihentikan (folder sesi belum ada).');
