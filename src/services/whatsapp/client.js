@@ -363,9 +363,11 @@ function createNewClient(io) {
     });
 
     // Override sendMessage — random read 1-2s + random typing 2-5s (hanya untuk DM, bukan grup)
+    // Ditambah dengan auto-mention @semua / @everyone untuk pesan grup.
     const originalSendMessage = client.sendMessage.bind(client);
     client.sendMessage = async function(chatId, content, options) {
         const isGroupChat = typeof chatId === 'string' && chatId.endsWith('@g.us');
+        let sendOptions = options || {};
 
         try {
             // Typing & read indicator hanya untuk DM (bukan grup)
@@ -385,13 +387,30 @@ function createNewClient(io) {
 
                 // Hentikan typing state
                 try { await chat.clearState(); } catch (_) {}
+            } else {
+                // Untuk grup: Cek mention @semua / @everyone
+                const isMentionEveryone = typeof content === 'string' && (
+                    content.toLowerCase().includes('@semua') || 
+                    content.toLowerCase().includes('@everyone')
+                );
+                
+                if (isMentionEveryone) {
+                    const chat = await client.getChatById(chatId);
+                    if (chat.isGroup && chat.participants) {
+                        const contactPromises = chat.participants.map(p => 
+                            client.getContactById(p.id._serialized).catch(() => null)
+                        );
+                        const contacts = await Promise.all(contactPromises);
+                        sendOptions.mentions = contacts.filter(c => c !== null);
+                    }
+                }
             }
         } catch (err) {
-            console.warn('[Anti-Ban Delay Warning] Gagal simulasi read/typing:', err.message);
+            console.warn('[Anti-Ban/Mention Everyone Warning] Gagal memproses pesan:', err.message);
         }
 
         // Kirim pesan asli
-        return await originalSendMessage(chatId, content, options);
+        return await originalSendMessage(chatId, content, sendOptions);
     };
     
     initMessageHandler(client, io);
