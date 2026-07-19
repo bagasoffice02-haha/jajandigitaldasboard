@@ -1354,184 +1354,192 @@
                 <h2><i data-lucide="sliders-horizontal"></i> Konfigurasi Bot</h2>
                 <p class="card-subtitle">Sesuaikan penyedia AI dan parameter asisten Anda</p>
 
-                <form id="config-form" class="settings-form">
-
-                    <!-- Provider -->
-                    <div class="form-group">
-                        <label for="cfg-provider">Penyedia AI (AI Provider)</label>
-                        <select id="cfg-provider" onchange="toggleProviderFields()">
-                            <option value="gemini">Google Gemini API</option>
-                            <option value="local">LM Studio (Lokal)</option>
-                            <option value="groq">Groq API</option>
-                            <option value="deepseek">DeepSeek API</option>
-                            <option value="qwen">Alibaba DashScope (Qwen)</option>
-                            <option value="openrouter">OpenRouter (Llama/Qwen/dll)</option>
-                        </select>
+                <form id="config-form" class="settings-form" style="display: flex; flex-direction: column; gap: 12px; flex: 1;">
+                    <!-- Sub-tabs button control inside Global Bot Settings -->
+                    <div class="global-settings-tabs" style="display: flex; gap: 4px; background: rgba(0, 0, 0, 0.15); padding: 3px; border-radius: 8px; margin-bottom: 10px; border: 1px solid var(--border-color); flex-shrink: 0;">
+                        <button type="button" class="global-tab-btn active" onclick="window.switchGlobalSettingsTab('ai')" style="flex: 1; background: none; border: none; padding: 6px; font-size: 0.72rem; font-weight: 600; color: var(--text-secondary); border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px;">
+                            <i data-lucide="cpu" style="width: 12px; height: 12px;"></i> Koneksi AI
+                        </button>
+                        <button type="button" class="global-tab-btn" onclick="window.switchGlobalSettingsTab('features')" style="flex: 1; background: none; border: none; padding: 6px; font-size: 0.72rem; font-weight: 600; color: var(--text-secondary); border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px;">
+                            <i data-lucide="sliders" style="width: 12px; height: 12px;"></i> Fitur Keaktifan
+                        </button>
+                        <button type="button" class="global-tab-btn" onclick="window.switchGlobalSettingsTab('prompt')" style="flex: 1; background: none; border: none; padding: 6px; font-size: 0.72rem; font-weight: 600; color: var(--text-secondary); border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px;">
+                            <i data-lucide="scroll-text" style="width: 12px; height: 12px;"></i> Prompt
+                        </button>
                     </div>
 
-                    <!-- Gemini -->
-                    <div id="group-gemini-settings">
+                    <!-- TAB 1: KONEKSI AI -->
+                    <div id="global-sec-ai" class="global-settings-section" style="display: flex; flex-direction: column; gap: 12px;">
+                        <!-- Provider -->
                         <div class="form-group">
-                            <label for="cfg-gemini-api-keys">Stok Gemini API Keys (Satu Key Per Baris)</label>
-                            <textarea id="cfg-gemini-api-keys" rows="4" placeholder="Masukkan Google Gemini API Keys Anda (satu per baris)…"></textarea>
-                            <small>Bot akan rotasi otomatis (round-robin) jika ada key yang limit.</small>
+                            <label for="cfg-provider">Penyedia AI (AI Provider)</label>
+                            <select id="cfg-provider" onchange="toggleProviderFields()" style="width: 100%; padding: 6px 10px; font-size: 0.82rem; background: var(--bg-primary); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 6px; height: 32px;">
+                                <option value="gemini">Google Gemini API</option>
+                                <option value="local">LM Studio (Lokal)</option>
+                                <option value="groq">Groq API</option>
+                                <option value="deepseek">DeepSeek API</option>
+                                <option value="qwen">Alibaba DashScope (Qwen)</option>
+                                <option value="openrouter">OpenRouter (Llama/Qwen/dll)</option>
+                            </select>
                         </div>
-                        <div class="form-group" style="margin-top:12px;">
-                            <label for="cfg-gemini-model">Model Gemini</label>
-                            <input type="text" id="cfg-gemini-model" placeholder="gemini-2.5-flash">
-                            <small>Rekomendasi: <code>gemini-2.5-flash</code> (cepat & hemat)</small>
-                        </div>
-                    </div>
 
-                    <!-- LM Studio -->
-                    <div id="group-local-settings" class="hidden">
+                        <!-- Gemini -->
+                        <div id="group-gemini-settings">
+                            <div class="form-group">
+                                <label for="cfg-gemini-api-keys">Stok Gemini API Keys (Satu Key Per Baris)</label>
+                                <textarea id="cfg-gemini-api-keys" rows="4" placeholder="Masukkan Google Gemini API Keys Anda (satu per baris)…" class="form-control" style="width: 100%; padding: 8px; border-radius: 6px; font-size: 0.82rem; background: var(--bg-primary); color: var(--text-primary); border: 1px solid var(--border-color); font-family: monospace;"></textarea>
+                                <small style="color: var(--text-secondary); font-size: 0.65rem; display: block; margin-top: 2px;">Bot akan rotasi otomatis (round-robin) jika ada key yang limit.</small>
+                            </div>
+                            <div class="form-group" style="margin-top:10px;">
+                                <label for="cfg-gemini-model">Model Gemini</label>
+                                <input type="text" id="cfg-gemini-model" placeholder="gemini-2.5-flash" class="form-control" style="width: 100%; padding: 6px 10px; font-size: 0.82rem; background: var(--bg-primary); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 6px; height: 32px;">
+                                <small style="color: var(--text-secondary); font-size: 0.65rem; display: block; margin-top: 2px;">Rekomendasi: <code>gemini-2.5-flash</code> (cepat &amp; hemat)</small>
+                            </div>
+                        </div>
+
+                        <!-- LM Studio -->
+                        <div id="group-local-settings" class="hidden">
+                            <div class="form-group">
+                                <label for="cfg-api-url">URL API Local Server</label>
+                                <input type="text" id="cfg-api-url" placeholder="http://localhost:1234/v1/chat/completions" class="form-control" style="width: 100%; padding: 6px 10px; font-size: 0.82rem; background: var(--bg-primary); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 6px; height: 32px;">
+                            </div>
+                            <div class="form-group" style="margin-top:10px;">
+                                <label for="cfg-model-name">Nama Model (Sesuai di LM Studio)</label>
+                                <input type="text" id="cfg-model-name" placeholder="qwen3.5-9b" class="form-control" style="width: 100%; padding: 6px 10px; font-size: 0.82rem; background: var(--bg-primary); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 6px; height: 32px;">
+                            </div>
+                            <div class="form-group" style="margin-top:10px;">
+                                <label for="cfg-api-key">API Key (Opsional)</label>
+                                <input type="password" id="cfg-api-key" placeholder="Token autentikasi LM Studio…" class="form-control" style="width: 100%; padding: 6px 10px; font-size: 0.82rem; background: var(--bg-primary); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 6px; height: 32px;">
+                            </div>
+                        </div>
+
+                        <!-- Groq -->
+                        <div id="group-groq-settings" class="hidden">
+                            <div class="form-group">
+                                <label for="cfg-groq-api-keys">Stok Groq API Keys (Satu Key Per Baris)</label>
+                                <textarea id="cfg-groq-api-keys" rows="4" placeholder="Masukkan Groq API Keys Anda (satu per baris)&#10;gsk_xxxxx&#10;gsk_yyyyy&#10;gsk_zzzzz" class="form-control" style="width: 100%; padding: 8px; border-radius: 6px; font-size: 0.82rem; background: var(--bg-primary); color: var(--text-primary); border: 1px solid var(--border-color); font-family: monospace;"></textarea>
+                                <small style="color: var(--text-secondary); font-size: 0.65rem; display: block; margin-top: 2px;">Bot akan rotasi otomatis (round-robin) jika ada key yang limit/error.</small>
+                            </div>
+                            <div class="form-group" style="margin-top:10px;">
+                                <label for="cfg-groq-model">Model Groq</label>
+                                <input type="text" id="cfg-groq-model" placeholder="llama-3.3-70b-versatile" class="form-control" style="width: 100%; padding: 6px 10px; font-size: 0.82rem; background: var(--bg-primary); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 6px; height: 32px;">
+                                <small style="color: var(--text-secondary); font-size: 0.65rem; display: block; margin-top: 2px;">Contoh: <code>llama-3.3-70b-versatile</code></small>
+                            </div>
+                        </div>
+
+                        <!-- DeepSeek -->
+                        <div id="group-deepseek-settings" class="hidden">
+                            <div class="form-group">
+                                <label for="cfg-deepseek-api-key">DeepSeek API Key</label>
+                                <input type="password" id="cfg-deepseek-api-key" placeholder="sk-…" class="form-control" style="width: 100%; padding: 6px 10px; font-size: 0.82rem; background: var(--bg-primary); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 6px; height: 32px;">
+                            </div>
+                            <div class="form-group" style="margin-top:10px;">
+                                <label for="cfg-deepseek-model">Model DeepSeek</label>
+                                <input type="text" id="cfg-deepseek-model" placeholder="deepseek-chat" class="form-control" style="width: 100%; padding: 6px 10px; font-size: 0.82rem; background: var(--bg-primary); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 6px; height: 32px;">
+                            </div>
+                        </div>
+
+                        <!-- Qwen -->
+                        <div id="group-qwen-settings" class="hidden">
+                            <div class="form-group">
+                                <label for="cfg-qwen-api-key">Alibaba DashScope (Qwen) API Key</label>
+                                <input type="password" id="cfg-qwen-api-key" placeholder="sk-…" class="form-control" style="width: 100%; padding: 6px 10px; font-size: 0.82rem; background: var(--bg-primary); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 6px; height: 32px;">
+                            </div>
+                            <div class="form-group" style="margin-top:10px;">
+                                <label for="cfg-qwen-model">Model Qwen</label>
+                                <input type="text" id="cfg-qwen-model" placeholder="qwen-plus" class="form-control" style="width: 100%; padding: 6px 10px; font-size: 0.82rem; background: var(--bg-primary); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 6px; height: 32px;">
+                            </div>
+                        </div>
+
+                        <!-- OpenRouter -->
+                        <div id="group-openrouter-settings" class="hidden">
+                            <div class="form-group">
+                                <label for="cfg-openrouter-api-key">OpenRouter API Key</label>
+                                <input type="password" id="cfg-openrouter-api-key" placeholder="sk-or-…" class="form-control" style="width: 100%; padding: 6px 10px; font-size: 0.82rem; background: var(--bg-primary); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 6px; height: 32px;">
+                            </div>
+                            <div class="form-group" style="margin-top:10px;">
+                                <label for="cfg-openrouter-model">Model OpenRouter</label>
+                                <input type="text" id="cfg-openrouter-model" placeholder="meta-llama/llama-3.3-70b-instruct" class="form-control" style="width: 100%; padding: 6px 10px; font-size: 0.82rem; background: var(--bg-primary); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 6px; height: 32px;">
+                            </div>
+                        </div>
+
+                        <!-- Shared Settings -->
                         <div class="form-group">
-                            <label for="cfg-api-url">URL API Local Server</label>
-                            <input type="text" id="cfg-api-url" placeholder="http://localhost:1234/v1/chat/completions">
-                        </div>
-                        <div class="form-group" style="margin-top:12px;">
-                            <label for="cfg-model-name">Nama Model (Sesuai di LM Studio)</label>
-                            <input type="text" id="cfg-model-name" placeholder="qwen3.5-9b">
-                        </div>
-                        <div class="form-group" style="margin-top:12px;">
-                            <label for="cfg-api-key">API Key (Opsional)</label>
-                            <input type="password" id="cfg-api-key" placeholder="Token autentikasi LM Studio…">
+                            <label for="cfg-max-tokens">Batas Maksimal Token</label>
+                            <input type="number" id="cfg-max-tokens" required min="100" max="4000" placeholder="1000" class="form-control" style="width: 100%; padding: 6px 10px; font-size: 0.82rem; background: var(--bg-primary); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 6px; height: 32px;">
+                            <small style="color: var(--text-secondary); font-size: 0.65rem; display: block; margin-top: 2px;">Token lebih banyak membantu model reasoning menyelesaikan jawaban panjang.</small>
                         </div>
                     </div>
 
-                    <!-- Groq -->
-                    <div id="group-groq-settings" class="hidden">
-                        <div class="form-group">
-                            <label for="cfg-groq-api-keys">Stok Groq API Keys (Satu Key Per Baris)</label>
-                            <textarea id="cfg-groq-api-keys" rows="4" placeholder="Masukkan Groq API Keys Anda (satu per baris)&#10;gsk_xxxxx&#10;gsk_yyyyy&#10;gsk_zzzzz"></textarea>
-                            <small>Bot akan rotasi otomatis (round-robin) jika ada key yang limit/error.</small>
+                    <!-- TAB 2: FITUR & KEAKTIFAN -->
+                    <div id="global-sec-features" class="global-settings-section hidden" style="display: flex; flex-direction: column; gap: 12px;">
+                        <h4 style="margin: 0; font-size: 0.82rem; color: var(--text-secondary); text-transform: uppercase; font-weight: 700; border-bottom: 1px solid var(--border-color); padding-bottom: 6px;">Respons AI Bot (AI Fallback)</h4>
+                        <div style="display: flex; flex-direction: column; gap: 8px;">
+                            <label class="checkbox-container" style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 0.82rem; font-weight: 600; color: var(--text-primary);">
+                                <input type="checkbox" id="cfg-group-ai-enabled" style="width: 16px; height: 16px; margin: 0; cursor: pointer;">
+                                <span>Aktifkan AI Bot untuk Chat Grup</span>
+                            </label>
+                            <label class="checkbox-container" style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 0.82rem; font-weight: 600; color: var(--text-primary);">
+                                <input type="checkbox" id="cfg-private-ai-enabled" style="width: 16px; height: 16px; margin: 0; cursor: pointer;">
+                                <span>Aktifkan AI Bot untuk Chat Pribadi (PM)</span>
+                            </label>
                         </div>
-                        <div class="form-group" style="margin-top:12px;">
-                            <label for="cfg-groq-model">Model Groq</label>
-                            <input type="text" id="cfg-groq-model" placeholder="llama-3.3-70b-versatile">
-                            <small>Contoh: <code>llama-3.3-70b-versatile</code>, <code>deepseek-r1-distill-llama-70b</code></small>
-                        </div>
-                    </div>
 
-                    <!-- DeepSeek -->
-                    <div id="group-deepseek-settings" class="hidden">
-                        <div class="form-group">
-                            <label for="cfg-deepseek-api-key">DeepSeek API Key</label>
-                            <input type="password" id="cfg-deepseek-api-key" placeholder="sk-…">
+                        <h4 style="margin: 8px 0 0 0; font-size: 0.82rem; color: var(--text-secondary); text-transform: uppercase; font-weight: 700; border-bottom: 1px solid var(--border-color); padding-bottom: 6px;">Keaktifan Chatbot (Global)</h4>
+                        <div style="display: flex; flex-direction: column; gap: 8px;">
+                            <label class="checkbox-container" style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 0.82rem; font-weight: 600; color: var(--text-primary);">
+                                <input type="checkbox" id="cfg-group-chat-bot-enabled" style="width: 16px; height: 16px; margin: 0; cursor: pointer;">
+                                <span>Aktifkan Chatbot untuk Chat Grup (Semua Grup)</span>
+                            </label>
+                            <label class="checkbox-container" style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 0.82rem; font-weight: 600; color: var(--text-primary);">
+                                <input type="checkbox" id="cfg-private-chat-bot-enabled" style="width: 16px; height: 16px; margin: 0; cursor: pointer;">
+                                <span>Aktifkan Chatbot untuk Chat Pribadi (PM / Japri)</span>
+                            </label>
                         </div>
-                        <div class="form-group" style="margin-top:12px;">
-                            <label for="cfg-deepseek-model">Model DeepSeek</label>
-                            <input type="text" id="cfg-deepseek-model" placeholder="deepseek-chat">
-                            <small>Pilihan: <code>deepseek-chat</code> (V3), <code>deepseek-reasoner</code> (R1)</small>
-                        </div>
-                    </div>
 
-                    <!-- Qwen -->
-                    <div id="group-qwen-settings" class="hidden">
-                        <div class="form-group">
-                            <label for="cfg-qwen-api-key">Alibaba DashScope (Qwen) API Key</label>
-                            <input type="password" id="cfg-qwen-api-key" placeholder="sk-…">
-                        </div>
-                        <div class="form-group" style="margin-top:12px;">
-                            <label for="cfg-qwen-model">Model Qwen</label>
-                            <input type="text" id="cfg-qwen-model" placeholder="qwen-plus">
-                            <small>Contoh: <code>qwen-plus</code>, <code>qwen-max</code>, <code>qwen-turbo</code></small>
-                        </div>
-                    </div>
-
-                    <!-- OpenRouter -->
-                    <div id="group-openrouter-settings" class="hidden">
-                        <div class="form-group">
-                            <label for="cfg-openrouter-api-key">OpenRouter API Key</label>
-                            <input type="password" id="cfg-openrouter-api-key" placeholder="sk-or-…">
-                        </div>
-                        <div class="form-group" style="margin-top:12px;">
-                            <label for="cfg-openrouter-model">Model OpenRouter</label>
-                            <input type="text" id="cfg-openrouter-model" placeholder="meta-llama/llama-3.3-70b-instruct">
-                            <small>Contoh: <code>meta-llama/llama-3.3-70b-instruct</code>, <code>qwen/qwen-2.5-72b-instruct</code></small>
-                        </div>
-                    </div>
-
-                    <!-- Shared Settings -->
-                    <div class="form-group">
-                        <label for="cfg-max-tokens">Batas Maksimal Token</label>
-                        <input type="number" id="cfg-max-tokens" required min="100" max="4000" placeholder="1000">
-                        <small>Token lebih banyak membantu model reasoning menyelesaikan jawaban panjang.</small>
-                    </div>
-
-                    <!-- AI Bot Activation Container -->
-                    <div style="background: rgba(255, 159, 10, 0.08); border-radius: 8px; padding: 12px; border: 1px solid rgba(255, 159, 10, 0.2); margin-top: 15px; margin-bottom: 15px;">
-                        <h3 style="margin: 0 0 10px 0; font-size: 0.85rem; color: #ff9f0a; display: flex; align-items: center; gap: 6px;">
-                            <i data-lucide="bot" style="width: 16px; height: 16px; color: #ff9f0a;"></i> Status Respons AI Bot (AI Fallback)
-                        </h3>
-                        <div class="form-group" style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
-                            <input type="checkbox" id="cfg-group-ai-enabled" checked style="width: 18px; height: 18px; margin: 0; cursor: pointer;">
-                            <label for="cfg-group-ai-enabled" style="margin: 0; font-size: 0.8rem; cursor: pointer; font-weight: 600; color: var(--text-primary);">Aktifkan AI Bot untuk Chat Grup</label>
-                        </div>
-                        <div class="form-group" style="display: flex; align-items: center; gap: 10px; margin-bottom: 0;">
-                            <input type="checkbox" id="cfg-private-ai-enabled" checked style="width: 18px; height: 18px; margin: 0; cursor: pointer;">
-                            <label for="cfg-private-ai-enabled" style="margin: 0; font-size: 0.8rem; cursor: pointer; font-weight: 600; color: var(--text-primary);">Aktifkan AI Bot untuk Chat Pribadi (PM)</label>
-                        </div>
-                    </div>
-
-                    <!-- Global Bot Keaktifan Settings Container -->
-                    <div style="background: rgba(10, 132, 255, 0.08); border-radius: 8px; padding: 12px; border: 1px solid rgba(10, 132, 255, 0.2); margin-top: 15px; margin-bottom: 15px;">
-                        <h3 style="margin: 0 0 10px 0; font-size: 0.85rem; color: #0a84ff; display: flex; align-items: center; gap: 6px;">
-                            <i data-lucide="power" style="width: 16px; height: 16px; color: #0a84ff;"></i> Kontrol Keaktifan Chatbot (Global)
-                        </h3>
-                        <div class="form-group" style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
-                            <input type="checkbox" id="cfg-group-chat-bot-enabled" checked style="width: 18px; height: 18px; margin: 0; cursor: pointer;">
-                            <label for="cfg-group-chat-bot-enabled" style="margin: 0; font-size: 0.8rem; cursor: pointer; font-weight: 600; color: var(--text-primary);">Aktifkan Chatbot untuk Chat Grup (Semua Grup)</label>
-                        </div>
-                        <div class="form-group" style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px;">
-                            <input type="checkbox" id="cfg-private-chat-bot-enabled" checked style="width: 18px; height: 18px; margin: 0; cursor: pointer;">
-                            <label for="cfg-private-chat-bot-enabled" style="margin: 0; font-size: 0.8rem; cursor: pointer; font-weight: 600; color: var(--text-primary);">Aktifkan Chatbot untuk Chat Pribadi (PM / Japri)</label>
-                        </div>
-                        <div class="form-group" style="margin-bottom: 0; border-top: 1px solid rgba(10, 132, 255, 0.15); padding-top: 10px;">
-                            <label for="cfg-private-chat-sync-group-id" style="font-size: 0.75rem; margin-bottom: 4px; display: block; color: var(--text-secondary); font-weight: 600;">Sinkronisasi Chat Pribadi dengan Grup</label>
-                            <select id="cfg-private-chat-sync-group-id" class="form-control" style="width: 100%; padding: 6px; font-size: 0.85rem; background: var(--bg-primary); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 4px;">
+                        <div class="form-group" style="margin-top: 4px;">
+                            <label for="cfg-private-chat-sync-group-id" style="font-size: 0.78rem; font-weight: 600; margin-bottom: 4px; display: block;">Sinkronisasi Chat Pribadi dengan Grup</label>
+                            <select id="cfg-private-chat-sync-group-id" class="form-control" style="width: 100%; padding: 6px 10px; font-size: 0.82rem; background: var(--bg-primary); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 6px; height: 32px;">
                                 <option value="">-- Pilih Grup Penyelaras --</option>
                             </select>
-                            <small style="display: block; margin-top: 4px; color: var(--text-secondary);">Pilih data grup mana yang ingin digunakan sebagai acuan menu & prompt pada Chat Pribadi.</small>
+                        </div>
+
+                        <h4 style="margin: 8px 0 0 0; font-size: 0.82rem; color: var(--text-secondary); text-transform: uppercase; font-weight: 700; border-bottom: 1px solid var(--border-color); padding-bottom: 6px;">Auto-Kirim Kontak Toko (Auto Save)</h4>
+                        <div style="display: flex; flex-direction: column; gap: 10px;">
+                            <label class="checkbox-container" style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 0.82rem; font-weight: 600; color: var(--text-primary);">
+                                <input type="checkbox" id="cfg-auto-send-vcard" style="width: 16px; height: 16px; margin: 0; cursor: pointer;">
+                                <span>Kirim Kontak ke Pelanggan Baru</span>
+                            </label>
+                            <div class="form-group">
+                                <label for="cfg-vcard-name" style="font-size: 0.78rem; font-weight: 600; display: block; margin-bottom: 4px;">Nama Kontak Bisnis (vCard Name)</label>
+                                <input type="text" id="cfg-vcard-name" placeholder="CS Jajan Digital" class="form-control" style="width: 100%; padding: 6px 10px; font-size: 0.82rem; background: var(--bg-primary); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 6px; height: 32px;">
+                            </div>
+                        </div>
+
+                        <h4 style="margin: 8px 0 0 0; font-size: 0.82rem; color: var(--text-secondary); text-transform: uppercase; font-weight: 700; border-bottom: 1px solid var(--border-color); padding-bottom: 6px;">Akses Tunggal &amp; Laporan</h4>
+                        <div class="form-group">
+                            <label for="cfg-boss-number" style="font-size: 0.78rem; font-weight: 600;">Nomor WhatsApp Bos</label>
+                            <input type="text" id="cfg-boss-number" placeholder="Contoh: 628123456789" class="form-control" style="width: 100%; padding: 6px 10px; font-size: 0.82rem; background: var(--bg-primary); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 6px; height: 32px;">
+                            <small style="color: var(--text-secondary); font-size: 0.65rem; display: block; margin-top: 2px;">Jika diisi, bot hanya membalas nomor ini.</small>
+                        </div>
+                        <div class="form-group" style="margin-top: 4px;">
+                            <label for="cfg-report-time" style="font-size: 0.78rem; font-weight: 600;">Waktu Laporan Harian (HH:MM)</label>
+                            <input type="text" id="cfg-report-time" placeholder="Contoh: 08:00" class="form-control" style="width: 100%; padding: 6px 10px; font-size: 0.82rem; background: var(--bg-primary); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 6px; height: 32px;">
                         </div>
                     </div>
 
-                    <div class="form-group">
-                        <label for="cfg-boss-number">Nomor WhatsApp Bos (Akses Tunggal)</label>
-                        <input type="text" id="cfg-boss-number" placeholder="Contoh: 628123456789">
-                        <small>Jika diisi, bot hanya membalas nomor ini. Kosongkan agar bot merespons semua nomor.</small>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="cfg-report-time">Waktu Laporan Harian (Format HH:MM)</label>
-                        <input type="text" id="cfg-report-time" placeholder="Contoh: 08:00">
-                        <small>Waktu kirim otomatis rekap kas & agenda harian ke nomor Bos.</small>
-                    </div>
-
-                    <!-- Auto Save & Send VCard Settings -->
-                    <div style="background: rgba(48, 209, 88, 0.08); border-radius: 8px; padding: 12px; border: 1px solid rgba(48, 209, 88, 0.2); margin-top: 15px; margin-bottom: 15px;">
-                        <h3 style="margin: 0 0 10px 0; font-size: 0.85rem; color: #30d158; display: flex; align-items: center; gap: 6px;">
-                            <i data-lucide="contact" style="width: 16px; height: 16px;"></i> Auto-Kirim Kontak Toko (Auto Save)
-                        </h3>
-                        <div class="form-group" style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
-                            <input type="checkbox" id="cfg-auto-send-vcard" style="width: 18px; height: 18px; margin: 0; cursor: pointer;">
-                            <label for="cfg-auto-send-vcard" style="margin: 0; font-size: 0.8rem; cursor: pointer;">Aktifkan Auto-Kirim Kontak ke Pelanggan Baru</label>
-                        </div>
-                        <div class="form-group" style="margin-bottom: 0;">
-                            <label for="cfg-vcard-name" style="font-size: 0.75rem;">Nama Kontak Bisnis Anda (vCard Name)</label>
-                            <input type="text" id="cfg-vcard-name" placeholder="Contoh: CS Jajan Digital" style="width: 100%; padding: 6px; font-size: 0.85rem; background: var(--bg-primary); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 4px;">
-                            <small>Kontak kartu nama VCard akan otomatis dikirim agar pelanggan baru tinggal klik 'Add/Save Contact' di HP mereka.</small>
+                    <!-- TAB 3: PROMPT KEPRIBADIAN -->
+                    <div id="global-sec-prompt" class="global-settings-section hidden" style="display: flex; flex-direction: column; gap: 10px; flex: 1;">
+                        <div class="form-group" style="display: flex; flex-direction: column; flex: 1; min-height: 280px;">
+                            <label for="cfg-system-prompt" style="font-size: 0.78rem; font-weight: 600; display: block; margin-bottom: 4px;">Template Prompt Sistem (Kepribadian Asisten)</label>
+                            <textarea id="cfg-system-prompt" rows="12" placeholder="Tuliskan kepribadian dan panduan bot di sini…" class="form-control" style="width: 100%; padding: 8px; font-size: 0.82rem; resize: vertical; flex: 1; min-height: 260px; height: 320px; font-family: monospace; background: var(--bg-primary); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 6px;"></textarea>
+                            <small style="color: var(--text-secondary); font-size: 0.65rem; display: block; margin-top: 2px;">Wajib menyertakan <code>{KNOWLEDGE_BASE_CONTENT}</code> di bagian akhir.</small>
                         </div>
                     </div>
 
-                    <div class="form-group">
-                        <label for="cfg-system-prompt">Template Prompt Sistem (Kepribadian Asisten)</label>
-                        <textarea id="cfg-system-prompt" rows="7" placeholder="Tuliskan kepribadian dan panduan bot di sini…"></textarea>
-                        <small>Wajib menyertakan <code>{KNOWLEDGE_BASE_CONTENT}</code> di bagian akhir agar bot bisa memproses dokumen pengetahuan.</small>
-                    </div>
-
-                    <button type="submit" class="btn btn-primary btn-block">
-                        <i data-lucide="save"></i> Simpan Konfigurasi
+                    <!-- Action Button at Bottom of card -->
+                    <button type="submit" class="btn btn-primary btn-block" style="margin-top: auto; padding: 10px; border-radius: 8px; cursor: pointer; flex-shrink: 0; font-weight: 600; font-size: 0.85rem;">
+                        <i data-lucide="save" style="width: 14px; height: 14px; display: inline-block; vertical-align: middle; margin-right: 4px;"></i> Simpan Konfigurasi
                     </button>
                 </form>
             </section>
@@ -2397,6 +2405,28 @@
         // Switch active states on sections
         document.querySelectorAll('.node-editor-section').forEach(sec => sec.classList.add('hidden'));
         document.getElementById(`node-sec-${tabName}`)?.classList.remove('hidden');
+        
+        // Re-trigger Lucide icons render just in case
+        if (window.lucide) lucide.createIcons();
+    };
+
+    window.switchGlobalSettingsTab = function(tabName) {
+        // Switch active states on tab buttons
+        document.querySelectorAll('.global-tab-btn').forEach(btn => btn.classList.remove('active'));
+        
+        const btnMap = {
+            'ai': 0,
+            'features': 1,
+            'prompt': 2
+        };
+        const btns = document.querySelectorAll('.global-tab-btn');
+        if (btns && btns[btnMap[tabName]]) {
+            btns[btnMap[tabName]].classList.add('active');
+        }
+        
+        // Switch active states on sections
+        document.querySelectorAll('.global-settings-section').forEach(sec => sec.classList.add('hidden'));
+        document.getElementById(`global-sec-${tabName}`)?.classList.remove('hidden');
         
         // Re-trigger Lucide icons render just in case
         if (window.lucide) lucide.createIcons();
