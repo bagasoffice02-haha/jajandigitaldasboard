@@ -1230,6 +1230,7 @@ window.quickToggleStatus = function(e, nodeId) {
     }
 };
 
+
 // Memilih Node Menu untuk diedit
 window.selectTreeNode = function(nodeId) {
     selectedNodeId = nodeId;
@@ -1269,9 +1270,16 @@ window.selectTreeNode = function(nodeId) {
         document.getElementById('node-status-field').classList.add('hidden');
         document.getElementById('node-status').value = '';
     }
+
+    // Auto scroll to active node editor on mobile so the user sees they can edit
+    setTimeout(() => {
+        const editorEl = document.getElementById('active-node-editor');
+        if (editorEl) {
+            editorEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+    }, 80);
 };
 
-// Toggle field berdasarkan tipe node aktif
 window.toggleNodeFields = function() {
     const nodeType = document.getElementById('node-type').value;
     const mediaField = document.getElementById('node-media-field');
