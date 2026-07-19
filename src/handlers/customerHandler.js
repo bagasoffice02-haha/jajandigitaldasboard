@@ -16,6 +16,16 @@ const {
     getGroupKnowledgeContext
 } = require('./helpers');
 
+async function simulateTyping(msg, delayMs = 2000) {
+    try {
+        const chat = await msg.getChat();
+        try { await chat.sendSeen(); } catch (_) {}
+        await chat.sendStateTyping();
+        const typingDelay = delayMs || (2000 + Math.floor(Math.random() * 1500));
+        await new Promise(resolve => setTimeout(resolve, typingDelay));
+    } catch (_) {}
+}
+
 async function handleCustomerMessage(msg, {
     chatId, senderId, userMessage, textLower, isGroup, clientInstance, ioInstance,
     activeCfg, configGroupId, gConfigs, customerMenuStates, activeLocks
@@ -28,6 +38,7 @@ async function handleCustomerMessage(msg, {
         (['menu', 'bantuan', 'help', '/menu', '#menu', '#', 'list'].includes(text));
         
     if (isTrigger) {
+        await simulateTyping(msg, 2000);
         customerMenuStates.set(sessionKey, {
             currentNodeId: 'root',
             parentIds: [],
@@ -52,6 +63,7 @@ async function handleCustomerMessage(msg, {
     // PROMO SPECIAL
     const promoKeywords = ['promo', 'promosi', 'diskon', 'sale', 'promo spesial', 'daftar promo'];
     if (promoKeywords.includes(text)) {
+        await simulateTyping(msg, 2000);
         const promoNodes = getAllPromoNodes(activeCfg.menuTree);
 
         if (promoNodes.length === 0) {
@@ -94,6 +106,7 @@ async function handleCustomerMessage(msg, {
     // QRIS/PAYMENT TRIGGER
     const paymentKeywords = ['bayar', 'qris', 'pembayaran', 'cara bayar'];
     if (paymentKeywords.includes(text)) {
+        await simulateTyping(msg, 2000);
         const pType = activeCfg.paymentType || 'qris';
         const pText = activeCfg.paymentText || `💵 *QRIS PEMBAYARAN RESMI JAJAN DIGITAL* 💵\n\nSilakan scan QRIS di atas untuk melakukan pembayaran.\n\n*⚠️ Penting:* Setelah melakukan pembayaran, silakan kirimkan bukti transfer/pembayaran berupa foto/screenshot di grup ini.`;
         const pMedia = activeCfg.paymentMedia !== undefined ? activeCfg.paymentMedia : 'Qris.jpeg';
@@ -123,6 +136,7 @@ async function handleCustomerMessage(msg, {
     const matchResult = findNodeByName(activeCfg.menuTree || { id: "root", name: "Menu Utama", type: "category", children: [] }, userMessage);
     
     if (matchResult) {
+        await simulateTyping(msg, 2000);
         const { node: matchedNode, parentPath } = matchResult;
         
         customerMenuStates.set(sessionKey, {
@@ -138,7 +152,8 @@ async function handleCustomerMessage(msg, {
             const conEmoji = matchedNode.isPromo ? '🔥' : (activeCfg.contentEmoji || '📄');
             const statusSuffix = getStatusEmoji(matchedNode.status);
             const promoHeader = matchedNode.isPromo ? `⚠️ *PROMO SPESIAL HARI INI!* ⚠️\n\n` : '';
-            let replyText = `${conEmoji} *${matchedNode.name}*${statusSuffix}\n\n${promoHeader}${matchedNode.text}`;
+            let headerPrefix = (activeCfg.universalHeader && activeCfg.universalHeader.trim() !== '') ? `${activeCfg.universalHeader.trim()}\n\n` : '';
+            let replyText = `${headerPrefix}${conEmoji} *${matchedNode.name}*${statusSuffix}\n\n${promoHeader}${matchedNode.text}`;
             const footerText = activeCfg.contentFooter || `_Ketik *0* untuk kembali ke menu sebelumnya, atau *#* untuk kembali ke menu utama._`;
             replyText += `\n\n${footerText}`;
             
@@ -192,6 +207,7 @@ async function handleCustomerMessage(msg, {
     }
 
     if (matchedTrigger) {
+        await simulateTyping(msg, 2000);
         await msg.reply(matchedTrigger.reply);
         
         if (matchedTrigger.media && matchedTrigger.media.trim() !== '') {
@@ -219,6 +235,7 @@ async function handleCustomerMessage(msg, {
         session.lastActive = Date.now();
         
         if (text === '0') {
+            await simulateTyping(msg, 2000);
             if (session.parentIds.length > 0) {
                 const parentId = session.parentIds.pop();
                 session.currentNodeId = parentId;
@@ -232,6 +249,7 @@ async function handleCustomerMessage(msg, {
         }
         
         if (text === '#') {
+            await simulateTyping(msg, 2000);
             session.currentNodeId = 'root';
             session.parentIds = [];
             const replyMsg = renderGroupMenuMessage(activeCfg.menuTree, activeCfg);
@@ -249,6 +267,7 @@ async function handleCustomerMessage(msg, {
                 const { flatList: sortedChildren } = getSortedGroupedChildren(currentNode.children);
 
                 if (choiceIndex >= 0 && choiceIndex < sortedChildren.length) {
+                    await simulateTyping(msg, 2000);
                     const chosenNode = sortedChildren[choiceIndex];
                     
                     if (chosenNode.type === 'category') {
@@ -260,7 +279,8 @@ async function handleCustomerMessage(msg, {
                         const conEmoji = chosenNode.isPromo ? '🔥' : (activeCfg.contentEmoji || '📄');
                         const statusSuffix = getStatusEmoji(chosenNode.status);
                         const promoHeader = chosenNode.isPromo ? `⚠️ *PROMO SPESIAL HARI INI!* ⚠️\n\n` : '';
-                        let replyText = `${conEmoji} *${chosenNode.name}*${statusSuffix}\n\n${promoHeader}${chosenNode.text}`;
+                        let headerPrefix = (activeCfg.universalHeader && activeCfg.universalHeader.trim() !== '') ? `${activeCfg.universalHeader.trim()}\n\n` : '';
+                        let replyText = `${headerPrefix}${conEmoji} *${chosenNode.name}*${statusSuffix}\n\n${promoHeader}${chosenNode.text}`;
                         const footerText = activeCfg.contentFooter || `_Ketik *0* untuk kembali ke menu sebelumnya, atau *#* untuk kembali ke menu utama._`;
                         replyText += `\n\n${footerText}`;
                         
@@ -286,6 +306,7 @@ async function handleCustomerMessage(msg, {
                     });
 
                     if (matchedChild) {
+                        await simulateTyping(msg, 2000);
                         if (matchedChild.type === 'category') {
                             session.parentIds.push(session.currentNodeId);
                             session.currentNodeId = matchedChild.id;
@@ -295,7 +316,8 @@ async function handleCustomerMessage(msg, {
                             const conEmoji = matchedChild.isPromo ? '🔥' : (activeCfg.contentEmoji || '📄');
                             const statusSuffix = getStatusEmoji(matchedChild.status);
                             const promoHeader = matchedChild.isPromo ? `⚠️ *PROMO SPESIAL HARI INI!* ⚠️\n\n` : '';
-                            let replyText = `${conEmoji} *${matchedChild.name}*${statusSuffix}\n\n${promoHeader}${matchedChild.text}`;
+                            let headerPrefix = (activeCfg.universalHeader && activeCfg.universalHeader.trim() !== '') ? `${activeCfg.universalHeader.trim()}\n\n` : '';
+                            let replyText = `${headerPrefix}${conEmoji} *${matchedChild.name}*${statusSuffix}\n\n${promoHeader}${matchedChild.text}`;
                             const footerText = activeCfg.contentFooter || `_Ketik *0* untuk kembali ke menu sebelumnya, atau *#* untuk kembali ke menu utama._`;
                             replyText += `\n\n${footerText}`;
                             

@@ -157,6 +157,11 @@ function getSortedGroupedChildren(children) {
 function renderGroupMenuMessage(node, cfg = {}) {
     let msg = '';
     
+    // Header Balasan Universal (Teks Pembuka) jika diisi
+    if (cfg.universalHeader && cfg.universalHeader.trim() !== '') {
+        msg += `${cfg.universalHeader.trim()}\n\n`;
+    }
+    
     // Header Dekoratif Kustom
     msg += `━━━━━━━━━━━━━━━━━━━━━━\n`;
     msg += ` 🛒 *DAFTAR PRODUK DIGITAL*\n`;
