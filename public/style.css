@@ -1801,6 +1801,8 @@ textarea.form-control, input.form-control {
        GROUPS TAB — FULL MOBILE REWRITE
     ────────────────────────────────────────── */
 
+
+
     /* Outer sidebar + editor: collapse to 1 column */
     .groups-grid {
         grid-template-columns: 1fr !important;
@@ -1808,7 +1810,50 @@ textarea.form-control, input.form-control {
         gap: 12px;
     }
 
+    /* Group list sidebar: natural height on mobile */
+    .groups-grid > .panel:first-child {
+        max-height: none !important;
+        overflow-y: visible !important;
+    }
 
+    /* Inner editor panel (settings col + tree col): 1 column */
+    .group-editor-inner {
+        display: flex !important;
+        flex-direction: column !important;
+        height: auto !important;
+        gap: 12px;
+    }
+
+    /* Settings column: full width */
+    .grp-settings-col {
+        width: 100% !important;
+        max-height: none !important;
+        overflow-y: visible !important;
+        flex-shrink: 0;
+    }
+
+    /* Editor column: full width */
+    .grp-editor-col {
+        width: 100% !important;
+        overflow: visible !important;
+        flex-shrink: 0;
+    }
+
+    /* Inner tree grid: stack tree above node editor on mobile */
+    .grp-tree-grid {
+        display: flex !important;
+        flex-direction: column !important;
+        overflow: visible !important;
+        gap: 12px;
+        min-height: 0;
+    }
+
+    /* Visual menu tree: natural height on mobile */
+    #menu-tree-visualizer {
+        min-height: none !important;
+        max-height: none !important;
+        overflow-y: visible !important;
+    }
 
     /* Node editor form: full width */
     #active-node-editor {
