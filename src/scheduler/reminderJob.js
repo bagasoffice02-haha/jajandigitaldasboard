@@ -301,15 +301,24 @@ async function checkGroupSchedules(clientOrGetClient, getStatus) {
                 }
             }
 
-            // 2. SCHEDULED GROUP MESSAGES
+            // 2. SCHEDULED GROUP MESSAGES (Multiple schedules support)
+            const scheduledList = [];
             if (cfg.scheduledMessage && cfg.scheduledMessage.enabled) {
-                const sched = cfg.scheduledMessage;
+                scheduledList.push(cfg.scheduledMessage);
+            }
+            if (Array.isArray(cfg.scheduledMessages)) {
+                cfg.scheduledMessages.forEach(s => {
+                    if (s && s.enabled) scheduledList.push(s);
+                });
+            }
+
+            for (const sched of scheduledList) {
                 const schedTime = sched.time; // e.g., "12:00"
                 const activeDays = sched.activeDays || [];
                 const messageText = sched.message;
 
                 if (schedTime && messageText && messageText.trim() !== '') {
-                    const key = `${groupId}_${schedTime}`;
+                    const key = `${groupId}_${schedTime}_${messageText.substring(0, 15)}`;
                     if (timeStr === schedTime && lastSentGroupMessageDate.get(key) !== dateStr) {
                         if (activeDays.length === 0 || activeDays.includes(currentDayVal)) {
                             lastSentGroupMessageDate.set(key, dateStr);

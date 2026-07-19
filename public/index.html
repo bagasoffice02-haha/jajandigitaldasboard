@@ -439,37 +439,17 @@
 
                             <!-- Penjadwalan Mengirim Pesan (Scheduled Message) -->
                             <div style="border: 1px solid var(--border-color); border-radius: 8px; padding: 12px; margin-bottom: 15px; background: rgba(0,0,0,0.15);">
-                                <label class="checkbox-container" style="font-weight: bold; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; font-size: 0.8rem;">
-                                    <input type="checkbox" id="grp-sched-msg-enable" onchange="toggleSchedMsgFields()">
-                                    <span>Kirim Pesan Terjadwal Otomatis</span>
-                                </label>
-                                
-                                <div id="grp-sched-msg-fields" class="hidden" style="display: flex; flex-direction: column; gap: 8px; margin-top: 8px;">
-                                    <div style="display: flex; gap: 10px;">
-                                        <div style="flex: 1;">
-                                            <label style="font-size: 0.75rem;">Waktu Pengiriman (HH:MM)</label>
-                                            <input type="time" id="grp-sched-msg-time" value="12:00" class="form-control" style="width: 100%; padding: 6px; background: var(--bg-primary); color: var(--text-primary); border: 1px solid var(--border-color); font-size: 0.82rem;">
-                                        </div>
-                                    </div>
-                                    
-                                    <div>
-                                        <label style="font-size: 0.75rem; display: block; margin-bottom: 4px;">Hari Aktif</label>
-                                        <div style="display: flex; flex-wrap: wrap; gap: 8px; font-size: 0.75rem;">
-                                            <label style="display: flex; align-items: center; gap: 2px;"><input type="checkbox" value="1" class="grp-sched-msg-day-cb" checked> Sen</label>
-                                            <label style="display: flex; align-items: center; gap: 2px;"><input type="checkbox" value="2" class="grp-sched-msg-day-cb" checked> Sel</label>
-                                            <label style="display: flex; align-items: center; gap: 2px;"><input type="checkbox" value="3" class="grp-sched-msg-day-cb" checked> Rab</label>
-                                            <label style="display: flex; align-items: center; gap: 2px;"><input type="checkbox" value="4" class="grp-sched-msg-day-cb" checked> Kam</label>
-                                            <label style="display: flex; align-items: center; gap: 2px;"><input type="checkbox" value="5" class="grp-sched-msg-day-cb" checked> Jum</label>
-                                            <label style="display: flex; align-items: center; gap: 2px;"><input type="checkbox" value="6" class="grp-sched-msg-day-cb" checked> Sab</label>
-                                            <label style="display: flex; align-items: center; gap: 2px;"><input type="checkbox" value="7" class="grp-sched-msg-day-cb" checked> Min</label>
-                                        </div>
-                                    </div>
-
-                                    <div>
-                                        <label style="font-size: 0.75rem;">Isi Pesan Terjadwal</label>
-                                        <textarea id="grp-sched-msg-content" placeholder="Contoh: Selamat siang kaka semua!..." rows="5" class="form-control" style="width: 100%; padding: 8px; border-radius: 6px; background: var(--bg-primary); color: var(--text-primary); border: 1px solid var(--border-color); resize: vertical; font-size: 0.82rem; min-height: 150px; height: 150px;"></textarea>
-                                    </div>
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                    <span style="font-weight: bold; font-size: 0.8rem;">⏰ Kirim Pesan Terjadwal Otomatis</span>
+                                    <button class="btn btn-secondary" type="button" onclick="window.addNewSchedMsgRow()" style="padding: 4px 10px; font-size: 0.72rem; min-height: auto; border-radius: 6px; cursor: pointer; display: inline-flex; align-items: center; gap: 4px;">
+                                        <i data-lucide="plus" style="width: 12px; height: 12px;"></i> Tambah
+                                    </button>
                                 </div>
+                                
+                                <div id="grp-sched-msg-list-container" style="display: flex; flex-direction: column; gap: 12px;">
+                                    <!-- Daftar pesan terjadwal akan dirender di sini -->
+                                </div>
+                            </div>
                             </div>
                         </div>
 

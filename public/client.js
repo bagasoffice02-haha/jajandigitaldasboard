@@ -1049,19 +1049,17 @@ window.selectGroup = async function(groupId) {
         toggleScheduleFields();
 
         // Scheduled Message
-        const schedMsg = selectedGroupConfig.scheduledMessage || { enabled: false, time: '12:00', activeDays: [1,2,3,4,5,6,7], message: '' };
-        document.getElementById('grp-sched-msg-enable').checked = schedMsg.enabled;
-        document.getElementById('grp-sched-msg-time').value = schedMsg.time || '12:00';
-        document.getElementById('grp-sched-msg-content').value = schedMsg.message || '';
+        const legacyMsg = selectedGroupConfig.scheduledMessage || { enabled: false, time: '12:00', activeDays: [1,2,3,4,5,6,7], message: '' };
+        let schedMessages = selectedGroupConfig.scheduledMessages || [];
         
-        // Sched active days checkboxes
-        const schedDays = schedMsg.activeDays || [1,2,3,4,5,6,7];
-        document.querySelectorAll('.grp-sched-msg-day-cb').forEach(cb => {
-            cb.checked = schedDays.includes(parseInt(cb.value, 10));
-        });
+        // Auto migrate legacy single scheduledMessage to the array
+        if (legacyMsg.enabled && legacyMsg.message && legacyMsg.message.trim() !== '' && schedMessages.length === 0) {
+            schedMessages.push(legacyMsg);
+            selectedGroupConfig.scheduledMessage = { enabled: false, time: '12:00', activeDays: [1,2,3,4,5,6,7], message: '' };
+        }
         
-        // Toggle sched message UI fields visibility
-        toggleSchedMsgFields();
+        selectedGroupConfig.scheduledMessages = schedMessages;
+        renderSchedMsgList(schedMessages);
 
         // Extra Triggers
         renderExtraTriggersList(selectedGroupConfig.extraTriggers || []);
@@ -1493,17 +1491,30 @@ window.saveGroupConfiguration = async function() {
         activeDays
     };
 
-    // Scheduled Message
-    const schedDays = [];
-    document.querySelectorAll('.grp-sched-msg-day-cb:checked').forEach(cb => {
-        schedDays.push(parseInt(cb.value, 10));
+    // Multiple Scheduled Messages
+    const scheduledMessages = [];
+    document.querySelectorAll('.grp-sched-msg-row').forEach(row => {
+        const enabled = row.querySelector('.grp-sched-msg-row-enable').checked;
+        const time = row.querySelector('.grp-sched-msg-row-time').value;
+        const message = row.querySelector('.grp-sched-msg-row-content').value.trim();
+        
+        const activeDays = [];
+        row.querySelectorAll('.grp-sched-msg-row-day-cb:checked').forEach(cb => {
+            activeDays.push(parseInt(cb.value, 10));
+        });
+        
+        if (message) {
+            scheduledMessages.push({
+                enabled,
+                time,
+                message,
+                activeDays
+            });
+        }
     });
-    const scheduledMessage = {
-        enabled: document.getElementById('grp-sched-msg-enable').checked,
-        time: document.getElementById('grp-sched-msg-time').value,
-        message: document.getElementById('grp-sched-msg-content').value.trim(),
-        activeDays: schedDays
-    };
+    
+    // For backwards compatibility: keep dummy single scheduledMessage payload
+    const scheduledMessage = scheduledMessages.length > 0 ? scheduledMessages[0] : { enabled: false, time: '12:00', activeDays: [], message: '' };
     
     // Extra Triggers
     const extraTriggers = [];
@@ -1544,6 +1555,7 @@ window.saveGroupConfiguration = async function() {
         goodbyeMessage,
         autoCloseSchedule,
         scheduledMessage,
+        scheduledMessages,
         extraTriggers,
         paymentType,
         paymentMedia,
@@ -1671,6 +1683,8 @@ window.applyCloneConfig = async function() {
         selectedGroupConfig.contentFooter = sourceConfig.contentFooter || '';
         selectedGroupConfig.allowedKnowledgeFiles = JSON.parse(JSON.stringify(sourceConfig.allowedKnowledgeFiles || []));
         selectedGroupConfig.menuTree = JSON.parse(JSON.stringify(sourceConfig.menuTree));
+        selectedGroupConfig.scheduledMessages = JSON.parse(JSON.stringify(sourceConfig.scheduledMessages || []));
+        renderSchedMsgList(selectedGroupConfig.scheduledMessages);
         
         // Perbarui UI form
         document.getElementById('grp-ai-fallback').checked = selectedGroupConfig.useAiFallback;
@@ -1712,14 +1726,144 @@ window.toggleScheduleFields = function() {
     }
 };
 
-window.toggleSchedMsgFields = function() {
-    const isEnabled = document.getElementById('grp-sched-msg-enable').checked;
-    const fields = document.getElementById('grp-sched-msg-fields');
-    if (fields) {
-        if (isEnabled) {
-            fields.classList.remove('hidden');
+window.renderSchedMsgList = function(scheds = []) {
+    const list = document.getElementById('grp-sched-msg-list-container');
+    if (!list) return;
+    list.innerHTML = '';
+    
+    if (scheds.length === 0) {
+        list.innerHTML = `<p style="color: var(--text-secondary); font-size: 0.75rem; text-align: center; margin: 10px 0;">Belum ada pesan terjadwal. Klik tombol Tambah di atas.</p>`;
+        return;
+    }
+    
+    scheds.forEach((s, idx) => {
+        const item = document.createElement('div');
+        item.style = 'border: 1px solid var(--border-color); border-radius: 8px; padding: 12px; background: rgba(0,0,0,0.15); display: flex; flex-direction: column; gap: 8px;';
+        item.className = 'grp-sched-msg-row';
+        
+        // Days check
+        const activeDays = s.activeDays || [1, 2, 3, 4, 5, 6, 7];
+        const daysHtml = [
+            { v: 1, n: 'Sen' }, { v: 2, n: 'Sel' }, { v: 3, n: 'Rab' },
+            { v: 4, n: 'Kam' }, { v: 5, n: 'Jum' }, { v: 6, n: 'Sab' },
+            { v: 7, n: 'Min' }
+        ].map(d => {
+            const checked = activeDays.includes(d.v) ? 'checked' : '';
+            return `<label style="display: flex; align-items: center; gap: 2px;"><input type="checkbox" value="${d.v}" class="grp-sched-msg-row-day-cb" ${checked}> ${d.n}</label>`;
+        }).join('');
+
+        item.innerHTML = `
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px dashed var(--border-color); padding-bottom: 6px; margin-bottom: 4px;">
+                <span style="font-size: 0.75rem; font-weight: bold; color: var(--text-secondary);">Jadwal #${idx + 1}</span>
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <label class="checkbox-container" style="font-size: 0.72rem; display: flex; align-items: center; gap: 4px; font-weight: normal; margin-bottom: 0;">
+                        <input type="checkbox" class="grp-sched-msg-row-enable" ${s.enabled ? 'checked' : ''}>
+                        <span>Aktif</span>
+                    </label>
+                    <button type="button" class="btn btn-secondary btn-icon" onclick="deleteSchedMsgRow(this)" style="padding: 4px; min-height: auto; color: #ff453a; border-color: rgba(255,69,58,0.2); background: transparent;">
+                        <i data-lucide="trash" style="width: 12px; height: 12px;"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <div style="display: flex; gap: 10px;">
+                <div style="flex: 1;">
+                    <label style="font-size: 0.7rem; color: var(--text-secondary);">Waktu Pengiriman (HH:MM)</label>
+                    <input type="time" class="form-control grp-sched-msg-row-time" value="${s.time || '12:00'}" style="width: 100%; padding: 6px; background: var(--bg-primary); color: var(--text-primary); border: 1px solid var(--border-color); font-size: 0.82rem; height: 30px; border-radius: 6px;">
+                </div>
+            </div>
+            
+            <div>
+                <label style="font-size: 0.7rem; color: var(--text-secondary); display: block; margin-bottom: 4px;">Hari Aktif</label>
+                <div style="display: flex; flex-wrap: wrap; gap: 8px; font-size: 0.7rem;">
+                    ${daysHtml}
+                </div>
+            </div>
+            
+            <div>
+                <label style="font-size: 0.7rem; color: var(--text-secondary);">Isi Pesan Terjadwal</label>
+                <textarea class="form-control grp-sched-msg-row-content" placeholder="Contoh: Selamat siang kaka semua!..." rows="4" style="width: 100%; padding: 8px; border-radius: 6px; background: var(--bg-primary); color: var(--text-primary); border: 1px solid var(--border-color); resize: vertical; font-size: 0.82rem; min-height: 100px; height: 100px;">${s.message || ''}</textarea>
+            </div>
+        `;
+        list.appendChild(item);
+    });
+    
+    if (window.lucide) lucide.createIcons();
+};
+
+window.addNewSchedMsgRow = function() {
+    const list = document.getElementById('grp-sched-msg-list-container');
+    if (!list) return;
+    
+    // Remove placeholder if present
+    if (list.querySelector('p')) {
+        list.innerHTML = '';
+    }
+    
+    const idx = list.querySelectorAll('.grp-sched-msg-row').length;
+    const item = document.createElement('div');
+    item.style = 'border: 1px solid var(--border-color); border-radius: 8px; padding: 12px; background: rgba(0,0,0,0.15); display: flex; flex-direction: column; gap: 8px;';
+    item.className = 'grp-sched-msg-row';
+    
+    const daysHtml = [
+        { v: 1, n: 'Sen' }, { v: 2, n: 'Sel' }, { v: 3, n: 'Rab' },
+        { v: 4, n: 'Kam' }, { v: 5, n: 'Jum' }, { v: 6, n: 'Sab' },
+        { v: 7, n: 'Min' }
+    ].map(d => {
+        return `<label style="display: flex; align-items: center; gap: 2px;"><input type="checkbox" value="${d.v}" class="grp-sched-msg-row-day-cb" checked> ${d.n}</label>`;
+    }).join('');
+
+    item.innerHTML = `
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px dashed var(--border-color); padding-bottom: 6px; margin-bottom: 4px;">
+            <span style="font-size: 0.75rem; font-weight: bold; color: var(--text-secondary);">Jadwal #${idx + 1}</span>
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <label class="checkbox-container" style="font-size: 0.72rem; display: flex; align-items: center; gap: 4px; font-weight: normal; margin-bottom: 0;">
+                    <input type="checkbox" class="grp-sched-msg-row-enable" checked>
+                    <span>Aktif</span>
+                </label>
+                <button type="button" class="btn btn-secondary btn-icon" onclick="deleteSchedMsgRow(this)" style="padding: 4px; min-height: auto; color: #ff453a; border-color: rgba(255,69,58,0.2); background: transparent;">
+                    <i data-lucide="trash" style="width: 12px; height: 12px;"></i>
+                </button>
+            </div>
+        </div>
+        
+        <div style="display: flex; gap: 10px;">
+            <div style="flex: 1;">
+                <label style="font-size: 0.7rem; color: var(--text-secondary);">Waktu Pengiriman (HH:MM)</label>
+                <input type="time" class="form-control grp-sched-msg-row-time" value="12:00" style="width: 100%; padding: 6px; background: var(--bg-primary); color: var(--text-primary); border: 1px solid var(--border-color); font-size: 0.82rem; height: 30px; border-radius: 6px;">
+            </div>
+        </div>
+        
+        <div>
+            <label style="font-size: 0.7rem; color: var(--text-secondary); display: block; margin-bottom: 4px;">Hari Aktif</label>
+            <div style="display: flex; flex-wrap: wrap; gap: 8px; font-size: 0.7rem;">
+                ${daysHtml}
+            </div>
+        </div>
+        
+        <div>
+            <label style="font-size: 0.7rem; color: var(--text-secondary);">Isi Pesan Terjadwal</label>
+            <textarea class="form-control grp-sched-msg-row-content" placeholder="Contoh: Selamat siang kaka semua!..." rows="4" style="width: 100%; padding: 8px; border-radius: 6px; background: var(--bg-primary); color: var(--text-primary); border: 1px solid var(--border-color); resize: vertical; font-size: 0.82rem; min-height: 100px; height: 100px;"></textarea>
+        </div>
+    `;
+    list.appendChild(item);
+    if (window.lucide) lucide.createIcons();
+};
+
+window.deleteSchedMsgRow = function(btn) {
+    const row = btn.closest('.grp-sched-msg-row');
+    if (row) {
+        row.remove();
+        
+        const list = document.getElementById('grp-sched-msg-list-container');
+        const rows = list.querySelectorAll('.grp-sched-msg-row');
+        if (rows.length === 0) {
+            list.innerHTML = `<p style="color: var(--text-secondary); font-size: 0.75rem; text-align: center; margin: 10px 0;">Belum ada pesan terjadwal. Klik tombol Tambah di atas.</p>`;
         } else {
-            fields.classList.add('hidden');
+            rows.forEach((r, idx) => {
+                const label = r.querySelector('span');
+                if (label) label.textContent = `Jadwal #${idx + 1}`;
+            });
         }
     }
 };
