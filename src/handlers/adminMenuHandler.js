@@ -76,12 +76,11 @@ async function handleAdminMenuMessage(msg, {
                             `2️⃣ 🔓 *Buka Toko* (Semua Grup)\n` +
                             `3️⃣ 🔒 *Tutup Toko* (Semua Grup)\n` +
                             `4️⃣ 📦 *Kelola Status Stok Barang*\n` +
-                            `5️⃣ 📣 *Kirim Broadcast / Siaran Massal*\n` +
-                            `6️⃣ 👥 *Lihat Daftar Pelanggan*\n` +
-                            `7️⃣ ➕ *Tambah Trigger Kata Kunci Baru* (Semua Grup)\n` +
-                            `8️⃣ 📝 *Update Panduan & Aturan Bot*\n` +
-                            `9️⃣ 🛍️ *Tambah Produk ke Menu*\n` +
-                            `🔟 ✏️ *Edit / Hapus Produk Menu*\n\n` +
+                            `5️⃣ 👥 *Lihat Daftar Pelanggan*\n` +
+                            `6️⃣ ➕ *Tambah Trigger Kata Kunci Baru* (Semua Grup)\n` +
+                            `7️⃣ 📝 *Update Panduan & Aturan Bot*\n` +
+                            `8️⃣ 🛍️ *Tambah Produk ke Menu*\n` +
+                            `9️⃣ ✏️ *Edit / Hapus Produk Menu*\n\n` +
                             `_Ketik *batal* untuk keluar dari menu admin._`;
         await msg.reply(adminMenuText);
         return true; // handled
@@ -122,24 +121,32 @@ async function handleAdminMenuMessage(msg, {
                 return true;
             } else if (userMessage === '2') {
                 let successCount = 0;
-                for (const gId of Object.keys(gConfigs)) {
+                const groupIds2 = Object.keys(gConfigs);
+                for (let gi = 0; gi < groupIds2.length; gi++) {
+                    const gId = groupIds2[gi];
                     try {
                         await setMessagesAdminsOnly(clientInstance, gId, false);
                         await clientInstance.sendMessage(gId, "🔔 *Pemberitahuan:* Toko telah dibuka kembali. Grup dibuka untuk umum!");
                         successCount++;
                     } catch (err) { console.error(`Gagal membuka grup ${gId}:`, err.message); }
+                    // Delay antar grup agar tidak terdeteksi spam oleh WhatsApp
+                    if (gi < groupIds2.length - 1) await new Promise(r => setTimeout(r, 5000));
                 }
                 global.adminMenuStates.delete(senderId);
                 await msg.reply(`🔓 Toko dibuka! Berhasil membuka ${successCount} grup.`);
                 return true;
             } else if (userMessage === '3') {
                 let successCount = 0;
-                for (const gId of Object.keys(gConfigs)) {
+                const groupIds3 = Object.keys(gConfigs);
+                for (let gi = 0; gi < groupIds3.length; gi++) {
+                    const gId = groupIds3[gi];
                     try {
                         await setMessagesAdminsOnly(clientInstance, gId, true);
                         await clientInstance.sendMessage(gId, "🔔 *Pemberitahuan:* Toko telah ditutup. Hanya Admin yang dapat mengirim pesan.");
                         successCount++;
                     } catch (err) { console.error(`Gagal menutup grup ${gId}:`, err.message); }
+                    // Delay antar grup agar tidak terdeteksi spam oleh WhatsApp
+                    if (gi < groupIds3.length - 1) await new Promise(r => setTimeout(r, 5000));
                 }
                 global.adminMenuStates.delete(senderId);
                 await msg.reply(`🔒 Toko ditutup! Berhasil mengunci ${successCount} grup.`);
@@ -162,10 +169,6 @@ async function handleAdminMenuMessage(msg, {
                 await msg.reply(replyText);
                 return true;
             } else if (userMessage === '5') {
-                adminSession.step = 'broadcast_input';
-                await msg.reply("📣 *KIRIM BROADCAST MASSAL*\n\nSilakan ketik pesan siaran yang ingin dikirimkan ke seluruh grup aktif:\n\n_Ketik *batal* untuk membatalkan._");
-                return true;
-            } else if (userMessage === '6') {
                 let replyText = "👥 *DAFTAR PELANGGAN TOKO:*\n\n";
                 if (shopData.customers && shopData.customers.length > 0) {
                     shopData.customers.forEach((c, idx) => { replyText += `${idx + 1}. *${c.name}* (${c.phone})\n`; });
@@ -175,18 +178,18 @@ async function handleAdminMenuMessage(msg, {
                 global.adminMenuStates.delete(senderId);
                 await msg.reply(replyText);
                 return true;
-            } else if (userMessage === '7') {
+            } else if (userMessage === '6') {
                 adminSession.step = 'trigger_input';
                 await msg.reply("➕ *TAMBAH TRIGGER KATA KUNCI BARU*\n\nKetik pemicu dan respon:\n*[kata_kunci] | [respon_balasan]*\n\nContoh: *alamat | Toko kami berlokasi di Jl. Melati No. 5.*\n\n_Ketik *batal* untuk membatalkan._");
                 return true;
-            } else if (userMessage === '8') {
+            } else if (userMessage === '7') {
                 const memPath = path.join(__dirname, '../../knowledge', '00_memori_otomatis.txt');
                 let currentMem = '';
                 try { currentMem = fs.existsSync(memPath) ? fs.readFileSync(memPath, 'utf-8').trim() : '(Kosong)'; } catch(_) {}
                 adminSession.step = 'panduan_input';
                 await msg.reply(`📝 *UPDATE PANDUAN & ATURAN BOT*\n\nPanduan saat ini:\n_${currentMem || '(Kosong)'}_ \n\nKetik panduan/aturan bot yang baru untuk menggantikannya.\n\n_Ketik *batal* untuk membatalkan._`);
                 return true;
-            } else if (userMessage === '9') {
+            } else if (userMessage === '8') {
                 const groupIds = Object.keys(gConfigs);
                 if (groupIds.length === 0) {
                     await msg.reply("⚠️ Belum ada grup WA yang dikonfigurasi. Tambahkan grup dulu lewat dashboard web.");
@@ -208,7 +211,7 @@ async function handleAdminMenuMessage(msg, {
                 listText9 += `\n_Ketik *batal* untuk membatalkan._`;
                 await msg.reply(listText9);
                 return true;
-            } else if (userMessage === '10') {
+            } else if (userMessage === '9') {
                 const groupIds = Object.keys(gConfigs);
                 if (groupIds.length === 0) {
                     await msg.reply("⚠️ Belum ada grup WA yang dikonfigurasi.");
@@ -387,18 +390,10 @@ async function handleAdminMenuMessage(msg, {
             return true;
         }
         
-        // BROADCAST_INPUT STEP
+        // BROADCAST_INPUT STEP — DINONAKTIFKAN
         if (adminSession.step === 'broadcast_input') {
-            const broadcastText = userMessage.trim();
-            const activeGroupIds = Object.keys(gConfigs).filter(id => gConfigs[id].enabled);
-            if (activeGroupIds.length === 0) { await msg.reply("⚠️ Tidak ada grup aktif."); global.adminMenuStates.delete(senderId); return true; }
-            let successCount = 0;
-            for (const gId of activeGroupIds) {
-                try { await clientInstance.sendMessage(gId, broadcastText); successCount++; }
-                catch (err) { console.error(`Gagal broadcast admin ke ${gId}:`, err.message); }
-            }
             global.adminMenuStates.delete(senderId);
-            await msg.reply(`📣 Broadcast berhasil terkirim ke ${successCount} dari ${activeGroupIds.length} grup aktif!`);
+            await msg.reply("🚫 Fitur broadcast telah dinonaktifkan untuk melindungi akun WhatsApp dari risiko pemblokiran.");
             return true;
         }
         

@@ -147,7 +147,8 @@ router.post('/action', async (req, res) => {
         const activeGroupIds = Object.keys(gConfigs).filter(id => gConfigs[id].enabled);
         let count = 0;
         const shouldAdminsOnly = action !== 'buka';
-        for (const gid of activeGroupIds) {
+        for (let gi = 0; gi < activeGroupIds.length; gi++) {
+            const gid = activeGroupIds[gi];
             try {
                 await setMessagesAdminsOnlyHelper(client, gid, shouldAdminsOnly);
                 const msgText = shouldAdminsOnly
@@ -158,6 +159,8 @@ router.post('/action', async (req, res) => {
             } catch(e) {
                 console.error(`Gagal kontrol grup ${gid} massal:`, e.message);
             }
+            // Delay 5 detik antar grup agar tidak terdeteksi spam oleh WhatsApp
+            if (gi < activeGroupIds.length - 1) await new Promise(r => setTimeout(r, 5000));
         }
         res.json({ success: true, count });
     } catch(err) {

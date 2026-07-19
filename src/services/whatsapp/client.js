@@ -342,29 +342,35 @@ function createNewClient(io) {
         puppeteer: puppeteerOptions
     });
 
-    // Override sendMessage — random read 1-2s + random typing 2-5s agar mirip manusia
+    // Override sendMessage — random read 1-2s + random typing 2-5s (hanya untuk DM, bukan grup)
     const originalSendMessage = client.sendMessage.bind(client);
     client.sendMessage = async function(chatId, content, options) {
+        const isGroupChat = typeof chatId === 'string' && chatId.endsWith('@g.us');
+
         try {
-            const chat = await client.getChatById(chatId);
+            // Typing & read indicator hanya untuk DM (bukan grup)
+            // Di grup: typing muncul ke semua anggota = terlihat seperti bot
+            if (!isGroupChat) {
+                const chat = await client.getChatById(chatId);
 
-            // 1. Fase Read — random 1000–2000ms
-            try { await chat.sendSeen(); } catch (_) {}
-            const readDelay = 1000 + Math.floor(Math.random() * 1000);
-            await new Promise(resolve => setTimeout(resolve, readDelay));
+                // 1. Fase Read — random 1000–2000ms
+                try { await chat.sendSeen(); } catch (_) {}
+                const readDelay = 1000 + Math.floor(Math.random() * 1000);
+                await new Promise(resolve => setTimeout(resolve, readDelay));
 
-            // 2. Fase Typing — random 2000–5000ms
-            try { await chat.sendStateTyping(); } catch (_) {}
-            const typingDelay = 2000 + Math.floor(Math.random() * 3000);
-            await new Promise(resolve => setTimeout(resolve, typingDelay));
+                // 2. Fase Typing — random 2000–5000ms
+                try { await chat.sendStateTyping(); } catch (_) {}
+                const typingDelay = 2000 + Math.floor(Math.random() * 3000);
+                await new Promise(resolve => setTimeout(resolve, typingDelay));
 
-            // Hentikan typing state
-            try { await chat.clearState(); } catch (_) {}
+                // Hentikan typing state
+                try { await chat.clearState(); } catch (_) {}
+            }
         } catch (err) {
             console.warn('[Anti-Ban Delay Warning] Gagal simulasi read/typing:', err.message);
         }
 
-        // 3. Kirim pesan asli
+        // Kirim pesan asli
         return await originalSendMessage(chatId, content, options);
     };
     
