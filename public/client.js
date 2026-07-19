@@ -1461,7 +1461,7 @@ function removeNodeFromTree(parentNode, targetId) {
 }
 
 // Simpan Konfigurasi Grup & Menu Tree ke Server
-window.saveGroupConfiguration = async function() {
+window.saveGroupConfiguration = async function(showAlert = true, refreshGroupList = true) {
     if (!selectedGroupId || !selectedGroupConfig) return;
     
     const enabled = document.getElementById('grp-enabled').checked;
@@ -1572,8 +1572,8 @@ window.saveGroupConfiguration = async function() {
         });
         
         if (res.ok) {
-            alert('Konfigurasi grup berhasil disimpan!');
-            loadGroupsList(); // Refresh keaktifan status di sidebar
+            if (showAlert) alert('Konfigurasi grup berhasil disimpan!');
+            if (refreshGroupList) loadGroupsList(); // Refresh keaktifan status di sidebar
         } else {
             const txt = await res.text();
             alert('Gagal menyimpan konfigurasi: ' + txt);
@@ -3283,8 +3283,8 @@ async function qeUpdateStatus(nodeId, newStatus) {
     const node = _findNodeInTree(selectedGroupConfig.menuTree, nodeId);
     if (!node) return;
     node.status = newStatus;
-    await saveGroupConfiguration();
     renderQuickEditList();
+    await saveGroupConfiguration(false, false);
 }
 
 async function qeTogglePromo(nodeId) {
@@ -3292,8 +3292,8 @@ async function qeTogglePromo(nodeId) {
     const node = _findNodeInTree(selectedGroupConfig.menuTree, nodeId);
     if (!node) return;
     node.isPromo = !node.isPromo;
-    await saveGroupConfiguration();
     renderQuickEditList();
+    await saveGroupConfiguration(false, false);
 }
 
 function qeOpenEdit(nodeId) {
@@ -3313,8 +3313,8 @@ async function qeSaveEdit(nodeId) {
     const descEl = document.getElementById(`qe-desc-${nodeId}`);
     if (nameEl && nameEl.value.trim()) node.name = nameEl.value.trim();
     if (descEl) node.text = descEl.value.trim();
-    await saveGroupConfiguration();
     renderQuickEditList();
+    await saveGroupConfiguration(false, false);
 }
 
 async function qeDeleteProduct(nodeId, productName) {
@@ -3327,8 +3327,8 @@ async function qeDeleteProduct(nodeId, productName) {
         return tree.children.some(c => del(c, id));
     };
     del(selectedGroupConfig.menuTree, nodeId);
-    await saveGroupConfiguration();
     renderQuickEditList();
+    await saveGroupConfiguration(false, false);
 }
 
 window.logoutAdmin = async function() {
