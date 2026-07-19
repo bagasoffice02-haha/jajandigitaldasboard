@@ -1321,11 +1321,7 @@
                     <!-- Lists -->
                     <button type="button" class="btn btn-secondary toolbar-btn" onclick="execEditorCommand('insertUnorderedList')" title="Bullet List" style="padding: 6px 8px; min-height: auto; width: auto; height: 32px; display: flex; align-items: center; justify-content: center;"><i data-lucide="list" style="width:14px; height:14px;"></i></button>
                     <button type="button" class="btn btn-secondary toolbar-btn" onclick="execEditorCommand('insertOrderedList')" title="Numbered List" style="padding: 6px 8px; min-height: auto; width: auto; height: 32px; display: flex; align-items: center; justify-content: center;"><i data-lucide="list-ordered" style="width:14px; height:14px;"></i></button>
-                    
-                    <span style="width: 1px; height: 20px; background: var(--border-color); margin: 0 4px;"></span>
-
-                    <!-- Alignment -->
-                    <button type="button" class="btn btn-secondary toolbar-btn" onclick="execEditorCommand('justifyLeft')" title="Rata Kiri" style="padding: 6px 8px; min-height: auto; width: auto; height: 32px; display: flex; align-items: center; justify-content: center;"><i data-lucide="align-left" style="width:14px; height:14px;"></i></button>
+<button type="button" class="btn btn-secondary toolbar-btn" onclick="execEditorCommand('justifyLeft')" title="Rata Kiri" style="padding: 6px 8px; min-height: auto; width: auto; height: 32px; display: flex; align-items: center; justify-content: center;"><i data-lucide="align-left" style="width:14px; height:14px;"></i></button>
                     <button type="button" class="btn btn-secondary toolbar-btn" onclick="execEditorCommand('justifyCenter')" title="Rata Tengah" style="padding: 6px 8px; min-height: auto; width: auto; height: 32px; display: flex; align-items: center; justify-content: center;"><i data-lucide="align-center" style="width:14px; height:14px;"></i></button>
                     <button type="button" class="btn btn-secondary toolbar-btn" onclick="execEditorCommand('justifyRight')" title="Rata Kanan" style="padding: 6px 8px; min-height: auto; width: auto; height: 32px; display: flex; align-items: center; justify-content: center;"><i data-lucide="align-right" style="width:14px; height:14px;"></i></button>
                     
@@ -1349,208 +1345,275 @@
          TAB 3 — SETTINGS
     ══════════════════════════════════════════ -->
     <div id="tab-settings" class="tab-content hidden">
-        <main class="dashboard-grid settings-grid">
+        <main class="dashboard-grid settings-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
 
-            <!-- PANEL KIRI: Bot Config -->
-            <section class="panel panel-left card form-card">
-                <h2><i data-lucide="sliders-horizontal"></i> Konfigurasi Bot</h2>
-                <p class="card-subtitle">Sesuaikan penyedia AI dan parameter asisten Anda</p>
+            <!-- KOLOM KIRI: Konfigurasi Utama & Restore Backup -->
+            <div style="display: flex; flex-direction: column; gap: 20px;">
+                
+                <!-- 🧠 Konfigurasi Utama -->
+                <section class="panel card form-card" style="margin: 0;">
+                    <h2><i data-lucide="sliders-horizontal"></i> Konfigurasi Bot</h2>
+                    <p class="card-subtitle">Sesuaikan penyedia AI dan parameter asisten Anda</p>
 
-                <form id="config-form" class="settings-form" style="display: flex; flex-direction: column; gap: 12px; flex: 1;">
-                    <!-- Sub-tabs button control inside Global Bot Settings -->
-                    <div class="global-settings-tabs" style="display: flex; gap: 4px; background: rgba(0, 0, 0, 0.15); padding: 3px; border-radius: 8px; margin-bottom: 10px; border: 1px solid var(--border-color); flex-shrink: 0;">
-                        <button type="button" class="global-tab-btn active" onclick="window.switchGlobalSettingsTab('ai')" style="flex: 1; background: none; border: none; padding: 6px; font-size: 0.72rem; font-weight: 600; color: var(--text-secondary); border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px;">
-                            <i data-lucide="cpu" style="width: 12px; height: 12px;"></i> Koneksi AI
+                    <form id="config-form" class="settings-form" style="display: flex; flex-direction: column; gap: 12px; flex: 1;">
+                        <!-- Sub-tabs button control inside Global Bot Settings -->
+                        <div class="global-settings-tabs" style="display: flex; gap: 4px; background: rgba(0, 0, 0, 0.15); padding: 3px; border-radius: 8px; margin-bottom: 10px; border: 1px solid var(--border-color); flex-shrink: 0;">
+                            <button type="button" class="global-tab-btn active" onclick="window.switchGlobalSettingsTab('ai')" style="flex: 1; background: none; border: none; padding: 6px; font-size: 0.72rem; font-weight: 600; color: var(--text-secondary); border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px;">
+                                <i data-lucide="cpu" style="width: 12px; height: 12px;"></i> Koneksi AI
+                            </button>
+                            <button type="button" class="global-tab-btn" onclick="window.switchGlobalSettingsTab('features')" style="flex: 1; background: none; border: none; padding: 6px; font-size: 0.72rem; font-weight: 600; color: var(--text-secondary); border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px;">
+                                <i data-lucide="sliders" style="width: 12px; height: 12px;"></i> Fitur Keaktifan
+                            </button>
+                            <button type="button" class="global-tab-btn" onclick="window.switchGlobalSettingsTab('prompt')" style="flex: 1; background: none; border: none; padding: 6px; font-size: 0.72rem; font-weight: 600; color: var(--text-secondary); border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px;">
+                                <i data-lucide="scroll-text" style="width: 12px; height: 12px;"></i> Prompt
+                            </button>
+                        </div>
+
+                        <!-- TAB 1: KONEKSI AI -->
+                        <div id="global-sec-ai" class="global-settings-section" style="display: flex; flex-direction: column; gap: 12px;">
+                            <!-- Provider -->
+                            <div class="form-group">
+                                <label for="cfg-provider">Penyedia AI (AI Provider)</label>
+                                <select id="cfg-provider" onchange="toggleProviderFields()" style="width: 100%; padding: 6px 10px; font-size: 0.82rem; background: var(--bg-primary); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 6px; height: 32px;">
+                                    <option value="gemini">Google Gemini API</option>
+                                    <option value="local">LM Studio (Lokal)</option>
+                                    <option value="groq">Groq API</option>
+                                    <option value="deepseek">DeepSeek API</option>
+                                    <option value="qwen">Alibaba DashScope (Qwen)</option>
+                                    <option value="openrouter">OpenRouter (Llama/Qwen/dll)</option>
+                                </select>
+                            </div>
+
+                            <!-- Gemini -->
+                            <div id="group-gemini-settings">
+                                <div class="form-group">
+                                    <label for="cfg-gemini-api-keys">Stok Gemini API Keys (Satu Key Per Baris)</label>
+                                    <textarea id="cfg-gemini-api-keys" rows="4" placeholder="Masukkan Google Gemini API Keys Anda (satu per baris)…" class="form-control" style="width: 100%; padding: 8px; border-radius: 6px; font-size: 0.82rem; background: var(--bg-primary); color: var(--text-primary); border: 1px solid var(--border-color); font-family: monospace;"></textarea>
+                                    <small style="color: var(--text-secondary); font-size: 0.65rem; display: block; margin-top: 2px;">Bot akan rotasi otomatis (round-robin) jika ada key yang limit.</small>
+                                </div>
+                                <div class="form-group" style="margin-top:10px;">
+                                    <label for="cfg-gemini-model">Model Gemini</label>
+                                    <input type="text" id="cfg-gemini-model" placeholder="gemini-2.5-flash" class="form-control" style="width: 100%; padding: 6px 10px; font-size: 0.82rem; background: var(--bg-primary); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 6px; height: 32px;">
+                                    <small style="color: var(--text-secondary); font-size: 0.65rem; display: block; margin-top: 2px;">Rekomendasi: <code>gemini-2.5-flash</code> (cepat &amp; hemat)</small>
+                                </div>
+                            </div>
+
+                            <!-- LM Studio -->
+                            <div id="group-local-settings" class="hidden">
+                                <div class="form-group">
+                                    <label for="cfg-api-url">URL API Local Server</label>
+                                    <input type="text" id="cfg-api-url" placeholder="http://localhost:1234/v1/chat/completions" class="form-control" style="width: 100%; padding: 6px 10px; font-size: 0.82rem; background: var(--bg-primary); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 6px; height: 32px;">
+                                </div>
+                                <div class="form-group" style="margin-top:10px;">
+                                    <label for="cfg-model-name">Nama Model (Sesuai di LM Studio)</label>
+                                    <input type="text" id="cfg-model-name" placeholder="qwen3.5-9b" class="form-control" style="width: 100%; padding: 6px 10px; font-size: 0.82rem; background: var(--bg-primary); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 6px; height: 32px;">
+                                </div>
+                                <div class="form-group" style="margin-top:10px;">
+                                    <label for="cfg-api-key">API Key (Opsional)</label>
+                                    <input type="password" id="cfg-api-key" placeholder="Token autentikasi LM Studio…" class="form-control" style="width: 100%; padding: 6px 10px; font-size: 0.82rem; background: var(--bg-primary); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 6px; height: 32px;">
+                                </div>
+                            </div>
+
+                            <!-- Groq -->
+                            <div id="group-groq-settings" class="hidden">
+                                <div class="form-group">
+                                    <label for="cfg-groq-api-keys">Stok Groq API Keys (Satu Key Per Baris)</label>
+                                    <textarea id="cfg-groq-api-keys" rows="4" placeholder="Masukkan Groq API Keys Anda (satu per baris)&#10;gsk_xxxxx&#10;gsk_yyyyy&#10;gsk_zzzzz" class="form-control" style="width: 100%; padding: 8px; border-radius: 6px; font-size: 0.82rem; background: var(--bg-primary); color: var(--text-primary); border: 1px solid var(--border-color); font-family: monospace;"></textarea>
+                                    <small style="color: var(--text-secondary); font-size: 0.65rem; display: block; margin-top: 2px;">Bot akan rotasi otomatis (round-robin) jika ada key yang limit/error.</small>
+                                </div>
+                                <div class="form-group" style="margin-top:10px;">
+                                    <label for="cfg-groq-model">Model Groq</label>
+                                    <input type="text" id="cfg-groq-model" placeholder="llama-3.3-70b-versatile" class="form-control" style="width: 100%; padding: 6px 10px; font-size: 0.82rem; background: var(--bg-primary); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 6px; height: 32px;">
+                                    <small style="color: var(--text-secondary); font-size: 0.65rem; display: block; margin-top: 2px;">Contoh: <code>llama-3.3-70b-versatile</code></small>
+                                </div>
+                            </div>
+
+                            <!-- DeepSeek -->
+                            <div id="group-deepseek-settings" class="hidden">
+                                <div class="form-group">
+                                    <label for="cfg-deepseek-api-key">DeepSeek API Key</label>
+                                    <input type="password" id="cfg-deepseek-api-key" placeholder="sk-…" class="form-control" style="width: 100%; padding: 6px 10px; font-size: 0.82rem; background: var(--bg-primary); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 6px; height: 32px;">
+                                </div>
+                                <div class="form-group" style="margin-top:10px;">
+                                    <label for="cfg-deepseek-model">Model DeepSeek</label>
+                                    <input type="text" id="cfg-deepseek-model" placeholder="deepseek-chat" class="form-control" style="width: 100%; padding: 6px 10px; font-size: 0.82rem; background: var(--bg-primary); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 6px; height: 32px;">
+                                </div>
+                            </div>
+
+                            <!-- Qwen -->
+                            <div id="group-qwen-settings" class="hidden">
+                                <div class="form-group">
+                                    <label for="cfg-qwen-api-key">Alibaba DashScope (Qwen) API Key</label>
+                                    <input type="password" id="cfg-qwen-api-key" placeholder="sk-…" class="form-control" style="width: 100%; padding: 6px 10px; font-size: 0.82rem; background: var(--bg-primary); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 6px; height: 32px;">
+                                </div>
+                                <div class="form-group" style="margin-top:10px;">
+                                    <label for="cfg-qwen-model">Model Qwen</label>
+                                    <input type="text" id="cfg-qwen-model" placeholder="qwen-plus" class="form-control" style="width: 100%; padding: 6px 10px; font-size: 0.82rem; background: var(--bg-primary); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 6px; height: 32px;">
+                                </div>
+                            </div>
+
+                            <!-- OpenRouter -->
+                            <div id="group-openrouter-settings" class="hidden">
+                                <div class="form-group">
+                                    <label for="cfg-openrouter-api-key">OpenRouter API Key</label>
+                                    <input type="password" id="cfg-openrouter-api-key" placeholder="sk-or-…" class="form-control" style="width: 100%; padding: 6px 10px; font-size: 0.82rem; background: var(--bg-primary); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 6px; height: 32px;">
+                                </div>
+                                <div class="form-group" style="margin-top:10px;">
+                                    <label for="cfg-openrouter-model">Model OpenRouter</label>
+                                    <input type="text" id="cfg-openrouter-model" placeholder="meta-llama/llama-3.3-70b-instruct" class="form-control" style="width: 100%; padding: 6px 10px; font-size: 0.82rem; background: var(--bg-primary); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 6px; height: 32px;">
+                                </div>
+                            </div>
+
+                            <!-- Shared Settings -->
+                            <div class="form-group">
+                                <label for="cfg-max-tokens">Batas Maksimal Token</label>
+                                <input type="number" id="cfg-max-tokens" required min="100" max="4000" placeholder="1000" class="form-control" style="width: 100%; padding: 6px 10px; font-size: 0.82rem; background: var(--bg-primary); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 6px; height: 32px;">
+                                <small style="color: var(--text-secondary); font-size: 0.65rem; display: block; margin-top: 2px;">Token lebih banyak membantu model reasoning menyelesaikan jawaban panjang.</small>
+                            </div>
+                        </div>
+
+                        <!-- TAB 2: FITUR & KEAKTIFAN -->
+                        <div id="global-sec-features" class="global-settings-section hidden" style="display: flex; flex-direction: column; gap: 12px;">
+                            <h4 style="margin: 0; font-size: 0.82rem; color: var(--text-secondary); text-transform: uppercase; font-weight: 700; border-bottom: 1px solid var(--border-color); padding-bottom: 6px;">Respons AI Bot (AI Fallback)</h4>
+                            <div style="display: flex; flex-direction: column; gap: 8px;">
+                                <label class="switch-container">
+                                    <span style="font-size: 0.82rem; font-weight: 600; color: var(--text-primary);">Aktifkan AI Bot untuk Chat Grup</span>
+                                    <input type="checkbox" id="cfg-group-ai-enabled">
+                                </label>
+                                <label class="switch-container">
+                                    <span style="font-size: 0.82rem; font-weight: 600; color: var(--text-primary);">Aktifkan AI Bot untuk Chat Pribadi (PM)</span>
+                                    <input type="checkbox" id="cfg-private-ai-enabled">
+                                </label>
+                            </div>
+
+                            <h4 style="margin: 8px 0 0 0; font-size: 0.82rem; color: var(--text-secondary); text-transform: uppercase; font-weight: 700; border-bottom: 1px solid var(--border-color); padding-bottom: 6px;">Keaktifan Chatbot (Global)</h4>
+                            <div style="display: flex; flex-direction: column; gap: 8px;">
+                                <label class="switch-container">
+                                    <span style="font-size: 0.82rem; font-weight: 600; color: var(--text-primary);">Aktifkan Chatbot untuk Chat Grup (Semua Grup)</span>
+                                    <input type="checkbox" id="cfg-group-chat-bot-enabled">
+                                </label>
+                                <label class="switch-container">
+                                    <span style="font-size: 0.82rem; font-weight: 600; color: var(--text-primary);">Aktifkan Chatbot untuk Chat Pribadi (PM / Japri)</span>
+                                    <input type="checkbox" id="cfg-private-chat-bot-enabled">
+                                </label>
+                            </div>
+
+                            <div class="form-group" style="margin-top: 4px;">
+                                <label for="cfg-private-chat-sync-group-id" style="font-size: 0.78rem; font-weight: 600; margin-bottom: 4px; display: block;">Sinkronisasi Chat Pribadi dengan Grup</label>
+                                <select id="cfg-private-chat-sync-group-id" class="form-control" style="width: 100%; padding: 6px 10px; font-size: 0.82rem; background: var(--bg-primary); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 6px; height: 32px;">
+                                    <option value="">-- Pilih Grup Penyelaras --</option>
+                                </select>
+                            </div>
+
+                            <h4 style="margin: 8px 0 0 0; font-size: 0.82rem; color: var(--text-secondary); text-transform: uppercase; font-weight: 700; border-bottom: 1px solid var(--border-color); padding-bottom: 6px;">Auto-Kirim Kontak Toko (Auto Save)</h4>
+                            <div style="display: flex; flex-direction: column; gap: 10px;">
+                                <label class="switch-container">
+                                    <span style="font-size: 0.82rem; font-weight: 600; color: var(--text-primary);">Kirim Kontak ke Pelanggan Baru</span>
+                                    <input type="checkbox" id="cfg-auto-send-vcard">
+                                </label>
+                                <div class="form-group">
+                                    <label for="cfg-vcard-name" style="font-size: 0.78rem; font-weight: 600; display: block; margin-bottom: 4px;">Nama Kontak Bisnis (vCard Name)</label>
+                                    <input type="text" id="cfg-vcard-name" placeholder="CS Jajan Digital" class="form-control" style="width: 100%; padding: 6px 10px; font-size: 0.82rem; background: var(--bg-primary); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 6px; height: 32px;">
+                                </div>
+                            </div>
+
+                            <h4 style="margin: 8px 0 0 0; font-size: 0.82rem; color: var(--text-secondary); text-transform: uppercase; font-weight: 700; border-bottom: 1px solid var(--border-color); padding-bottom: 6px;">Akses Tunggal &amp; Laporan</h4>
+                            <div class="form-group">
+                                <label for="cfg-boss-number" style="font-size: 0.78rem; font-weight: 600;">Nomor WhatsApp Bos</label>
+                                <input type="text" id="cfg-boss-number" placeholder="Contoh: 628123456789" class="form-control" style="width: 100%; padding: 6px 10px; font-size: 0.82rem; background: var(--bg-primary); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 6px; height: 32px;">
+                                <small style="color: var(--text-secondary); font-size: 0.65rem; display: block; margin-top: 2px;">Jika diisi, bot hanya membalas nomor ini.</small>
+                            </div>
+                            <div class="form-group" style="margin-top: 4px;">
+                                <label for="cfg-report-time" style="font-size: 0.78rem; font-weight: 600;">Waktu Laporan Harian (HH:MM)</label>
+                                <input type="text" id="cfg-report-time" placeholder="Contoh: 08:00" class="form-control" style="width: 100%; padding: 6px 10px; font-size: 0.82rem; background: var(--bg-primary); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 6px; height: 32px;">
+                            </div>
+                        </div>
+
+                        <!-- TAB 3: PROMPT KEPRIBADIAN -->
+                        <div id="global-sec-prompt" class="global-settings-section hidden" style="display: flex; flex-direction: column; gap: 10px; flex: 1;">
+                            <div class="form-group" style="display: flex; flex-direction: column; flex: 1; min-height: 280px;">
+                                <label for="cfg-system-prompt" style="font-size: 0.78rem; font-weight: 600; display: block; margin-bottom: 4px;">Template Prompt Sistem (Kepribadian Asisten)</label>
+                                <textarea id="cfg-system-prompt" rows="12" placeholder="Tuliskan kepribadian dan panduan bot di sini…" class="form-control" style="width: 100%; padding: 8px; font-size: 0.82rem; resize: vertical; flex: 1; min-height: 260px; height: 320px; font-family: monospace; background: var(--bg-primary); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 6px;"></textarea>
+                                <small style="color: var(--text-secondary); font-size: 0.65rem; display: block; margin-top: 2px;">Wajib menyertakan <code>{KNOWLEDGE_BASE_CONTENT}</code> di bagian akhir.</small>
+                            </div>
+                        </div>
+
+                        <!-- Action Button at Bottom of card -->
+                        <button type="submit" class="btn btn-primary btn-block" style="margin-top: auto; padding: 10px; border-radius: 8px; cursor: pointer; flex-shrink: 0; font-weight: 600; font-size: 0.85rem;">
+                            <i data-lucide="save" style="width: 14px; height: 14px; display: inline-block; vertical-align: middle; margin-right: 4px;"></i> Simpan Konfigurasi
                         </button>
-                        <button type="button" class="global-tab-btn" onclick="window.switchGlobalSettingsTab('features')" style="flex: 1; background: none; border: none; padding: 6px; font-size: 0.72rem; font-weight: 600; color: var(--text-secondary); border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px;">
-                            <i data-lucide="sliders" style="width: 12px; height: 12px;"></i> Fitur Keaktifan
+                    </form>
+                </section>
+
+                <!-- 📤 Import / Restore Backup -->
+                <div class="card" style="margin: 0;">
+                    <h2><i data-lucide="upload-cloud"></i> Import / Restore Backup</h2>
+                    <p class="card-subtitle">Upload file backup (.zip) untuk memulihkan data ke server ini</p>
+
+                    <div style="display:flex; flex-direction:column; gap:14px; margin-top:16px;">
+                        <!-- Drop zone upload -->
+                        <div id="import-dropzone" style="border: 2px dashed var(--border-color, #ddd); border-radius: 12px; padding: 24px; text-align:center; cursor:pointer; transition: all 0.2s;"
+                             onclick="document.getElementById('import-file-input').click()"
+                             ondragover="event.preventDefault(); this.style.borderColor='#25d366'; this.style.background='rgba(37,211,102,0.05)'"
+                             ondragleave="this.style.borderColor=''; this.style.background=''"
+                             ondrop="handleImportDrop(event)">
+                            <i data-lucide="file-archive" style="width:40px; height:40px; color: var(--accent-color, #25d366); margin-bottom:10px;"></i>
+                            <p style="font-weight:600; margin-bottom:4px;">Klik atau seret file backup di sini</p>
+                            <p style="font-size:12px; color: var(--text-secondary, #888);">Format: .zip — Maks 500 MB</p>
+                            <input type="file" id="import-file-input" accept=".zip" style="display:none" onchange="handleImportFileSelect(this)">
+                        </div>
+
+                        <!-- File terpilih info -->
+                        <div id="import-file-info" style="display:none; background: var(--bg-secondary, #f5f5f5); border-radius:10px; padding:12px; font-size:13px;">
+                            <div style="display:flex; align-items:center; gap:8px;">
+                                <i data-lucide="file-zip" style="color:#25d366; width:18px; height:18px;"></i>
+                                <span id="import-file-name" style="font-weight:600;"></span>
+                                <span id="import-file-size" style="color:var(--text-secondary,#888); margin-left:auto;"></span>
+                            </div>
+                        </div>
+
+                        <!-- Opsi import sesi -->
+                        <label class="switch-container" style="background: var(--bg-secondary,#f5f5f5); border-radius:10px; padding: 10px; margin-bottom: 0;">
+                            <div>
+                                <strong style="font-size: 0.85rem; display: block; color: var(--text-primary);">Restore Sesi WhatsApp</strong>
+                                <span style="font-size:0.7rem; color:var(--text-secondary,#888); margin-top:2px; display: block;">Centang jika backup mengandung folder session (tidak perlu scan QR)</span>
+                            </div>
+                            <input type="checkbox" id="import-session-check">
+                        </label>
+
+                        <!-- Progress bar -->
+                        <div id="import-progress-wrap" style="display:none;">
+                            <div style="display:flex; justify-content:space-between; font-size:12px; margin-bottom:4px;">
+                                <span>Mengupload & memulihkan data...</span>
+                                <span id="import-progress-pct">0%</span>
+                            </div>
+                            <div style="background: var(--border-color,#eee); border-radius:99px; height:8px; overflow:hidden;">
+                                <div id="import-progress-bar" style="background: #25d366; height:100%; width:0%; transition: width 0.3s; border-radius:99px;"></div>
+                            </div>
+                        </div>
+
+                        <!-- Tombol import -->
+                        <button id="btn-do-import" class="btn btn-primary btn-block" onclick="doImport()" disabled style="opacity:0.5;">
+                            <i data-lucide="upload"></i> Mulai Restore Data
                         </button>
-                        <button type="button" class="global-tab-btn" onclick="window.switchGlobalSettingsTab('prompt')" style="flex: 1; background: none; border: none; padding: 6px; font-size: 0.72rem; font-weight: 600; color: var(--text-secondary); border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px;">
-                            <i data-lucide="scroll-text" style="width: 12px; height: 12px;"></i> Prompt
-                        </button>
-                    </div>
 
-                    <!-- TAB 1: KONEKSI AI -->
-                    <div id="global-sec-ai" class="global-settings-section" style="display: flex; flex-direction: column; gap: 12px;">
-                        <!-- Provider -->
-                        <div class="form-group">
-                            <label for="cfg-provider">Penyedia AI (AI Provider)</label>
-                            <select id="cfg-provider" onchange="toggleProviderFields()" style="width: 100%; padding: 6px 10px; font-size: 0.82rem; background: var(--bg-primary); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 6px; height: 32px;">
-                                <option value="gemini">Google Gemini API</option>
-                                <option value="local">LM Studio (Lokal)</option>
-                                <option value="groq">Groq API</option>
-                                <option value="deepseek">DeepSeek API</option>
-                                <option value="qwen">Alibaba DashScope (Qwen)</option>
-                                <option value="openrouter">OpenRouter (Llama/Qwen/dll)</option>
-                            </select>
-                        </div>
+                        <!-- Hasil import -->
+                        <div id="import-result" style="display:none; border-radius:10px; padding:12px; font-size:13px; line-height:1.7;"></div>
 
-                        <!-- Gemini -->
-                        <div id="group-gemini-settings">
-                            <div class="form-group">
-                                <label for="cfg-gemini-api-keys">Stok Gemini API Keys (Satu Key Per Baris)</label>
-                                <textarea id="cfg-gemini-api-keys" rows="4" placeholder="Masukkan Google Gemini API Keys Anda (satu per baris)…" class="form-control" style="width: 100%; padding: 8px; border-radius: 6px; font-size: 0.82rem; background: var(--bg-primary); color: var(--text-primary); border: 1px solid var(--border-color); font-family: monospace;"></textarea>
-                                <small style="color: var(--text-secondary); font-size: 0.65rem; display: block; margin-top: 2px;">Bot akan rotasi otomatis (round-robin) jika ada key yang limit.</small>
-                            </div>
-                            <div class="form-group" style="margin-top:10px;">
-                                <label for="cfg-gemini-model">Model Gemini</label>
-                                <input type="text" id="cfg-gemini-model" placeholder="gemini-2.5-flash" class="form-control" style="width: 100%; padding: 6px 10px; font-size: 0.82rem; background: var(--bg-primary); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 6px; height: 32px;">
-                                <small style="color: var(--text-secondary); font-size: 0.65rem; display: block; margin-top: 2px;">Rekomendasi: <code>gemini-2.5-flash</code> (cepat &amp; hemat)</small>
-                            </div>
-                        </div>
-
-                        <!-- LM Studio -->
-                        <div id="group-local-settings" class="hidden">
-                            <div class="form-group">
-                                <label for="cfg-api-url">URL API Local Server</label>
-                                <input type="text" id="cfg-api-url" placeholder="http://localhost:1234/v1/chat/completions" class="form-control" style="width: 100%; padding: 6px 10px; font-size: 0.82rem; background: var(--bg-primary); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 6px; height: 32px;">
-                            </div>
-                            <div class="form-group" style="margin-top:10px;">
-                                <label for="cfg-model-name">Nama Model (Sesuai di LM Studio)</label>
-                                <input type="text" id="cfg-model-name" placeholder="qwen3.5-9b" class="form-control" style="width: 100%; padding: 6px 10px; font-size: 0.82rem; background: var(--bg-primary); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 6px; height: 32px;">
-                            </div>
-                            <div class="form-group" style="margin-top:10px;">
-                                <label for="cfg-api-key">API Key (Opsional)</label>
-                                <input type="password" id="cfg-api-key" placeholder="Token autentikasi LM Studio…" class="form-control" style="width: 100%; padding: 6px 10px; font-size: 0.82rem; background: var(--bg-primary); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 6px; height: 32px;">
-                            </div>
-                        </div>
-
-                        <!-- Groq -->
-                        <div id="group-groq-settings" class="hidden">
-                            <div class="form-group">
-                                <label for="cfg-groq-api-keys">Stok Groq API Keys (Satu Key Per Baris)</label>
-                                <textarea id="cfg-groq-api-keys" rows="4" placeholder="Masukkan Groq API Keys Anda (satu per baris)&#10;gsk_xxxxx&#10;gsk_yyyyy&#10;gsk_zzzzz" class="form-control" style="width: 100%; padding: 8px; border-radius: 6px; font-size: 0.82rem; background: var(--bg-primary); color: var(--text-primary); border: 1px solid var(--border-color); font-family: monospace;"></textarea>
-                                <small style="color: var(--text-secondary); font-size: 0.65rem; display: block; margin-top: 2px;">Bot akan rotasi otomatis (round-robin) jika ada key yang limit/error.</small>
-                            </div>
-                            <div class="form-group" style="margin-top:10px;">
-                                <label for="cfg-groq-model">Model Groq</label>
-                                <input type="text" id="cfg-groq-model" placeholder="llama-3.3-70b-versatile" class="form-control" style="width: 100%; padding: 6px 10px; font-size: 0.82rem; background: var(--bg-primary); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 6px; height: 32px;">
-                                <small style="color: var(--text-secondary); font-size: 0.65rem; display: block; margin-top: 2px;">Contoh: <code>llama-3.3-70b-versatile</code></small>
-                            </div>
-                        </div>
-
-                        <!-- DeepSeek -->
-                        <div id="group-deepseek-settings" class="hidden">
-                            <div class="form-group">
-                                <label for="cfg-deepseek-api-key">DeepSeek API Key</label>
-                                <input type="password" id="cfg-deepseek-api-key" placeholder="sk-…" class="form-control" style="width: 100%; padding: 6px 10px; font-size: 0.82rem; background: var(--bg-primary); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 6px; height: 32px;">
-                            </div>
-                            <div class="form-group" style="margin-top:10px;">
-                                <label for="cfg-deepseek-model">Model DeepSeek</label>
-                                <input type="text" id="cfg-deepseek-model" placeholder="deepseek-chat" class="form-control" style="width: 100%; padding: 6px 10px; font-size: 0.82rem; background: var(--bg-primary); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 6px; height: 32px;">
-                            </div>
-                        </div>
-
-                        <!-- Qwen -->
-                        <div id="group-qwen-settings" class="hidden">
-                            <div class="form-group">
-                                <label for="cfg-qwen-api-key">Alibaba DashScope (Qwen) API Key</label>
-                                <input type="password" id="cfg-qwen-api-key" placeholder="sk-…" class="form-control" style="width: 100%; padding: 6px 10px; font-size: 0.82rem; background: var(--bg-primary); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 6px; height: 32px;">
-                            </div>
-                            <div class="form-group" style="margin-top:10px;">
-                                <label for="cfg-qwen-model">Model Qwen</label>
-                                <input type="text" id="cfg-qwen-model" placeholder="qwen-plus" class="form-control" style="width: 100%; padding: 6px 10px; font-size: 0.82rem; background: var(--bg-primary); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 6px; height: 32px;">
-                            </div>
-                        </div>
-
-                        <!-- OpenRouter -->
-                        <div id="group-openrouter-settings" class="hidden">
-                            <div class="form-group">
-                                <label for="cfg-openrouter-api-key">OpenRouter API Key</label>
-                                <input type="password" id="cfg-openrouter-api-key" placeholder="sk-or-…" class="form-control" style="width: 100%; padding: 6px 10px; font-size: 0.82rem; background: var(--bg-primary); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 6px; height: 32px;">
-                            </div>
-                            <div class="form-group" style="margin-top:10px;">
-                                <label for="cfg-openrouter-model">Model OpenRouter</label>
-                                <input type="text" id="cfg-openrouter-model" placeholder="meta-llama/llama-3.3-70b-instruct" class="form-control" style="width: 100%; padding: 6px 10px; font-size: 0.82rem; background: var(--bg-primary); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 6px; height: 32px;">
-                            </div>
-                        </div>
-
-                        <!-- Shared Settings -->
-                        <div class="form-group">
-                            <label for="cfg-max-tokens">Batas Maksimal Token</label>
-                            <input type="number" id="cfg-max-tokens" required min="100" max="4000" placeholder="1000" class="form-control" style="width: 100%; padding: 6px 10px; font-size: 0.82rem; background: var(--bg-primary); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 6px; height: 32px;">
-                            <small style="color: var(--text-secondary); font-size: 0.65rem; display: block; margin-top: 2px;">Token lebih banyak membantu model reasoning menyelesaikan jawaban panjang.</small>
+                        <!-- Warning -->
+                        <div style="background: rgba(231,76,60,0.08); border-left: 3px solid #e74c3c; border-radius:8px; padding:10px 12px; font-size:12px; color: #c0392b;">
+                            ⚠️ <strong>Perhatian:</strong> File yang ada (config, database, knowledge) akan <strong>ditimpa</strong> oleh isi backup. Pastikan Bos mengupload file backup yang benar.
                         </div>
                     </div>
+                </div>
 
-                    <!-- TAB 2: FITUR & KEAKTIFAN -->
-                    <div id="global-sec-features" class="global-settings-section hidden" style="display: flex; flex-direction: column; gap: 12px;">
-                        <h4 style="margin: 0; font-size: 0.82rem; color: var(--text-secondary); text-transform: uppercase; font-weight: 700; border-bottom: 1px solid var(--border-color); padding-bottom: 6px;">Respons AI Bot (AI Fallback)</h4>
-                        <div style="display: flex; flex-direction: column; gap: 8px;">
-                            <label class="switch-container">
-                                <span style="font-size: 0.82rem; font-weight: 600; color: var(--text-primary);">Aktifkan AI Bot untuk Chat Grup</span>
-                                <input type="checkbox" id="cfg-group-ai-enabled">
-                            </label>
-                            <label class="switch-container">
-                                <span style="font-size: 0.82rem; font-weight: 600; color: var(--text-primary);">Aktifkan AI Bot untuk Chat Pribadi (PM)</span>
-                                <input type="checkbox" id="cfg-private-ai-enabled">
-                            </label>
-                        </div>
+            </div>
 
-                        <h4 style="margin: 8px 0 0 0; font-size: 0.82rem; color: var(--text-secondary); text-transform: uppercase; font-weight: 700; border-bottom: 1px solid var(--border-color); padding-bottom: 6px;">Keaktifan Chatbot (Global)</h4>
-                        <div style="display: flex; flex-direction: column; gap: 8px;">
-                            <label class="switch-container">
-                                <span style="font-size: 0.82rem; font-weight: 600; color: var(--text-primary);">Aktifkan Chatbot untuk Chat Grup (Semua Grup)</span>
-                                <input type="checkbox" id="cfg-group-chat-bot-enabled">
-                            </label>
-                            <label class="switch-container">
-                                <span style="font-size: 0.82rem; font-weight: 600; color: var(--text-primary);">Aktifkan Chatbot untuk Chat Pribadi (PM / Japri)</span>
-                                <input type="checkbox" id="cfg-private-chat-bot-enabled">
-                            </label>
-                        </div>
-
-                        <div class="form-group" style="margin-top: 4px;">
-                            <label for="cfg-private-chat-sync-group-id" style="font-size: 0.78rem; font-weight: 600; margin-bottom: 4px; display: block;">Sinkronisasi Chat Pribadi dengan Grup</label>
-                            <select id="cfg-private-chat-sync-group-id" class="form-control" style="width: 100%; padding: 6px 10px; font-size: 0.82rem; background: var(--bg-primary); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 6px; height: 32px;">
-                                <option value="">-- Pilih Grup Penyelaras --</option>
-                            </select>
-                        </div>
-
-                        <h4 style="margin: 8px 0 0 0; font-size: 0.82rem; color: var(--text-secondary); text-transform: uppercase; font-weight: 700; border-bottom: 1px solid var(--border-color); padding-bottom: 6px;">Auto-Kirim Kontak Toko (Auto Save)</h4>
-                        <div style="display: flex; flex-direction: column; gap: 10px;">
-                            <label class="switch-container">
-                                <span style="font-size: 0.82rem; font-weight: 600; color: var(--text-primary);">Kirim Kontak ke Pelanggan Baru</span>
-                                <input type="checkbox" id="cfg-auto-send-vcard">
-                            </label>
-                            <div class="form-group">
-                                <label for="cfg-vcard-name" style="font-size: 0.78rem; font-weight: 600; display: block; margin-bottom: 4px;">Nama Kontak Bisnis (vCard Name)</label>
-                                <input type="text" id="cfg-vcard-name" placeholder="CS Jajan Digital" class="form-control" style="width: 100%; padding: 6px 10px; font-size: 0.82rem; background: var(--bg-primary); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 6px; height: 32px;">
-                            </div>
-                        </div>
-
-                        <h4 style="margin: 8px 0 0 0; font-size: 0.82rem; color: var(--text-secondary); text-transform: uppercase; font-weight: 700; border-bottom: 1px solid var(--border-color); padding-bottom: 6px;">Akses Tunggal &amp; Laporan</h4>
-                        <div class="form-group">
-                            <label for="cfg-boss-number" style="font-size: 0.78rem; font-weight: 600;">Nomor WhatsApp Bos</label>
-                            <input type="text" id="cfg-boss-number" placeholder="Contoh: 628123456789" class="form-control" style="width: 100%; padding: 6px 10px; font-size: 0.82rem; background: var(--bg-primary); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 6px; height: 32px;">
-                            <small style="color: var(--text-secondary); font-size: 0.65rem; display: block; margin-top: 2px;">Jika diisi, bot hanya membalas nomor ini.</small>
-                        </div>
-                        <div class="form-group" style="margin-top: 4px;">
-                            <label for="cfg-report-time" style="font-size: 0.78rem; font-weight: 600;">Waktu Laporan Harian (HH:MM)</label>
-                            <input type="text" id="cfg-report-time" placeholder="Contoh: 08:00" class="form-control" style="width: 100%; padding: 6px 10px; font-size: 0.82rem; background: var(--bg-primary); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 6px; height: 32px;">
-                        </div>
-                    </div>
-
-                    <!-- TAB 3: PROMPT KEPRIBADIAN -->
-                    <div id="global-sec-prompt" class="global-settings-section hidden" style="display: flex; flex-direction: column; gap: 10px; flex: 1;">
-                        <div class="form-group" style="display: flex; flex-direction: column; flex: 1; min-height: 280px;">
-                            <label for="cfg-system-prompt" style="font-size: 0.78rem; font-weight: 600; display: block; margin-bottom: 4px;">Template Prompt Sistem (Kepribadian Asisten)</label>
-                            <textarea id="cfg-system-prompt" rows="12" placeholder="Tuliskan kepribadian dan panduan bot di sini…" class="form-control" style="width: 100%; padding: 8px; font-size: 0.82rem; resize: vertical; flex: 1; min-height: 260px; height: 320px; font-family: monospace; background: var(--bg-primary); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 6px;"></textarea>
-                            <small style="color: var(--text-secondary); font-size: 0.65rem; display: block; margin-top: 2px;">Wajib menyertakan <code>{KNOWLEDGE_BASE_CONTENT}</code> di bagian akhir.</small>
-                        </div>
-                    </div>
-
-                    <!-- Action Button at Bottom of card -->
-                    <button type="submit" class="btn btn-primary btn-block" style="margin-top: auto; padding: 10px; border-radius: 8px; cursor: pointer; flex-shrink: 0; font-weight: 600; font-size: 0.85rem;">
-                        <i data-lucide="save" style="width: 14px; height: 14px; display: inline-block; vertical-align: middle; margin-right: 4px;"></i> Simpan Konfigurasi
-                    </button>
-                </form>
-            </section>
-
-            <!-- PANEL KANAN: Export & Migrasi -->
-            <section class="panel panel-right">
+            <!-- KOLOM KANAN: Bot Telegram, Otomatisasi, Export, Tampilan -->
+            <div style="display: flex; flex-direction: column; gap: 20px;">
 
                 <!-- 🤖 Kartu Pengaturan Bot Telegram -->
-                <div class="card" style="margin-bottom: 20px;">
+                <div class="card" style="margin: 0;">
                     <h2><i data-lucide="send" style="color: #229ED9;"></i> Bot Telegram</h2>
                     <p class="card-subtitle">Konfigurasi bot Telegram yang terhubung dengan database & AI yang sama</p>
 
@@ -1625,124 +1688,81 @@
                             </div>
                         </div>
 
-                        <!-- Whitelist / Blacklist -->
-                        <div style="padding:12px 14px; background: rgba(255,255,255,0.02); border-radius:10px; border:1px solid var(--border-color);">
-                            <div style="font-size:0.8rem; font-weight:600; margin-bottom:10px; color:var(--text-primary);">👥 Kontrol Akses User</div>
-                            <label class="switch-container" style="padding:0 0 10px 0; background:none; border:none; margin-bottom: 0;">
-                                <span style="font-size:0.82rem; font-weight:600; color:var(--text-primary);">Mode Whitelist (hanya user terdaftar)</span>
-                                <input type="checkbox" id="tg-whitelist-mode" onchange="toggleWhitelistUI()">
-                            </label>
-                            <div class="form-group" style="margin:8px 0 8px;">
-                                <label style="font-size:0.75rem; color:var(--text-secondary); display:block; margin-bottom:4px;">Whitelist ID (pisah koma)</label>
-                                <input type="text" id="tg-whitelist" placeholder="123456,789012,345678"
-                                    style="width:100%; padding:7px; font-size:0.78rem; background:var(--bg-primary); color:var(--text-primary); border:1px solid var(--border-color); border-radius:7px; font-family:monospace; box-sizing:border-box;">
-                            </div>
-                            <div class="form-group" style="margin:0;">
-                                <label style="font-size:0.75rem; color:var(--text-secondary); display:block; margin-bottom:4px;">Blacklist ID (pisah koma)</label>
-                                <input type="text" id="tg-blacklist" placeholder="999111,888222"
-                                    style="width:100%; padding:7px; font-size:0.78rem; background:var(--bg-primary); color:var(--text-primary); border:1px solid var(--border-color); border-radius:7px; font-family:monospace; box-sizing:border-box;">
-                            </div>
-                        </div>
-
-                        <!-- Auto-Delete Pesan Sistem -->
-                        <div style="padding:12px 14px; background: rgba(255,255,255,0.02); border-radius:10px; border:1px solid var(--border-color);">
-                            <div style="font-size:0.8rem; font-weight:600; margin-bottom:10px; color:var(--text-primary);">🗑️ Auto-Delete Pesan Sistem (0 = nonaktif)</div>
-                            <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
-                                <div>
-                                    <label style="font-size:0.75rem; color:var(--text-secondary); display:block; margin-bottom:4px;">Pesan Welcome (detik)</label>
-                                    <input type="number" id="tg-auto-delete-welcome" min="0" value="0"
-                                        style="width:100%; padding:7px; font-size:0.82rem; background:var(--bg-primary); color:var(--text-primary); border:1px solid var(--border-color); border-radius:7px; box-sizing:border-box; text-align:center;">
-                                </div>
-                                <div>
-                                    <label style="font-size:0.75rem; color:var(--text-secondary); display:block; margin-bottom:4px;">Notif Buka/Tutup (detik)</label>
-                                    <input type="number" id="tg-auto-delete-schedule" min="0" value="0"
-                                        style="width:100%; padding:7px; font-size:0.82rem; background:var(--bg-primary); color:var(--text-primary); border:1px solid var(--border-color); border-radius:7px; box-sizing:border-box; text-align:center;">
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Tombol Simpan -->
-                        <button type="button" id="btn-save-tg-config" onclick="saveTelegramConfig()"
-                            class="btn btn-primary" style="width:100%; font-size:0.85rem; padding:10px; border-radius:10px; display:flex; align-items:center; justify-content:center; gap:8px;">
-                            <i data-lucide="save" style="width:15px; height:15px;"></i> Simpan Pengaturan Telegram
+                        <!-- Action Buttons Stack -->
+                        <button class="btn btn-primary btn-block" onclick="saveTelegramConfig()" style="font-size:0.82rem; padding:8px; border-radius:8px; cursor:pointer; font-weight:600;">
+                            <i data-lucide="save" style="width:14px; height:14px; display:inline-block; vertical-align:middle; margin-right:4px;"></i> Simpan Pengaturan Telegram
                         </button>
-
-                        <!-- Tombol Test Koneksi -->
-                        <button type="button" onclick="testTelegramConnection()"
-                            class="btn btn-secondary" style="width:100%; font-size:0.82rem; padding:9px; border-radius:10px; display:flex; align-items:center; justify-content:center; gap:8px;">
-                            <i data-lucide="radio" style="width:14px; height:14px;"></i> Test Koneksi Bot
+                        <button class="btn btn-secondary btn-block" onclick="testTelegramBot()" style="font-size:0.82rem; padding:8px; border-radius:8px; cursor:pointer;">
+                            <i data-lucide="refresh-cw" style="width:14px; height:14px; display:inline-block; vertical-align:middle; margin-right:4px;"></i> Test Koneksi Bot
                         </button>
-
                     </div>
                 </div>
 
-                <!-- Status & Aksi Otomatisasi -->
-                <div class="card" style="margin-bottom: 20px;">
-                    <h2><i data-lucide="cpu" style="color: var(--blue);"></i> Otomatisasi &amp; Penjadwal</h2>
+                <!-- ⏱️ Otomatisasi & Penjadwalan -->
+                <div class="card" style="margin: 0;">
+                    <h2><i data-lucide="clock" style="color: var(--blue);"></i> Otomatisasi &amp; Penjadwalan</h2>
                     <p class="card-subtitle">Kontrol dan pantau tugas otomatis asisten virtual Anda secara real-time</p>
-                    
+
                     <div style="display:flex; flex-direction:column; gap:12px; margin-top:16px;">
-                        
                         <!-- Laporan Harian -->
-                        <div style="background: var(--bg-secondary, #f5f5f5); border-radius: 12px; padding: 14px; border: 1px solid var(--border-color);">
-                            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:6px;">
-                                <div style="display:flex; align-items:center; gap:8px;">
-                                    <i data-lucide="file-text" style="color: var(--blue); width:18px; height:18px;"></i>
-                                    <strong style="font-size: 0.85rem;">Laporan Harian Status Bot &amp; Server</strong>
+                        <div style="background: var(--bg-secondary, #f5f5f5); border-radius:12px; padding:16px; border: 1px solid var(--border-color); display:flex; justify-content:space-between; align-items:center; gap:15px; flex-wrap:wrap;">
+                            <div style="flex:1; min-width:180px;">
+                                <div style="display:flex; align-items:center; gap:8px; margin-bottom:4px;">
+                                    <i data-lucide="file-text" style="color:var(--blue); width:18px; height:18px;"></i>
+                                    <strong style="font-size:0.85rem;">Laporan Harian Status Bot &amp; Server</strong>
                                 </div>
-                                <span class="badge" style="background: rgba(10, 132, 255, 0.15); color: var(--blue); padding: 2px 6px; border-radius: 4px; font-size: 0.7rem;">Setiap Hari</span>
+                                <p style="font-size:12px; color: var(--text-secondary); margin:0;">Mengirim status operasional server, status koneksi bot, dan ringkasan kas (jika WA shop aktif) ke Bos secara otomatis.</p>
                             </div>
-                            <p style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 8px; line-height: 1.4;">
-                                Mengirim status operasional server, status koneksi bot, dan ringkasan keaktifan WhatsApp ke Bos secara otomatis.
-                            </p>
-                            <button type="button" class="btn btn-secondary btn-block" style="font-size: 0.75rem; padding: 6.5px;" onclick="triggerSchedulerAction('daily-report', this)">
-                                <i data-lucide="send" style="width:12px; height:12px;"></i> Kirim Sekarang via WA
-                            </button>
-                        </div>
-                        
-                        <!-- Rekap Jatuh Tempo Premium -->
-                        <div style="background: var(--bg-secondary, #f5f5f5); border-radius: 12px; padding: 14px; border: 1px solid var(--border-color);">
-                            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:6px;">
-                                <div style="display:flex; align-items:center; gap:8px;">
-                                    <i data-lucide="alert-triangle" style="color: #ecc94b; width:18px; height:18px;"></i>
-                                    <strong style="font-size: 0.85rem;">Rekap Akun Expired ke Bos</strong>
-                                </div>
-                                <span class="badge" style="background: rgba(236, 201, 75, 0.15); color: #ecc94b; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem;">Setiap Hari</span>
+                            <div style="display:flex; flex-direction:column; gap:8px; align-items:flex-end;">
+                                <span style="background:rgba(10,132,255,0.12); color:var(--blue); font-size:0.65rem; padding:2px 8px; border-radius:99px; font-weight:700;">SETIAP HARI</span>
+                                <button class="btn btn-secondary" onclick="runJobManual('dailyReport')" style="padding: 4px 10px; font-size: 0.72rem; min-height:auto; height:28px; border-radius:6px; display:flex; align-items:center; gap:4px; cursor:pointer;">
+                                    <i data-lucide="send" style="width:11px; height:11px;"></i> Kirim Sekarang via WA
+                                </button>
                             </div>
-                            <p style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 8px; line-height: 1.4;">
-                                Cek status dan kirim peringatan langganan premium pelanggan ke WhatsApp Bos.
-                            </p>
-                            <button type="button" class="btn btn-secondary btn-block" style="font-size: 0.75rem; padding: 6.5px;" onclick="triggerSchedulerAction('premium-expirations', this)">
-                                <i data-lucide="bell" style="width:12px; height:12px;"></i> Cek &amp; Kirim Sekarang
-                            </button>
                         </div>
 
-                        <!-- Backup Mingguan -->
-                        <div style="background: var(--bg-secondary, #f5f5f5); border-radius: 12px; padding: 14px; border: 1px solid var(--border-color);">
-                            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:6px;">
-                                <div style="display:flex; align-items:center; gap:8px;">
-                                    <i data-lucide="database" style="color: #10b981; width:18px; height:18px;"></i>
-                                    <strong style="font-size: 0.85rem;">Auto-Backup ZIP Mingguan</strong>
+                        <!-- Rekap Expired -->
+                        <div style="background: var(--bg-secondary, #f5f5f5); border-radius:12px; padding:16px; border: 1px solid var(--border-color); display:flex; justify-content:space-between; align-items:center; gap:15px; flex-wrap:wrap;">
+                            <div style="flex:1; min-width:180px;">
+                                <div style="display:flex; align-items:center; gap:8px; margin-bottom:4px;">
+                                    <i data-lucide="alert-triangle" style="color:var(--orange); width:18px; height:18px;"></i>
+                                    <strong style="font-size:0.85rem;">Rekap Akun Expired ke Bos</strong>
                                 </div>
-                                <span class="badge" style="background: rgba(16, 185, 129, 0.15); color: #10b981; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem;">Setiap Minggu</span>
+                                <p style="font-size:12px; color: var(--text-secondary); margin:0;">Cek status dan kirim peringatan langganan premium pelanggan ke WA shop Bos.</p>
                             </div>
-                            <p style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 8px; line-height: 1.4;">
-                                Mengompres DB, Config, & Media ke ZIP lalu dikirim ke WhatsApp Bos otomatis.
-                            </p>
-                            <button type="button" class="btn btn-secondary btn-block" style="font-size: 0.75rem; padding: 6.5px;" onclick="triggerSchedulerAction('weekly-backup', this)">
-                                <i data-lucide="archive" style="width:12px; height:12px;"></i> Backup &amp; Kirim Sekarang
-                            </button>
+                            <div style="display:flex; flex-direction:column; gap:8px; align-items:flex-end;">
+                                <span style="background:rgba(245,158,11,0.12); color:var(--orange); font-size:0.65rem; padding:2px 8px; border-radius:99px; font-weight:700;">SETIAP HARI</span>
+                                <button class="btn btn-secondary" onclick="runJobManual('expiredCheck')" style="padding: 4px 10px; font-size: 0.72rem; min-height:auto; height:28px; border-radius:6px; display:flex; align-items:center; gap:4px; cursor:pointer;">
+                                    <i data-lucide="check-circle" style="width:11px; height:11px;"></i> Cek &amp; Kirim Sekarang
+                                </button>
+                            </div>
                         </div>
 
+                        <!-- Auto-Backup ZIP -->
+                        <div style="background: var(--bg-secondary, #f5f5f5); border-radius:12px; padding:16px; border: 1px solid var(--border-color); display:flex; justify-content:space-between; align-items:center; gap:15px; flex-wrap:wrap;">
+                            <div style="flex:1; min-width:180px;">
+                                <div style="display:flex; align-items:center; gap:8px; margin-bottom:4px;">
+                                    <i data-lucide="database" style="color:var(--green); width:18px; height:18px;"></i>
+                                    <strong style="font-size:0.85rem;">Auto-Backup ZIP Mingguan</strong>
+                                </div>
+                                <p style="font-size:12px; color: var(--text-secondary); margin:0;">Mengompres DB, Config, &amp; Media ke ZIP lalu dikirim ke WhatsApp Bos otomatis.</p>
+                            </div>
+                            <div style="display:flex; flex-direction:column; gap:8px; align-items:flex-end;">
+                                <span style="background:rgba(16,185,129,0.12); color:var(--green); font-size:0.65rem; padding:2px 8px; border-radius:99px; font-weight:700;">SETIAP MINGGU</span>
+                                <button class="btn btn-secondary" onclick="runJobManual('weeklyBackup')" style="padding: 4px 10px; font-size: 0.72rem; min-height:auto; height:28px; border-radius:6px; display:flex; align-items:center; gap:4px; cursor:pointer;">
+                                    <i data-lucide="archive" style="width:11px; height:11px;"></i> Backup &amp; Kirim Sekarang
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
-                <div class="card" style="margin-bottom: 20px;">
+                <!-- 📦 Export & Migrasi Data -->
+                <div class="card" style="margin: 0;">
                     <h2><i data-lucide="package-open"></i> Export &amp; Migrasi Data</h2>
                     <p class="card-subtitle">Download semua data bot dalam satu file ZIP untuk dipindahkan ke server lain</p>
 
                     <div style="display:flex; flex-direction:column; gap:12px; margin-top:16px;">
-
                         <!-- Export tanpa sesi -->
                         <div style="background: var(--bg-secondary, #f5f5f5); border-radius: 12px; padding: 16px;">
                             <div style="display:flex; align-items:center; gap:10px; margin-bottom:8px;">
@@ -1757,24 +1777,8 @@
                                 <i data-lucide="download"></i> Download Backup (.zip)
                             </a>
                         </div>
-
-                        <!-- Export dengan sesi -->
-                        <div style="background: var(--bg-secondary, #f5f5f5); border-radius: 12px; padding: 16px;">
-                            <div style="display:flex; align-items:center; gap:10px; margin-bottom:8px;">
-                                <i data-lucide="smartphone" style="color: #f0a500; width:20px; height:20px;"></i>
-                                <strong>Export + Sesi WhatsApp</strong>
-                            </div>
-                            <p style="font-size:13px; color: var(--text-secondary, #666); margin-bottom:12px; line-height:1.5;">
-                                Termasuk folder <b>session</b> WhatsApp — <b>tidak perlu scan QR ulang</b> di server baru.<br>
-                                <span style="color:#e74c3c; font-size:12px;">⚠️ File lebih besar & hanya 1 device yang bisa aktif</span>
-                            </p>
-                            <a href="/api/export?session=1" id="btn-export-session" class="btn btn-block" style="text-decoration:none; display:flex; align-items:center; justify-content:center; gap:8px; background: #f0a500; color:#fff;" onclick="handleExportClick(this)">
-                                <i data-lucide="download"></i> Download + Sesi WA (.zip)
-                            </a>
-                        </div>
-
-                        <!-- Info isi backup -->
-                        <details style="font-size:13px; color: var(--text-secondary, #666);">
+                        
+                        <details style="font-size:13px; color: var(--text-secondary, #666); margin-top: 8px;">
                             <summary style="cursor:pointer; font-weight:600; margin-bottom:8px;">📦 Apa saja isi file backup?</summary>
                             <ul style="margin: 8px 0 0 16px; line-height:2;">
                                 <li><code>config.json</code> — API keys, pengaturan bot</li>
@@ -1787,81 +1791,13 @@
                         </details>
                     </div>
                 </div>
-            </section>
 
-            <!-- PANEL KANAN: Import / Restore Backup -->
-            <section class="panel panel-right">
-                <div class="card" style="margin-bottom: 20px;">
-                    <h2><i data-lucide="upload-cloud"></i> Import / Restore Backup</h2>
-                    <p class="card-subtitle">Upload file backup (.zip) untuk memulihkan data ke server ini</p>
-
-                    <div style="display:flex; flex-direction:column; gap:14px; margin-top:16px;">
-
-                        <!-- Drop zone upload -->
-                        <div id="import-dropzone" style="border: 2px dashed var(--border-color, #ddd); border-radius: 12px; padding: 24px; text-align:center; cursor:pointer; transition: all 0.2s;"
-                             onclick="document.getElementById('import-file-input').click()"
-                             ondragover="event.preventDefault(); this.style.borderColor='#25d366'; this.style.background='rgba(37,211,102,0.05)'"
-                             ondragleave="this.style.borderColor=''; this.style.background=''"
-                             ondrop="handleImportDrop(event)">
-                            <i data-lucide="file-archive" style="width:40px; height:40px; color: var(--accent-color, #25d366); margin-bottom:10px;"></i>
-                            <p style="font-weight:600; margin-bottom:4px;">Klik atau seret file backup di sini</p>
-                            <p style="font-size:12px; color: var(--text-secondary, #888);">Format: .zip — Maks 500 MB</p>
-                            <input type="file" id="import-file-input" accept=".zip" style="display:none" onchange="handleImportFileSelect(this)">
-                        </div>
-
-                        <!-- File terpilih info -->
-                        <div id="import-file-info" style="display:none; background: var(--bg-secondary, #f5f5f5); border-radius:10px; padding:12px; font-size:13px;">
-                            <div style="display:flex; align-items:center; gap:8px;">
-                                <i data-lucide="file-zip" style="color:#25d366; width:18px; height:18px;"></i>
-                                <span id="import-file-name" style="font-weight:600;"></span>
-                                <span id="import-file-size" style="color:var(--text-secondary,#888); margin-left:auto;"></span>
-                            </div>
-                        </div>
-
-                        <!-- Opsi import sesi -->
-                        <label class="switch-container" style="background: var(--bg-secondary,#f5f5f5); border-radius:10px; padding: 10px; margin-bottom: 0;">
-                            <div>
-                                <strong style="font-size: 0.85rem; display: block; color: var(--text-primary);">Restore Sesi WhatsApp</strong>
-                                <span style="font-size:0.7rem; color:var(--text-secondary,#888); margin-top:2px; display: block;">Centang jika backup mengandung folder session (tidak perlu scan QR)</span>
-                            </div>
-                            <input type="checkbox" id="import-session-check">
-                        </label>
-
-                        <!-- Progress bar -->
-                        <div id="import-progress-wrap" style="display:none;">
-                            <div style="display:flex; justify-content:space-between; font-size:12px; margin-bottom:4px;">
-                                <span>Mengupload & memulihkan data...</span>
-                                <span id="import-progress-pct">0%</span>
-                            </div>
-                            <div style="background: var(--border-color,#eee); border-radius:99px; height:8px; overflow:hidden;">
-                                <div id="import-progress-bar" style="background: #25d366; height:100%; width:0%; transition: width 0.3s; border-radius:99px;"></div>
-                            </div>
-                        </div>
-
-                        <!-- Tombol import -->
-                        <button id="btn-do-import" class="btn btn-primary btn-block" onclick="doImport()" disabled style="opacity:0.5;">
-                            <i data-lucide="upload"></i> Mulai Restore Data
-                        </button>
-
-                        <!-- Hasil import -->
-                        <div id="import-result" style="display:none; border-radius:10px; padding:12px; font-size:13px; line-height:1.7;"></div>
-
-                        <!-- Warning -->
-                        <div style="background: rgba(231,76,60,0.08); border-left: 3px solid #e74c3c; border-radius:8px; padding:10px 12px; font-size:12px; color: #c0392b;">
-                            ⚠️ <strong>Perhatian:</strong> File yang ada (config, database, knowledge) akan <strong>ditimpa</strong> oleh isi backup. Pastikan Bos mengupload file backup yang benar.
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- PANEL KANAN: Tampilan & Tema -->
-            <section class="panel panel-right">
-                <div class="card">
+                <!-- 🎨 Tampilan & Tema -->
+                <div class="card" style="margin: 0;">
                     <h2><i data-lucide="palette"></i> Tampilan &amp; Tema</h2>
                     <p class="card-subtitle">Pilih tema yang paling nyaman untuk Anda — perubahan langsung diterapkan</p>
 
-                    <div class="theme-grid" id="theme-grid">
-
+                    <div class="theme-grid" id="theme-grid" style="margin-top: 15px;">
                         <!-- Light (default) -->
                         <div class="theme-card active" id="tc-light" onclick="changeTheme('light')">
                             <div class="theme-preview tp-light">
@@ -1917,7 +1853,6 @@
                             <div class="theme-card-label">Minimal Light</div>
                             <div class="theme-card-sub">Terang &amp; Lega</div>
                         </div>
-
                     </div>
 
                     <!-- Hidden select for backward compatibility with client.js -->
