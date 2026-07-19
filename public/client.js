@@ -2157,33 +2157,53 @@ window.loadCustomersList = async function() {
         
         activeCustomers.forEach((cust, idx) => {
             const card = document.createElement('div');
-            card.style = 'border: 1px solid var(--border-color); border-radius: 8px; padding: 12px; display: flex; flex-direction: column; gap: 8px; background: var(--bg-secondary); margin-bottom: 10px;';
+            card.className = 'customer-item-row';
+            card.style = `
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 12px;
+                background: var(--bg-secondary);
+                border: 1px solid var(--border-color);
+                border-radius: 8px;
+                padding: 6px 12px;
+                margin-bottom: 8px;
+                transition: all 0.2s ease;
+                min-height: 48px;
+            `;
+            
+            // Hover effect
+            card.onmouseover = () => { card.style.background = 'rgba(255,255,255,0.04)'; };
+            card.onmouseout = () => { card.style.background = 'var(--bg-secondary)'; };
+
             card.innerHTML = `
-                <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <div style="display: flex; align-items: center; gap: 6px;">
-                        <input type="text" id="cust-name-${idx}" value="${cust.name}" style="font-weight: bold; font-size: 0.95rem; border: none; background: transparent; color: var(--text-primary); border-bottom: 1px dashed var(--border-color); padding: 2px;">
-                        <a href="https://wa.me/${cust.phone}" target="_blank" style="font-size: 0.75rem; color: #30d158; text-decoration: none;">wa.me/${cust.phone}</a>
-                    </div>
-                    <div style="display: flex; gap: 6px;">
-                        <button class="btn btn-secondary" onclick="viewCustomerChatLogs('${cust.phone}')" style="font-size: 0.75rem; padding: 4px 8px; display: flex; align-items: center; gap: 4px;">
-                            <i data-lucide="message-square" style="width: 12px; height: 12px;"></i> Lihat Chat
-                        </button>
-                        <button class="btn btn-primary" onclick="saveCustomerInfo(${idx})" style="font-size: 0.75rem; padding: 4px 8px;">Simpan</button>
-                    </div>
+                <!-- Nama & WA Link -->
+                <div style="flex: 2; display: flex; flex-direction: column; gap: 2px; min-width: 140px;">
+                    <input type="text" id="cust-name-${idx}" value="${cust.name}" style="font-weight: 600; font-size: 0.85rem; border: none; background: transparent; color: var(--text-primary); border-bottom: 1px dashed var(--border-color); padding: 2px; width: 100%;" placeholder="Nama Pelanggan">
+                    <a href="https://wa.me/${cust.phone}" target="_blank" style="font-size: 0.72rem; color: #30d158; text-decoration: none; width: fit-content; font-family: monospace;">wa.me/${cust.phone}</a>
                 </div>
-                <div style="display: flex; gap: 10px; align-items: center; margin-top: 6px;">
-                    <div style="flex: 1;">
-                        <label style="font-size: 0.7rem; color: var(--text-secondary);">Catatan / Alamat</label>
-                        <input type="text" id="cust-notes-${idx}" value="${cust.notes || ''}" placeholder="Tulis catatan di sini..." class="form-control" style="width: 100%; padding: 4px 8px; font-size: 0.8rem; background: var(--bg-primary); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 6px;">
-                    </div>
-                    <div style="flex: 1;">
-                        <label style="font-size: 0.7rem; color: var(--text-secondary);">Label / Tag (koma pemisah)</label>
-                        <input type="text" id="cust-labels-${idx}" value="${(cust.labels || []).join(', ')}" placeholder="VIP, Reseller" class="form-control" style="width: 100%; padding: 4px 8px; font-size: 0.8rem; background: var(--bg-primary); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 6px;">
-                    </div>
-                    <div style="width: 80px;">
-                        <label style="font-size: 0.7rem; color: var(--text-secondary);">Order Count</label>
-                        <input type="number" id="cust-order-${idx}" value="${cust.orderCount || 0}" class="form-control" style="width: 100%; padding: 4px 8px; font-size: 0.8rem; text-align: center; background: var(--bg-primary); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 6px;">
-                    </div>
+                
+                <!-- Catatan/Alamat -->
+                <div style="flex: 3; min-width: 180px;">
+                    <input type="text" id="cust-notes-${idx}" value="${cust.notes || ''}" placeholder="Alamat / Catatan..." class="form-control" style="width: 100%; padding: 4px 8px; font-size: 0.8rem; background: var(--bg-primary); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 6px; height: 28px;">
+                </div>
+                
+                <!-- Labels/Tags -->
+                <div style="flex: 2; min-width: 130px;">
+                    <input type="text" id="cust-labels-${idx}" value="${(cust.labels || []).join(', ')}" placeholder="Tag (VIP, Reseller)" class="form-control" style="width: 100%; padding: 4px 8px; font-size: 0.8rem; background: var(--bg-primary); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 6px; height: 28px;">
+                </div>
+                
+                <!-- Order Count -->
+                <div style="width: 60px; display: flex; align-items: center; position: relative;">
+                    <input type="number" id="cust-order-${idx}" value="${cust.orderCount || 0}" class="form-control" style="width: 100%; padding: 4px; font-size: 0.8rem; text-align: center; background: var(--bg-primary); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 6px; height: 28px;" title="Order Count">
+                </div>
+                
+                <!-- Aksi Buttons -->
+                <div style="display: flex; gap: 6px; align-items: center; flex-shrink: 0;">
+                    <button class="btn btn-secondary" onclick="viewCustomerChatLogs('${cust.phone}')" style="font-size: 0.72rem; padding: 4px 8px; display: flex; align-items: center; gap: 4px; min-height: auto; height: 28px; border-radius: 6px;">
+                        <i data-lucide="message-square" style="width: 11px; height: 11px;"></i> Chat
+                    </button>
+                    <button class="btn btn-primary" onclick="saveCustomerInfo(${idx})" style="font-size: 0.72rem; padding: 4px 10px; min-height: auto; height: 28px; border-radius: 6px; font-weight: 600;">Simpan</button>
                 </div>
             `;
             list.appendChild(card);
