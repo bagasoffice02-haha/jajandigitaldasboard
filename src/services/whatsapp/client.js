@@ -380,9 +380,9 @@ function createNewClient(io) {
                 const readDelay = 1000 + Math.floor(Math.random() * 1000);
                 await new Promise(resolve => setTimeout(resolve, readDelay));
 
-                // 2. Fase Typing — random 2000–5000ms
+                // 2. Fase Typing — random 3000–6000ms (3-6 detik)
                 try { await chat.sendStateTyping(); } catch (_) {}
-                const typingDelay = 2000 + Math.floor(Math.random() * 3000);
+                const typingDelay = 3000 + Math.floor(Math.random() * 3000);
                 await new Promise(resolve => setTimeout(resolve, typingDelay));
 
                 // Hentikan typing state
