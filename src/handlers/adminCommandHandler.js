@@ -133,15 +133,20 @@ async function handleAdminCommandMessage(msg, {
                     }
                 }
                 
-                const invoiceText = `📄 *INVOICE PEMBAYARAN* 📄\n` +
-                                    `━━━━━━━━━━━━━━━━━━━━\n\n` +
+                const invoiceText = `╭───────────────\n` +
+                                    `📄 *INVOICE PEMBAYARAN*\n` +
+                                    `╰───────────────\n` +
+                                    `╭───────────────\n` +
                                     `👤 *Nama:* ${customerName} (@${customerNumber})\n` +
                                     `🆔 *Nomor ID:* ${invoiceId}\n` +
                                     `📌 *Status:* *${statusVal}*\n` +
                                     `📅 *Tanggal:* ${tanggalStr}\n` +
-                                    `⏰ *Waktu:* ${waktuStr}\n\n` +
-                                    `━━━━━━━━━━━━━━━━━━━━\n` +
-                                    `_Terima kasih atas pembayaran Anda! Pesanan Anda telah diverifikasi oleh admin._`;
+                                    `⏰ *Waktu:* ${waktuStr}\n` +
+                                    `╰───────────────\n` +
+                                    `╭───────────────\n` +
+                                    `┊ _Terima kasih atas pembayaran Anda!_\n` +
+                                    `┊ _Pesanan Anda telah diverifikasi oleh admin._\n` +
+                                    `╰───────────────`;
                                      
                 try {
                     if (quotedMsg) {
