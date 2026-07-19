@@ -2379,6 +2379,28 @@
             }
         });
     };
+
+    window.switchNodeEditorTab = function(tabName) {
+        // Switch active states on tab buttons
+        document.querySelectorAll('.node-tab-btn').forEach(btn => btn.classList.remove('active'));
+        
+        const btnMap = {
+            'message': 0,
+            'media': 1,
+            'status': 2
+        };
+        const btns = document.querySelectorAll('.node-tab-btn');
+        if (btns && btns[btnMap[tabName]]) {
+            btns[btnMap[tabName]].classList.add('active');
+        }
+        
+        // Switch active states on sections
+        document.querySelectorAll('.node-editor-section').forEach(sec => sec.classList.add('hidden'));
+        document.getElementById(`node-sec-${tabName}`)?.classList.remove('hidden');
+        
+        // Re-trigger Lucide icons render just in case
+        if (window.lucide) lucide.createIcons();
+    };
 </script>
 </body>
 </html>
