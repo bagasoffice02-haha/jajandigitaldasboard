@@ -506,70 +506,94 @@
                         </div>
 
                         <!-- Form Pengeditan Node Aktif -->
-                        <div id="active-node-editor" style="border: 1px solid var(--border-color); border-radius: 12px; padding: 15px; display: flex; flex-direction: column; gap: 12px; background: var(--bg-card); overflow-y: auto; height: 100%;">
+                        <div id="active-node-editor" style="border: 1px solid var(--border-color); border-radius: 12px; padding: 15px; display: flex; flex-direction: column; gap: 12px; background: var(--bg-card); overflow: hidden; height: 100%;">
                             <h4 style="margin: 0; font-size: 0.85rem; text-transform: uppercase; color: var(--text-secondary); font-weight: 700; border-bottom: 1px solid var(--border-color); padding-bottom: 8px; margin-bottom: 4px;" id="node-editor-title">Edit Menu Pilihan</h4>
                             
-                            <div id="node-editor-fields" class="hidden" style="display: flex; flex-direction: column; gap: 10px;">
-                                <div class="form-group">
-                                    <label for="node-name" style="font-size: 0.75rem; font-weight: 600;">Nama Menu / Label</label>
-                                    <input type="text" id="node-name" class="form-control" style="width: 100%; padding: 6px; font-size: 0.82rem; border-radius: 6px;">
-                                </div>
+                            <!-- Sub-tabs button control inside Node Editor -->
+                            <div class="node-editor-tabs" style="display: flex; gap: 4px; background: rgba(0, 0, 0, 0.15); padding: 3px; border-radius: 8px; margin-bottom: 5px; flex-shrink: 0; border: 1px solid var(--border-color);">
+                                <button type="button" class="node-tab-btn active" onclick="switchNodeEditorTab('message')" style="flex: 1; background: none; border: none; padding: 6px; font-size: 0.72rem; font-weight: 600; color: var(--text-secondary); border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px;">
+                                    <i data-lucide="message-square" style="width: 12px; height: 12px;"></i> Teks Pesan
+                                </button>
+                                <button type="button" class="node-tab-btn" onclick="switchNodeEditorTab('media')" style="flex: 1; background: none; border: none; padding: 6px; font-size: 0.72rem; font-weight: 600; color: var(--text-secondary); border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px;">
+                                    <i data-lucide="paperclip" style="width: 12px; height: 12px;"></i> Berkas Media
+                                </button>
+                                <button type="button" class="node-tab-btn" onclick="switchNodeEditorTab('status')" style="flex: 1; background: none; border: none; padding: 6px; font-size: 0.72rem; font-weight: 600; color: var(--text-secondary); border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px;">
+                                    <i data-lucide="tag" style="width: 12px; height: 12px;"></i> Status &amp; Promo
+                                </button>
+                            </div>
 
-                                <div class="form-group">
-                                    <label for="node-aliases" style="font-size: 0.75rem; font-weight: 600;">Kata Kunci Alternatif (Aliases) — Pisahkan dengan koma</label>
-                                    <input type="text" id="node-aliases" class="form-control" placeholder="kopi, espresso, latte" style="width: 100%; padding: 6px; font-size: 0.82rem; border-radius: 6px;">
-                                </div>
-
-                                <div class="form-group">
-                                    <label for="node-type" style="font-size: 0.75rem; font-weight: 600;">Tipe Menu</label>
-                                    <select id="node-type" onchange="toggleNodeFields()" style="width: 100%; padding: 6px; font-size: 0.82rem; border-radius: 6px; border: 1px solid var(--border-color); background: var(--bg-primary); color: var(--text-primary);">
-                                        <option value="category">📁 Kategori (Milik sub-menu)</option>
-                                        <option value="content">📄 Konten (Teks / Media Akhir)</option>
-                                    </select>
-                                </div>
-
-                                <div class="form-group">
-                                    <label for="node-text" style="font-size: 0.75rem; display: block; margin-bottom: 4px; font-weight: 600;">Isi Balasan Teks / Deskripsi Menu</label>
-                                    <!-- Formatting Toolbar -->
-                                    <div style="display: flex; gap: 6px; margin-bottom: 6px; background: rgba(255,255,255,0.03); padding: 4px; border-radius: 4px; border: 1px solid var(--border-color);">
-                                        <button class="btn btn-secondary" type="button" onclick="window.insertFormatToElement('node-text', '*')" style="padding: 3px 8px; font-size: 0.7rem; cursor: pointer; font-weight: bold; min-height: auto;">Tebal (*)</button>
-                                        <button class="btn btn-secondary" type="button" onclick="window.insertFormatToElement('node-text', '_')" style="padding: 3px 8px; font-size: 0.7rem; cursor: pointer; font-style: italic; min-height: auto;">Miring (_)</button>
-                                        <button class="btn btn-secondary" type="button" onclick="window.insertFormatToElement('node-text', '~')" style="padding: 3px 8px; font-size: 0.7rem; cursor: pointer; text-decoration: line-through; min-height: auto;">Coret (~)</button>
-                                        <button class="btn btn-secondary" type="button" onclick="window.insertFormatToElement('node-text', '```')" style="padding: 3px 8px; font-size: 0.7rem; cursor: pointer; font-family: monospace; min-height: auto;">Mono (```)</button>
+                            <div id="node-editor-fields" class="hidden" style="display: flex; flex-direction: column; gap: 10px; flex: 1; overflow-y: auto; padding-right: 2px;">
+                                
+                                <!-- SECTION 1: TEKS PESAN -->
+                                <div id="node-sec-message" class="node-editor-section" style="display: flex; flex-direction: column; gap: 10px; flex: 1;">
+                                    <div class="form-group" style="margin-bottom: 2px;">
+                                        <label for="node-name" style="font-size: 0.75rem; font-weight: 600;">Nama Menu / Label</label>
+                                        <input type="text" id="node-name" class="form-control" style="width: 100%; padding: 6px; font-size: 0.82rem; border-radius: 6px;">
                                     </div>
-                                    <textarea id="node-text" rows="6" class="form-control" style="width: 100%; padding: 8px; font-size: 0.82rem; resize: vertical; height: 140px; font-family: monospace; background: var(--bg-primary); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 6px;"></textarea>
-                                </div>
 
-                                <div id="node-media-field" class="hidden">
-                                    <label for="node-media" style="font-size: 0.75rem; font-weight: 600;">Lampiran Berkas Media (Nama File)</label>
-                                    <div style="display: flex; gap: 6px;">
-                                        <input type="text" id="node-media" class="form-control" placeholder="brosur.pdf" style="flex: 1; padding: 6px; font-size: 0.82rem; border-radius: 6px;">
-                                        <button type="button" class="btn btn-secondary" onclick="document.getElementById('node-media-file').click()" style="padding: 6px 10px; font-size: 0.8rem; min-height: auto; border-radius: 6px;">Pilih File</button>
+                                    <div class="form-group" style="margin-bottom: 2px;">
+                                        <label for="node-aliases" style="font-size: 0.75rem; font-weight: 600;">Kata Kunci Alternatif (Aliases) — Pisahkan dengan koma</label>
+                                        <input type="text" id="node-aliases" class="form-control" placeholder="kopi, espresso, latte" style="width: 100%; padding: 6px; font-size: 0.82rem; border-radius: 6px;">
                                     </div>
-                                    <input type="file" id="node-media-file" onchange="uploadNodeMediaFile(this)" style="display: none;">
-                                    <small style="color: var(--text-secondary); font-size: 0.65rem;">Masukkan nama file di folder media.</small>
+
+                                    <div class="form-group" style="display: flex; flex-direction: column; flex: 1; min-height: 280px; margin-bottom: 2px;">
+                                        <label for="node-text" style="font-size: 0.75rem; display: block; margin-bottom: 4px; font-weight: 600;">Isi Balasan Teks / Deskripsi Menu</label>
+                                        <!-- Formatting Toolbar -->
+                                        <div style="display: flex; gap: 6px; margin-bottom: 6px; background: rgba(255,255,255,0.03); padding: 4px; border-radius: 4px; border: 1px solid var(--border-color); flex-shrink: 0;">
+                                            <button class="btn btn-secondary" type="button" onclick="window.insertFormatToElement('node-text', '*')" style="padding: 3px 8px; font-size: 0.7rem; cursor: pointer; font-weight: bold; min-height: auto;">Tebal (*)</button>
+                                            <button class="btn btn-secondary" type="button" onclick="window.insertFormatToElement('node-text', '_')" style="padding: 3px 8px; font-size: 0.7rem; cursor: pointer; font-style: italic; min-height: auto;">Miring (_)</button>
+                                            <button class="btn btn-secondary" type="button" onclick="window.insertFormatToElement('node-text', '~')" style="padding: 3px 8px; font-size: 0.7rem; cursor: pointer; text-decoration: line-through; min-height: auto;">Coret (~)</button>
+                                            <button class="btn btn-secondary" type="button" onclick="window.insertFormatToElement('node-text', '```')" style="padding: 3px 8px; font-size: 0.7rem; cursor: pointer; font-family: monospace; min-height: auto;">Mono (```)</button>
+                                        </div>
+                                        <textarea id="node-text" rows="12" class="form-control" style="width: 100%; padding: 8px; font-size: 0.82rem; resize: vertical; flex: 1; min-height: 260px; height: 320px; font-family: monospace; background: var(--bg-primary); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 6px;"></textarea>
+                                    </div>
                                 </div>
 
-                                <div id="node-status-field" class="hidden">
-                                    <label for="node-status" style="font-size: 0.75rem; font-weight: 600;">Status Konten (Stok/Ketersediaan)</label>
-                                    <select id="node-status" class="form-control" style="width: 100%; padding: 6px; font-size: 0.82rem; background: var(--bg-primary); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 6px;">
-                                        <option value="">(Tanpa Status)</option>
-                                        <option value="Tersedia">🟢 Tersedia</option>
-                                        <option value="Habis">🔴 Habis</option>
-                                        <option value="Pre-order">🟡 Pre-order</option>
-                                    </select>
+                                <!-- SECTION 2: BERKAS MEDIA -->
+                                <div id="node-sec-media" class="node-editor-section hidden" style="display: flex; flex-direction: column; gap: 12px; margin-bottom: auto;">
+                                    <div class="form-group">
+                                        <label for="node-type" style="font-size: 0.75rem; font-weight: 600;">Tipe Menu</label>
+                                        <select id="node-type" onchange="toggleNodeFields()" style="width: 100%; padding: 6px; font-size: 0.82rem; border-radius: 6px; border: 1px solid var(--border-color); background: var(--bg-primary); color: var(--text-primary);">
+                                            <option value="category">📁 Kategori (Milik sub-menu)</option>
+                                            <option value="content">📄 Konten (Teks / Media Akhir)</option>
+                                        </select>
+                                    </div>
+
+                                    <div id="node-media-field" class="hidden">
+                                        <label for="node-media" style="font-size: 0.75rem; font-weight: 600;">Lampiran Berkas Media (Nama File)</label>
+                                        <div style="display: flex; gap: 6px;">
+                                            <input type="text" id="node-media" class="form-control" placeholder="brosur.pdf" style="flex: 1; padding: 6px; font-size: 0.82rem; border-radius: 6px;">
+                                            <button type="button" class="btn btn-secondary" onclick="document.getElementById('node-media-file').click()" style="padding: 6px 10px; font-size: 0.8rem; min-height: auto; border-radius: 6px;">Pilih File</button>
+                                        </div>
+                                        <input type="file" id="node-media-file" onchange="uploadNodeMediaFile(this)" style="display: none;">
+                                        <small style="color: var(--text-secondary); font-size: 0.65rem;">Masukkan nama file di folder media.</small>
+                                    </div>
                                 </div>
 
-                                <div class="form-group" style="display: flex; align-items: center; gap: 8px; padding: 2px 0;">
-                                    <input type="checkbox" id="node-promo" style="width: 16px; height: 16px; cursor: pointer; accent-color: #ff9f0a;">
-                                    <label for="node-promo" style="font-size: 0.78rem; cursor: pointer; font-weight: 600; color: #ffd60a;">🔥 Promo Spesial</label>
+                                <!-- SECTION 3: STATUS & PROMO -->
+                                <div id="node-sec-status" class="node-editor-section hidden" style="display: flex; flex-direction: column; gap: 12px; margin-bottom: auto;">
+                                    <div id="node-status-field" class="hidden">
+                                        <label for="node-status" style="font-size: 0.75rem; font-weight: 600;">Status Konten (Stok/Ketersediaan)</label>
+                                        <select id="node-status" class="form-control" style="width: 100%; padding: 6px; font-size: 0.82rem; background: var(--bg-primary); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 6px;">
+                                            <option value="">(Tanpa Status)</option>
+                                            <option value="Tersedia">🟢 Tersedia</option>
+                                            <option value="Habis">🔴 Habis</option>
+                                            <option value="Pre-order">🟡 Pre-order</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="form-group" style="display: flex; align-items: center; gap: 8px; padding: 2px 0;">
+                                        <input type="checkbox" id="node-promo" style="width: 16px; height: 16px; cursor: pointer; accent-color: #ff9f0a;">
+                                        <label for="node-promo" style="font-size: 0.78rem; cursor: pointer; font-weight: 600; color: #ffd60a;">🔥 Promo Spesial</label>
+                                    </div>
                                 </div>
 
-                                <div style="display: flex; gap: 8px; margin-top: 10px;">
-                                    <button id="btn-add-child" class="btn btn-secondary" onclick="addChildNode()" style="flex: 1; font-size: 0.75rem; padding: 6px; border-radius: 6px; min-height: auto; cursor: pointer;">
+                                <!-- BOTTOM ACTIONS -->
+                                <div style="display: flex; gap: 8px; margin-top: auto; padding-top: 10px; border-top: 1px solid var(--border-color); flex-shrink: 0;">
+                                    <button id="btn-add-child" class="btn btn-secondary" onclick="addChildNode()" style="flex: 1; font-size: 0.75rem; padding: 8px; border-radius: 6px; min-height: auto; cursor: pointer;">
                                         <i data-lucide="plus-circle" style="width: 12px; height: 12px; display: inline-block; vertical-align: middle;"></i> Tambah Anak
                                     </button>
-                                    <button class="btn btn-secondary" onclick="deleteNode()" style="flex: 1; font-size: 0.75rem; padding: 6px; color: #ff453a; border-color: rgba(255,69,58,0.3); border-radius: 6px; min-height: auto; cursor: pointer;">
+                                    <button class="btn btn-secondary" onclick="deleteNode()" style="flex: 1; font-size: 0.75rem; padding: 8px; color: #ff453a; border-color: rgba(255,69,58,0.3); border-radius: 6px; min-height: auto; cursor: pointer;">
                                         <i data-lucide="trash" style="width: 12px; height: 12px; display: inline-block; vertical-align: middle;"></i> Hapus
                                     </button>
                                 </div>

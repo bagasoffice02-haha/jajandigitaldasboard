@@ -1242,6 +1242,11 @@ window.selectTreeNode = function(nodeId) {
     document.getElementById('node-editor-placeholder').classList.add('hidden');
     document.getElementById('node-editor-fields').classList.remove('hidden');
     
+    // Reset to message tab
+    if (typeof window.switchNodeEditorTab === 'function') {
+        window.switchNodeEditorTab('message');
+    }
+    
     // Update data form
     document.getElementById('node-name').value = node.name;
     document.getElementById('node-aliases').value = Array.isArray(node.aliases) ? node.aliases.join(', ') : '';
@@ -4530,6 +4535,29 @@ window.switchGroupSubTab = function(tabName) {
         document.getElementById('grp-tab-content-settings').classList.add('hidden');
         document.getElementById('grp-tab-content-tree').classList.remove('hidden');
     }
+    
+    // Re-trigger Lucide icons render just in case
+    if (window.lucide) lucide.createIcons();
+};
+
+// Switch node editor sub-tabs (Isi Pesan vs Berkas Media vs Status)
+window.switchNodeEditorTab = function(tabName) {
+    // Switch active states on tab buttons
+    document.querySelectorAll('.node-tab-btn').forEach(btn => btn.classList.remove('active'));
+    
+    const btnMap = {
+        'message': 0,
+        'media': 1,
+        'status': 2
+    };
+    const btns = document.querySelectorAll('.node-tab-btn');
+    if (btns && btns[btnMap[tabName]]) {
+        btns[btnMap[tabName]].classList.add('active');
+    }
+    
+    // Switch active states on sections
+    document.querySelectorAll('.node-editor-section').forEach(sec => sec.classList.add('hidden'));
+    document.getElementById(`node-sec-${tabName}`)?.classList.remove('hidden');
     
     // Re-trigger Lucide icons render just in case
     if (window.lucide) lucide.createIcons();
