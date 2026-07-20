@@ -112,83 +112,9 @@ router.delete('/group-config/:groupId', async (req, res) => {
 
 // Endpoint untuk mengekstrak daftar nomor anggota dari grup tertentu
 router.get('/groups/:groupId/members', async (req, res) => {
-    try {
-        const { groupId } = req.params;
-        const client = getClient();
-        if (!client || getStatus() !== 'CONNECTED') {
-            return res.status(400).json({ error: 'WhatsApp client tidak terhubung.' });
-        }
-
-        console.log(`[API Members] Mengambil anggota grup untuk ${groupId}...`);
-        let participants = [];
-
-        // Evaluasi langsung di WA Web via Puppeteer
-        try {
-            participants = await client.pupPage.evaluate(async (chatId) => {
-                try {
-                    const chat = window.WWebJS.getChat(chatId);
-                    if (!chat || !chat.groupMetadata) return [];
-                    
-                    try {
-                        const WAWebGroupQueryJob = window.require('WAWebGroupQueryJob');
-                        if (WAWebGroupQueryJob && WAWebGroupQueryJob.queryAndUpdateGroupMetadataById) {
-                            await WAWebGroupQueryJob.queryAndUpdateGroupMetadataById({ id: chatId });
-                        }
-                    } catch (_) {}
-
-                    const metadata = chat.groupMetadata;
-                    if (metadata && metadata.participants) {
-                        return metadata.participants.map(p => ({
-                            id: p.id._serialized,
-                            user: p.id.user,
-                            isAdmin: p.isAdmin || false,
-                            isSuperAdmin: p.isSuperAdmin || false
-                        }));
-                    }
-                } catch (e) {
-                    console.error('Error in WA page evaluate:', e.message);
-                }
-                return [];
-            }, groupId);
-        } catch (evalErr) {
-            console.warn('[API Members] Evaluasi halaman gagal, fallback ke fetchChat:', evalErr.message);
-        }
-
-        // Fallback ke standard fetch jika evaluasi kosong
-        if (!participants || participants.length === 0) {
-            try {
-                const chat = await client.getChatById(groupId);
-                if (chat && chat.isGroup && chat.participants) {
-                    participants = chat.participants.map(p => ({
-                        id: p.id._serialized,
-                        user: p.id.user,
-                        isAdmin: p.isAdmin || false,
-                        isSuperAdmin: p.isSuperAdmin || false
-                    }));
-                }
-            } catch (getChatErr) {
-                console.error('[API Members] Fallback getChatById juga gagal:', getChatErr.message);
-            }
-        }
-
-        if (!participants || participants.length === 0) {
-            return res.status(404).json({ error: 'Anggota grup tidak ditemukan atau gagal diambil. Pastikan bot adalah anggota grup tersebut.' });
-        }
-
-        const resolved = participants.map(p => {
-            return {
-                id: p.id,
-                phone: p.user,
-                isAdmin: p.isAdmin,
-                isSuperAdmin: p.isSuperAdmin
-            };
-        });
-
-        res.json({ success: true, count: resolved.length, members: resolved });
-    } catch (err) {
-        console.error('Gagal mengambil anggota grup:', err.message);
-        res.status(500).json({ error: err.message });
-    }
+    return res.status(403).json({
+        error: '🚫 Fitur pengambilan/ekstraksi anggota grup dinonaktifkan secara permanen untuk melindungi akun WhatsApp dari pemblokiran (ban) Meta.'
+    });
 });
 
 module.exports = router;

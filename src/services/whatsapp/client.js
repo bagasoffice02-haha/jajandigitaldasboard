@@ -387,23 +387,6 @@ function createNewClient(io) {
 
                 // Hentikan typing state
                 try { await chat.clearState(); } catch (_) {}
-            } else {
-                // Untuk grup: Cek mention @semua / @everyone
-                const isMentionEveryone = typeof content === 'string' && (
-                    content.toLowerCase().includes('@semua') || 
-                    content.toLowerCase().includes('@everyone')
-                );
-                
-                if (isMentionEveryone) {
-                    const chat = await client.getChatById(chatId);
-                    if (chat.isGroup && chat.participants) {
-                        const contactPromises = chat.participants.map(p => 
-                            client.getContactById(p.id._serialized).catch(() => null)
-                        );
-                        const contacts = await Promise.all(contactPromises);
-                        sendOptions.mentions = contacts.filter(c => c !== null);
-                    }
-                }
             }
         } catch (err) {
             console.warn('[Anti-Ban/Mention Everyone Warning] Gagal memproses pesan:', err.message);
