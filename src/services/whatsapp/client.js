@@ -43,8 +43,13 @@ if (process.platform === 'android') {
         console.warn(`[WhatsApp] Peringatan: Berjalan di Termux tetapi chromium tidak ditemukan di ${termuxChromiumPath}.`);
     }
 } else if (config.puppeteer_executable_path && config.puppeteer_executable_path.trim() !== '') {
-    puppeteerOptions.executablePath = config.puppeteer_executable_path.trim();
-    console.log(`[WhatsApp] Menggunakan custom puppeteer executablePath: ${puppeteerOptions.executablePath}`);
+    const customPath = config.puppeteer_executable_path.trim();
+    if (fs.existsSync(customPath)) {
+        puppeteerOptions.executablePath = customPath;
+        console.log(`[WhatsApp] Menggunakan custom puppeteer executablePath: ${puppeteerOptions.executablePath}`);
+    } else {
+        console.warn(`[WhatsApp] Custom puppeteer executablePath tidak ditemukan di: "${customPath}". Menggunakan Chromium bawaan.`);
+    }
 }
 
 function cleanupChromeCache(sessionPath) {
