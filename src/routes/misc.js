@@ -13,6 +13,43 @@ const { config } = require('../config/config');
 
 const KNOWLEDGE_DIR = './knowledge';
 
+router.get('/test-buka', async (req, res) => {
+    try {
+        const client = getClient();
+        if (!client || getStatus() !== 'CONNECTED') {
+            return res.json({ error: 'WA client not connected' });
+        }
+        const { group_configs: gConfigs } = await require('../db/models').getGroupConfigs();
+        const activeGroupIds = Object.keys(gConfigs);
+        const groupId = req.query.gid || activeGroupIds[0];
+        if (!groupId) return res.json({ error: 'No group configured' });
+        
+        console.log('[Test Buka] Gid:', groupId);
+        const chat = await client.getChatById(groupId);
+        
+        const result = await client.pupPage.evaluate(async (chatId) => {
+            try {
+                const chatWid = window.Store.WidFactory.createWid(chatId);
+                const chat = await window.Store.Chat.find(chatWid);
+                if (!chat) return { error: 'Chat not found in Store' };
+                
+                // Cek ketersediaan WAWebSetPropertyGroupAction
+                const hasSetGroupProperty = !!(window.require && window.require('WAWebSetPropertyGroupAction'));
+                
+                // Eksekusi setGroupProperty
+                await window.require('WAWebSetPropertyGroupAction').setGroupProperty(chat, 'announcement', 0);
+                return { success: true, hasSetGroupProperty };
+            } catch (e) {
+                return { error: e.message || String(e), stack: e.stack };
+            }
+        }, groupId);
+        
+        return res.json({ result });
+    } catch (err) {
+        return res.json({ error: err.message, stack: err.stack });
+    }
+});
+
 // ─── NOTEPAD ──────────────────────────────────────────────
 router.get('/notepad', async (req, res) => {
     try {
