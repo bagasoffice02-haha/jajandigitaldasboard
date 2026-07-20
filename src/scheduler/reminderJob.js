@@ -69,31 +69,16 @@ async function checkPremiumExpirations(clientOrGetClient, io) {
                 expiringSoon.push(`${itemDesc} (Sisa ${diffDays} hari lagi)`);
             }
 
-            // Send Auto-Reminder exactly 3 days and 1 day before expiration
+            // Send Auto-Reminder exactly 3 days and 1 day before expiration (DEACTIVATED/SUNTIK MATI)
             if (sale.auto_remind === 1 && (diffDays === 3 || diffDays === 1)) {
-                try {
-                    const cleanPhone = sale.buyer_phone.replace(/\D/g, '') + '@c.us';
-                    const reminderMsg = `🔔 *PENGINGAT LANGGANAN PREMIUM* 🔔\n\nHalo Kak *${sale.buyer_name}*,\n\nMengingatkan bahwa langganan akun premium Anda untuk produk *${sale.product_name}*${profileInfo} akan berakhir dalam *${diffDays} hari* (${sale.end_date}).\n\nKredensial Akun:\n- Login: \`${sale.account_email}\`\n\nSilakan lakukan perpanjangan langganan sebelum masa aktif berakhir agar layanan tidak terputus. Terima kasih! 🙏`;
-                    
-                    await client.sendMessage(cleanPhone, reminderMsg);
-                    console.log(`[Premium Scheduler] Sent auto-reminder to customer ${sale.buyer_name} (${cleanPhone})`);
-                    
-                    io.emit('message_log', {
-                        chatId: cleanPhone,
-                        body: `[Auto-Reminder Premium] Mengingatkan sisa hari: ${diffDays} hari`,
-                        type: 'outgoing',
-                        timestamp: Date.now()
-                    });
-                } catch (err) {
-                    console.error(`[Premium Scheduler] Gagal mengirim auto-reminder ke ${sale.buyer_name}:`, err.message);
-                }
+                console.log(`[Premium Scheduler] Expiration auto-reminder for customer ${sale.buyer_name} is deactivated to prevent bans.`);
             }
         }
 
         // Send daily rekap report to Admin Host
         if ((expired.length > 0 || expiringSoon.length > 0) && config.boss_number && config.boss_number.trim() !== '') {
             try {
-                const cleanBoss = config.boss_number.replace(/\D/g, '') + '@c.us';
+                const cleanBoss = config.boss_number.includes('@') ? config.boss_number.trim() : (config.boss_number.replace(/\D/g, '') + '@c.us');
                 
                 let adminMsg = `⚠️ *REKAP EXPIRED & PERINGATAN LANGGANAN PREMIUM* ⚠️\n\nHalo Bos! Berikut adalah daftar pelanggan premium yang sudah habis masa aktifnya atau akan habis dalam waktu dekat:\n\n`;
                 
@@ -142,7 +127,7 @@ async function sendDailyReport(clientOrGetClient, io) {
             return;
         }
 
-        const cleanBoss = config.boss_number.replace(/\D/g, '') + '@c.us';
+        const cleanBoss = config.boss_number.includes('@') ? config.boss_number.trim() : (config.boss_number.replace(/\D/g, '') + '@c.us');
         const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', timeZone: 'Asia/Jakarta' };
         const todayStr = new Date().toLocaleDateString('id-ID', options);
 
@@ -538,7 +523,7 @@ async function runWeeklyBackup(clientOrGetClient, io) {
         console.log('[Backup Scheduler] Backup ZIP berhasil dibuat di:', tempZipPath);
         
         if (client && config.boss_number && config.boss_number.trim() !== '') {
-            const cleanBoss = config.boss_number.replace(/\D/g, '') + '@c.us';
+            const cleanBoss = config.boss_number.includes('@') ? config.boss_number.trim() : (config.boss_number.replace(/\D/g, '') + '@c.us');
             const fileData = fs.readFileSync(tempZipPath);
             const base64Data = fileData.toString('base64');
             const mediaObj = new MessageMedia('application/zip', base64Data, zipFilename);
