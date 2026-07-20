@@ -29,6 +29,11 @@ async function handleCustomerMessage(msg, {
     chatId, senderId, userMessage, textLower, isGroup, clientInstance, ioInstance,
     activeCfg, configGroupId, gConfigs, customerMenuStates, activeLocks
 }) {
+    if (activeLocks && activeLocks.has(chatId)) {
+        console.log(`[Rate Limit Guard] Chat ID ${chatId} sedang diproses. Mengabaikan pesan beruntun.`);
+        return true;
+    }
+
     const sessionKey = `${chatId}_${senderId}`;
     const text = textLower;
 
@@ -292,6 +297,8 @@ async function handleCustomerMessage(msg, {
                                 const base64Data = fileData.toString('base64');
                                 const mimeType = getMimeType(mediaPath);
                                 const mediaObj = new MessageMedia(mimeType, base64Data, path.basename(mediaPath));
+                                // Delay 1.5s antar pesan teks & gambar agar tidak instan bersamaan
+                                await new Promise(r => setTimeout(r, 1500));
                                 await clientInstance.sendMessage(chatId, mediaObj, { quotedMessageId: msg.id._serialized });
                             }
                         }
@@ -329,6 +336,8 @@ async function handleCustomerMessage(msg, {
                                     const base64Data = fileData.toString('base64');
                                     const mimeType = getMimeType(mediaPath);
                                     const mediaObj = new MessageMedia(mimeType, base64Data, path.basename(mediaPath));
+                                    // Delay 1.5s antar pesan teks & gambar agar tidak instan bersamaan
+                                    await new Promise(r => setTimeout(r, 1500));
                                     await clientInstance.sendMessage(chatId, mediaObj, { quotedMessageId: msg.id._serialized });
                                 }
                             }
