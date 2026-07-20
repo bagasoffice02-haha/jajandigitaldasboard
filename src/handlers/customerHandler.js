@@ -389,7 +389,20 @@ async function handleCustomerMessage(msg, {
                 msg.body.includes(botDigits) ||
                 nameRegex.test(msg.body)
             );
-            if (isMentioned) {
+
+            let isReplyToBot = false;
+            if (msg.hasQuotedMsg) {
+                try {
+                    const quotedMsg = await msg.getQuotedMessage();
+                    if (quotedMsg && (quotedMsg.fromMe || (botDigits && quotedMsg.author && getDigits(quotedMsg.author).includes(botDigits)))) {
+                        isReplyToBot = true;
+                    }
+                } catch (quoteErr) {
+                    console.warn('[Quote Check Warning] Gagal memeriksa pesan kutipan:', quoteErr.message);
+                }
+            }
+
+            if (isMentioned || isReplyToBot) {
                 shouldTriggerAi = true;
             }
         } else {
