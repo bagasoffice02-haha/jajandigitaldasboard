@@ -22,9 +22,6 @@ router.get('/pinned-chats', async (req, res) => {
         res.status(500).json({ error: err.message });
     }
 });
-        res.status(500).json({ error: err.message });
-    }
-});
 
 // ─── ADMINS ───────────────────────────────────────────────
 router.get('/admins', async (req, res) => {
