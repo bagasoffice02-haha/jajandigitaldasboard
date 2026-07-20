@@ -62,7 +62,7 @@ async function handleIncomingMessage(msg) {
         }
         opt = opt || {};
 
-        if (typeof content === 'string') {
+        if (typeof content === 'string' && (content.includes('@user') || content.includes('@nama'))) {
             try {
                 const contact = await msg.getContact();
                 const pushname = contact.pushname || 'Pelanggan';
