@@ -101,6 +101,11 @@ async function handleIncomingMessage(msg) {
 
     if (shouldIgnore) return;
 
+    // Jika bukan grup dan bukan admin, abaikan chat pribadi sepenuhnya (100% matikan bot/AI di Japri)
+    if (!isGroup && !isSenderHostAdmin) {
+        return;
+    }
+
     // Auto-prefix dot for invoice command
     if (isSenderHostAdmin && msg.hasQuotedMsg) {
         const cleanMsg = userMessage.toLowerCase().trim();
