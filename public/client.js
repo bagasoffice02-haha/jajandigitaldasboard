@@ -2350,13 +2350,7 @@ window.loadCustomersList = async function() {
                     <input type="number" id="cust-order-${idx}" value="${cust.orderCount || 0}" class="form-control" style="width: 100%; padding: 4px; font-size: 0.8rem; text-align: center; background: var(--bg-primary); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 6px; height: 28px;" title="Order Count">
                 </div>
                 
-                <!-- Status Respon AI -->
-                <div style="width: 75px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;" title="Aktif/Nonaktifkan respon AI otomatis untuk pelanggan ini">
-                    <label style="display: flex; align-items: center; gap: 4px; font-size: 0.75rem; cursor: pointer; user-select: none;">
-                        <input type="checkbox" id="cust-ai-enable-${idx}" ${cust.mute_ai === 1 ? '' : 'checked'} onchange="document.getElementById('cust-ai-label-${idx}').textContent = this.checked ? 'AI On' : 'AI Off'; document.getElementById('cust-ai-label-${idx}').style.color = this.checked ? '#30d158' : 'var(--text-secondary)';" style="cursor: pointer; width: 14px; height: 14px;">
-                        <span id="cust-ai-label-${idx}" style="font-weight: bold; color: ${cust.mute_ai === 1 ? 'var(--text-secondary)' : '#30d158'};">${cust.mute_ai === 1 ? 'AI Off' : 'AI On'}</span>
-                    </label>
-                </div>
+
                 
                 <!-- Aksi Buttons -->
                 <div style="display: flex; gap: 6px; align-items: center; flex-shrink: 0;">
@@ -2383,13 +2377,11 @@ window.saveCustomerInfo = async function(idx) {
     const newNotes = document.getElementById(`cust-notes-${idx}`).value.trim();
     const newLabels = document.getElementById(`cust-labels-${idx}`).value.split(',').map(s => s.trim()).filter(Boolean);
     const newOrderCount = parseInt(document.getElementById(`cust-order-${idx}`).value, 10) || 0;
-    const isAiEnabled = document.getElementById(`cust-ai-enable-${idx}`).checked;
     
     cust.name = newName;
     cust.notes = newNotes;
     cust.labels = newLabels;
     cust.orderCount = newOrderCount;
-    cust.mute_ai = isAiEnabled ? 0 : 1;
     
     try {
         const res = await fetch('/api/shop/customers', {
