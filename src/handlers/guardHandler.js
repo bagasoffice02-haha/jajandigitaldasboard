@@ -36,7 +36,9 @@ async function checkAndProcessGuards(msg, {
         })();
     }
 
-    if (!isSenderHostAdmin && isGroup) {
+    // Only query group participants to check if sender is group admin IF the message is a potential command
+    const isPotentialCommand = userMessage && (userMessage.startsWith('!') || userMessage.startsWith('.'));
+    if (!isSenderHostAdmin && isGroup && isPotentialCommand) {
         try {
             const chat = await msg.getChat();
             if (chat.isGroup) {
