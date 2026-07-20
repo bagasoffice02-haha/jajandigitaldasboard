@@ -289,17 +289,25 @@ function attachClientListeners() {
             let groupChat = null;
             try { groupChat = await client.getChatById(groupId); } catch(_) {}
             
-            let targetIds = notification.recipientIds || [];
-            if (!Array.isArray(targetIds) || targetIds.length === 0) {
-                if (notification.author) {
-                    targetIds = [notification.author];
-                }
+            // Ekstrak target JIDs secara robust dari berbagai kemungkinan properti
+            let targetIds = [];
+            if (notification.recipientIds && notification.recipientIds.length > 0) {
+                targetIds = notification.recipientIds;
+            } else if (notification.id && notification.id.participant) {
+                targetIds = [notification.id.participant];
+            } else if (notification.author) {
+                targetIds = [notification.author];
             }
             
-            console.log(`[WA Group Update] Event: ${isJoin ? 'Join' : 'Leave'} | Grup: ${groupId} | Target:`, targetIds);
+            if (!Array.isArray(targetIds) || targetIds.length === 0) {
+                console.warn('[WA Group Update] Gagal mendeteksi JID anggota yang masuk/keluar dari notification payload.');
+                return;
+            }
+            
+            console.log(`[WA Group Update] Event: ${isJoin ? 'Join' : 'Leave'} | Grup: ${groupId} | Target JIDs:`, targetIds);
             
             for (const participantId of targetIds) {
-                let contact = { id: { _serialized: participantId } };
+                let contact = null;
                 let displayName = '';
                 
                 try {
@@ -307,6 +315,16 @@ function attachClientListeners() {
                     displayName = contact.pushname || contact.name || '';
                 } catch (contactErr) {
                     console.warn('[Welcome/Goodbye Warning] Gagal mendapatkan profil kontak, menggunakan fallback:', contactErr.message);
+                }
+                
+                if (!contact) {
+                    contact = { 
+                        id: { 
+                            _serialized: participantId,
+                            user: participantId.split('@')[0],
+                            server: 'c.us'
+                        } 
+                    };
                 }
                 
                 if (!displayName && groupChat && groupChat.participants) {
