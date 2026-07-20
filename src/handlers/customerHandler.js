@@ -21,8 +21,7 @@ async function simulateTyping(msg, delayMs = 2000) {
         const chat = await msg.getChat();
         try { await chat.sendSeen(); } catch (_) {}
         await chat.sendStateTyping();
-        const typingDelay = delayMs || (2000 + Math.floor(Math.random() * 1500));
-        await new Promise(resolve => setTimeout(resolve, typingDelay));
+        await new Promise(resolve => setTimeout(resolve, 2000));
     } catch (_) {}
 }
 
