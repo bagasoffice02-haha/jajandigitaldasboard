@@ -130,33 +130,6 @@
     </div>
 
     <!-- ══════════════════════════════════════════
-         TAB - BROADCAST (DINONAKTIFKAN)
-    ══════════════════════════════════════════ -->
-    <div id="tab-broadcast" class="tab-content hidden">
-        <main class="dashboard-grid" style="place-items: center;">
-            <section class="panel card" style="grid-column: 1 / -1; padding: 60px 40px; display: flex; flex-direction: column; align-items: center; gap: 20px; text-align: center; max-width: 520px; margin: 0 auto;">
-                <div style="width: 72px; height: 72px; border-radius: 50%; background: rgba(255, 69, 58, 0.12); display: flex; align-items: center; justify-content: center;">
-                    <i data-lucide="shield-off" style="width: 36px; height: 36px; color: #ff453a; stroke-width: 1.5px;"></i>
-                </div>
-                <h2 style="margin: 0; font-size: 1.25rem; color: var(--text-primary);">Fitur Siaran Massal Dinonaktifkan</h2>
-                <p style="margin: 0; font-size: 0.88rem; color: var(--text-secondary); line-height: 1.6; max-width: 400px;">
-                    Fitur broadcast/siaran massal telah <strong style="color: #ff453a;">dinonaktifkan secara permanen</strong> untuk melindungi akun WhatsApp Anda dari risiko pemblokiran.<br><br>
-                    Pengiriman pesan massal ke banyak nomor sekaligus merupakan salah satu penyebab utama akun WhatsApp diblokir oleh Meta.
-                </p>
-                <div style="background: rgba(255, 159, 10, 0.08); border: 1px solid rgba(255, 159, 10, 0.2); border-radius: 12px; padding: 16px 20px; text-align: left; width: 100%; max-width: 420px;">
-                    <p style="margin: 0 0 8px; font-size: 0.8rem; font-weight: 700; color: #ff9f0a;">⚠️ Mengapa Fitur Ini Berbahaya?</p>
-                    <ul style="margin: 0; padding-left: 18px; font-size: 0.78rem; color: var(--text-secondary); line-height: 1.7;">
-                        <li>Mengirim DM ke nomor yang tidak kenal = laporan spam</li>
-                        <li>Pola pengiriman massal terdeteksi oleh sistem Meta</li>
-                        <li>Risiko ban permanen pada akun WhatsApp</li>
-                        <li>Tidak ada jeda yang cukup aman antar pesan massal</li>
-                    </ul>
-                </div>
-            </section>
-        </main>
-    </div>
-
-    <!-- ══════════════════════════════════════════
          TAB 2 — MEMORY
     ══════════════════════════════════════════ -->
     <div id="tab-memory" class="tab-content hidden">
@@ -636,7 +609,7 @@
     ══════════════════════════════════════════ -->
     <div id="tab-shop" class="tab-content hidden">
         <div class="sub-tab-nav" style="display: flex; gap: 8px; margin: 15px 20px 0 20px; background: rgba(255,255,255,0.02); padding: 4px; border-radius: 8px; border: 1px solid var(--border-color); width: fit-content; flex-wrap: wrap;">
-            <button class="btn btn-secondary combined-sub-btn active" data-tab="shop" onclick="switchTabWithSub('shop')">Host &amp; Broadcast</button>
+            <button class="btn btn-secondary combined-sub-btn active" data-tab="shop" onclick="switchTabWithSub('shop')">Host &amp; Pelanggan</button>
             <button class="btn btn-secondary combined-sub-btn" data-tab="transactions" data-sub="orders" onclick="switchTabWithSub('transactions', 'orders')">Daftar Pesanan</button>
             <button class="btn btn-secondary combined-sub-btn" data-tab="transactions" data-sub="invoices" onclick="switchTabWithSub('transactions', 'invoices')">Riwayat Invoice</button>
             <button class="btn btn-secondary combined-sub-btn" data-tab="premium" data-sub="stock" onclick="switchTabWithSub('premium', 'stock')">Stok Premium</button>
@@ -948,7 +921,7 @@
     ══════════════════════════════════════════ -->
     <div id="tab-transactions" class="tab-content hidden">
         <div class="sub-tab-nav" style="display: flex; gap: 8px; margin: 15px 20px 0 20px; background: rgba(255,255,255,0.02); padding: 4px; border-radius: 8px; border: 1px solid var(--border-color); width: fit-content; flex-wrap: wrap;">
-            <button class="btn btn-secondary combined-sub-btn" data-tab="shop" onclick="switchTabWithSub('shop')">Host &amp; Broadcast</button>
+            <button class="btn btn-secondary combined-sub-btn" data-tab="shop" onclick="switchTabWithSub('shop')">Host &amp; Pelanggan</button>
             <button class="btn btn-secondary combined-sub-btn active" data-tab="transactions" data-sub="orders" onclick="switchTabWithSub('transactions', 'orders')">Daftar Pesanan</button>
             <button class="btn btn-secondary combined-sub-btn" data-tab="transactions" data-sub="invoices" onclick="switchTabWithSub('transactions', 'invoices')">Riwayat Invoice</button>
             <button class="btn btn-secondary combined-sub-btn" data-tab="premium" data-sub="stock" onclick="switchTabWithSub('premium', 'stock')">Stok Premium</button>
@@ -1764,7 +1737,7 @@
     ══════════════════════════════════════════ -->
     <div id="tab-premium" class="tab-content hidden">
         <div class="sub-tab-nav" style="display: flex; gap: 8px; margin: 15px 0 15px 0; background: rgba(255,255,255,0.02); padding: 4px; border-radius: 8px; border: 1px solid var(--border-color); width: fit-content; flex-wrap: wrap;">
-            <button class="btn btn-secondary combined-sub-btn" data-tab="shop" onclick="switchTabWithSub('shop')">Host &amp; Broadcast</button>
+            <button class="btn btn-secondary combined-sub-btn" data-tab="shop" onclick="switchTabWithSub('shop')">Host &amp; Pelanggan</button>
             <button class="btn btn-secondary combined-sub-btn" data-tab="transactions" data-sub="orders" onclick="switchTabWithSub('transactions', 'orders')">Daftar Pesanan</button>
             <button class="btn btn-secondary combined-sub-btn" data-tab="transactions" data-sub="invoices" onclick="switchTabWithSub('transactions', 'invoices')">Riwayat Invoice</button>
             <button class="btn btn-secondary combined-sub-btn active" data-tab="premium" data-sub="stock" onclick="switchTabWithSub('premium', 'stock')">Stok Premium</button>
