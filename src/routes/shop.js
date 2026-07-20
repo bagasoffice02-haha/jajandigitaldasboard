@@ -11,41 +11,17 @@ let cancelBroadcastFlag = false;
 // ─── PINNED CHATS (host admin) ────────────────────────────
 router.get('/pinned-chats', async (req, res) => {
     try {
-        const client = getClient();
         const db = getDb();
-        const admins = await db.all('SELECT phone FROM shop_admins') || [];
-        const adminPhones = new Set(admins.map(a => a.phone.replace(/\D/g, '')));
-        
-        const fallbackToDbAdmins = () => admins.map(a => {
+        const admins = await db.all('SELECT phone, name FROM shop_admins') || [];
+        const result = admins.map(a => {
             const clean = a.phone.replace(/\D/g, '');
-            return { id: `${clean}@c.us`, name: clean, phone: clean, isHostAdmin: true };
+            return { id: `${clean}@c.us`, name: a.name || clean, phone: clean, isHostAdmin: true };
         });
-        
-        if (!client || getStatus() !== 'CONNECTED') return res.json(fallbackToDbAdmins());
-        
-        let chats = [];
-        try {
-            chats = await client.getChats();
-        } catch (err) {
-            console.warn('[API Pinned Chats] Fallback ke DB:', err.message);
-            return res.json(fallbackToDbAdmins());
-        }
-        
-        const pinned = chats.filter(chat => chat.pinned && !chat.isGroup).map(chat => {
-            const phone = (chat.id.user || '').replace(/\D/g, '');
-            return { id: chat.id._serialized, name: chat.name || phone, phone, isHostAdmin: adminPhones.has(phone) };
-        });
-        
-        const pinnedPhones = new Set(pinned.map(p => p.phone));
-        admins.forEach(a => {
-            const clean = a.phone.replace(/\D/g, '');
-            if (clean && !pinnedPhones.has(clean)) {
-                pinned.push({ id: `${clean}@c.us`, name: clean, phone: clean, isHostAdmin: true });
-            }
-        });
-        
-        res.json(pinned);
+        res.json(result);
     } catch(err) {
+        res.status(500).json({ error: err.message });
+    }
+});
         res.status(500).json({ error: err.message });
     }
 });

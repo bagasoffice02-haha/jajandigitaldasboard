@@ -137,25 +137,6 @@ function cleanupHeadlessChrome() {
     });
 }
 
-async function syncPinnedHostAdmins() {
-    if (!client) return;
-    try {
-        const chats = await client.getChats();
-        const pinnedAdmins = chats
-            .filter(chat => chat.pinned && !chat.isGroup)
-            .map(chat => chat.id.user.replace(/\D/g, ''));
-        
-        for (const adminPhone of pinnedAdmins) {
-            if (adminPhone) {
-                await addAdmin(adminPhone, 'Pinned Host Admin');
-            }
-        }
-        
-        console.log(`[Host Admin] Sinkronisasi ${pinnedAdmins.length} Host Admin dari chat tersemat.`);
-    } catch (err) {
-        console.error('[Host Admin] Gagal sinkronisasi chat tersemat:', err.message);
-    }
-}
 
 function attachClientListeners() {
     client.on('qr', (qr) => {
@@ -199,12 +180,6 @@ function attachClientListeners() {
         }
         
         if (syncInterval) clearInterval(syncInterval);
-        
-        // Tunda 15 detik sebelum sync pinned admins agar WhatsApp Web selesai loading 100%
-        setTimeout(() => {
-            syncPinnedHostAdmins();
-        }, 15000);
-        syncInterval = setInterval(syncPinnedHostAdmins, 120000);
 
         if (global.wasDisconnected) {
             setTimeout(async () => {
