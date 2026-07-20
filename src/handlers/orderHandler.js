@@ -65,6 +65,12 @@ async function handleOrderMessage(msg, {
                     });
                 }
                 
+                try {
+                    const chat = await msg.getChat();
+                    try { await chat.sendStateTyping(); } catch(_) {}
+                    await new Promise(r => setTimeout(r, 2000));
+                } catch(_) {}
+
                 await msg.reply(`✅ *Pesanan Anda Telah Dicatat!*\n\n` +
                                 `📦 *Detail:* ${details}\n` +
                                 `👤 *Nama:* ${contactName || customerNumber}\n\n` +
