@@ -185,8 +185,7 @@ server.listen(PORT, async () => {
     await cleanupHeadlessChrome();
     createNewClient(io);
 
-    const { startDailyReportScheduler, startReminderScheduler, startGroupScheduleScheduler } = require('./src/scheduler/reminderJob');
-    startDailyReportScheduler(getClient, io, getStatus);
+    const { startReminderScheduler, startGroupScheduleScheduler } = require('./src/scheduler/reminderJob');
     startReminderScheduler(getClient, io, getStatus);
     startGroupScheduleScheduler(getClient, getStatus);
 
