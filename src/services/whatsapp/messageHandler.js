@@ -92,6 +92,7 @@ async function handleIncomingMessage(msg) {
     };
 
     const isGroup = msg.isGroupMsg || chatId.includes('@g.us');
+    const { group_configs: gConfigs } = await getGroupConfigs();
     const shopData = await getShopData();
 
     // 1. Guard check (termasuk auto-CRM save, auto-vcard, checking bot active settings)
@@ -104,6 +105,45 @@ async function handleIncomingMessage(msg) {
     // Jika bukan grup dan bukan admin, abaikan chat pribadi sepenuhnya (100% matikan bot/AI di Japri)
     if (!isGroup && !isSenderHostAdmin) {
         return;
+    }
+
+    // Untuk pesan di Grup dari non-admin: abaikan segera jika tidak ada kaitan dengan bot (hemat CPU & memori)
+    if (isGroup && !isSenderHostAdmin) {
+        const cleanMsg = userMessage.toLowerCase().trim();
+        const isMenuTrigger = ['menu', 'bantuan', 'help', '#', 'list'].includes(cleanMsg);
+        const isCommand = userMessage.startsWith('!') || userMessage.startsWith('.') || userMessage.startsWith('#');
+        
+        const getDigits = (str) => str ? str.replace(/\D/g, '') : '';
+        const botDigits = clientInstance && clientInstance.info ? getDigits(clientInstance.info.wid.user) : null;
+        
+        const defaultNames = ['bot', 'ai'];
+        const activeCfg = gConfigs[chatId] || {};
+        const customNames = activeCfg.aiNames ? activeCfg.aiNames.split(',').map(n => n.trim().toLowerCase()).filter(n => n) : defaultNames;
+        const escapedNames = customNames.map(n => n.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&'));
+        const nameRegex = new RegExp(`(\\b(${escapedNames.join('|')})\\b)`, 'gi');
+
+        const isMentioned = botDigits && (
+            (msg.mentionedIds && msg.mentionedIds.some(id => getDigits(id).includes(botDigits))) ||
+            msg.body.includes('@' + botDigits) ||
+            msg.body.includes(botDigits) ||
+            nameRegex.test(msg.body)
+        );
+
+        let isReplyToBot = false;
+        if (msg.hasQuotedMsg) {
+            try {
+                const quotedMsg = await msg.getQuotedMessage();
+                if (quotedMsg && (quotedMsg.fromMe || (botDigits && quotedMsg.author && getDigits(quotedMsg.author).includes(botDigits)))) {
+                    isReplyToBot = true;
+                }
+            } catch (quoteErr) {
+                console.warn('[Early Quote Check Warning] Gagal:', quoteErr.message);
+            }
+        }
+
+        if (!isMenuTrigger && !isCommand && !isMentioned && !isReplyToBot) {
+            return;
+        }
     }
 
     // Auto-prefix dot for invoice command
@@ -131,8 +171,6 @@ async function handleIncomingMessage(msg) {
     });
     if (adminMenuHandled) return;
 
-    // 4. ADMIN & BOSS QUICK COMMANDS
-    const { group_configs: gConfigs } = await getGroupConfigs();
     const groupId = chatId;
     const adminCommandHandled = await handleAdminCommandMessage(msg, {
         senderId, userMessage, textLower, isSenderHostAdmin, isGroup, shopData,
