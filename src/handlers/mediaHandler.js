@@ -8,7 +8,10 @@ const { generateUnifiedAiResponse } = require('../services/ai/aiService');
 async function handleMediaMessage(msg, {
     chatId, userMessage, isSenderHostAdmin, ioInstance, activeLocks
 }) {
-    if (!msg.hasMedia || !isSenderHostAdmin) return false;
+    // Hanya izinkan media gambar/foto ('image') atau dokumen ('document')
+    // Format lain seperti video, stiker, audio, atau voice note akan diabaikan secara senyap
+    const allowedTypes = ['image', 'document'];
+    if (!msg.hasMedia || !isSenderHostAdmin || !allowedTypes.includes(msg.type)) return false;
 
     activeLocks.add(chatId);
     try {
@@ -107,7 +110,8 @@ async function handleMediaMessage(msg, {
             }
         }
         else {
-            await msg.reply('❌ Maaf Bos, format berkas ini belum didukung. Silakan kirimkan dokumen dalam format PDF/TXT, atau gambar dalam format foto/screenshot.');
+            // Berkas format dokumen lain tidak didukung, abaikan secara senyap tanpa membalas
+            return false;
         }
     } catch (err) {
         console.error('Gagal membaca media:', err.message);
