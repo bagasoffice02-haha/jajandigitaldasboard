@@ -367,9 +367,9 @@ async function handleCustomerMessage(msg, {
         console.error('[CRM Check Mute AI Error]:', dbErr.message);
     }
 
-    // AI Fallback inside Group (CS AI Fallback)
-    const canUseGroupAi = !isAiMutedForCustomer && isGroup && config.group_ai_enabled !== false && activeCfg && activeCfg.useAiFallback;
-    const canUsePrivateAi = !isAiMutedForCustomer && !isGroup && config.private_ai_enabled !== false;
+    // AI Fallback dinonaktifkan sepenuhnya agar bot hanya membalas triger menu terkonfigurasi
+    const canUseGroupAi = false;
+    const canUsePrivateAi = false;
     
     if (canUseGroupAi || canUsePrivateAi) {
         let shouldTriggerAi = false;
