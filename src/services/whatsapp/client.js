@@ -494,45 +494,72 @@ async function restartClient(clearSession = false) {
 }
 
 async function setMessagesAdminsOnlyHelper(client, groupId, adminsOnly) {
-    if (!client) throw new Error('WhatsApp client tidak terhubung.');
-    const chat = await client.getChatById(groupId);
-    if (!chat.isGroup) {
-        throw new Error('ID tersebut bukan sebuah grup.');
-    }
-
-    // Check if the bot is admin using Puppeteer evaluation (robust for LIDs and aliases)
-    let isBotAdmin = false;
     try {
-        isBotAdmin = await client.pupPage.evaluate(async (chatId) => {
-            const chat = await window.WWebJS.getChat(chatId, { getAsModel: false });
-            if (!chat || !chat.groupMetadata || !chat.groupMetadata.participants) return false;
-            const meWid = window.Store.Conn.wid;
-            const participant = chat.groupMetadata.participants.find(p => {
-                if (!p.id) return false;
-                if (p.id.equals) return p.id.equals(meWid);
-                return p.id._serialized === meWid._serialized || p.id.user === meWid.user;
-            });
-            return !!(participant && (participant.isAdmin || participant.isSuperAdmin));
-        }, groupId);
-    } catch (evalErr) {
-        console.warn('[setMessagesAdminsOnlyHelper] Gagal memverifikasi status admin via browser:', evalErr.message);
-        // Fallback to basic node-side check
-        const botId = client.info && client.info.wid && client.info.wid._serialized;
-        if (botId && chat.participants) {
-            const participant = chat.participants.find(p => p.id._serialized === botId || p.id.user === botId.split('@')[0]);
-            isBotAdmin = !!(participant && (participant.isAdmin || participant.isSuperAdmin));
+        if (!client) throw new Error('WhatsApp client tidak terhubung.');
+        
+        let chat = null;
+        try {
+            chat = await client.getChatById(groupId);
+        } catch (chatErr) {
+            console.warn('[setMessagesAdminsOnlyHelper] Gagal memanggil getChatById, menggunakan fallback:', chatErr.message);
+            chat = { 
+                isGroup: true, 
+                groupMetadata: { announce: !adminsOnly } 
+            };
         }
-    }
 
-    if (!isBotAdmin) {
-        throw new Error('Bot bukan admin di grup ini. Silakan jadikan bot sebagai admin grup terlebih dahulu.');
-    }
+        if (chat && !chat.isGroup) {
+            throw new Error('ID tersebut bukan sebuah grup.');
+        }
 
-    try {
+        // Check if the bot is admin using Puppeteer evaluation (robust for LIDs and aliases)
+        let isBotAdmin = false;
+        try {
+            isBotAdmin = await client.pupPage.evaluate(async (chatId) => {
+                const chat = await window.WWebJS.getChat(chatId, { getAsModel: false });
+                if (!chat || !chat.groupMetadata || !chat.groupMetadata.participants) return false;
+                const meWid = window.Store.Conn.wid;
+                const participant = chat.groupMetadata.participants.find(p => {
+                    if (!p.id) return false;
+                    if (p.id.equals) return p.id.equals(meWid);
+                    return p.id._serialized === meWid._serialized || p.id.user === meWid.user;
+                });
+                return !!(participant && (participant.isAdmin || participant.isSuperAdmin));
+            }, groupId);
+        } catch (evalErr) {
+            console.warn('[setMessagesAdminsOnlyHelper] Gagal memverifikasi status admin via browser:', evalErr.message);
+            // Fallback to basic node-side check
+            const botId = client.info && client.info.wid && client.info.wid._serialized;
+            if (botId && chat && chat.participants) {
+                const participant = chat.participants.find(p => p.id._serialized === botId || p.id.user === botId.split('@')[0]);
+                isBotAdmin = !!(participant && (participant.isAdmin || participant.isSuperAdmin));
+            } else {
+                // If everything fails, assume true to let the browser attempt setting it
+                isBotAdmin = true;
+            }
+        }
+
+        if (!isBotAdmin) {
+            throw new Error('Bot bukan admin di grup ini. Silakan jadikan bot sebagai admin grup terlebih dahulu.');
+        }
+
         const result = await client.pupPage.evaluate(async (chatId, adminsOnly) => {
             try {
-                const chat = await window.WWebJS.getChat(chatId, { getAsModel: false });
-                if (!chat) {
+                let chatObj = null;
+                if (window.Store && window.Store.Chat) {
+                    chatObj = window.Store.Chat.get(chatId);
+                    if (!chatObj && typeof window.Store.Chat.find === 'function') {
+                        try {
+                            chatObj = await window.Store.Chat.find(chatId);
+                        } catch (_) {}
+                    }
+                }
+                
+                if (!chatObj) {
+                    chatObj = await window.WWebJS.getChat(chatId, { getAsModel: false });
+                }
+                
+                if (!chatObj) {
                     return { success: false, error: 'Chat tidak ditemukan di browser.' };
                 }
                 
@@ -542,7 +569,6 @@ async function setMessagesAdminsOnlyHelper(client, groupId, adminsOnly) {
                 } catch (_) {}
                 
                 if (!setGroupPropAction) {
-                    // Fallback: search in window.Store modules
                     if (window.Store) {
                         const keys = Object.keys(window.Store);
                         const matchKey = keys.find(k => k.toLowerCase().includes('setgroupproperty') || k.toLowerCase().includes('groupaction'));
@@ -554,7 +580,7 @@ async function setMessagesAdminsOnlyHelper(client, groupId, adminsOnly) {
                     return { success: false, error: 'Modul WAWebSetPropertyGroupAction tidak ditemukan di WhatsApp Web.' };
                 }
                 
-                await setGroupPropAction.setGroupProperty(chat, 'announcement', adminsOnly ? 1 : 0);
+                await setGroupPropAction.setGroupProperty(chatObj, 'announcement', adminsOnly ? 1 : 0);
                 return { success: true };
             } catch (err) {
                 return { 
@@ -575,7 +601,9 @@ async function setMessagesAdminsOnlyHelper(client, groupId, adminsOnly) {
             throw new Error(`Kesalahan browser WhatsApp Web: ${result.error}`);
         }
         
-        chat.groupMetadata.announce = adminsOnly;
+        if (chat && chat.groupMetadata) {
+            chat.groupMetadata.announce = adminsOnly;
+        }
         return true;
     } catch (err) {
         console.error(`[setMessagesAdminsOnlyHelper] Exception:`, err);
