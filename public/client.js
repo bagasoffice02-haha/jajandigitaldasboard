@@ -544,9 +544,9 @@ async function loadConfig() {
             privateAiEnabled.checked = config.private_ai_enabled !== false;
         }
 
-        cfgBossNumber.value = config.boss_number || '';
-        cfgReportTime.value = config.report_time || '08:00';
-        cfgSystemPrompt.value = config.system_prompt_template || '';
+        if (cfgBossNumber) cfgBossNumber.value = config.boss_number || '';
+        if (cfgReportTime) cfgReportTime.value = config.report_time || '08:00';
+        if (cfgSystemPrompt) cfgSystemPrompt.value = config.system_prompt_template || '';
         
         const autoSendVcardEl = document.getElementById('cfg-auto-send-vcard');
         if (autoSendVcardEl) autoSendVcardEl.checked = config.auto_send_vcard !== false;
@@ -604,10 +604,10 @@ function setupConfigHandler() {
             api_key: (cfgApiKey.value.trim() && !cfgApiKey.value.includes('YOUR_LOCAL') && !cfgApiKey.value.includes('TOKEN')) ? cfgApiKey.value.trim() : (config && config.api_key && !config.api_key.includes('YOUR_LOCAL') ? config.api_key : ''),
             model_name: activeModel,
             max_tokens: parseInt(cfgMaxTokens.value, 10),
-            boss_number: cfgBossNumber.value.trim(),
-            report_time: cfgReportTime.value.trim(),
-            system_prompt_template: cfgSystemPrompt.value.trim(),
-            private_chat_sync_group_id: document.getElementById('cfg-private-chat-sync-group-id').value,
+            boss_number: cfgBossNumber ? cfgBossNumber.value.trim() : '',
+            report_time: cfgReportTime ? cfgReportTime.value.trim() : '08:00',
+            system_prompt_template: cfgSystemPrompt ? cfgSystemPrompt.value.trim() : '',
+            private_chat_sync_group_id: document.getElementById('cfg-private-chat-sync-group-id') ? document.getElementById('cfg-private-chat-sync-group-id').value : '',
             private_chat_bot_enabled: document.getElementById('cfg-private-chat-bot-enabled') ? document.getElementById('cfg-private-chat-bot-enabled').checked : true,
             group_chat_bot_enabled: document.getElementById('cfg-group-chat-bot-enabled') ? document.getElementById('cfg-group-chat-bot-enabled').checked : true,
             group_ai_enabled: document.getElementById('cfg-group-ai-enabled') ? document.getElementById('cfg-group-ai-enabled').checked : true,
