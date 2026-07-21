@@ -4580,6 +4580,7 @@ window.saveTelegramConfig = async function() {
         telegram_bot_enabled:      el('tg-enabled-toggle') ? el('tg-enabled-toggle').checked : false,
         telegram_boss_id:          el('tg-boss-id')        ? el('tg-boss-id').value.trim()   : '',
         telegram_private_bot_enabled: el('tg-private-enabled') ? el('tg-private-enabled').checked : true,
+        private_chat_sync_group_id: el('cfg-private-chat-sync-group-id') ? el('cfg-private-chat-sync-group-id').value : '',
         telegram_config: {
             rate_limit_per_minute:         parseInt(el('tg-rate-limit')?.value || '5', 10),
             ai_cooldown_seconds:           parseInt(el('tg-ai-cooldown')?.value || '10', 10),

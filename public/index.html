@@ -1586,6 +1586,20 @@
                             <input type="checkbox" id="tg-private-enabled">
                         </label>
 
+                        <!-- Penyelarasan Grup untuk Chat Personal -->
+                        <div class="form-group" style="margin: 0;">
+                            <label for="cfg-private-chat-sync-group-id" style="font-size: 0.8rem; font-weight: 600; margin-bottom: 6px; display: block;">
+                                <i data-lucide="git-compare" style="width: 13px; height: 13px; display: inline-block; vertical-align: middle; margin-right: 4px; color: #229ED9;"></i>
+                                Penyelarasan Grup (Sync Group)
+                            </label>
+                            <select id="cfg-private-chat-sync-group-id" class="form-control" style="width: 100%; padding: 6px 10px; font-size: 0.82rem; background: var(--bg-primary); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 6px; height: 32px;">
+                                <option value="">-- Pilih Grup Penyelaras --</option>
+                            </select>
+                            <small style="color: var(--text-secondary); font-size: 0.68rem; display: block; margin-top: 4px;">
+                                Pilih grup WhatsApp yang konfigurasinya (AI, menu, dll) akan digunakan oleh Chat Personal Telegram.
+                            </small>
+                        </div>
+
                         <!-- Action Buttons Stack -->
                         <button class="btn btn-primary btn-block" onclick="saveTelegramConfig()" style="font-size:0.82rem; padding:8px; border-radius:8px; cursor:pointer; font-weight:600;">
                             <i data-lucide="save" style="width:14px; height:14px; display:inline-block; vertical-align:middle; margin-right:4px;"></i> Simpan Pengaturan Telegram
