@@ -251,7 +251,10 @@ function attachClientListeners() {
     // Fungsi pemroses event masuk/keluar anggota grup
     async function handleGroupParticipantUpdate(notification, isJoin) {
         try {
-            const groupId = notification.chatId;
+            const groupId = typeof notification.chatId === 'object' 
+                ? (notification.chatId._serialized || `${notification.chatId.user}@${notification.chatId.server}`) 
+                : notification.chatId;
+
             const { group_configs: gConfigs } = await getGroupConfigs();
             const cfg = gConfigs[groupId];
             if (!cfg || !cfg.enabled) return;
@@ -272,11 +275,13 @@ function attachClientListeners() {
             // Ekstrak target JIDs secara robust dari berbagai kemungkinan properti
             let targetIds = [];
             if (notification.recipientIds && notification.recipientIds.length > 0) {
-                targetIds = notification.recipientIds;
+                targetIds = notification.recipientIds.map(id => typeof id === 'object' ? id._serialized : id);
             } else if (notification.id && notification.id.participant) {
-                targetIds = [notification.id.participant];
+                const part = notification.id.participant;
+                targetIds = [typeof part === 'object' ? part._serialized : part];
             } else if (notification.author) {
-                targetIds = [notification.author];
+                const auth = notification.author;
+                targetIds = [typeof auth === 'object' ? auth._serialized : auth];
             }
             
             if (!Array.isArray(targetIds) || targetIds.length === 0) {
