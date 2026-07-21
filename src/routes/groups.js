@@ -5,6 +5,16 @@ const { getGroupConfigs, saveGroupConfig, deleteGroupConfig } = require('../db/m
 const { getClient, getStatus } = require('../services/whatsapp/client');
 
 // ─── LIST SEMUA GRUP ──────────────────────────────────────
+const promiseTimeout = (promise, ms) => {
+    let timeout = new Promise((resolve, reject) => {
+        let id = setTimeout(() => {
+            clearTimeout(id);
+            reject(new Error('Timed out'));
+        }, ms);
+    });
+    return Promise.race([promise, timeout]);
+};
+
 router.get('/groups', async (req, res) => {
     try {
         const client = getClient();
@@ -20,9 +30,9 @@ router.get('/groups', async (req, res) => {
         
         let chats = [];
         try {
-            chats = await client.getChats();
+            chats = await promiseTimeout(client.getChats(), 4000);
         } catch (err) {
-            console.warn('[API Groups] Gagal mengambil chats via client.getChats(), fallback ke DB:', err.message);
+            console.warn('[API Groups] Gagal/timeout mengambil chats via client.getChats(), fallback ke DB:', err.message);
             const { group_configs: gConfigs } = await getGroupConfigs();
             const groups = Object.keys(gConfigs).map(id => {
                 const cfg = gConfigs[id];
