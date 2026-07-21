@@ -27,10 +27,23 @@ async function isSenderGroupAdminHelper(client, groupId, senderId) {
                     return false;
                 }
                 
+                const getDigits = (str) => {
+                    if (!str) return '';
+                    if (typeof str === 'object') {
+                        return (str._serialized || str.user || '').replace(/\D/g, '');
+                    }
+                    return String(str).replace(/\D/g, '');
+                };
+                
+                const targetDigits = getDigits(userId);
+                if (!targetDigits) return false;
+
                 const participant = chatObj.groupMetadata.participants.find(p => {
                     if (!p.id) return false;
-                    return p.id._serialized === userId || p.id.user === userId.split('@')[0];
+                    const pIdStr = typeof p.id === 'object' ? (p.id._serialized || p.id.user) : p.id;
+                    return getDigits(pIdStr) === targetDigits;
                 });
+                
                 return !!(participant && (participant.isAdmin || participant.isSuperAdmin));
             } catch (browserErr) {
                 console.error('[Browser Guard Error] Gagal mengecek admin:', browserErr.message);
