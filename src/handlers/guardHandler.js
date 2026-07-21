@@ -4,6 +4,37 @@ const { config } = require('../config/config');
 const { addCustomer, touchCustomer } = require('../db/models');
 const { normalizePhone } = require('./helpers');
 
+async function isSenderGroupAdminHelper(client, chat, senderId) {
+    if (!chat || !chat.isGroup) return false;
+    
+    // 1. Coba dari Node.js GroupChat participants list
+    if (chat.participants) {
+        const participant = chat.participants.find(p => p.id._serialized === senderId || p.id.user === senderId.split('@')[0]);
+        if (participant && (participant.isAdmin || participant.isSuperAdmin)) {
+            return true;
+        }
+    }
+    
+    // 2. Coba via Puppeteer evaluate untuk hasil 100% akurat dari browser
+    if (client && client.pupPage) {
+        try {
+            const isGroupAdmin = await client.pupPage.evaluate(async (chatId, userId) => {
+                const chat = await window.WWebJS.getChat(chatId, { getAsModel: false });
+                if (!chat || !chat.groupMetadata || !chat.groupMetadata.participants) return false;
+                const participant = chat.groupMetadata.participants.find(p => {
+                    if (!p.id) return false;
+                    return p.id._serialized === userId || p.id.user === userId.split('@')[0];
+                });
+                return !!(participant && (participant.isAdmin || participant.isSuperAdmin));
+            }, chat.id._serialized, senderId);
+            return !!isGroupAdmin;
+        } catch (err) {
+            console.warn('[Guard Warning] Gagal memeriksa status admin via browser:', err.message);
+        }
+    }
+    return false;
+}
+
 async function checkAndProcessGuards(msg, {
     chatId, senderId, userMessage, isGroup, shopData, clientInstance
 }) {
@@ -26,8 +57,18 @@ async function checkAndProcessGuards(msg, {
         return cleanSender === cleanBoss || cleanContact === cleanBoss;
     })();
 
-    // Di dalam grup, tidak ada batas admin (semua anggota grup dianggap admin & bisa kontrol bot jika triger pas)
-    const isSenderHostAdmin = isSenderBoss || isGroup;
+    // Di dalam grup, isSenderHostAdmin bernilai true HANYA jika pengirim adalah Boss (Owner) ATAU Admin Grup WA tersebut
+    let isSenderHostAdmin = isSenderBoss;
+    if (isGroup) {
+        try {
+            const chat = await msg.getChat();
+            const isGroupAdmin = await isSenderGroupAdminHelper(clientInstance, chat, senderId);
+            isSenderHostAdmin = isSenderBoss || isGroupAdmin;
+        } catch (chatErr) {
+            console.warn('[Guard Warning] Gagal memverifikasi status admin grup, fallback ke false:', chatErr.message);
+            isSenderHostAdmin = isSenderBoss;
+        }
+    }
 
     // Touch customer to update last interaction time
     if (!isSenderHostAdmin && senderId !== 'status@broadcast' && !msg.fromMe) {
