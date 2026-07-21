@@ -334,13 +334,37 @@ function attachClientListeners() {
                 }
                 
                 console.log(`[WA Group Update] Mengirim pesan ke ${groupId} dengan isi: "${finalMessage}"`);
-                // Kirim pesan ke grup dengan mention JID string langsung agar robust & anti-error
-                await client.sendMessage(groupId, finalMessage, {
-                    mentions: [participantId]
-                });
+                try {
+                    // Pastikan chat termuat di browser agar sendMessage tidak gagal/error
+                    try {
+                        await client.getChatById(groupId);
+                    } catch (chatLoadErr) {
+                        console.warn(`[WA Group Update] Gagal memuat chat ${groupId} via Node, mencoba memuat via browser:`, chatLoadErr.message);
+                        if (client.pupPage) {
+                            await client.pupPage.evaluate(async (chatId) => {
+                                if (window.Store && window.Store.Chat) {
+                                    let chat = window.Store.Chat.get(chatId);
+                                    if (!chat && typeof window.Store.Chat.find === 'function') {
+                                        try {
+                                            await window.Store.Chat.find(chatId);
+                                        } catch (_) {}
+                                    }
+                                }
+                            }, groupId);
+                        }
+                    }
+
+                    // Kirim pesan ke grup dengan mention JID string langsung agar robust & anti-error
+                    await client.sendMessage(groupId, finalMessage, {
+                        mentions: [participantId]
+                    });
+                    console.log(`[WA Group Update] Berhasil mengirim pesan welcome/goodbye ke ${groupId}`);
+                } catch (sendErr) {
+                    console.error(`[WA Group Update] Gagal mengirim pesan ke ${groupId}:`, sendErr.message);
+                }
             }
         } catch (err) {
-            console.error('Gagal mengirim pesan welcome/goodbye:', err);
+            console.error('Gagal memproses event welcome/goodbye:', err);
         }
     }
 
