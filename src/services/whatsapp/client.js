@@ -5,7 +5,7 @@ const path = require('path');
 const { exec } = require('child_process');
 
 const { config } = require('../../config/config');
-const { addAdmin, getShopData } = require('../../db/models');
+const { addAdmin, getShopData, getGroupConfigs } = require('../../db/models');
 const { handleIncomingMessage, initMessageHandler } = require('./messageHandler');
 let client = null;
 let currentStatus = 'DISCONNECTED';
