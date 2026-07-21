@@ -10,18 +10,28 @@ async function checkAndProcessGuards(msg, {
     const senderPhone = senderId.split('@')[0];
 
     // 1. Resolve isSenderHostAdmin status
+    let contactPhone = '';
+    try {
+        const contact = await msg.getContact();
+        contactPhone = contact.number || (contact.id && contact.id.user);
+    } catch (e) {
+        console.warn('[Guard Warning] Gagal mendapatkan detail kontak pengirim:', e.message);
+    }
+
     const isSenderBoss = (() => {
         if (!config.boss_number || config.boss_number.trim() === '') return false;
         const cleanBoss = normalizePhone(config.boss_number);
         const cleanSender = normalizePhone(senderId);
-        return cleanSender === cleanBoss;
+        const cleanContact = contactPhone ? normalizePhone(contactPhone) : '';
+        return cleanSender === cleanBoss || cleanContact === cleanBoss;
     })();
 
     let isSenderHostAdmin = false;
     const isPinnedAdmin = (shopData.host_admins || []).some(admin => {
         const cleanAdmin = normalizePhone(admin);
         const cleanSender = normalizePhone(senderId);
-        return cleanAdmin === cleanSender;
+        const cleanContact = contactPhone ? normalizePhone(contactPhone) : '';
+        return cleanAdmin === cleanSender || cleanAdmin === cleanContact;
     });
     isSenderHostAdmin = isPinnedAdmin || isSenderBoss;
 

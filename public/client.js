@@ -1978,57 +1978,6 @@ window.loadHostAdmins = async function() {
             });
         }
 
-        // ── Bagian 2: Pinned Chats dari WhatsApp ──
-        const divider = document.createElement('div');
-        divider.style = 'border-top:1px solid var(--border-color);margin:12px 0 8px;';
-        list.appendChild(divider);
-
-        const sectionTitle2 = document.createElement('p');
-        sectionTitle2.style = 'font-size:0.72rem;font-weight:700;color:var(--text-secondary);text-transform:uppercase;letter-spacing:0.05em;margin:0 0 6px;';
-        list.appendChild(sectionTitle2);
-
-        // Filter pinned chats yang belum di-admin (bisa ditambahkan)
-        const dbAdminSet = new Set(dbAdmins.map(p => (p || '').replace(/\D/g, '')));
-        const unpinnedForToggle = pinnedChats.filter(chat => {
-            const cp = (chat.phone || '').replace(/\D/g, '');
-            return cp && !dbAdminSet.has(cp);
-        });
-
-        if (pinnedChats.length === 0) {
-            sectionTitle2.textContent = '📌 Chat Tersemat WA (WhatsApp belum connect / tidak ada)';
-            const waMsg = document.createElement('p');
-            waMsg.style = 'text-align:center;color:var(--text-secondary);font-size:0.78rem;padding:8px;background:var(--bg-secondary);border-radius:8px;';
-            waMsg.textContent = 'WhatsApp belum terkoneksi atau tidak ada chat yang di-pin. Sambungkan WA untuk menampilkan daftar ini.';
-            list.appendChild(waMsg);
-        } else {
-            sectionTitle2.textContent = `📌 Chat Tersemat WA (${pinnedChats.length} ditemukan)`;
-            pinnedChats.forEach(chat => {
-                const cleanPhone = (chat.phone || '').replace(/\D/g, '');
-                const isAdmin = dbAdminSet.has(cleanPhone);
-                const row = document.createElement('div');
-                row.style = `display:flex;justify-content:space-between;align-items:center;padding:10px 14px;border:1px solid ${isAdmin ? '#30d158' : 'var(--border-color)'};border-radius:8px;background:var(--bg-secondary);margin-bottom:6px;transition:all 0.2s;`;
-                row.className = 'host-admin-item-row';
-                row.innerHTML = `
-                    <div style="cursor:pointer;flex:1;display:flex;flex-direction:column;gap:2px;" onclick="window.openHostConfig('${chat.id}')">
-                        <span style="font-weight:500;font-size:0.85rem;display:flex;align-items:center;gap:6px;color:var(--text-primary);">
-                            <i data-lucide="message-square" style="width:14px;height:14px;color:${isAdmin ? '#30d158' : 'var(--text-secondary)'};"></i>
-                            ${chat.name || cleanPhone}
-                        </span>
-                        <span style="font-size:0.75rem;color:var(--text-secondary);">+${cleanPhone} ${isAdmin ? '🛡️ (Host Admin)' : ''}</span>
-                    </div>
-                    <div style="display:flex;align-items:center;gap:10px;">
-                        <div style="position:relative;display:inline-block;width:40px;height:24px;">
-                            <input type="checkbox" id="toggle-${cleanPhone}" ${isAdmin ? 'checked' : ''} onchange="window.toggleHostAdmin('${chat.id}', this.checked)" style="position:absolute;top:0;left:0;width:100%;height:100%;opacity:0;cursor:pointer;z-index:2;">
-                            <div style="width:100%;height:100%;background:${isAdmin ? '#30d158' : 'rgba(255,255,255,0.08)'};border-radius:12px;transition:background 0.2s;position:relative;pointer-events:none;border:1px solid var(--border-color);">
-                                <div style="width:18px;height:18px;background:white;border-radius:50%;position:absolute;top:2px;left:${isAdmin ? '18px' : '2px'};transition:left 0.2s;box-shadow:0 2px 4px rgba(0,0,0,0.3);"></div>
-                            </div>
-                        </div>
-                    </div>
-                `;
-                list.appendChild(row);
-            });
-        }
-        
         if (window.lucide) lucide.createIcons();
     } catch (err) {
         console.error('Error loadHostAdmins:', err);
