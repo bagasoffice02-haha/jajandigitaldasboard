@@ -255,9 +255,19 @@ function attachClientListeners() {
                 ? (notification.chatId._serialized || `${notification.chatId.user}@${notification.chatId.server}`) 
                 : notification.chatId;
 
+            console.log(`[WA Group Update] Mendapat event update participant. Grup JID: ${groupId}. Tipe: ${isJoin ? 'Join (Masuk)' : 'Leave (Keluar)'}`);
+            console.log(`[WA Group Update] Raw Notification payload:`, JSON.stringify(notification));
+
             const { group_configs: gConfigs } = await getGroupConfigs();
             const cfg = gConfigs[groupId];
-            if (!cfg || !cfg.enabled) return;
+            if (!cfg) {
+                console.warn(`[WA Group Update] Konfigurasi grup untuk ${groupId} tidak ditemukan di database. Mengabaikan event.`);
+                return;
+            }
+            if (!cfg.enabled) {
+                console.log(`[WA Group Update] Bot dinonaktifkan untuk grup ${groupId}. Mengabaikan event.`);
+                return;
+            }
             
             // Pilih template pesan berdasarkan event
             let template = '';
@@ -267,7 +277,10 @@ function attachClientListeners() {
                 template = cfg.goodbyeMessage || "Selamat tinggal @user, terima kasih atas waktu Anda!";
             }
 
-            if (!template || template.trim() === '') return;
+            if (!template || template.trim() === '') {
+                console.log(`[WA Group Update] Template pesan untuk ${isJoin ? 'Join' : 'Leave'} kosong. Mengabaikan.`);
+                return;
+            }
 
             let groupChat = null;
             try { groupChat = await client.getChatById(groupId); } catch(_) {}
@@ -289,27 +302,15 @@ function attachClientListeners() {
                 return;
             }
             
-            console.log(`[WA Group Update] Event: ${isJoin ? 'Join' : 'Leave'} | Grup: ${groupId} | Target JIDs:`, targetIds);
+            console.log(`[WA Group Update] Memproses ${isJoin ? 'penyambutan' : 'perpisahan'} untuk target JIDs:`, targetIds);
             
             for (const participantId of targetIds) {
-                let contact = null;
                 let displayName = '';
-                
                 try {
-                    contact = await client.getContactById(participantId);
+                    const contact = await client.getContactById(participantId);
                     displayName = contact.pushname || contact.name || '';
                 } catch (contactErr) {
-                    console.warn('[Welcome/Goodbye Warning] Gagal mendapatkan profil kontak, menggunakan fallback:', contactErr.message);
-                }
-                
-                if (!contact) {
-                    contact = { 
-                        id: { 
-                            _serialized: participantId,
-                            user: participantId.split('@')[0],
-                            server: 'c.us'
-                        } 
-                    };
+                    console.warn('[Welcome/Goodbye Warning] Gagal mendapatkan profil kontak untuk pushname:', contactErr.message);
                 }
                 
                 if (!displayName && groupChat && groupChat.participants) {
@@ -332,13 +333,14 @@ function attachClientListeners() {
                     finalMessage = finalMessage.replace(/@nama/g, displayName || 'Pelanggan');
                 }
                 
-                // Kirim pesan ke grup dengan mention
+                console.log(`[WA Group Update] Mengirim pesan ke ${groupId} dengan isi: "${finalMessage}"`);
+                // Kirim pesan ke grup dengan mention JID string langsung agar robust & anti-error
                 await client.sendMessage(groupId, finalMessage, {
-                    mentions: [contact]
+                    mentions: [participantId]
                 });
             }
         } catch (err) {
-            console.error('Gagal mengirim pesan welcome/goodbye:', err.message);
+            console.error('Gagal mengirim pesan welcome/goodbye:', err);
         }
     }
 
@@ -527,12 +529,21 @@ async function setMessagesAdminsOnlyHelper(client, groupId, adminsOnly) {
     }
 
     try {
-        await chat.setMessagesAdminsOnly(adminsOnly);
+        const success = await chat.setMessagesAdminsOnly(adminsOnly);
+        if (!success) {
+            throw new Error('Gagal mengubah setelan grup. Pastikan bot memiliki hak akses admin.');
+        }
         return true;
     } catch (err) {
         console.error(`[setMessagesAdminsOnlyHelper] Gagal mengubah setelan grup ${groupId}:`, err);
-        let errMsg = err.message || String(err);
-        if (errMsg === 'r' || errMsg.includes('Evaluation failed')) {
+        const errMsg = err.message || String(err);
+        if (
+            errMsg === 'r' || 
+            errMsg.includes('Evaluation failed') || 
+            errMsg.trim().length <= 3 ||
+            errMsg.includes('announcement') ||
+            errMsg.includes('setGroupProperty')
+        ) {
             throw new Error('Gagal mengubah setelan grup (kesalahan WhatsApp Web). Pastikan bot memiliki hak akses admin.');
         }
         throw err;

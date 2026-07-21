@@ -31,7 +31,12 @@ async function handleAdminCommandMessage(msg, {
             await setMessagesAdminsOnly(clientInstance, groupId, false);
             await msg.reply("🔓 *Pemberitahuan:* Toko telah dibuka kembali. Grup dibuka untuk umum!");
         } catch (err) {
-            await msg.reply("❌ Gagal membuka grup: " + err.message);
+            const errMsg = err.message || String(err);
+            if (errMsg === 'r' || errMsg.includes('Evaluation failed') || errMsg.trim().length <= 3) {
+                await msg.reply("❌ Gagal membuka grup: Terjadi kesalahan browser WhatsApp Web. Pastikan bot adalah Admin di grup ini.");
+            } else {
+                await msg.reply("❌ Gagal membuka grup: " + errMsg);
+            }
         }
         return true;
     }
@@ -45,7 +50,12 @@ async function handleAdminCommandMessage(msg, {
             await setMessagesAdminsOnly(clientInstance, groupId, true);
             await msg.reply("🔒 *Pemberitahuan:* Toko telah ditutup. Hanya Admin yang dapat mengirim pesan.");
         } catch (err) {
-            await msg.reply("❌ Gagal menutup grup: " + err.message);
+            const errMsg = err.message || String(err);
+            if (errMsg === 'r' || errMsg.includes('Evaluation failed') || errMsg.trim().length <= 3) {
+                await msg.reply("❌ Gagal menutup grup: Terjadi kesalahan browser WhatsApp Web. Pastikan bot adalah Admin di grup ini.");
+            } else {
+                await msg.reply("❌ Gagal menutup grup: " + errMsg);
+            }
         }
         return true;
     }

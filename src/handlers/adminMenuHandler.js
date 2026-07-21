@@ -285,7 +285,14 @@ async function handleAdminMenuMessage(msg, {
                     await setMessagesAdminsOnly(clientInstance, selectedGroupId, false);
                     await clientInstance.sendMessage(selectedGroupId, "🔓 *Pemberitahuan:* Toko telah dibuka kembali. Grup dibuka untuk umum!");
                     await msg.reply("🔓 Berhasil membuka grup manual.");
-                } catch(err) { await msg.reply("❌ Gagal membuka grup: " + err.message); }
+                } catch(err) {
+                    const errMsg = err.message || String(err);
+                    if (errMsg === 'r' || errMsg.includes('Evaluation failed') || errMsg.trim().length <= 3) {
+                        await msg.reply("❌ Gagal membuka grup: Terjadi kesalahan browser WhatsApp Web. Pastikan bot adalah Admin di grup ini.");
+                    } else {
+                        await msg.reply("❌ Gagal membuka grup: " + errMsg);
+                    }
+                }
                 await sendGroupDetailMenu(msg, selectedGroupId, senderId);
                 return true;
             } else if (userMessage === '3') {
@@ -293,7 +300,14 @@ async function handleAdminMenuMessage(msg, {
                     await setMessagesAdminsOnly(clientInstance, selectedGroupId, true);
                     await clientInstance.sendMessage(selectedGroupId, "🔒 *Pemberitahuan:* Toko telah ditutup. Hanya Admin yang dapat mengirim pesan.");
                     await msg.reply("🔒 Berhasil menutup grup manual.");
-                } catch(err) { await msg.reply("❌ Gagal menutup grup: " + err.message); }
+                } catch(err) {
+                    const errMsg = err.message || String(err);
+                    if (errMsg === 'r' || errMsg.includes('Evaluation failed') || errMsg.trim().length <= 3) {
+                        await msg.reply("❌ Gagal menutup grup: Terjadi kesalahan browser WhatsApp Web. Pastikan bot adalah Admin di grup ini.");
+                    } else {
+                        await msg.reply("❌ Gagal menutup grup: " + errMsg);
+                    }
+                }
                 await sendGroupDetailMenu(msg, selectedGroupId, senderId);
                 return true;
             } else if (userMessage === '4') {
