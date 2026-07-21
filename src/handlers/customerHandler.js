@@ -1,6 +1,7 @@
 // src/handlers/customerHandler.js
 'use strict';
 const fs = require('fs');
+const groupAiCooldowns = new Map();
 const path = require('path');
 const { MessageMedia } = require('whatsapp-web.js');
 const { config } = require('../config/config');
@@ -410,6 +411,15 @@ async function handleCustomerMessage(msg, {
         }
         
         if (shouldTriggerAi) {
+            if (isGroup) {
+                const lastAiTime = groupAiCooldowns.get(chatId) || 0;
+                const now = Date.now();
+                if (now - lastAiTime < 5000) { // 5 detik cooldown
+                    console.log(`[Cooldown Guard] Mengabaikan pemicu AI Grup ${chatId} karena spamming (5s cooldown).`);
+                    return true;
+                }
+                groupAiCooldowns.set(chatId, now);
+            }
             activeLocks.add(chatId);
             try {
                 try {

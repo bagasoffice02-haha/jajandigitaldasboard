@@ -25,6 +25,7 @@ let ioInstance = null;
 const activeLocks = new Set();
 const customerMenuStates = new Map();
 const pendingTransactions = new Map();
+const groupCommandCooldowns = new Map();
 
 function initMessageHandler(client, io) {
     clientInstance = client;
@@ -167,6 +168,21 @@ async function handleIncomingMessage(msg) {
         senderId, chatId, userMessage, textLower, isGroup, clientInstance, ioInstance
     });
     if (orderHandled) return;
+
+    // Cooldown untuk perintah grup (Mencegah spam perintah dari anggota grup)
+    if (isGroup && !isSenderBoss) {
+        const cleanMsg = userMessage.toLowerCase().trim();
+        const isCmd = cleanMsg.startsWith('.') || cleanMsg.startsWith('!');
+        if (isCmd) {
+            const lastCmdTime = groupCommandCooldowns.get(chatId) || 0;
+            const now = Date.now();
+            if (now - lastCmdTime < 5000) { // Cooldown 5 detik
+                console.log(`[Cooldown Guard] Mengabaikan perintah grup "${userMessage}" karena spamming (5s cooldown).`);
+                return;
+            }
+            groupCommandCooldowns.set(chatId, now);
+        }
+    }
 
     // 3. ADMIN MENU HANDLER
     const adminMenuHandled = await handleAdminMenuMessage(msg, {
