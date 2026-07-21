@@ -4,35 +4,44 @@ const { config } = require('../config/config');
 const { addCustomer, touchCustomer } = require('../db/models');
 const { normalizePhone } = require('./helpers');
 
-async function isSenderGroupAdminHelper(client, chat, senderId) {
-    if (!chat || !chat.isGroup) return false;
-    
-    // 1. Coba dari Node.js GroupChat participants list
-    if (chat.participants) {
-        const participant = chat.participants.find(p => p.id._serialized === senderId || p.id.user === senderId.split('@')[0]);
-        if (participant && (participant.isAdmin || participant.isSuperAdmin)) {
-            return true;
-        }
-    }
-    
-    // 2. Coba via Puppeteer evaluate untuk hasil 100% akurat dari browser
-    if (client && client.pupPage) {
-        try {
-            const isGroupAdmin = await client.pupPage.evaluate(async (chatId, userId) => {
-                const chat = await window.WWebJS.getChat(chatId, { getAsModel: false });
-                if (!chat || !chat.groupMetadata || !chat.groupMetadata.participants) return false;
-                const participant = chat.groupMetadata.participants.find(p => {
+async function isSenderGroupAdminHelper(client, groupId, senderId) {
+    if (!client || !client.pupPage) return false;
+    try {
+        const isGroupAdmin = await client.pupPage.evaluate(async (chatId, userId) => {
+            try {
+                let chatObj = null;
+                if (window.Store && window.Store.Chat) {
+                    chatObj = window.Store.Chat.get(chatId);
+                    if (!chatObj && typeof window.Store.Chat.find === 'function') {
+                        try {
+                            chatObj = await window.Store.Chat.find(chatId);
+                        } catch (_) {}
+                    }
+                }
+                
+                if (!chatObj) {
+                    chatObj = await window.WWebJS.getChat(chatId, { getAsModel: false });
+                }
+                
+                if (!chatObj || !chatObj.groupMetadata || !chatObj.groupMetadata.participants) {
+                    return false;
+                }
+                
+                const participant = chatObj.groupMetadata.participants.find(p => {
                     if (!p.id) return false;
                     return p.id._serialized === userId || p.id.user === userId.split('@')[0];
                 });
                 return !!(participant && (participant.isAdmin || participant.isSuperAdmin));
-            }, chat.id._serialized, senderId);
-            return !!isGroupAdmin;
-        } catch (err) {
-            console.warn('[Guard Warning] Gagal memeriksa status admin via browser:', err.message);
-        }
+            } catch (browserErr) {
+                console.error('[Browser Guard Error] Gagal mengecek admin:', browserErr.message);
+                return false;
+            }
+        }, groupId, senderId);
+        return !!isGroupAdmin;
+    } catch (err) {
+        console.warn('[Guard Warning] Gagal memeriksa status admin via browser:', err.message);
+        return false;
     }
-    return false;
 }
 
 async function checkAndProcessGuards(msg, {
@@ -61,8 +70,7 @@ async function checkAndProcessGuards(msg, {
     let isSenderHostAdmin = isSenderBoss;
     if (isGroup) {
         try {
-            const chat = await msg.getChat();
-            const isGroupAdmin = await isSenderGroupAdminHelper(clientInstance, chat, senderId);
+            const isGroupAdmin = await isSenderGroupAdminHelper(clientInstance, chatId, senderId);
             isSenderHostAdmin = isSenderBoss || isGroupAdmin;
         } catch (chatErr) {
             console.warn('[Guard Warning] Gagal memverifikasi status admin grup, fallback ke false:', chatErr.message);
