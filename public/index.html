@@ -210,9 +210,14 @@
             <section class="panel card" style="display: flex; flex-direction: column; overflow: hidden; padding: 15px;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
                     <h2 style="margin: 0; font-size: 1.1rem;"><i data-lucide="users"></i> Grup WA</h2>
-                    <button class="btn btn-secondary btn-icon" onclick="loadGroupsList()" title="Refresh Grup">
-                        <i data-lucide="rotate-cw" style="width: 14px; height: 14px;"></i>
-                    </button>
+                    <div style="display: flex; gap: 6px;">
+                        <button class="btn btn-secondary btn-icon" onclick="window.addNewGroupJidManual()" title="Tambah JID Grup Manual" style="background: rgba(48, 209, 88, 0.15); color: #30d158; border-color: rgba(48, 209, 88, 0.3); padding: 4px 8px; font-size: 0.72rem; display: flex; align-items: center; gap: 4px; border-radius: 6px; cursor: pointer; border: 1px solid rgba(48,209,88,0.2);">
+                            <i data-lucide="plus" style="width: 12px; height: 12px;"></i> Tambah
+                        </button>
+                        <button class="btn btn-secondary btn-icon" onclick="loadGroupsList()" title="Refresh Grup">
+                            <i data-lucide="rotate-cw" style="width: 14px; height: 14px;"></i>
+                        </button>
+                    </div>
                 </div>
                 <p class="card-subtitle" style="margin-top: -10px; margin-bottom: 15px; font-size: 0.8rem;">Daftar grup WhatsApp Anda</p>
                 <div id="groups-list-container" style="flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; padding-right: 5px;">

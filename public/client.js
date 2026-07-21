@@ -2611,6 +2611,11 @@ window.addNewGroupJidManual = async function() {
         
         alert('Grup berhasil ditambahkan! Memuat ulang daftar...');
         
+        // Reload main sidebar group list
+        if (window.loadGroupsList) {
+            await window.loadGroupsList();
+        }
+        
         const groupsRes = await fetch('/api/groups');
         if (groupsRes.ok) {
             hostConfigActiveGroups = await groupsRes.json();
