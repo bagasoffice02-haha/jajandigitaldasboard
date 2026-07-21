@@ -529,23 +529,56 @@ async function setMessagesAdminsOnlyHelper(client, groupId, adminsOnly) {
     }
 
     try {
-        const success = await chat.setMessagesAdminsOnly(adminsOnly);
-        if (!success) {
-            throw new Error('Gagal mengubah setelan grup. Pastikan bot memiliki hak akses admin.');
+        const result = await client.pupPage.evaluate(async (chatId, adminsOnly) => {
+            try {
+                const chat = await window.WWebJS.getChat(chatId, { getAsModel: false });
+                if (!chat) {
+                    return { success: false, error: 'Chat tidak ditemukan di browser.' };
+                }
+                
+                let setGroupPropAction = null;
+                try {
+                    setGroupPropAction = window.require('WAWebSetPropertyGroupAction');
+                } catch (_) {}
+                
+                if (!setGroupPropAction) {
+                    // Fallback: search in window.Store modules
+                    if (window.Store) {
+                        const keys = Object.keys(window.Store);
+                        const matchKey = keys.find(k => k.toLowerCase().includes('setgroupproperty') || k.toLowerCase().includes('groupaction'));
+                        return { 
+                            success: false, 
+                            error: `Modul WAWebSetPropertyGroupAction tidak ditemukan. Store keys: ${matchKey || 'tidak ada'}` 
+                        };
+                    }
+                    return { success: false, error: 'Modul WAWebSetPropertyGroupAction tidak ditemukan di WhatsApp Web.' };
+                }
+                
+                await setGroupPropAction.setGroupProperty(chat, 'announcement', adminsOnly ? 1 : 0);
+                return { success: true };
+            } catch (err) {
+                return { 
+                    success: false, 
+                    error: err.message || String(err), 
+                    name: err.name || 'Error',
+                    stack: err.stack || '' 
+                };
+            }
+        }, groupId, adminsOnly);
+
+        if (!result.success) {
+            console.error(`[Browser Error Debug] Gagal mengubah setelan grup ${groupId}:`, result.error, result.stack);
+            
+            if (result.name === 'ServerStatusCodeError' || result.error.includes('403') || result.error.includes('401') || result.error.includes('ServerStatusCodeError')) {
+                throw new Error('Ditolak oleh WhatsApp: Bot tidak memiliki izin admin di grup ini.');
+            }
+            throw new Error(`Kesalahan browser WhatsApp Web: ${result.error}`);
         }
+        
+        chat.groupMetadata.announce = adminsOnly;
         return true;
     } catch (err) {
-        console.error(`[setMessagesAdminsOnlyHelper] Gagal mengubah setelan grup ${groupId}:`, err);
-        const errMsg = err.message || String(err);
-        if (
-            errMsg === 'r' || 
-            errMsg.includes('Evaluation failed') || 
-            errMsg.trim().length <= 3 ||
-            errMsg.includes('announcement') ||
-            errMsg.includes('setGroupProperty')
-        ) {
-            throw new Error('Gagal mengubah setelan grup (kesalahan WhatsApp Web). Pastikan bot memiliki hak akses admin.');
-        }
+        console.error(`[setMessagesAdminsOnlyHelper] Exception:`, err);
         throw err;
     }
 }
