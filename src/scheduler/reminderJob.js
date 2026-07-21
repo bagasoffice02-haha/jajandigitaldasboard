@@ -388,8 +388,7 @@ async function runAutoMaintenance() {
         
         const activeMediaFiles = new Set();
         const activeKnowledgeFiles = new Set([
-            '00_memori_otomatis.txt',
-            'secret_akun_dan_password.txt'
+            '00_memori_otomatis.txt'
         ]);
 
         // Fungsi bantu rekursif untuk mengumpulkan file media aktif dari menuTree
