@@ -26,14 +26,8 @@ async function checkAndProcessGuards(msg, {
         return cleanSender === cleanBoss || cleanContact === cleanBoss;
     })();
 
-    let isSenderHostAdmin = false;
-    const isPinnedAdmin = (shopData.host_admins || []).some(admin => {
-        const cleanAdmin = normalizePhone(admin);
-        const cleanSender = normalizePhone(senderId);
-        const cleanContact = contactPhone ? normalizePhone(contactPhone) : '';
-        return cleanAdmin === cleanSender || cleanAdmin === cleanContact;
-    });
-    isSenderHostAdmin = isPinnedAdmin || isSenderBoss;
+    // Di dalam grup, tidak ada batas admin (semua anggota grup dianggap admin & bisa kontrol bot jika triger pas)
+    const isSenderHostAdmin = isSenderBoss || isGroup;
 
     // Touch customer to update last interaction time
     if (!isSenderHostAdmin && senderId !== 'status@broadcast' && !msg.fromMe) {
@@ -44,22 +38,6 @@ async function checkAndProcessGuards(msg, {
                 console.error('[CRM Touch Warning] Gagal meng-update interaksi terakhir:', err.message);
             }
         })();
-    }
-
-    // Only query group participants to check if sender is group admin IF the message is a potential command
-    const isPotentialCommand = userMessage && (userMessage.startsWith('!') || userMessage.startsWith('.'));
-    if (!isSenderHostAdmin && isGroup && isPotentialCommand) {
-        try {
-            const chat = await msg.getChat();
-            if (chat.isGroup) {
-                const participant = chat.participants.find(p => p.id._serialized === senderId);
-                if (participant && (participant.isAdmin || participant.isSuperAdmin)) {
-                    isSenderHostAdmin = true;
-                }
-            }
-        } catch (e) {
-            console.error('Gagal memverifikasi status admin grup:', e.message);
-        }
     }
 
     // 2. Check if bot is disabled in this scope
@@ -91,7 +69,7 @@ async function checkAndProcessGuards(msg, {
         })();
     }
 
-    return { shouldIgnore: false, isSenderHostAdmin };
+    return { shouldIgnore: false, isSenderHostAdmin, isSenderBoss };
 }
 
 module.exports = { checkAndProcessGuards };

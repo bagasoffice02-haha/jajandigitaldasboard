@@ -617,33 +617,7 @@
         </div>
         <main class="shop-grid">
             
-            <!-- KOLOM KIRI: Management Host Admin & Broadcast -->
-            <div class="shop-left-col">
-                <!-- PANEL: Host Admin -->
-                <section class="panel card" style="display: flex; flex-direction: column; padding: 15px;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                        <h2 style="margin: 0; font-size: 1.1rem;"><i data-lucide="shield-alert"></i> Host Admin</h2>
-                        <button class="btn btn-secondary btn-icon" onclick="loadHostAdmins()" title="Refresh Admin">
-                            <i data-lucide="rotate-cw" style="width: 14px; height: 14px;"></i>
-                        </button>
-                    </div>
-                    <p class="card-subtitle" style="margin-top: -10px; margin-bottom: 12px; font-size: 0.8rem;">Daftar admin yang terdaftar. Tambah nomor HP untuk menjadikannya Host Admin.</p>
-                    
-                    <div style="display: flex; gap: 6px; margin-bottom: 12px;">
-                        <input type="text" id="new-host-admin-phone" placeholder="Nomor HP (misal: 628123456789)" style="flex: 1; padding: 6px 10px; font-size: 0.8rem; border-radius: 6px; background: var(--bg-primary); border: 1px solid var(--border-color); color: var(--text-primary);">
-                        <button class="btn btn-primary" onclick="window.addHostAdminManual()" style="padding: 6px 12px; font-size: 0.8rem; font-weight: 600; border-radius: 6px; cursor: pointer; display: flex; align-items: center; gap: 4px;">
-                            <i data-lucide="plus" style="width: 12px; height: 12px;"></i> Tambah
-                        </button>
-                    </div>
-                    
-                    <div id="shop-admins-list" style="display: flex; flex-direction: column; gap: 4px;">
-                        <!-- Rendered dynamically -->
-                        <p style="text-align: center; color: var(--text-secondary); font-size: 0.8rem; margin-top: 30px;">Belum ada Host Admin...</p>
-                    </div>
-                </section>
 
-
-            </div>
 
             <!-- KOLOM KANAN: Manajemen Pelanggan -->
             <section class="panel card shop-right-col">

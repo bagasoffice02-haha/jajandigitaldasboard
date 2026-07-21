@@ -1710,7 +1710,7 @@ textarea.form-control, input.form-control {
 /* Outer grid: Shop Tab */
 .shop-grid {
     display: grid;
-    grid-template-columns: 380px 1fr;
+    grid-template-columns: 1fr;
     gap: 20px;
     height: calc(100vh - 120px);
     padding: 0 10px;

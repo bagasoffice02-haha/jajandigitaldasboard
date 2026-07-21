@@ -96,7 +96,7 @@ async function handleIncomingMessage(msg) {
     const shopData = await getShopData();
 
     // 1. Guard check (termasuk auto-CRM save, auto-vcard, checking bot active settings)
-    const { shouldIgnore, isSenderHostAdmin } = await checkAndProcessGuards(msg, {
+    const { shouldIgnore, isSenderHostAdmin, isSenderBoss } = await checkAndProcessGuards(msg, {
         chatId, senderId, userMessage, isGroup, shopData, clientInstance
     });
 
@@ -107,8 +107,8 @@ async function handleIncomingMessage(msg) {
         return;
     }
 
-    // Untuk pesan di Grup dari non-admin: abaikan segera jika tidak ada kaitan dengan bot (hemat CPU & memori)
-    if (isGroup && !isSenderHostAdmin) {
+    // Untuk pesan di Grup dari non-boss: abaikan segera jika tidak ada kaitan dengan bot (hemat CPU & memori)
+    if (isGroup && !isSenderBoss) {
         const cleanMsg = userMessage.toLowerCase().trim();
         const isMenuTrigger = ['menu', 'bantuan', 'help', '#', 'list'].includes(cleanMsg);
         const isCommand = userMessage.startsWith('!') || userMessage.startsWith('.') || userMessage.startsWith('#');
@@ -211,10 +211,10 @@ async function handleIncomingMessage(msg) {
         return;
     }
 
-    // 5. MEDIA HANDLING (PDF & PICTURES) (Only untuk Host Admin/Boss)
+    // 5. MEDIA HANDLING (PDF & PICTURES) (Only untuk Boss)
     // Di grup, hanya respon media jika bot disebut/tag agar tidak salah respon chat kiriman foto biasa.
-    let shouldProcessMedia = isSenderHostAdmin;
-    if (isGroup && isSenderHostAdmin) {
+    let shouldProcessMedia = isSenderBoss;
+    if (isGroup && isSenderBoss) {
         const getDigits = (str) => str ? str.replace(/\D/g, '') : '';
         const botDigits = clientInstance && clientInstance.info ? getDigits(clientInstance.info.wid.user) : null;
         
@@ -235,7 +235,7 @@ async function handleIncomingMessage(msg) {
 
     if (shouldProcessMedia) {
         const mediaHandled = await handleMediaMessage(msg, {
-            chatId, userMessage, isSenderHostAdmin, ioInstance, activeLocks
+            chatId, userMessage, isSenderHostAdmin: isSenderBoss, ioInstance, activeLocks
         });
         if (mediaHandled) return;
     }
@@ -260,7 +260,7 @@ async function handleIncomingMessage(msg) {
 
     // 6. BOSS AI & COMMANDS (#akubosmu, #jadwallaporan, #ingatkan, help/bantuan)
     const bossAiHandled = await handleBossAiMessage(msg, {
-        chatId, senderId, userMessage, isSenderHostAdmin, ioInstance, activeLocks
+        chatId, senderId, userMessage, isSenderHostAdmin: isSenderBoss, ioInstance, activeLocks
     });
     if (bossAiHandled) return;
 
@@ -273,8 +273,8 @@ async function handleIncomingMessage(msg) {
 
     // 8. UNIFIED AI CLASSIFICATION AND DISPATCHER FOR BOSS
     // Di grup, hanya jalankan asisten AI jika Bos menyebut nama/tag bot agar tidak menjawab pengumuman biasa.
-    let shouldTriggerBossAi = isSenderHostAdmin;
-    if (isGroup && isSenderHostAdmin) {
+    let shouldTriggerBossAi = isSenderBoss;
+    if (isGroup && isSenderBoss) {
         const getDigits = (str) => str ? str.replace(/\D/g, '') : '';
         const botDigits = clientInstance && clientInstance.info ? getDigits(clientInstance.info.wid.user) : null;
         
