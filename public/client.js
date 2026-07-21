@@ -548,8 +548,11 @@ async function loadConfig() {
         cfgReportTime.value = config.report_time || '08:00';
         cfgSystemPrompt.value = config.system_prompt_template || '';
         
-        document.getElementById('cfg-auto-send-vcard').checked = config.auto_send_vcard !== false;
-        document.getElementById('cfg-vcard-name').value = config.vcard_name || 'CS Jajan Digital';
+        const autoSendVcardEl = document.getElementById('cfg-auto-send-vcard');
+        if (autoSendVcardEl) autoSendVcardEl.checked = config.auto_send_vcard !== false;
+        
+        const vcardNameEl = document.getElementById('cfg-vcard-name');
+        if (vcardNameEl) vcardNameEl.value = config.vcard_name || 'CS Jajan Digital';
         
         // Update header badge with current provider name and model
         let providerLabel = 'Gemini';
@@ -609,8 +612,8 @@ function setupConfigHandler() {
             group_chat_bot_enabled: document.getElementById('cfg-group-chat-bot-enabled') ? document.getElementById('cfg-group-chat-bot-enabled').checked : true,
             group_ai_enabled: document.getElementById('cfg-group-ai-enabled') ? document.getElementById('cfg-group-ai-enabled').checked : true,
             private_ai_enabled: document.getElementById('cfg-private-ai-enabled') ? document.getElementById('cfg-private-ai-enabled').checked : true,
-            auto_send_vcard: document.getElementById('cfg-auto-send-vcard').checked,
-            vcard_name: document.getElementById('cfg-vcard-name').value.trim(),
+            auto_send_vcard: document.getElementById('cfg-auto-send-vcard') ? document.getElementById('cfg-auto-send-vcard').checked : false,
+            vcard_name: document.getElementById('cfg-vcard-name') ? document.getElementById('cfg-vcard-name').value.trim() : 'CS Jajan Digital',
             
             // Sertakan key & model provider lainnya agar tidak terhapus
             groq_api_keys: (document.getElementById('cfg-groq-api-keys').value || '').split('\n').map(k => k.trim()).filter(k => k.length > 0),
