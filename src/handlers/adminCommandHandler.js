@@ -13,6 +13,15 @@ async function handleAdminCommandMessage(msg, {
 
     const cmd = userMessage.toLowerCase().trim();
 
+    if (cmd === '.id') {
+        if (!isGroup) {
+            await msg.reply("❌ Perintah ini hanya dapat digunakan di dalam grup.");
+            return true;
+        }
+        await msg.reply(`📌 *ID Grup WA ini:* \`${groupId}\``);
+        return true;
+    }
+
     if (cmd === '.buka' || cmd === '!toko buka') {
         if (!isGroup) {
             await msg.reply("❌ Perintah ini hanya dapat digunakan di dalam grup.");

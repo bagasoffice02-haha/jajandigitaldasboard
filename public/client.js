@@ -2586,6 +2586,52 @@ window.stopBroadcast = async function() {
 // Host Admin Group/Menu Config Modal Handlers
 let hostConfigActiveGroups = [];
 
+window.addNewGroupJidManual = async function() {
+    const jid = prompt('Masukkan ID JID Grup WA Baru secara manual:\n(Contoh: 12036310978236670@g.us)\n\nAnda bisa mendapatkan ID grup ini dengan mengetik ".id" di dalam grup WhatsApp Anda.');
+    if (!jid) return;
+    
+    const cleanJid = jid.trim();
+    if (!cleanJid.endsWith('@g.us')) {
+        alert('Format ID Grup salah. Harus diakhiri dengan @g.us');
+        return;
+    }
+    
+    try {
+        const checkRes = await fetch(`/api/group-config/${cleanJid}`);
+        if (!checkRes.ok) throw new Error('Gagal memeriksa konfigurasi grup.');
+        const existingConfig = await checkRes.json();
+        
+        const saveRes = await fetch(`/api/group-config/${cleanJid}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(existingConfig)
+        });
+        
+        if (!saveRes.ok) throw new Error('Gagal menyimpan konfigurasi baru.');
+        
+        alert('Grup berhasil ditambahkan! Memuat ulang daftar...');
+        
+        const groupsRes = await fetch('/api/groups');
+        if (groupsRes.ok) {
+            hostConfigActiveGroups = await groupsRes.json();
+            const groupSelect = document.getElementById('host-config-group-select');
+            if (groupSelect) {
+                groupSelect.innerHTML = '';
+                hostConfigActiveGroups.forEach(g => {
+                    const opt = document.createElement('option');
+                    opt.value = g.id;
+                    opt.textContent = g.name;
+                    groupSelect.appendChild(opt);
+                });
+                groupSelect.value = cleanJid;
+                window.onHostGroupSelectChange();
+            }
+        }
+    } catch (err) {
+        alert('Gagal menambahkan grup manual: ' + err.message);
+    }
+};
+
 window.onHostGroupSelectChange = function() {
     const select = document.getElementById('host-config-group-select');
     if (!select) return;

@@ -698,9 +698,12 @@
                 
                 <div class="form-group" style="margin-bottom: 0;">
                     <label for="host-config-group-select" style="font-size: 0.75rem; margin-bottom: 4px; display: block; color: var(--text-secondary); font-weight: 600;">Pilih Grup WA:</label>
-                    <select id="host-config-group-select" onchange="onHostGroupSelectChange()" class="form-control" style="width: 100%; padding: 6px 10px; font-size: 0.85rem; background: var(--bg-primary); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 6px;">
-                        <!-- Populate dynamically -->
-                    </select>
+                    <div style="display: flex; gap: 8px;">
+                        <select id="host-config-group-select" onchange="onHostGroupSelectChange()" class="form-control" style="flex: 1; padding: 6px 10px; font-size: 0.85rem; background: var(--bg-primary); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 6px;">
+                            <!-- Populate dynamically -->
+                        </select>
+                        <button class="btn btn-secondary" onclick="window.addNewGroupJidManual()" title="Tambah JID Grup Manual" style="padding: 4px 10px; font-size: 0.75rem; border-radius: 6px; border: 1px solid var(--border-color); background: rgba(255,255,255,0.05); color: var(--text-primary); cursor: pointer;">+ JID Manual</button>
+                    </div>
                 </div>
 
                 <!-- Toggle Aktif/Nonaktif Bot Grup -->
