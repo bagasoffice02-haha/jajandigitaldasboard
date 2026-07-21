@@ -125,8 +125,12 @@ async function handleAdminMenuMessage(msg, {
                 for (let gi = 0; gi < groupIds2.length; gi++) {
                     const gId = groupIds2[gi];
                     try {
+                        const gCfg = gConfigs[gId];
+                        const openText = (gCfg && gCfg.groupOpenText && gCfg.groupOpenText.trim() !== '') 
+                            ? gCfg.groupOpenText 
+                            : "🔓 *Pemberitahuan:* Toko telah dibuka kembali. Grup dibuka untuk umum!";
                         await setMessagesAdminsOnly(clientInstance, gId, false);
-                        await clientInstance.sendMessage(gId, "🔔 *Pemberitahuan:* Toko telah dibuka kembali. Grup dibuka untuk umum!");
+                        await clientInstance.sendMessage(gId, openText);
                         successCount++;
                     } catch (err) { console.error(`Gagal membuka grup ${gId}:`, err.message); }
                     // Delay antar grup agar tidak terdeteksi spam oleh WhatsApp
@@ -141,8 +145,12 @@ async function handleAdminMenuMessage(msg, {
                 for (let gi = 0; gi < groupIds3.length; gi++) {
                     const gId = groupIds3[gi];
                     try {
+                        const gCfg = gConfigs[gId];
+                        const closeText = (gCfg && gCfg.groupCloseText && gCfg.groupCloseText.trim() !== '') 
+                            ? gCfg.groupCloseText 
+                            : "🔒 *Pemberitahuan:* Toko telah ditutup. Hanya Admin yang dapat mengirim pesan.";
                         await setMessagesAdminsOnly(clientInstance, gId, true);
-                        await clientInstance.sendMessage(gId, "🔔 *Pemberitahuan:* Toko telah ditutup. Hanya Admin yang dapat mengirim pesan.");
+                        await clientInstance.sendMessage(gId, closeText);
                         successCount++;
                     } catch (err) { console.error(`Gagal menutup grup ${gId}:`, err.message); }
                     // Delay antar grup agar tidak terdeteksi spam oleh WhatsApp
@@ -282,8 +290,11 @@ async function handleAdminMenuMessage(msg, {
                 return true;
             } else if (userMessage === '2') {
                 try {
+                    const openText = (gCfg && gCfg.groupOpenText && gCfg.groupOpenText.trim() !== '') 
+                        ? gCfg.groupOpenText 
+                        : "🔓 *Pemberitahuan:* Toko telah dibuka kembali. Grup dibuka untuk umum!";
                     await setMessagesAdminsOnly(clientInstance, selectedGroupId, false);
-                    await clientInstance.sendMessage(selectedGroupId, "🔓 *Pemberitahuan:* Toko telah dibuka kembali. Grup dibuka untuk umum!");
+                    await clientInstance.sendMessage(selectedGroupId, openText);
                     await msg.reply("🔓 Berhasil membuka grup manual.");
                 } catch(err) {
                     const errMsg = err.message || String(err);
@@ -297,8 +308,11 @@ async function handleAdminMenuMessage(msg, {
                 return true;
             } else if (userMessage === '3') {
                 try {
+                    const closeText = (gCfg && gCfg.groupCloseText && gCfg.groupCloseText.trim() !== '') 
+                        ? gCfg.groupCloseText 
+                        : "🔒 *Pemberitahuan:* Toko telah ditutup. Hanya Admin yang dapat mengirim pesan.";
                     await setMessagesAdminsOnly(clientInstance, selectedGroupId, true);
-                    await clientInstance.sendMessage(selectedGroupId, "🔒 *Pemberitahuan:* Toko telah ditutup. Hanya Admin yang dapat mengirim pesan.");
+                    await clientInstance.sendMessage(selectedGroupId, closeText);
                     await msg.reply("🔒 Berhasil menutup grup manual.");
                 } catch(err) {
                     const errMsg = err.message || String(err);

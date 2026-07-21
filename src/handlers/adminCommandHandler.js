@@ -29,7 +29,11 @@ async function handleAdminCommandMessage(msg, {
         }
         try {
             await setMessagesAdminsOnly(clientInstance, groupId, false);
-            await msg.reply("🔓 *Pemberitahuan:* Toko telah dibuka kembali. Grup dibuka untuk umum!");
+            const cfg = gConfigs && gConfigs[groupId];
+            const openText = (cfg && cfg.groupOpenText && cfg.groupOpenText.trim() !== '') 
+                ? cfg.groupOpenText 
+                : "🔓 *Pemberitahuan:* Toko telah dibuka kembali. Grup dibuka untuk umum!";
+            await msg.reply(openText);
         } catch (err) {
             const errMsg = err.message || String(err);
             if (errMsg === 'r' || errMsg.includes('Evaluation failed') || errMsg.trim().length <= 3) {
@@ -48,7 +52,11 @@ async function handleAdminCommandMessage(msg, {
         }
         try {
             await setMessagesAdminsOnly(clientInstance, groupId, true);
-            await msg.reply("🔒 *Pemberitahuan:* Toko telah ditutup. Hanya Admin yang dapat mengirim pesan.");
+            const cfg = gConfigs && gConfigs[groupId];
+            const closeText = (cfg && cfg.groupCloseText && cfg.groupCloseText.trim() !== '') 
+                ? cfg.groupCloseText 
+                : "🔒 *Pemberitahuan:* Toko telah ditutup. Hanya Admin yang dapat mengirim pesan.";
+            await msg.reply(closeText);
         } catch (err) {
             const errMsg = err.message || String(err);
             if (errMsg === 'r' || errMsg.includes('Evaluation failed') || errMsg.trim().length <= 3) {

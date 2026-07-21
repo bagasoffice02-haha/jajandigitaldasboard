@@ -1035,6 +1035,8 @@ window.selectGroup = async function(groupId) {
         document.getElementById('grp-universal-footer').value = selectedGroupConfig.universalFooter || '';
         document.getElementById('grp-welcome-message').value = selectedGroupConfig.welcomeMessage || '';
         document.getElementById('grp-goodbye-message').value = selectedGroupConfig.goodbyeMessage || '';
+        document.getElementById('grp-open-text').value = selectedGroupConfig.groupOpenText || '';
+        document.getElementById('grp-close-text').value = selectedGroupConfig.groupCloseText || '';
         
         // Auto Close Schedule
         const schedule = selectedGroupConfig.autoCloseSchedule || { enabled: false, openTime: '08:00', closeTime: '17:00', activeDays: [1,2,3,4,5,6,7] };
@@ -1481,6 +1483,8 @@ window.saveGroupConfiguration = async function(showAlert = true, refreshGroupLis
     const universalFooter = document.getElementById('grp-universal-footer').value.trim();
     const welcomeMessage = document.getElementById('grp-welcome-message').value.trim();
     const goodbyeMessage = document.getElementById('grp-goodbye-message').value.trim();
+    const groupOpenText = document.getElementById('grp-open-text').value.trim();
+    const groupCloseText = document.getElementById('grp-close-text').value.trim();
     
     // Auto Close Schedule
     const activeDays = [];
@@ -1556,6 +1560,8 @@ window.saveGroupConfiguration = async function(showAlert = true, refreshGroupLis
         universalFooter,
         welcomeMessage,
         goodbyeMessage,
+        groupOpenText,
+        groupCloseText,
         autoCloseSchedule,
         scheduledMessage,
         scheduledMessages,

@@ -272,8 +272,8 @@ async function checkGroupSchedules(clientOrGetClient, getStatus) {
                             await setMessagesAdminsOnlyHelper(client, groupId, !shouldBeOpen);
                             
                             const msgText = shouldBeOpen 
-                                ? "🔔 *Pemberitahuan Otomatis:* Jam operasional toko telah dimulai. Grup dibuka kembali untuk umum. Silakan ajukan pesanan Anda!"
-                                : "🔔 *Pemberitahuan Otomatis:* Jam operasional toko telah berakhir. Grup ditutup sementara. Hanya Admin yang dapat mengirim pesan.";
+                                ? ((cfg.groupOpenText && cfg.groupOpenText.trim() !== '') ? cfg.groupOpenText : "🔔 *Pemberitahuan Otomatis:* Jam operasional toko telah dimulai. Grup dibuka kembali untuk umum. Silakan ajukan pesanan Anda!")
+                                : ((cfg.groupCloseText && cfg.groupCloseText.trim() !== '') ? cfg.groupCloseText : "🔔 *Pemberitahuan Otomatis:* Jam operasional toko telah berakhir. Grup ditutup sementara. Hanya Admin yang dapat mengirim pesan.");
                             
                             await client.sendMessage(groupId, msgText);
                             console.log(`[Scheduler] Status Grup ${cfg.group_name || groupId} diubah ke ${shouldBeOpen ? 'BUKA' : 'TUTUP'}.`);
