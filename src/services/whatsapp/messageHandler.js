@@ -141,7 +141,11 @@ async function handleIncomingMessage(msg) {
             }
         }
 
-        if (!isMenuTrigger && !isCommand && !isMentioned && !isReplyToBot) {
+        // Cek pencarian produk/kategori langsung secara sensitif/kasus (Direct Product Name/Alias Match)
+        const { findNodeByName } = require('../../handlers/helpers');
+        const isProductMatch = activeCfg.menuTree ? !!findNodeByName(activeCfg.menuTree, userMessage) : false;
+
+        if (!isMenuTrigger && !isCommand && !isMentioned && !isReplyToBot && !isProductMatch) {
             return;
         }
     }
