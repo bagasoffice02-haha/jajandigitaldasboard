@@ -272,7 +272,39 @@ async function handleIncomingMessage(msg) {
     if (customerHandled) return;
 
     // 8. UNIFIED AI CLASSIFICATION AND DISPATCHER FOR BOSS
-    if (isSenderHostAdmin) {
+    // Di grup, hanya jalankan asisten AI jika Bos menyebut nama/tag bot agar tidak menjawab pengumuman biasa.
+    let shouldTriggerBossAi = isSenderHostAdmin;
+    if (isGroup && isSenderHostAdmin) {
+        const getDigits = (str) => str ? str.replace(/\D/g, '') : '';
+        const botDigits = clientInstance && clientInstance.info ? getDigits(clientInstance.info.wid.user) : null;
+        
+        const defaultNames = ['bot', 'ai'];
+        const activeCfg = gConfigs[chatId] || {};
+        const customNames = activeCfg.aiNames ? activeCfg.aiNames.split(',').map(n => n.trim().toLowerCase()).filter(n => n) : defaultNames;
+        const escapedNames = customNames.map(n => n.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&'));
+        const nameRegex = new RegExp(`(\\b(${escapedNames.join('|')})\\b)`, 'gi');
+
+        const isMentioned = botDigits && (
+            (msg.mentionedIds && msg.mentionedIds.some(id => getDigits(id).includes(botDigits))) ||
+            msg.body.includes('@' + botDigits) ||
+            msg.body.includes(botDigits) ||
+            nameRegex.test(msg.body)
+        );
+
+        let isReplyToBot = false;
+        if (msg.hasQuotedMsg) {
+            try {
+                const quotedMsg = await msg.getQuotedMessage();
+                if (quotedMsg && (quotedMsg.fromMe || (botDigits && quotedMsg.author && getDigits(quotedMsg.author).includes(botDigits)))) {
+                    isReplyToBot = true;
+                }
+            } catch (_) {}
+        }
+
+        shouldTriggerBossAi = isMentioned || isReplyToBot;
+    }
+
+    if (shouldTriggerBossAi) {
         await handleUnifiedAiDispatcher(msg, {
             chatId, userMessage, ioInstance, activeLocks
         });
