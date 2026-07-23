@@ -3045,6 +3045,73 @@ table tr:hover {
     background: rgba(140, 140, 140, 0.45);
 }
 
+/* ============================================================
+   NATIVE MOBILE APP EXPERIENCE & TOUCH MECHANICS
+   ============================================================ */
+html, body {
+    overscroll-behavior-y: none;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+}
+
+body {
+    -webkit-user-select: none;
+    user-select: none;
+}
+
+input, textarea, select, [contenteditable], .selectable-text, .chat-messages-container, .code-font, p, span, h1, h2, h3, code {
+    -webkit-user-select: text;
+    user-select: text;
+}
+
+/* Native Haptic Active Press Feedback */
+button:active, 
+.ios-tab-btn:active, 
+.card-clickable:active,
+.file-item:active,
+.wa-chat-item:active {
+    transform: scale(0.96) !important;
+    transition: transform 0.1s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+/* Prevent iOS Safari Auto-Zoom on Input Focus & Mobile Layout Optimization */
+@media (max-width: 768px) {
+    input, select, textarea {
+        font-size: 16px !important; /* Prevents viewport zoom in iOS Safari */
+    }
+    
+    .app-header {
+        padding-top: max(12px, env(safe-area-inset-top));
+    }
+    
+    .ios-tab-bar {
+        padding-bottom: max(10px, env(safe-area-inset-bottom));
+        height: calc(64px + env(safe-area-inset-bottom, 0px));
+        border-top: 1px solid rgba(255, 255, 255, 0.08);
+        box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.25);
+    }
+    
+    .ios-tab-btn {
+        position: relative;
+        padding-top: 6px;
+    }
+    
+    .ios-tab-btn.active::after {
+        content: '';
+        position: absolute;
+        bottom: 6px;
+        width: 4px;
+        height: 4px;
+        background: var(--blue);
+        border-radius: 50%;
+        box-shadow: 0 0 8px var(--blue), 0 0 12px var(--blue);
+    }
+    
+    .tab-content {
+        padding-bottom: calc(var(--tab-bar-h) + env(safe-area-inset-bottom, 0px) + 20px);
+    }
+}
+
 
 
 
