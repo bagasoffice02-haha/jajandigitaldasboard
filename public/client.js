@@ -1,6 +1,71 @@
 // Dashboard Admin Chatbot CS Sania AI - Client Logic
 const socket = io();
 
+// ══════════════════════════════════════════
+// ULTRA MODERN TOAST NOTIFICATION SYSTEM (2026 SAAS EXPERIENCE)
+// ══════════════════════════════════════════
+window.showToast = function(message, type = 'info', duration = 3500) {
+    if (!message) return;
+    let container = document.getElementById('toast-container');
+    if (!container) {
+        container = document.createElement('div');
+        container.id = 'toast-container';
+        document.body.appendChild(container);
+    }
+
+    const toast = document.createElement('div');
+    toast.className = `toast-notification toast-${type}`;
+    
+    let iconSvg = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>';
+    let defaultTitle = 'Informasi';
+
+    if (type === 'success') {
+        iconSvg = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>';
+        defaultTitle = 'Berhasil';
+    } else if (type === 'error') {
+        iconSvg = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>';
+        defaultTitle = 'Gagal';
+    } else if (type === 'warning') {
+        iconSvg = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>';
+        defaultTitle = 'Perhatian';
+    }
+
+    toast.innerHTML = `
+        <div class="toast-icon">${iconSvg}</div>
+        <div class="toast-content">
+            <span class="toast-title">${defaultTitle}</span>
+            <span class="toast-message">${message}</span>
+        </div>
+        <button class="toast-close" onclick="this.parentElement.remove()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+        <div class="toast-progress" style="animation-duration: ${duration}ms;"></div>
+    `;
+
+    container.appendChild(toast);
+
+    requestAnimationFrame(() => {
+        toast.classList.add('show');
+    });
+
+    setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => {
+            if (toast.parentElement) toast.remove();
+        }, 350);
+    }, duration);
+};
+
+// Override default browser alert with sleek toast notification
+window.alert = function(msg) {
+    if (!msg) return;
+    const str = String(msg).toLowerCase();
+    const isError = str.includes('gagal') || str.includes('error') || str.includes('salah') || str.includes('kosong') || str.includes('bukan') || str.includes('tidak');
+    const isSuccess = str.includes('berhasil') || str.includes('sukses') || str.includes('disimpan') || str.includes('dihapus') || str.includes('dikirim') || str.includes('disalin');
+    const type = isError ? 'error' : (isSuccess ? 'success' : 'info');
+    window.showToast(msg, type);
+};
+
 // State & UI Elements
 const statusDot = document.getElementById('status-dot');
 const statusText = document.getElementById('status-text');
