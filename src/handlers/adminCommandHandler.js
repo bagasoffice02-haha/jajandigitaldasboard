@@ -94,7 +94,8 @@ async function handleAdminCommandMessage(msg, {
     const isProcessCmd = cmd.startsWith('.proses') || cmd.startsWith('.process');
     const isDoneCmd = cmd.startsWith('.done') || cmd.startsWith('.doen');
     if (isProcessCmd || isDoneCmd) {
-        if (msg.hasQuotedMsg) {
+        const hasQuote = msg.hasQuotedMsg || Boolean(msg.quotedMsg) || Boolean(msg._data && (msg._data.quotedMsg || msg._data.quotedParticipant));
+        if (hasQuote) {
             try {
                 let quotedMsg = null;
                 let customerId = null;

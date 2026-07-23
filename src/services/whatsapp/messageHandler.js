@@ -45,10 +45,11 @@ async function handleIncomingMessage(msg) {
     // Jika pesan dari nomor bot sendiri, abaikan jika bukan command/shortcut
     if (msg.fromMe) {
         const cleanMsg = userMessage.toLowerCase().trim();
+        const hasQuote = msg.hasQuotedMsg || Boolean(msg.quotedMsg) || Boolean(msg._data && (msg._data.quotedMsg || msg._data.quotedParticipant));
         const isCommand = userMessage.startsWith('!') || 
                           userMessage.startsWith('.') || 
                           cleanMsg.startsWith('#agenda') ||
-                          (msg.hasQuotedMsg && ['done', 'doen', 'proses', 'process'].some(kw => cleanMsg.startsWith(kw)));
+                          (hasQuote && ['done', 'doen', 'proses', 'process'].some(kw => cleanMsg.startsWith(kw)));
         if (!isCommand) return;
     }
 
@@ -108,11 +109,13 @@ async function handleIncomingMessage(msg) {
         return;
     }
 
-    // Untuk pesan di Grup dari non-boss: abaikan segera jika tidak ada kaitan dengan bot (hemat CPU & memori)
-    if (isGroup && !isSenderBoss) {
+    // Untuk pesan di Grup dari anggota biasa (non-admin): abaikan segera jika tidak ada kaitan dengan bot (hemat CPU & memori)
+    if (isGroup && !isSenderHostAdmin) {
         const cleanMsg = userMessage.toLowerCase().trim();
         const isMenuTrigger = ['menu', 'bantuan', 'help', '#', 'list'].includes(cleanMsg);
-        const isCommand = userMessage.startsWith('!') || userMessage.startsWith('.') || userMessage.startsWith('#');
+        const hasQuote = msg.hasQuotedMsg || Boolean(msg.quotedMsg) || Boolean(msg._data && (msg._data.quotedMsg || msg._data.quotedParticipant));
+        const isShortcutCmd = hasQuote && ['done', 'doen', 'proses', 'process'].some(kw => cleanMsg.startsWith(kw));
+        const isCommand = userMessage.startsWith('!') || userMessage.startsWith('.') || userMessage.startsWith('#') || isShortcutCmd;
         
         const getDigits = (str) => str ? str.replace(/\D/g, '') : '';
         const botDigits = clientInstance && clientInstance.info ? getDigits(clientInstance.info.wid.user) : null;
@@ -131,7 +134,7 @@ async function handleIncomingMessage(msg) {
         );
 
         let isReplyToBot = false;
-        if (msg.hasQuotedMsg) {
+        if (hasQuote) {
             try {
                 const quotedMsg = await msg.getQuotedMessage();
                 if (quotedMsg && (quotedMsg.fromMe || (botDigits && quotedMsg.author && getDigits(quotedMsg.author).includes(botDigits)))) {
@@ -151,8 +154,9 @@ async function handleIncomingMessage(msg) {
         }
     }
 
-    // Auto-prefix dot for invoice command
-    if (isSenderHostAdmin && msg.hasQuotedMsg) {
+    // Auto-prefix dot for invoice command (done / doen / proses / process)
+    const hasQuote = msg.hasQuotedMsg || Boolean(msg.quotedMsg) || Boolean(msg._data && (msg._data.quotedMsg || msg._data.quotedParticipant));
+    if (isSenderHostAdmin && hasQuote) {
         const cleanMsg = userMessage.toLowerCase().trim();
         const foundKw = ['done', 'doen', 'proses', 'process'].find(kw => cleanMsg.startsWith(kw));
         if (foundKw && !cleanMsg.startsWith('.')) {
@@ -169,8 +173,8 @@ async function handleIncomingMessage(msg) {
     });
     if (orderHandled) return;
 
-    // Cooldown untuk perintah grup (Mencegah spam perintah dari anggota grup)
-    if (isGroup && !isSenderBoss) {
+    // Cooldown untuk perintah grup (Mencegah spam perintah dari anggota grup biasa)
+    if (isGroup && !isSenderHostAdmin) {
         const cleanMsg = userMessage.toLowerCase().trim();
         const isCmd = cleanMsg.startsWith('.') || cleanMsg.startsWith('!');
         if (isCmd) {
