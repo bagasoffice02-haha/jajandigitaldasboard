@@ -22,8 +22,9 @@ async function simulateTyping(msg, delayMs = 2000) {
         const chat = await msg.getChat();
         try { await chat.sendSeen(); } catch (_) {}
         await chat.sendStateTyping();
+        // Jangan clearState() — WhatsApp otomatis stop indikator "mengetik" 
+        // saat pesan dikirim. clearState() sebelum reply malah bikin jeda kosong.
         await new Promise(resolve => setTimeout(resolve, delayMs));
-        try { await chat.clearState(); } catch (_) {}
     } catch (_) {}
 }
 

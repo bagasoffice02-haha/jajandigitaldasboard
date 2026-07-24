@@ -83,7 +83,7 @@ async function handleAdminCommandMessage(msg, {
             const chatObj = await msg.getChat();
             try { await chatObj.sendSeen(); } catch(_) {}
             try { await chatObj.sendStateTyping(); } catch(_) {}
-            await new Promise(r => setTimeout(r, 1200));
+            await new Promise(r => setTimeout(r, 2000));
             await setGroupAnnounce(clientInstance, groupId, false);
             const cfg = gConfigs && gConfigs[groupId];
             const openText = (cfg && cfg.groupOpenText && cfg.groupOpenText.trim() !== '')
@@ -127,7 +127,7 @@ async function handleAdminCommandMessage(msg, {
             const chatObj = await msg.getChat();
             try { await chatObj.sendSeen(); } catch(_) {}
             try { await chatObj.sendStateTyping(); } catch(_) {}
-            await new Promise(r => setTimeout(r, 1500));
+            await new Promise(r => setTimeout(r, 2000));
         } catch(_) {}
 
         const extraNote = userMessage.trim().split(/\s+/).slice(1).join(' ');
