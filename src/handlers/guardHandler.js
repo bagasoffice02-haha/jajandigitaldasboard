@@ -76,7 +76,12 @@ async function checkAndProcessGuards(msg, {
         const cleanBoss = normalizePhone(config.boss_number);
         const cleanSender = normalizePhone(senderId);
         const cleanContact = contactPhone ? normalizePhone(contactPhone) : '';
-        return cleanSender === cleanBoss || cleanContact === cleanBoss;
+        // Juga cek: hanya digit angkanya saja (untuk LID vs nomor normal)
+        const senderDigits = (senderId.split('@')[0] || '').replace(/\D/g, '');
+        const bossDigits = cleanBoss.replace(/\D/g, '');
+        const matched = cleanSender === cleanBoss || cleanContact === cleanBoss || senderDigits === bossDigits;
+        console.log(`[Guard DEBUG] boss=${cleanBoss} | sender=${cleanSender} | contact=${cleanContact} | senderDigits=${senderDigits} | matched=${matched}`);
+        return matched;
     })();
 
     // Di dalam grup, isSenderHostAdmin bernilai true HANYA jika pengirim adalah Boss (Owner) ATAU Admin Grup WA tersebut
@@ -84,6 +89,7 @@ async function checkAndProcessGuards(msg, {
     if (isGroup) {
         try {
             const isGroupAdmin = await isSenderGroupAdminHelper(clientInstance, chatId, senderId);
+            console.log(`[Guard DEBUG] isGroupAdmin=${isGroupAdmin} | isSenderBoss=${isSenderBoss} | senderId=${senderId}`);
             isSenderHostAdmin = isSenderBoss || isGroupAdmin;
         } catch (chatErr) {
             console.warn('[Guard Warning] Gagal memverifikasi status admin grup, fallback ke false:', chatErr.message);
