@@ -620,6 +620,8 @@ async function loadConfig() {
         if (cfgBossNumber) cfgBossNumber.value = config.boss_number || '';
         if (cfgReportTime) cfgReportTime.value = config.report_time || '08:00';
         if (cfgSystemPrompt) cfgSystemPrompt.value = config.system_prompt_template || '';
+        const cfgBossLidEl = document.getElementById('cfg-boss-lid');
+        if (cfgBossLidEl) cfgBossLidEl.value = config.boss_lid || '';
         
         const autoSendVcardEl = document.getElementById('cfg-auto-send-vcard');
         if (autoSendVcardEl) autoSendVcardEl.checked = config.auto_send_vcard !== false;
@@ -685,6 +687,7 @@ window.saveConfigNow = async function() {
             model_name: activeModel,
             max_tokens: parseInt((cfgMaxTokens ? cfgMaxTokens.value : '1000'), 10) || 1000,
             boss_number: cfgBossNumber ? cfgBossNumber.value.trim() : '',
+            boss_lid: (document.getElementById('cfg-boss-lid') ? document.getElementById('cfg-boss-lid').value.trim() : ''),
             report_time: cfgReportTime ? cfgReportTime.value.trim() : '08:00',
             system_prompt_template: cfgSystemPrompt ? cfgSystemPrompt.value.trim() : '',
             private_chat_sync_group_id: document.getElementById('cfg-private-chat-sync-group-id') ? document.getElementById('cfg-private-chat-sync-group-id').value : '',

@@ -1447,7 +1447,12 @@
                             <div class="form-group">
                                 <label for="cfg-boss-number" style="font-size: 0.78rem; font-weight: 600;">Nomor WhatsApp Bos</label>
                                 <input type="text" id="cfg-boss-number" placeholder="Contoh: 628123456789" class="form-control" style="width: 100%; padding: 6px 10px; font-size: 0.82rem; background: var(--bg-primary); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 6px; height: 32px;">
-                                <small style="color: var(--text-secondary); font-size: 0.65rem; display: block; margin-top: 2px;">Jika diisi, bot hanya membalas nomor ini.</small>
+                                <small style="color: var(--text-secondary); font-size: 0.65rem; display: block; margin-top: 2px;">Nomor HP Bos (format: 628xxx). Bot akan mengenali pesan dari nomor ini sebagai perintah admin.</small>
+                            </div>
+                            <div class="form-group" style="margin-top: 8px;">
+                                <label for="cfg-boss-lid" style="font-size: 0.78rem; font-weight: 600;">WhatsApp LID Bos <span style="color: var(--accent-color); font-size: 0.7rem;">(Khusus WA Baru)</span></label>
+                                <input type="text" id="cfg-boss-lid" placeholder="Contoh: 32449065132068" class="form-control" style="width: 100%; padding: 6px 10px; font-size: 0.82rem; background: var(--bg-primary); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 6px; height: 32px;">
+                                <small style="color: var(--text-secondary); font-size: 0.65rem; display: block; margin-top: 2px;">🔑 Isi dengan angka LID dari log bot (misal: <code>32449065132068</code>). Lihat di PM2 logs baris "Author: xxxxx@lid".</small>
                             </div>
                         </div>
 
