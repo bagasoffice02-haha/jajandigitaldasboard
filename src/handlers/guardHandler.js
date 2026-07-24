@@ -84,6 +84,22 @@ async function checkAndProcessGuards(msg, {
         (bossDigits && (matchDigits(contactDigits, bossDigits) || matchDigits(senderPartDigits, bossDigits))) ||
         (bossLid    && (matchDigits(senderPartDigits, bossLid) || matchDigits(contactDigits, bossLid)));
 
+    // ─── Auto-simpan LID Boss jika belum tersimpan ──────────────────────────────
+    // Jika boss dikenali lewat nomor HP dan pengirim pakai format LID baru (@lid),
+    // otomatis simpan LID-nya supaya Kakak tidak perlu input manual.
+    if (isSenderBoss && senderId.endsWith('@lid')) {
+        const currentLid = (config.boss_lid || '').replace(/\D/g, '');
+        if (!currentLid || currentLid !== senderPartDigits) {
+            try {
+                const { updateConfig } = require('../config/config');
+                updateConfig({ boss_lid: senderPartDigits });
+                console.log(`[Guard] ✅ Auto-simpan boss_lid: "${senderPartDigits}" (dari pesan boss via LID format)`);
+            } catch(saveErr) {
+                console.warn('[Guard] Gagal auto-simpan boss_lid:', saveErr.message);
+            }
+        }
+    }
+
     console.log(`[Guard] boss="${bossDigits}" lid="${bossLid}" | contact="${contactDigits}" sender="${senderPartDigits}" | isBoss=${!!isSenderBoss}`);
 
     // Tidak ada cek async getChatById/Puppeteer — langsung pakai hasil di atas
