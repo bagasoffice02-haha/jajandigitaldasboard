@@ -27,6 +27,43 @@ const customerMenuStates = new Map();
 const pendingTransactions = new Map();
 const groupCommandCooldowns = new Map();
 
+// ─── Anti-Spam: Per-User Cooldown & Flood Protection ───────────────────────
+const userLastReplyTime = new Map();   // senderId → timestamp balasan terakhir
+const userMsgBucket = new Map();       // senderId → [timestamps] dalam 1 menit
+const USER_REPLY_COOLDOWN_MS  = 3000;  // 3 detik min antar balasan ke 1 user
+const USER_MAX_MSG_PER_MINUTE = 15;    // max pesan diproses per user per menit
+const USER_FLOOD_WARN_AT      = 10;    // kirim peringatan sekali di pesan ke-10
+
+function checkUserAntiSpam(senderId) {
+    const now = Date.now();
+
+    // 1. Flood protection: hitung pesan dalam 60 detik terakhir
+    const bucket = (userMsgBucket.get(senderId) || []).filter(t => now - t < 60000);
+    bucket.push(now);
+    userMsgBucket.set(senderId, bucket);
+
+    if (bucket.length > USER_MAX_MSG_PER_MINUTE) {
+        console.log(`[AntiSpam] FLOOD: ${senderId} (${bucket.length} msg/mnt) — diabaikan`);
+        return { blocked: true, reason: 'flood' };
+    }
+    if (bucket.length === USER_FLOOD_WARN_AT) {
+        return { blocked: false, warn: true }; // kirim peringatan tapi tetap proses
+    }
+
+    // 2. Per-user cooldown
+    const lastReply = userLastReplyTime.get(senderId) || 0;
+    if (now - lastReply < USER_REPLY_COOLDOWN_MS) {
+        console.log(`[AntiSpam] COOLDOWN: ${senderId} (${now - lastReply}ms < ${USER_REPLY_COOLDOWN_MS}ms) — diabaikan`);
+        return { blocked: true, reason: 'cooldown' };
+    }
+
+    return { blocked: false };
+}
+
+function markUserReplied(senderId) {
+    userLastReplyTime.set(senderId, Date.now());
+}
+
 function initMessageHandler(client, io) {
     clientInstance = client;
     ioInstance = io;
@@ -172,6 +209,19 @@ async function handleIncomingMessage(msg) {
             }
             groupCommandCooldowns.set(chatId, now);
         }
+
+        // ─── Per-user anti-spam (cooldown + flood) ───────────────────────
+        const spamCheck = checkUserAntiSpam(senderId);
+        if (spamCheck.blocked) return; // abaikan diam-diam
+        if (spamCheck.warn) {
+            // Peringatan sekali saat mendekati limit
+            try {
+                await msg.reply(
+                    `⚠️ _Hei, sepertinya kamu mengirim pesan terlalu cepat!_\n` +
+                    `_Mohon tunggu sebentar sebelum mengirim pesan lagi ya. 🙏_`
+                );
+            } catch(_) {}
+        }
     }
 
     // 3. ADMIN MENU HANDLER
@@ -275,7 +325,11 @@ async function handleIncomingMessage(msg) {
         chatId, senderId, userMessage, textLower, isGroup, clientInstance, ioInstance,
         activeCfg, configGroupId, gConfigs, customerMenuStates, activeLocks
     });
-    if (customerHandled) return;
+    if (customerHandled) {
+        // Tandai waktu balasan terakhir ke user ini (untuk per-user cooldown)
+        if (!isSenderHostAdmin) markUserReplied(senderId);
+        return;
+    }
 
     // 8. UNIFIED AI CLASSIFICATION AND DISPATCHER FOR BOSS
     // Di grup, hanya jalankan asisten AI jika Bos menyebut nama/tag bot agar tidak menjawab pengumuman biasa.
