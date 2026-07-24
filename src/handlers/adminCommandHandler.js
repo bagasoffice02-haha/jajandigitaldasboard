@@ -28,16 +28,22 @@ async function handleAdminCommandMessage(msg, {
             return true;
         }
         try {
-            await setMessagesAdminsOnly(clientInstance, groupId, false);
+            // Gunakan native whatsapp-web.js API terlebih dahulu (lebih andal)
+            const chat = await clientInstance.getChatById(groupId);
+            if (chat && typeof chat.setMessagesAdminsOnly === 'function') {
+                await chat.setMessagesAdminsOnly(false);
+            } else {
+                await setMessagesAdminsOnly(clientInstance, groupId, false);
+            }
             const cfg = gConfigs && gConfigs[groupId];
-            const openText = (cfg && cfg.groupOpenText && cfg.groupOpenText.trim() !== '') 
-                ? cfg.groupOpenText 
+            const openText = (cfg && cfg.groupOpenText && cfg.groupOpenText.trim() !== '')
+                ? cfg.groupOpenText
                 : "🔓 *Pemberitahuan:* Toko telah dibuka kembali. Grup dibuka untuk umum!";
             await msg.reply(openText);
         } catch (err) {
             const errMsg = err.message || String(err);
-            if (errMsg === 'r' || errMsg.includes('Evaluation failed') || errMsg.trim().length <= 3) {
-                await msg.reply("❌ Gagal membuka grup: Terjadi kesalahan browser WhatsApp Web. Pastikan bot adalah Admin di grup ini.");
+            if (errMsg.includes('Admin') || errMsg.includes('admin') || errMsg.includes('403') || errMsg.includes('401')) {
+                await msg.reply("❌ Gagal membuka grup: Bot belum menjadi Admin di grup ini. Jadikan bot sebagai Admin terlebih dahulu.");
             } else {
                 await msg.reply("❌ Gagal membuka grup: " + errMsg);
             }
@@ -51,19 +57,55 @@ async function handleAdminCommandMessage(msg, {
             return true;
         }
         try {
-            await setMessagesAdminsOnly(clientInstance, groupId, true);
+            // Gunakan native whatsapp-web.js API terlebih dahulu (lebih andal)
+            const chat = await clientInstance.getChatById(groupId);
+            if (chat && typeof chat.setMessagesAdminsOnly === 'function') {
+                await chat.setMessagesAdminsOnly(true);
+            } else {
+                await setMessagesAdminsOnly(clientInstance, groupId, true);
+            }
             const cfg = gConfigs && gConfigs[groupId];
-            const closeText = (cfg && cfg.groupCloseText && cfg.groupCloseText.trim() !== '') 
-                ? cfg.groupCloseText 
+            const closeText = (cfg && cfg.groupCloseText && cfg.groupCloseText.trim() !== '')
+                ? cfg.groupCloseText
                 : "🔒 *Pemberitahuan:* Toko telah ditutup. Hanya Admin yang dapat mengirim pesan.";
             await msg.reply(closeText);
         } catch (err) {
             const errMsg = err.message || String(err);
-            if (errMsg === 'r' || errMsg.includes('Evaluation failed') || errMsg.trim().length <= 3) {
-                await msg.reply("❌ Gagal menutup grup: Terjadi kesalahan browser WhatsApp Web. Pastikan bot adalah Admin di grup ini.");
+            if (errMsg.includes('Admin') || errMsg.includes('admin') || errMsg.includes('403') || errMsg.includes('401')) {
+                await msg.reply("❌ Gagal menutup grup: Bot belum menjadi Admin di grup ini. Jadikan bot sebagai Admin terlebih dahulu.");
             } else {
                 await msg.reply("❌ Gagal menutup grup: " + errMsg);
             }
+        }
+        return true;
+    }
+
+    // .done / .proses — Konfirmasi status pesanan sederhana
+    const isProcessCmd = cmd.startsWith('.proses') || cmd.startsWith('.process');
+    const isDoneCmd = cmd.startsWith('.done') || cmd.startsWith('.doen');
+    if (isProcessCmd || isDoneCmd) {
+        const extraNote = userMessage.trim().split(/\s+/).slice(1).join(' '); // teks setelah perintah
+        let replyText;
+        if (isProcessCmd) {
+            replyText = `⏳ *Status Pesanan: DIPROSES*\n`;
+            replyText += `Pesanan Anda sedang kami proses. Mohon tunggu sebentar ya! 🙏`;
+        } else {
+            replyText = `✅ *Status Pesanan: SELESAI / LUNAS*\n`;
+            replyText += `Pesanan Anda telah dikonfirmasi dan sudah diproses. Terima kasih! 🎉`;
+        }
+        if (extraNote) replyText += `\n\n📝 _Catatan Admin: ${extraNote}_`;
+
+        const hasQuote = msg.hasQuotedMsg || Boolean(msg.quotedMsg) || Boolean(msg._data && (msg._data.quotedMsg || msg._data.quotedParticipant));
+        if (hasQuote) {
+            try {
+                const quotedMsg = await msg.getQuotedMessage();
+                const targetId = quotedMsg.author || quotedMsg.from;
+                await msg.reply(replyText, null, { mentions: targetId ? [targetId] : [] });
+            } catch (_) {
+                await msg.reply(replyText);
+            }
+        } else {
+            await msg.reply(replyText);
         }
         return true;
     }
