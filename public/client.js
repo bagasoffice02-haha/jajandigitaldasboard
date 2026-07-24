@@ -645,11 +645,18 @@ async function loadConfig() {
 
 // Save config handler
 function setupConfigHandler() {
-    configForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        
-        const provider = cfgProvider.value;
-        const keysInput = cfgGeminiApiKeys.value;
+    // Fallback: juga tangani submit form biasa
+    if (configForm) {
+        configForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            window.saveConfigNow();
+        });
+    }
+}
+
+window.saveConfigNow = async function() {
+        const provider = cfgProvider ? cfgProvider.value : 'gemini';
+        const keysInput = cfgGeminiApiKeys ? cfgGeminiApiKeys.value : '';
         const geminiKeys = keysInput.split('\n')
             .map(k => k.trim())
             .filter(k => k.length > 0);
@@ -657,26 +664,26 @@ function setupConfigHandler() {
         // Tentukan model name berdasarkan provider yang aktif
         let activeModel = 'gemini-2.5-flash';
         if (provider === 'gemini') {
-            activeModel = cfgGeminiModel.value.trim();
+            activeModel = cfgGeminiModel ? cfgGeminiModel.value.trim() : 'gemini-2.5-flash';
         } else if (provider === 'local') {
-            activeModel = cfgModelName.value.trim();
+            activeModel = cfgModelName ? cfgModelName.value.trim() : '';
         } else if (provider === 'groq') {
-            activeModel = document.getElementById('cfg-groq-model').value.trim();
+            activeModel = (document.getElementById('cfg-groq-model') ? document.getElementById('cfg-groq-model').value.trim() : '');
         } else if (provider === 'deepseek') {
-            activeModel = document.getElementById('cfg-deepseek-model').value.trim();
+            activeModel = (document.getElementById('cfg-deepseek-model') ? document.getElementById('cfg-deepseek-model').value.trim() : '');
         } else if (provider === 'qwen') {
-            activeModel = document.getElementById('cfg-qwen-model').value.trim();
+            activeModel = (document.getElementById('cfg-qwen-model') ? document.getElementById('cfg-qwen-model').value.trim() : '');
         } else if (provider === 'openrouter') {
-            activeModel = document.getElementById('cfg-openrouter-model').value.trim();
+            activeModel = (document.getElementById('cfg-openrouter-model') ? document.getElementById('cfg-openrouter-model').value.trim() : '');
         }
             
         const payload = {
             provider: provider,
             gemini_api_keys: geminiKeys,
-            api_url: cfgApiUrl.value.trim(),
-            api_key: (cfgApiKey.value.trim() && !cfgApiKey.value.includes('YOUR_LOCAL') && !cfgApiKey.value.includes('TOKEN')) ? cfgApiKey.value.trim() : (config && config.api_key && !config.api_key.includes('YOUR_LOCAL') ? config.api_key : ''),
+            api_url: cfgApiUrl ? cfgApiUrl.value.trim() : '',
+            api_key: (cfgApiKey && cfgApiKey.value.trim() && !cfgApiKey.value.includes('YOUR_LOCAL') && !cfgApiKey.value.includes('TOKEN')) ? cfgApiKey.value.trim() : '',
             model_name: activeModel,
-            max_tokens: parseInt(cfgMaxTokens.value, 10),
+            max_tokens: parseInt((cfgMaxTokens ? cfgMaxTokens.value : '1000'), 10) || 1000,
             boss_number: cfgBossNumber ? cfgBossNumber.value.trim() : '',
             report_time: cfgReportTime ? cfgReportTime.value.trim() : '08:00',
             system_prompt_template: cfgSystemPrompt ? cfgSystemPrompt.value.trim() : '',
@@ -709,17 +716,16 @@ function setupConfigHandler() {
             });
             
             if (res.ok) {
-                alert('Konfigurasi bot berhasil disimpan dan diterapkan!');
+                alert('✅ Konfigurasi bot berhasil disimpan!');
                 loadConfig(); // Refresh values & header badge
             } else {
-                alert('Gagal menyimpan konfigurasi.');
+                alert('❌ Gagal menyimpan konfigurasi. Cek koneksi ke server.');
             }
         } catch (err) {
             console.error('Save config error:', err);
-            alert('Terjadi kesalahan koneksi saat menyimpan.');
+            alert('❌ Terjadi kesalahan koneksi saat menyimpan: ' + err.message);
         }
-    });
-}
+};
 
 // Utility to escape HTML and prevent XSS in monitor console
 function escapeHtml(text) {

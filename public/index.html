@@ -1420,7 +1420,7 @@
                             <!-- Shared Settings -->
                             <div class="form-group">
                                 <label for="cfg-max-tokens">Batas Maksimal Token</label>
-                                <input type="number" id="cfg-max-tokens" required min="100" max="4000" placeholder="1000" class="form-control" style="width: 100%; padding: 6px 10px; font-size: 0.82rem; background: var(--bg-primary); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 6px; height: 32px;">
+                                <input type="number" id="cfg-max-tokens" min="100" max="4000" placeholder="1000" class="form-control" style="width: 100%; padding: 6px 10px; font-size: 0.82rem; background: var(--bg-primary); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 6px; height: 32px;">
                                 <small style="color: var(--text-secondary); font-size: 0.65rem; display: block; margin-top: 2px;">Token lebih banyak membantu model reasoning menyelesaikan jawaban panjang.</small>
                             </div>
                         </div>
@@ -1461,7 +1461,7 @@
                         </div>
 
                         <!-- Action Button at Bottom of card -->
-                        <button type="submit" class="btn btn-primary btn-block" style="margin-top: auto; padding: 10px; border-radius: 8px; cursor: pointer; flex-shrink: 0; font-weight: 600; font-size: 0.85rem;">
+                        <button type="button" onclick="window.saveConfigNow()" class="btn btn-primary btn-block" style="margin-top: auto; padding: 10px; border-radius: 8px; cursor: pointer; flex-shrink: 0; font-weight: 600; font-size: 0.85rem;">
                             <i data-lucide="save" style="width: 14px; height: 14px; display: inline-block; vertical-align: middle; margin-right: 4px;"></i> Simpan Konfigurasi
                         </button>
                     </form>
