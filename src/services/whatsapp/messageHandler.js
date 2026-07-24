@@ -45,11 +45,9 @@ async function handleIncomingMessage(msg) {
     // Jika pesan dari nomor bot sendiri, abaikan jika bukan command/shortcut
     if (msg.fromMe) {
         const cleanMsg = userMessage.toLowerCase().trim();
-        const hasQuote = msg.hasQuotedMsg || Boolean(msg.quotedMsg) || Boolean(msg._data && (msg._data.quotedMsg || msg._data.quotedParticipant));
         const isCommand = userMessage.startsWith('!') || 
                           userMessage.startsWith('.') || 
-                          cleanMsg.startsWith('#agenda') ||
-                          (hasQuote && ['done', 'doen', 'proses', 'process'].some(kw => cleanMsg.startsWith(kw)));
+                          cleanMsg.startsWith('#agenda');
         if (!isCommand) return;
     }
 
@@ -113,9 +111,7 @@ async function handleIncomingMessage(msg) {
     if (isGroup && !isSenderHostAdmin) {
         const cleanMsg = userMessage.toLowerCase().trim();
         const isMenuTrigger = ['menu', 'bantuan', 'help', '#', 'list'].includes(cleanMsg);
-        const hasQuote = msg.hasQuotedMsg || Boolean(msg.quotedMsg) || Boolean(msg._data && (msg._data.quotedMsg || msg._data.quotedParticipant));
-        const isShortcutCmd = hasQuote && ['done', 'doen', 'proses', 'process'].some(kw => cleanMsg.startsWith(kw));
-        const isCommand = userMessage.startsWith('!') || userMessage.startsWith('.') || userMessage.startsWith('#') || isShortcutCmd;
+        const isCommand = userMessage.startsWith('!') || userMessage.startsWith('.') || userMessage.startsWith('#');
         
         const getDigits = (str) => str ? str.replace(/\D/g, '') : '';
         const botDigits = clientInstance && clientInstance.info ? getDigits(clientInstance.info.wid.user) : null;
@@ -134,6 +130,7 @@ async function handleIncomingMessage(msg) {
         );
 
         let isReplyToBot = false;
+        const hasQuote = msg.hasQuotedMsg || Boolean(msg.quotedMsg) || Boolean(msg._data && (msg._data.quotedMsg || msg._data.quotedParticipant));
         if (hasQuote) {
             try {
                 const quotedMsg = await msg.getQuotedMessage();
@@ -151,17 +148,6 @@ async function handleIncomingMessage(msg) {
 
         if (!isMenuTrigger && !isCommand && !isMentioned && !isReplyToBot && !isProductMatch) {
             return;
-        }
-    }
-
-    // Auto-prefix dot for invoice command (done / doen / proses / process)
-    const hasQuote = msg.hasQuotedMsg || Boolean(msg.quotedMsg) || Boolean(msg._data && (msg._data.quotedMsg || msg._data.quotedParticipant));
-    if (isSenderHostAdmin && hasQuote) {
-        const cleanMsg = userMessage.toLowerCase().trim();
-        const foundKw = ['done', 'doen', 'proses', 'process'].find(kw => cleanMsg.startsWith(kw));
-        if (foundKw && !cleanMsg.startsWith('.')) {
-            userMessage = '.' + userMessage;
-            console.log(`[Auto-Command] Mengubah pesan admin "${cleanMsg}" menjadi "${userMessage}"`);
         }
     }
 
