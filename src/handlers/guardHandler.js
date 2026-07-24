@@ -71,29 +71,72 @@ async function checkAndProcessGuards(msg, {
         console.warn('[Guard Warning] Gagal mendapatkan detail kontak pengirim:', e.message);
     }
 
+    // ─── Deteksi apakah pengirim adalah Boss/Owner ───────────────────────────────
+    // Strategi: cek dari banyak sumber sekaligus agar tidak gagal karena format ID
     const isSenderBoss = (() => {
         if (!config.boss_number || config.boss_number.trim() === '') return false;
-        const cleanBoss = normalizePhone(config.boss_number);
-        const cleanSender = normalizePhone(senderId);
-        const cleanContact = contactPhone ? normalizePhone(contactPhone) : '';
-        // Juga cek: hanya digit angkanya saja (untuk LID vs nomor normal)
-        const senderDigits = (senderId.split('@')[0] || '').replace(/\D/g, '');
-        const bossDigits = cleanBoss.replace(/\D/g, '');
-        const matched = cleanSender === cleanBoss || cleanContact === cleanBoss || senderDigits === bossDigits;
-        console.log(`[Guard DEBUG] boss=${cleanBoss} | sender=${cleanSender} | contact=${cleanContact} | senderDigits=${senderDigits} | matched=${matched}`);
+        // Ambil hanya digit dari boss_number yang tersimpan
+        const bossDigits = (config.boss_number || '').replace(/\D/g, '');
+        if (!bossDigits) return false;
+        
+        // Sumber 1: contactPhone (nomor telepon asli dari kontak WA - paling akurat)
+        const contactDigits = contactPhone ? contactPhone.replace(/\D/g, '') : '';
+        // Sumber 2: senderId (bisa berformat @c.us atau @lid)
+        const senderPart = (senderId || '').split('@')[0];
+        const senderDigits = senderPart.replace(/\D/g, '');
+        // Sumber 3: senderPhone (sudah di-split dari senderId)
+        const senderPhoneDigits = (senderPhone || '').replace(/\D/g, '');
+        
+        // Cocokkan: cukup salah satu sumber cocok dengan boss
+        // Gunakan endsWith agar 62xxx cocok dengan xxx (berbeda kode negara)
+        const isMatch = (a, b) => {
+            if (!a || !b) return false;
+            return a === b || a.endsWith(b) || b.endsWith(a);
+        };
+        
+        const matched = isMatch(contactDigits, bossDigits) || 
+                       isMatch(senderDigits, bossDigits) ||
+                       isMatch(senderPhoneDigits, bossDigits);
+        
+        console.log(`[Guard] BossCheck: boss="${bossDigits}" | contact="${contactDigits}" | senderPart="${senderDigits}" | matched=${matched}`);
         return matched;
     })();
 
-    // Di dalam grup, isSenderHostAdmin bernilai true HANYA jika pengirim adalah Boss (Owner) ATAU Admin Grup WA tersebut
+    // ─── Deteksi apakah pengirim adalah Admin Grup WA ────────────────────────────
     let isSenderHostAdmin = isSenderBoss;
-    if (isGroup) {
+    if (isGroup && !isSenderBoss) {
         try {
-            const isGroupAdmin = await isSenderGroupAdminHelper(clientInstance, chatId, senderId);
-            console.log(`[Guard DEBUG] isGroupAdmin=${isGroupAdmin} | isSenderBoss=${isSenderBoss} | senderId=${senderId}`);
-            isSenderHostAdmin = isSenderBoss || isGroupAdmin;
+            // Gunakan native getChatById().participants (tanpa Puppeteer - lebih andal)
+            const chat = await clientInstance.getChatById(chatId);
+            if (chat && chat.participants && chat.participants.length > 0) {
+                const contactDigits = contactPhone ? contactPhone.replace(/\D/g, '') : '';
+                const senderDigits = (senderId.split('@')[0] || '').replace(/\D/g, '');
+                
+                const participant = chat.participants.find(p => {
+                    if (!p.id) return false;
+                    const pDigits = (p.id.user || p.id._serialized || '').replace(/\D/g, '');
+                    return pDigits === senderDigits || 
+                           pDigits === contactDigits ||
+                           (contactDigits && pDigits.endsWith(contactDigits)) ||
+                           (contactDigits && contactDigits.endsWith(pDigits));
+                });
+                
+                const isGroupAdmin = !!(participant && (participant.isAdmin || participant.isSuperAdmin));
+                console.log(`[Guard] GroupAdminCheck: senderId="${senderId}" | isGroupAdmin=${isGroupAdmin}`);
+                isSenderHostAdmin = isGroupAdmin;
+            } else {
+                // Fallback: jika tidak bisa ambil participants, percaya pada cek boss_number
+                isSenderHostAdmin = isSenderBoss;
+            }
         } catch (chatErr) {
-            console.warn('[Guard Warning] Gagal memverifikasi status admin grup, fallback ke false:', chatErr.message);
-            isSenderHostAdmin = isSenderBoss;
+            console.warn('[Guard] Gagal cek admin grup via getChatById:', chatErr.message);
+            // Jika gagal, pakai Puppeteer sebagai last resort
+            try {
+                const isGroupAdmin = await isSenderGroupAdminHelper(clientInstance, chatId, senderId);
+                isSenderHostAdmin = isGroupAdmin;
+            } catch (_) {
+                isSenderHostAdmin = isSenderBoss;
+            }
         }
     }
 

@@ -521,116 +521,38 @@ async function setMessagesAdminsOnlyHelper(client, groupId, adminsOnly) {
     try {
         if (!client) throw new Error('WhatsApp client tidak terhubung.');
         
-        let chat = null;
-        try {
-            chat = await client.getChatById(groupId);
-        } catch (chatErr) {
-            console.warn('[setMessagesAdminsOnlyHelper] Gagal memanggil getChatById, menggunakan fallback:', chatErr.message);
-            chat = { 
-                isGroup: true, 
-                groupMetadata: { announce: !adminsOnly } 
-            };
-        }
-
-        if (chat && !chat.isGroup) {
-            throw new Error('ID tersebut bukan sebuah grup.');
-        }
-
-        // Check if the bot is admin using Puppeteer evaluation (robust for LIDs and aliases)
-        let isBotAdmin = false;
-        try {
-            isBotAdmin = await client.pupPage.evaluate(async (chatId) => {
-                const chat = await window.WWebJS.getChat(chatId, { getAsModel: false });
-                if (!chat || !chat.groupMetadata || !chat.groupMetadata.participants) return false;
-                const meWid = window.Store.Conn.wid;
-                const participant = chat.groupMetadata.participants.find(p => {
-                    if (!p.id) return false;
-                    if (p.id.equals) return p.id.equals(meWid);
-                    return p.id._serialized === meWid._serialized || p.id.user === meWid.user;
-                });
-                return !!(participant && (participant.isAdmin || participant.isSuperAdmin));
-            }, groupId);
-        } catch (evalErr) {
-            console.warn('[setMessagesAdminsOnlyHelper] Gagal memverifikasi status admin via browser:', evalErr.message);
-            // Fallback to basic node-side check
-            const botId = client.info && client.info.wid && client.info.wid._serialized;
-            if (botId && chat && chat.participants) {
-                const participant = chat.participants.find(p => p.id._serialized === botId || p.id.user === botId.split('@')[0]);
-                isBotAdmin = !!(participant && (participant.isAdmin || participant.isSuperAdmin));
-            } else {
-                // If everything fails, assume true to let the browser attempt setting it
-                isBotAdmin = true;
-            }
-        }
-
-        if (!isBotAdmin) {
-            throw new Error('Bot bukan admin di grup ini. Silakan jadikan bot sebagai admin grup terlebih dahulu.');
-        }
-
-        const result = await client.pupPage.evaluate(async (chatId, adminsOnly) => {
-            try {
-                let chatObj = null;
-                if (window.Store && window.Store.Chat) {
-                    chatObj = window.Store.Chat.get(chatId);
-                    if (!chatObj && typeof window.Store.Chat.find === 'function') {
-                        try {
-                            chatObj = await window.Store.Chat.find(chatId);
-                        } catch (_) {}
-                    }
-                }
-                
-                if (!chatObj) {
-                    chatObj = await window.WWebJS.getChat(chatId, { getAsModel: false });
-                }
-                
-                if (!chatObj) {
-                    return { success: false, error: 'Chat tidak ditemukan di browser.' };
-                }
-                
-                let setGroupPropAction = null;
-                try {
-                    setGroupPropAction = window.require('WAWebSetPropertyGroupAction');
-                } catch (_) {}
-                
-                if (!setGroupPropAction) {
-                    if (window.Store) {
-                        const keys = Object.keys(window.Store);
-                        const matchKey = keys.find(k => k.toLowerCase().includes('setgroupproperty') || k.toLowerCase().includes('groupaction'));
-                        return { 
-                            success: false, 
-                            error: `Modul WAWebSetPropertyGroupAction tidak ditemukan. Store keys: ${matchKey || 'tidak ada'}` 
-                        };
-                    }
-                    return { success: false, error: 'Modul WAWebSetPropertyGroupAction tidak ditemukan di WhatsApp Web.' };
-                }
-                
-                await setGroupPropAction.setGroupProperty(chatObj, 'announcement', adminsOnly ? 1 : 0);
-                return { success: true };
-            } catch (err) {
-                return { 
-                    success: false, 
-                    error: err.message || String(err), 
-                    name: err.name || 'Error',
-                    stack: err.stack || '' 
-                };
-            }
-        }, groupId, adminsOnly);
-
-        if (!result.success) {
-            console.error(`[Browser Error Debug] Gagal mengubah setelan grup ${groupId}:`, result.error, result.stack);
-            
-            if (result.name === 'ServerStatusCodeError' || result.error.includes('403') || result.error.includes('401') || result.error.includes('ServerStatusCodeError')) {
-                throw new Error('Ditolak oleh WhatsApp: Bot tidak memiliki izin admin di grup ini.');
-            }
-            throw new Error(`Kesalahan browser WhatsApp Web: ${result.error}`);
+        const chat = await client.getChatById(groupId);
+        if (!chat) throw new Error('Grup tidak ditemukan.');
+        if (!chat.isGroup) throw new Error('Bukan grup WhatsApp.');
+        
+        if (typeof chat.setMessagesAdminsOnly === 'function') {
+            // Cara native whatsapp-web.js — paling andal
+            await chat.setMessagesAdminsOnly(adminsOnly);
+            return true;
         }
         
-        if (chat && chat.groupMetadata) {
-            chat.groupMetadata.announce = adminsOnly;
-        }
+        // Fallback: Puppeteer evaluate jika native tidak tersedia
+        const result = await client.pupPage.evaluate(async (chatId, adminsOnly) => {
+            try {
+                let chatObj = window.Store && window.Store.Chat ? window.Store.Chat.get(chatId) : null;
+                if (!chatObj) chatObj = await window.WWebJS.getChat(chatId, { getAsModel: false });
+                if (!chatObj) return { success: false, error: 'Chat tidak ditemukan.' };
+                
+                let action = null;
+                try { action = window.require('WAWebSetPropertyGroupAction'); } catch (_) {}
+                if (!action) return { success: false, error: 'Modul WAWebSetPropertyGroupAction tidak tersedia.' };
+                
+                await action.setGroupProperty(chatObj, 'announcement', adminsOnly ? 1 : 0);
+                return { success: true };
+            } catch (err) {
+                return { success: false, error: err.message || String(err) };
+            }
+        }, groupId, adminsOnly);
+        
+        if (!result.success) throw new Error(result.error);
         return true;
     } catch (err) {
-        console.error(`[setMessagesAdminsOnlyHelper] Exception:`, err);
+        console.error(`[setMessagesAdminsOnlyHelper] Error:`, err.message);
         throw err;
     }
 }
