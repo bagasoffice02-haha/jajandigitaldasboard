@@ -569,17 +569,25 @@ async function loadConfig() {
         } else if (config.groq_api_key) {
             groqKeysList = config.groq_api_key;
         }
-        document.getElementById('cfg-groq-api-keys').value = groqKeysList;
-        document.getElementById('cfg-groq-model').value = config.groq_model || 'llama-3.3-70b-versatile';
+        const elGroqKeys = document.getElementById('cfg-groq-api-keys');
+        if (elGroqKeys) elGroqKeys.value = groqKeysList;
+        const elGroqModel = document.getElementById('cfg-groq-model');
+        if (elGroqModel) elGroqModel.value = config.groq_model || 'llama-3.3-70b-versatile';
         
-        document.getElementById('cfg-deepseek-api-key').value = config.deepseek_api_key || '';
-        document.getElementById('cfg-deepseek-model').value = config.deepseek_model || 'deepseek-chat';
+        const elDsKey = document.getElementById('cfg-deepseek-api-key');
+        if (elDsKey) elDsKey.value = config.deepseek_api_key || '';
+        const elDsModel = document.getElementById('cfg-deepseek-model');
+        if (elDsModel) elDsModel.value = config.deepseek_model || 'deepseek-chat';
         
-        document.getElementById('cfg-qwen-api-key').value = config.qwen_api_key || '';
-        document.getElementById('cfg-qwen-model').value = config.qwen_model || 'qwen-plus';
+        const elQwenKey = document.getElementById('cfg-qwen-api-key');
+        if (elQwenKey) elQwenKey.value = config.qwen_api_key || '';
+        const elQwenModel = document.getElementById('cfg-qwen-model');
+        if (elQwenModel) elQwenModel.value = config.qwen_model || 'qwen-plus';
         
-        document.getElementById('cfg-openrouter-api-key').value = config.openrouter_api_key || '';
-        document.getElementById('cfg-openrouter-model').value = config.openrouter_model || 'meta-llama/llama-3.3-70b-instruct';
+        const elOrKey = document.getElementById('cfg-openrouter-api-key');
+        if (elOrKey) elOrKey.value = config.openrouter_api_key || '';
+        const elOrModel = document.getElementById('cfg-openrouter-model');
+        if (elOrModel) elOrModel.value = config.openrouter_model || 'meta-llama/llama-3.3-70b-instruct';
         
         cfgMaxTokens.value = config.max_tokens || 1000;
         window.currentPrivateChatSyncGroupId = config.private_chat_sync_group_id || '';
@@ -681,14 +689,14 @@ function setupConfigHandler() {
             vcard_name: document.getElementById('cfg-vcard-name') ? document.getElementById('cfg-vcard-name').value.trim() : 'CS Jajan Digital',
             
             // Sertakan key & model provider lainnya agar tidak terhapus
-            groq_api_keys: (document.getElementById('cfg-groq-api-keys').value || '').split('\n').map(k => k.trim()).filter(k => k.length > 0),
-            groq_model: document.getElementById('cfg-groq-model').value.trim(),
-            deepseek_api_key: document.getElementById('cfg-deepseek-api-key').value.trim(),
-            deepseek_model: document.getElementById('cfg-deepseek-model').value.trim(),
-            qwen_api_key: document.getElementById('cfg-qwen-api-key').value.trim(),
-            qwen_model: document.getElementById('cfg-qwen-model').value.trim(),
-            openrouter_api_key: document.getElementById('cfg-openrouter-api-key').value.trim(),
-            openrouter_model: document.getElementById('cfg-openrouter-model').value.trim()
+            groq_api_keys: (document.getElementById('cfg-groq-api-keys') ? document.getElementById('cfg-groq-api-keys').value : '').split('\n').map(k => k.trim()).filter(k => k.length > 0),
+            groq_model: (document.getElementById('cfg-groq-model') ? document.getElementById('cfg-groq-model').value.trim() : ''),
+            deepseek_api_key: (document.getElementById('cfg-deepseek-api-key') ? document.getElementById('cfg-deepseek-api-key').value.trim() : ''),
+            deepseek_model: (document.getElementById('cfg-deepseek-model') ? document.getElementById('cfg-deepseek-model').value.trim() : ''),
+            qwen_api_key: (document.getElementById('cfg-qwen-api-key') ? document.getElementById('cfg-qwen-api-key').value.trim() : ''),
+            qwen_model: (document.getElementById('cfg-qwen-model') ? document.getElementById('cfg-qwen-model').value.trim() : ''),
+            openrouter_api_key: (document.getElementById('cfg-openrouter-api-key') ? document.getElementById('cfg-openrouter-api-key').value.trim() : ''),
+            openrouter_model: (document.getElementById('cfg-openrouter-model') ? document.getElementById('cfg-openrouter-model').value.trim() : '')
         };
         
         try {
