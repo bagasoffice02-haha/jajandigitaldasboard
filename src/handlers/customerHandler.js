@@ -107,36 +107,7 @@ async function handleCustomerMessage(msg, {
         }
         return true;
     }
-     
-    // QRIS/PAYMENT TRIGGER
-    const paymentKeywords = ['bayar', 'qris', 'pembayaran', 'cara bayar'];
-    if (paymentKeywords.includes(text)) {
-        await simulateTyping(msg, 2000);
-        const pType = activeCfg.paymentType || 'qris';
-        const pText = activeCfg.paymentText || `💵 *QRIS PEMBAYARAN RESMI JAJAN DIGITAL* 💵\n\nSilakan scan QRIS di atas untuk melakukan pembayaran.\n\n*⚠️ Penting:* Setelah melakukan pembayaran, silakan kirimkan bukti transfer/pembayaran berupa foto/screenshot di grup ini.`;
-        const pMedia = activeCfg.paymentMedia !== undefined ? activeCfg.paymentMedia : 'Qris.jpeg';
 
-        if (pType === 'qris' && pMedia) {
-            const mediaPath = path.join(__dirname, '../../media', pMedia);
-            if (fs.existsSync(mediaPath)) {
-                try {
-                    const fileData = fs.readFileSync(mediaPath);
-                    const base64Data = fileData.toString('base64');
-                    const mimeType = getMimeType(mediaPath);
-                    const mediaObj = new MessageMedia(mimeType, base64Data, path.basename(mediaPath));
-                    await msg.reply(pText);
-                    await clientInstance.sendMessage(chatId, mediaObj, { quotedMessageId: msg.id._serialized });
-                    if (ioInstance) ioInstance.emit('message_log', { chatId: chatId, body: `[Media Pembayaran dikirim ke ${senderId.split('@')[0]}]`, type: 'outgoing', timestamp: Date.now() });
-                    return true;
-                } catch (err) { console.error('Gagal mengirim media pembayaran:', err.message); }
-            }
-        }
-
-        await msg.reply(pText);
-        if (ioInstance) ioInstance.emit('message_log', { chatId: chatId, body: pText, type: 'outgoing', timestamp: Date.now() });
-        return true;
-    }
-    
     // Direct Menu Name Matching
     const matchResult = findNodeByName(activeCfg.menuTree || { id: "root", name: "Menu Utama", type: "category", children: [] }, userMessage);
     
