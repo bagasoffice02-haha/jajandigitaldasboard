@@ -28,22 +28,19 @@ async function handleAdminCommandMessage(msg, {
             return true;
         }
         try {
-            // Gunakan native whatsapp-web.js API terlebih dahulu (lebih andal)
-            const chat = await clientInstance.getChatById(groupId);
-            if (chat && typeof chat.setMessagesAdminsOnly === 'function') {
-                await chat.setMessagesAdminsOnly(false);
-            } else {
-                await setMessagesAdminsOnly(clientInstance, groupId, false);
-            }
+            // Gunakan msg.getChat() — selalu berhasil karena msg sudah ada konteksnya
+            const chat = await msg.getChat();
+            await chat.setMessagesAdminsOnly(false);
             const cfg = gConfigs && gConfigs[groupId];
             const openText = (cfg && cfg.groupOpenText && cfg.groupOpenText.trim() !== '')
                 ? cfg.groupOpenText
-                : "🔓 *Pemberitahuan:* Toko telah dibuka kembali. Grup dibuka untuk umum!";
+                : "🔓 *Pemberitahuan:* Toko telah dibuka. Semua anggota dapat mengirim pesan.";
             await msg.reply(openText);
         } catch (err) {
-            const errMsg = err.message || String(err);
-            if (errMsg.includes('Admin') || errMsg.includes('admin') || errMsg.includes('403') || errMsg.includes('401')) {
-                await msg.reply("❌ Gagal membuka grup: Bot belum menjadi Admin di grup ini. Jadikan bot sebagai Admin terlebih dahulu.");
+            const errMsg = (err && err.message) ? err.message : String(err);
+            const isAdminErr = errMsg === 'r' || errMsg.length <= 2 || errMsg.toLowerCase().includes('admin') || errMsg.includes('403') || errMsg.includes('401');
+            if (isAdminErr) {
+                await msg.reply("❌ Gagal membuka grup: Bot belum menjadi Admin di grup ini. Jadikan bot sebagai Admin WA terlebih dahulu.");
             } else {
                 await msg.reply("❌ Gagal membuka grup: " + errMsg);
             }
@@ -57,22 +54,19 @@ async function handleAdminCommandMessage(msg, {
             return true;
         }
         try {
-            // Gunakan native whatsapp-web.js API terlebih dahulu (lebih andal)
-            const chat = await clientInstance.getChatById(groupId);
-            if (chat && typeof chat.setMessagesAdminsOnly === 'function') {
-                await chat.setMessagesAdminsOnly(true);
-            } else {
-                await setMessagesAdminsOnly(clientInstance, groupId, true);
-            }
+            // Gunakan msg.getChat() — selalu berhasil karena msg sudah ada konteksnya
+            const chat = await msg.getChat();
+            await chat.setMessagesAdminsOnly(true);
             const cfg = gConfigs && gConfigs[groupId];
             const closeText = (cfg && cfg.groupCloseText && cfg.groupCloseText.trim() !== '')
                 ? cfg.groupCloseText
                 : "🔒 *Pemberitahuan:* Toko telah ditutup. Hanya Admin yang dapat mengirim pesan.";
             await msg.reply(closeText);
         } catch (err) {
-            const errMsg = err.message || String(err);
-            if (errMsg.includes('Admin') || errMsg.includes('admin') || errMsg.includes('403') || errMsg.includes('401')) {
-                await msg.reply("❌ Gagal menutup grup: Bot belum menjadi Admin di grup ini. Jadikan bot sebagai Admin terlebih dahulu.");
+            const errMsg = (err && err.message) ? err.message : String(err);
+            const isAdminErr = errMsg === 'r' || errMsg.length <= 2 || errMsg.toLowerCase().includes('admin') || errMsg.includes('403') || errMsg.includes('401');
+            if (isAdminErr) {
+                await msg.reply("❌ Gagal menutup grup: Bot belum menjadi Admin di grup ini. Jadikan bot sebagai Admin WA terlebih dahulu.");
             } else {
                 await msg.reply("❌ Gagal menutup grup: " + errMsg);
             }
