@@ -110,35 +110,128 @@ async function handleAdminCommandMessage(msg, {
         return true;
     }
 
-    // .done / .proses — Konfirmasi status pesanan sederhana
+    // .done / .proses — Invoice / Konfirmasi Pesanan
     const isProcessCmd = cmd.startsWith('.proses') || cmd.startsWith('.process');
-    const isDoneCmd = cmd.startsWith('.done') || cmd.startsWith('.doen');
+    const isDoneCmd    = cmd.startsWith('.done')   || cmd.startsWith('.doen');
     if (isProcessCmd || isDoneCmd) {
-        const extraNote = userMessage.trim().split(/\s+/).slice(1).join(' '); // teks setelah perintah
-        let replyText;
-        if (isProcessCmd) {
-            replyText = `⏳ *Status Pesanan: DIPROSES*\n`;
-            replyText += `Pesanan Anda sedang kami proses. Mohon tunggu sebentar ya! 🙏`;
-        } else {
-            replyText = `✅ *Status Pesanan: SELESAI / LUNAS*\n`;
-            replyText += `Pesanan Anda telah dikonfirmasi dan sudah diproses. Terima kasih! 🎉`;
-        }
-        if (extraNote) replyText += `\n\n📝 _Catatan Admin: ${extraNote}_`;
+        const extraNote = userMessage.trim().split(/\s+/).slice(1).join(' ');
 
-        const hasQuote = msg.hasQuotedMsg || Boolean(msg.quotedMsg) || Boolean(msg._data && (msg._data.quotedMsg || msg._data.quotedParticipant));
+        // Ambil data dari pesan yang dikutip
+        let customerName = '';
+        let customerNumber = '';
+        let orderDetails = '';
+        let quotedText = '';
+        let targetId = null;
+
+        const hasQuote = msg.hasQuotedMsg || Boolean(msg._data && (msg._data.quotedMsg || msg._data.quotedParticipant));
         if (hasQuote) {
             try {
                 const quotedMsg = await msg.getQuotedMessage();
-                const targetId = quotedMsg.author || quotedMsg.from;
-                await msg.reply(replyText, null, { mentions: targetId ? [targetId] : [] });
-            } catch (_) {
-                await msg.reply(replyText);
-            }
+                targetId = quotedMsg.author || quotedMsg.from;
+                quotedText = quotedMsg.body || '';
+
+                // Ambil nama pelanggan dari kontak
+                try {
+                    const contact = await quotedMsg.getContact();
+                    customerName = contact.pushname || contact.name || '';
+                    customerNumber = (contact.number || (contact.id && contact.id.user) || '').replace(/\D/g, '');
+                } catch(_) {}
+
+                if (!customerNumber && targetId) {
+                    customerNumber = (targetId.split('@')[0] || '').replace(/\D/g, '');
+                }
+
+                // Ekstrak detail pesanan dari teks kutipan
+                // Format: "pesan: Netflix 1 bulan" atau "beli: Spotify"
+                const lowerQuoted = quotedText.toLowerCase();
+                if (lowerQuoted.startsWith('pesan:') || lowerQuoted.startsWith('pesan ')) {
+                    orderDetails = quotedText.substring(6).trim();
+                } else if (lowerQuoted.startsWith('beli:') || lowerQuoted.startsWith('beli ')) {
+                    orderDetails = quotedText.substring(5).trim();
+                } else {
+                    // Ambil maksimal 100 karakter pertama sebagai ringkasan
+                    orderDetails = quotedText.length > 100 ? quotedText.substring(0, 100) + '...' : quotedText;
+                }
+            } catch (_) {}
+        }
+
+        // Nomor invoice otomatis: INV-YYYYMMDD-HHMMSS
+        const now = new Date();
+        const pad = n => String(n).padStart(2, '0');
+        const invDate = `${now.getFullYear()}${pad(now.getMonth()+1)}${pad(now.getDate())}`;
+        const invTime = `${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
+        const invoiceNo = `INV-${invDate}-${invTime}`;
+
+        // Format tanggal Indonesia
+        const bulan = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agt','Sep','Okt','Nov','Des'];
+        const tglStr = `${now.getDate()} ${bulan[now.getMonth()]} ${now.getFullYear()}, ${pad(now.getHours())}:${pad(now.getMinutes())} WIB`;
+
+        // Nama toko dari config atau default
+        const { config: botConfig } = require('../config/config');
+        const storeName = (botConfig && botConfig.store_name) ? botConfig.store_name : 'Jajan Digital';
+
+        let replyText;
+
+        if (isDoneCmd) {
+            replyText =
+`🧾 ━━━━━━━━━━━━━━━━━━━━
+   *INVOICE PEMBAYARAN*
+━━━━━━━━━━━━━━━━━━━━━━
+
+🏪 *Toko* : ${storeName}
+📋 *No. Invoice* : ${invoiceNo}
+📅 *Tanggal* : ${tglStr}
+
+━━━━━━━━━━━━━━━━━━━━━━
+👤 *Pelanggan*
+━━━━━━━━━━━━━━━━━━━━━━
+${customerName ? `Nama    : ${customerName}\n` : ''}${customerNumber ? `No. HP  : +${customerNumber}` : ''}
+
+━━━━━━━━━━━━━━━━━━━━━━
+📦 *Detail Pesanan*
+━━━━━━━━━━━━━━━━━━━━━━
+${orderDetails || '(Lihat pesan di atas)'}
+
+━━━━━━━━━━━━━━━━━━━━━━
+✅ *STATUS : LUNAS / SELESAI*
+━━━━━━━━━━━━━━━━━━━━━━
+${extraNote ? `📝 _Catatan: ${extraNote}_\n\n` : ''}🎉 Terima kasih atas kepercayaan Anda!
+Produk/akses akan segera dikirim. 🚀`;
+
         } else {
+            replyText =
+`📋 ━━━━━━━━━━━━━━━━━━━━
+   *UPDATE STATUS PESANAN*
+━━━━━━━━━━━━━━━━━━━━━━
+
+🏪 *Toko* : ${storeName}
+📋 *No. Ref* : ${invoiceNo}
+📅 *Update* : ${tglStr}
+
+━━━━━━━━━━━━━━━━━━━━━━
+👤 *Pelanggan*
+━━━━━━━━━━━━━━━━━━━━━━
+${customerName ? `Nama    : ${customerName}\n` : ''}${customerNumber ? `No. HP  : +${customerNumber}` : ''}
+
+━━━━━━━━━━━━━━━━━━━━━━
+📦 *Detail Pesanan*
+━━━━━━━━━━━━━━━━━━━━━━
+${orderDetails || '(Lihat pesan di atas)'}
+
+━━━━━━━━━━━━━━━━━━━━━━
+⏳ *STATUS : SEDANG DIPROSES*
+━━━━━━━━━━━━━━━━━━━━━━
+${extraNote ? `📝 _Catatan: ${extraNote}_\n\n` : ''}🙏 Mohon tunggu sebentar, pesanan Anda sedang kami kerjakan!`;
+        }
+
+        try {
+            await msg.reply(replyText, null, { mentions: targetId ? [targetId] : [] });
+        } catch(_) {
             await msg.reply(replyText);
         }
         return true;
     }
+
 
     if (cmd === '.kick') {
         if (!isGroup) {
