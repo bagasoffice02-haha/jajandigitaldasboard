@@ -155,16 +155,16 @@ async function handleAdminCommandMessage(msg, {
             } catch (_) {}
         }
 
-        // Nomor invoice otomatis: INV-YYYYMMDD-HHMMSS
-        const now = new Date();
+        // Nomor invoice otomatis: INV-YYYYMMDD-HHMMSS (zona waktu Jakarta)
+        const nowJkt = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Jakarta' }));
         const pad = n => String(n).padStart(2, '0');
-        const invDate = `${now.getFullYear()}${pad(now.getMonth()+1)}${pad(now.getDate())}`;
-        const invTime = `${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
+        const invDate = `${nowJkt.getFullYear()}${pad(nowJkt.getMonth()+1)}${pad(nowJkt.getDate())}`;
+        const invTime = `${pad(nowJkt.getHours())}${pad(nowJkt.getMinutes())}${pad(nowJkt.getSeconds())}`;
         const invoiceNo = `INV-${invDate}-${invTime}`;
 
-        // Format tanggal Indonesia
+        // Format tanggal Indonesia — zona waktu Jakarta (WIB)
         const bulan = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agt','Sep','Okt','Nov','Des'];
-        const tglStr = `${now.getDate()} ${bulan[now.getMonth()]} ${now.getFullYear()}, ${pad(now.getHours())}:${pad(now.getMinutes())} WIB`;
+        const tglStr = `${nowJkt.getDate()} ${bulan[nowJkt.getMonth()]} ${nowJkt.getFullYear()}, ${pad(nowJkt.getHours())}:${pad(nowJkt.getMinutes())} WIB`;
 
         // Nama toko dari config atau default
         const { config: botConfig } = require('../config/config');
@@ -183,10 +183,7 @@ async function handleAdminCommandMessage(msg, {
 📅 *Tanggal* : ${tglStr}
 
 ━━━━━━━━━━━━━━━━━━━━━━
-👤 *Pelanggan*
-━━━━━━━━━━━━━━━━━━━━━━
-${customerName ? `Nama    : ${customerName}\n` : ''}${customerNumber ? `No. HP  : +${customerNumber}` : ''}
-
+👤 *Pelanggan* : ${targetId ? `@${targetId.split('@')[0]}` : '(tidak diketahui)'}
 ━━━━━━━━━━━━━━━━━━━━━━
 ✅ *STATUS : LUNAS / SELESAI*
 ━━━━━━━━━━━━━━━━━━━━━━
@@ -204,10 +201,7 @@ Produk/akses akan segera dikirim. 🚀`;
 📅 *Update* : ${tglStr}
 
 ━━━━━━━━━━━━━━━━━━━━━━
-👤 *Pelanggan*
-━━━━━━━━━━━━━━━━━━━━━━
-${customerName ? `Nama    : ${customerName}\n` : ''}${customerNumber ? `No. HP  : +${customerNumber}` : ''}
-
+👤 *Pelanggan* : ${targetId ? `@${targetId.split('@')[0]}` : '(tidak diketahui)'}
 ━━━━━━━━━━━━━━━━━━━━━━
 ⏳ *STATUS : SEDANG DIPROSES*
 ━━━━━━━━━━━━━━━━━━━━━━
