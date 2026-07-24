@@ -188,11 +188,6 @@ async function handleAdminCommandMessage(msg, {
 ${customerName ? `Nama    : ${customerName}\n` : ''}${customerNumber ? `No. HP  : +${customerNumber}` : ''}
 
 ━━━━━━━━━━━━━━━━━━━━━━
-📦 *Detail Pesanan*
-━━━━━━━━━━━━━━━━━━━━━━
-${orderDetails || '(Lihat pesan di atas)'}
-
-━━━━━━━━━━━━━━━━━━━━━━
 ✅ *STATUS : LUNAS / SELESAI*
 ━━━━━━━━━━━━━━━━━━━━━━
 ${extraNote ? `📝 _Catatan: ${extraNote}_\n\n` : ''}🎉 Terima kasih atas kepercayaan Anda!
@@ -212,11 +207,6 @@ Produk/akses akan segera dikirim. 🚀`;
 👤 *Pelanggan*
 ━━━━━━━━━━━━━━━━━━━━━━
 ${customerName ? `Nama    : ${customerName}\n` : ''}${customerNumber ? `No. HP  : +${customerNumber}` : ''}
-
-━━━━━━━━━━━━━━━━━━━━━━
-📦 *Detail Pesanan*
-━━━━━━━━━━━━━━━━━━━━━━
-${orderDetails || '(Lihat pesan di atas)'}
 
 ━━━━━━━━━━━━━━━━━━━━━━
 ⏳ *STATUS : SEDANG DIPROSES*
