@@ -80,6 +80,10 @@ async function handleAdminCommandMessage(msg, {
             return true;
         }
         try {
+            const chatObj = await msg.getChat();
+            try { await chatObj.sendSeen(); } catch(_) {}
+            try { await chatObj.sendStateTyping(); } catch(_) {}
+            await new Promise(r => setTimeout(r, 1200));
             await setGroupAnnounce(clientInstance, groupId, false);
             const cfg = gConfigs && gConfigs[groupId];
             const openText = (cfg && cfg.groupOpenText && cfg.groupOpenText.trim() !== '')
@@ -98,6 +102,10 @@ async function handleAdminCommandMessage(msg, {
             return true;
         }
         try {
+            const chatObj = await msg.getChat();
+            try { await chatObj.sendSeen(); } catch(_) {}
+            try { await chatObj.sendStateTyping(); } catch(_) {}
+            await new Promise(r => setTimeout(r, 1200));
             await setGroupAnnounce(clientInstance, groupId, true);
             const cfg = gConfigs && gConfigs[groupId];
             const closeText = (cfg && cfg.groupCloseText && cfg.groupCloseText.trim() !== '')
@@ -114,6 +122,14 @@ async function handleAdminCommandMessage(msg, {
     const isProcessCmd = cmd.startsWith('.proses') || cmd.startsWith('.process');
     const isDoneCmd    = cmd.startsWith('.done')   || cmd.startsWith('.doen');
     if (isProcessCmd || isDoneCmd) {
+        // Tampilkan typing indicator dulu
+        try {
+            const chatObj = await msg.getChat();
+            try { await chatObj.sendSeen(); } catch(_) {}
+            try { await chatObj.sendStateTyping(); } catch(_) {}
+            await new Promise(r => setTimeout(r, 1500));
+        } catch(_) {}
+
         const extraNote = userMessage.trim().split(/\s+/).slice(1).join(' ');
 
         // Ambil data dari pesan yang dikutip
