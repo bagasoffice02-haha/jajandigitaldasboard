@@ -64,7 +64,12 @@ async function setGroupAnnounce(client, groupId, announce, attempt = 1) {
                 return { ok: false, error: emsg };
             }
         } catch(outerErr) {
-            return { ok: false, error: outerErr.message || String(outerErr) };
+            const emsg = outerErr.message || String(outerErr);
+            // Jika error 'r' dari outer scope juga → tandai sebagai transient
+            if (emsg === 'r' || emsg.length <= 2) {
+                return { ok: false, error: 'RETRY:WhatsApp belum siap (outer), coba lagi.' };
+            }
+            return { ok: false, error: emsg };
         }
     }, groupId, userPart, announce);
 
@@ -72,11 +77,12 @@ async function setGroupAnnounce(client, groupId, announce, attempt = 1) {
     if (result.ok) return true;
 
     const errMsg = result.error || '';
+    console.log(`[setGroupAnnounce] attempt=${attempt} error="${errMsg}"`);
 
-    // Error sementara (WA belum siap) → retry max 3x dengan jeda 2 detik
-    if (errMsg.startsWith('RETRY:') && attempt <= 3) {
-        console.log(`[setGroupAnnounce] Percobaan ${attempt}/3 gagal (WA belum siap), retry dalam 2 detik...`);
-        await new Promise(r => setTimeout(r, 2000));
+    // Error sementara (WA belum siap) → retry max 5x dengan jeda 3 detik
+    if (errMsg.startsWith('RETRY:') && attempt <= 5) {
+        console.log(`[setGroupAnnounce] Percobaan ${attempt}/5 gagal, retry dalam 3 detik...`);
+        await new Promise(r => setTimeout(r, 3000));
         return setGroupAnnounce(client, groupId, announce, attempt + 1);
     }
 
