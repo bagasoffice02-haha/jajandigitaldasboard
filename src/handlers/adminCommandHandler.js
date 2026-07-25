@@ -8,51 +8,81 @@ const { saveGroupConfig } = require('../db/models');
  * setGroupAnnounce — Set mode hanya-admin (tutup) atau semua (buka) di grup.
  * Menggunakan Puppeteer langsung dengan scan Store.Chat.models untuk mendukung
  * format group ID baru WhatsApp (120363xxxxxxx@g.us) yang gagal di WWebJS.getChat().
+ * Dilengkapi retry otomatis (max 3x, jeda 2 detik) untuk handle kondisi WA belum siap.
  */
-async function setGroupAnnounce(client, groupId, announce) {
+async function setGroupAnnounce(client, groupId, announce, attempt = 1) {
     const userPart = (groupId.split('@')[0] || '').replace(/\D/g, '');
-    
+
     const result = await client.pupPage.evaluate(async (groupId, userPart, announce) => {
-        try {
-            // Cari chat via metode standar dulu
-            let chat = null;
+        // ── Helper: cari chat object ─────────────────────────────────────────
+        const findChat = async () => {
+            // Metode 1: WWebJS standar
             try {
-                chat = await window.WWebJS.getChat(groupId, { getAsModel: false });
+                const c = await window.WWebJS.getChat(groupId, { getAsModel: false });
+                if (c) return c;
             } catch(_) {}
-            
-            // Jika gagal, scan semua chat di Store
-            if (!chat && window.Store && window.Store.Chat) {
-                const models = window.Store.Chat.models || window.Store.Chat.getModels?.() || [];
-                chat = models.find(c => {
-                    if (!c.id) return false;
-                    const cUser = String(c.id.user || c.id._serialized || '').replace(/\D/g, '');
-                    return cUser === userPart || (c.id._serialized || '') === groupId;
+
+            // Metode 2: Scan Store.Chat.models
+            if (window.Store && window.Store.Chat) {
+                const models = window.Store.Chat.models
+                    || (typeof window.Store.Chat.getModels === 'function' ? window.Store.Chat.getModels() : [])
+                    || [];
+                const found = models.find(c => {
+                    if (!c || !c.id) return false;
+                    const cu = String(c.id.user || c.id._serialized || '').replace(/\D/g, '');
+                    return cu === userPart || (c.id._serialized || '') === groupId;
                 });
+                if (found) return found;
             }
-            
-            if (!chat) return { ok: false, error: `Grup tidak ditemukan di Store (id: ${groupId})` };
-            
-            // Coba WAWebSetPropertyGroupAction
+
+            // Metode 3: Store.GroupMetadata (fallback terakhir)
+            if (window.Store && window.Store.GroupMetadata) {
+                const gm = window.Store.GroupMetadata.get(groupId);
+                if (gm) return gm;
+            }
+
+            return null;
+        };
+
+        try {
+            const chat = await findChat();
+            if (!chat) return { ok: false, error: `NOTFOUND:Grup tidak ditemukan di Store (id: ${groupId})` };
+
+            // ── Coba set properti grup ───────────────────────────────────────
             try {
                 const mod = window.require('WAWebSetPropertyGroupAction');
-                const res = await mod.setGroupProperty(chat, 'announcement', announce ? 1 : 0);
-                // ServerStatusCodeError.name === 'ServerStatusCodeError' → bot bukan admin
+                await mod.setGroupProperty(chat, 'announcement', announce ? 1 : 0);
                 return { ok: true };
             } catch(e) {
-                const name = e && e.name ? e.name : '';
-                const msg = e && e.message ? e.message : String(e);
-                if (name === 'ServerStatusCodeError' || msg === 'r' || msg.length <= 2) {
-                    return { ok: false, error: 'Bot bukan Admin di grup ini, atau WhatsApp menolak permintaan.' };
-                }
-                return { ok: false, error: msg };
+                const name  = (e && e.name)    ? e.name    : '';
+                const emsg  = (e && e.message) ? e.message : String(e);
+                const isTransient = emsg === 'r' || emsg.length <= 2; // error sementara WA
+                const isNotAdmin  = name === 'ServerStatusCodeError';
+
+                if (isNotAdmin) return { ok: false, error: 'NOTADMIN:Bot bukan Admin di grup ini.' };
+                if (isTransient) return { ok: false, error: 'RETRY:WhatsApp belum siap, coba lagi.' };
+                return { ok: false, error: emsg };
             }
         } catch(outerErr) {
             return { ok: false, error: outerErr.message || String(outerErr) };
         }
     }, groupId, userPart, announce);
-    
-    if (!result.ok) throw new Error(result.error);
-    return true;
+
+    // ── Handle hasil ────────────────────────────────────────────────────────
+    if (result.ok) return true;
+
+    const errMsg = result.error || '';
+
+    // Error sementara (WA belum siap) → retry max 3x dengan jeda 2 detik
+    if (errMsg.startsWith('RETRY:') && attempt <= 3) {
+        console.log(`[setGroupAnnounce] Percobaan ${attempt}/3 gagal (WA belum siap), retry dalam 2 detik...`);
+        await new Promise(r => setTimeout(r, 2000));
+        return setGroupAnnounce(client, groupId, announce, attempt + 1);
+    }
+
+    // Error lainnya → lempar langsung
+    const cleanMsg = errMsg.replace(/^(RETRY:|NOTFOUND:|NOTADMIN:)/, '');
+    throw new Error(cleanMsg);
 }
 
 
