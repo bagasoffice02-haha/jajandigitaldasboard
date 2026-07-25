@@ -6,90 +6,115 @@ const { saveGroupConfig } = require('../db/models');
 
 /**
  * setGroupAnnounce — Set mode hanya-admin (tutup) atau semua (buka) di grup.
- * Menggunakan Puppeteer langsung dengan scan Store.Chat.models untuk mendukung
- * format group ID baru WhatsApp (120363xxxxxxx@g.us) yang gagal di WWebJS.getChat().
- * Dilengkapi retry otomatis (max 3x, jeda 2 detik) untuk handle kondisi WA belum siap.
+ * Mencari modul secara DINAMIS — tidak hardcode nama modul yang bisa berubah
+ * setiap WhatsApp Web update. Juga scan Store.Chat.models untuk ID grup format baru.
  */
 async function setGroupAnnounce(client, groupId, announce, attempt = 1) {
     const userPart = (groupId.split('@')[0] || '').replace(/\D/g, '');
 
     const result = await client.pupPage.evaluate(async (groupId, userPart, announce) => {
-        // ── Helper: cari chat object ─────────────────────────────────────────
-        const findChat = async () => {
-            // Metode 1: WWebJS standar
+        try {
+            // ── 1. Cari chat object ───────────────────────────────────────────
+            let chat = null;
+
+            // Metode A: WWebJS standar
             try {
                 const c = await window.WWebJS.getChat(groupId, { getAsModel: false });
-                if (c) return c;
+                if (c) chat = c;
             } catch(_) {}
 
-            // Metode 2: Scan Store.Chat.models
-            if (window.Store && window.Store.Chat) {
+            // Metode B: Scan Store.Chat.models
+            if (!chat && window.Store && window.Store.Chat) {
                 const models = window.Store.Chat.models
                     || (typeof window.Store.Chat.getModels === 'function' ? window.Store.Chat.getModels() : [])
                     || [];
-                const found = models.find(c => {
+                chat = models.find(c => {
                     if (!c || !c.id) return false;
                     const cu = String(c.id.user || c.id._serialized || '').replace(/\D/g, '');
                     return cu === userPart || (c.id._serialized || '') === groupId;
-                });
-                if (found) return found;
+                }) || null;
             }
 
-            // Metode 3: Store.GroupMetadata (fallback terakhir)
-            if (window.Store && window.Store.GroupMetadata) {
-                const gm = window.Store.GroupMetadata.get(groupId);
-                if (gm) return gm;
+            // Metode C: Store.GroupMetadata
+            if (!chat && window.Store && window.Store.GroupMetadata) {
+                chat = window.Store.GroupMetadata.get(groupId) || null;
             }
 
-            return null;
-        };
+            if (!chat) return { ok: false, error: `NOTFOUND:Grup tidak ditemukan (id: ${groupId})` };
 
-        try {
-            const chat = await findChat();
-            if (!chat) return { ok: false, error: `NOTFOUND:Grup tidak ditemukan di Store (id: ${groupId})` };
+            // ── 2. Cari modul setGroupProperty SECARA DINAMIS ─────────────────
+            // Tidak hardcode nama modul karena WA Web sering update & rename
+            let setPropertyFn = null;
+            const knownNames = [
+                'WAWebSetPropertyGroupAction',
+                'WAWebGroupSetPropertyAction',
+                'WAWebSetGroupPropertyAction',
+            ];
 
-            // ── Coba set properti grup ───────────────────────────────────────
+            // Coba nama yang diketahui dulu (lebih cepat)
+            for (const name of knownNames) {
+                try {
+                    const m = window.require(name);
+                    if (m && typeof m.setGroupProperty === 'function') {
+                        setPropertyFn = (c, prop, val) => m.setGroupProperty(c, prop, val);
+                        break;
+                    }
+                } catch(_) {}
+            }
+
+            // Jika tidak ada, scan SEMUA modul webpack
+            if (!setPropertyFn) {
+                try {
+                    const moduleMap = window.require.m || {};
+                    for (const key of Object.keys(moduleMap)) {
+                        try {
+                            const m = window.require(key);
+                            if (m && typeof m.setGroupProperty === 'function') {
+                                setPropertyFn = (c, prop, val) => m.setGroupProperty(c, prop, val);
+                                break;
+                            }
+                        } catch(_) {}
+                    }
+                } catch(_) {}
+            }
+
+            if (!setPropertyFn) return { ok: false, error: 'NOTFOUND:Modul setGroupProperty tidak ditemukan di WA Web.' };
+
+            // ── 3. Jalankan ──────────────────────────────────────────────────
             try {
-                const mod = window.require('WAWebSetPropertyGroupAction');
-                await mod.setGroupProperty(chat, 'announcement', announce ? 1 : 0);
+                await setPropertyFn(chat, 'announcement', announce ? 1 : 0);
                 return { ok: true };
             } catch(e) {
-                const name  = (e && e.name)    ? e.name    : '';
-                const emsg  = (e && e.message) ? e.message : String(e);
-                const isTransient = emsg === 'r' || emsg.length <= 2; // error sementara WA
-                const isNotAdmin  = name === 'ServerStatusCodeError';
-
-                if (isNotAdmin) return { ok: false, error: 'NOTADMIN:Bot bukan Admin di grup ini.' };
-                if (isTransient) return { ok: false, error: 'RETRY:WhatsApp belum siap, coba lagi.' };
+                const name = (e && e.name)    ? e.name    : '';
+                const emsg = (e && e.message) ? e.message : String(e);
+                if (name === 'ServerStatusCodeError') return { ok: false, error: 'NOTADMIN:Bot bukan Admin di grup ini.' };
+                if (emsg === 'r' || emsg.length <= 2) return { ok: false, error: 'RETRY:WA server belum siap, coba lagi.' };
                 return { ok: false, error: emsg };
             }
+
         } catch(outerErr) {
             const emsg = outerErr.message || String(outerErr);
-            // Jika error 'r' dari outer scope juga → tandai sebagai transient
-            if (emsg === 'r' || emsg.length <= 2) {
-                return { ok: false, error: 'RETRY:WhatsApp belum siap (outer), coba lagi.' };
-            }
+            if (emsg === 'r' || emsg.length <= 2) return { ok: false, error: 'RETRY:WA error sementara.' };
             return { ok: false, error: emsg };
         }
     }, groupId, userPart, announce);
 
-    // ── Handle hasil ────────────────────────────────────────────────────────
+    // ── Retry logic ──────────────────────────────────────────────────────────
     if (result.ok) return true;
 
     const errMsg = result.error || '';
-    console.log(`[setGroupAnnounce] attempt=${attempt} error="${errMsg}"`);
+    console.log(`[setGroupAnnounce] attempt=${attempt} → ${errMsg}`);
 
-    // Error sementara (WA belum siap) → retry max 5x dengan jeda 3 detik
     if (errMsg.startsWith('RETRY:') && attempt <= 5) {
-        console.log(`[setGroupAnnounce] Percobaan ${attempt}/5 gagal, retry dalam 3 detik...`);
+        console.log(`[setGroupAnnounce] Retry ${attempt}/5 dalam 3 detik...`);
         await new Promise(r => setTimeout(r, 3000));
         return setGroupAnnounce(client, groupId, announce, attempt + 1);
     }
 
-    // Error lainnya → lempar langsung
     const cleanMsg = errMsg.replace(/^(RETRY:|NOTFOUND:|NOTADMIN:)/, '');
     throw new Error(cleanMsg);
 }
+
 
 
 async function handleAdminCommandMessage(msg, {
