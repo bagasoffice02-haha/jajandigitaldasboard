@@ -124,8 +124,8 @@ async function renderPaymentPage(req, res, startFlipped = false) {
         }
     }
 
-    // Ambil total transaksi sukses secara live dari database
-    let txCount = 170;
+    // Ambil total transaksi sukses secara live dari database (mulai dari 176)
+    let txCount = 176;
     try {
         const db = await getDb();
         const row = await db.get("SELECT COUNT(*) as total FROM orders WHERE status = 'DONE'");
@@ -294,35 +294,35 @@ async function renderPaymentPage(req, res, startFlipped = false) {
             margin: 4px 0;
         }
         .bank-item {
-            background: rgba(15, 23, 42, 0.65);
+            background: rgba(255, 255, 255, 0.04);
             border: 1px solid rgba(255, 255, 255, 0.08);
             border-radius: 10px;
-            padding: 6px 10px;
+            padding: 8px 12px;
             display: flex;
             align-items: center;
             justify-content: space-between;
         }
-        .bank-name { font-weight: 700; color: #e2e8f0; font-size: 0.72rem; }
-        .bank-num { font-family: monospace; font-size: 0.9rem; font-weight: 700; color: #38bdf8; }
-        .bank-holder { font-size: 0.66rem; color: #94a3b8; }
+        .bank-name { font-size: 0.75rem; font-weight: 800; color: #38bdf8; }
+        .bank-num { font-family: monospace; font-size: 0.88rem; font-weight: 700; color: #f1f5f9; letter-spacing: 0.5px; }
+        .bank-holder { font-size: 0.68rem; color: #94a3b8; }
         .btn-copy {
             background: rgba(16, 185, 129, 0.15);
             border: 1px solid rgba(16, 185, 129, 0.35);
             color: #34d399;
-            padding: 4px 12px;
+            padding: 5px 12px;
             border-radius: 6px;
-            font-size: 0.75rem;
-            font-weight: 600;
+            font-size: 0.72rem;
+            font-weight: 700;
             cursor: pointer;
             transition: all 0.2s ease;
         }
 
         .note-bar {
             background: rgba(234, 179, 8, 0.1);
-            border: 1px solid rgba(234, 179, 8, 0.28);
+            border: 1px solid rgba(234, 179, 8, 0.25);
             border-radius: 8px;
             padding: 6px 10px;
-            font-size: 0.7rem;
+            font-size: 0.68rem;
             color: #fef08a;
             line-height: 1.3;
         }
@@ -377,7 +377,7 @@ async function renderPaymentPage(req, res, startFlipped = false) {
             min-height: 180px;
         }
         .dropzone:hover { border-color: #38bdf8; background: rgba(56, 189, 248, 0.08); }
-        .dropzone-icon { font-size: 2.2rem; margin-bottom: 6px; }
+        .dropzone-icon { margin-bottom: 6px; display: flex; align-items: center; justify-content: center; }
         .dropzone-text { font-size: 0.85rem; font-weight: 600; color: #e2e8f0; }
         .dropzone-hint { font-size: 0.72rem; color: #94a3b8; margin-top: 4px; }
 
@@ -419,7 +419,7 @@ async function renderPaymentPage(req, res, startFlipped = false) {
                     <h1>Pembayaran Jajan Digital</h1>
                     <div class="trust-badge">
                         <span class="live-dot"></span>
-                        <span>⚡ ${formattedTxCount}+ Transaksi Sukses Real-Time</span>
+                        <span>${formattedTxCount} Total Transaksi Selesai</span>
                     </div>
                 </div>
 
@@ -462,7 +462,7 @@ async function renderPaymentPage(req, res, startFlipped = false) {
                 </div>
 
                 <button type="button" class="btn-flip" onclick="toggleFlip()">
-                    <span>Sudah Bayar? Unggah Bukti</span> 🔄
+                    <span>Sudah Bayar? Unggah Bukti</span>
                 </button>
             </div>
 
@@ -472,7 +472,7 @@ async function renderPaymentPage(req, res, startFlipped = false) {
                     <h1>Unggah Bukti Transfer</h1>
                     <div class="trust-badge">
                         <span class="live-dot"></span>
-                        <span>🛡️ Verifikasi Aman & Cepat</span>
+                        <span>Verifikasi Aman & Cepat</span>
                     </div>
                 </div>
 
@@ -481,7 +481,13 @@ async function renderPaymentPage(req, res, startFlipped = false) {
 
                     <div class="dropzone" onclick="document.getElementById('fileInput').click()">
                         <div id="dropInitial">
-                            <div class="dropzone-icon">📷</div>
+                            <div class="dropzone-icon">
+                                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                                    <polyline points="17 8 12 3 7 8"/>
+                                    <line x1="12" y1="3" x2="12" y2="15"/>
+                                </svg>
+                            </div>
                             <div class="dropzone-text">Pilih Foto Bukti Transfer</div>
                             <div class="dropzone-hint">Format JPG, PNG, WEBP (Max 2MB)</div>
                         </div>
