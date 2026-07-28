@@ -502,13 +502,13 @@ async function renderPaymentPage(req, res, startFlipped = false) {
                 </div>
             </form>
 
-            <!-- KOTAK HASIL UPLOAD (1-KLIK COPY LINK BUKTI) -->
+            <!-- KOTAK HASIL UPLOAD (1-KLIK COPY LINK BUKTI & KIRIM KE GRUP) -->
             <div id="successResultBox" style="display:none; flex-direction:column; justify-content:space-between; gap:10px; flex:1; text-align:center; padding:4px 0;">
                 <div style="background:rgba(16, 185, 129, 0.18); border:1.5px solid rgba(16, 185, 129, 0.5); padding:12px 10px; border-radius:12px; box-shadow:0 4px 15px rgba(16, 185, 129, 0.15);">
                     <div style="font-weight:800; font-size:1.05rem; color:#34d399; margin-bottom:6px;">Unggah Bukti Berhasil!</div>
                     <div style="font-size:0.76rem; color:#f1f5f9; line-height:1.4; background:rgba(15,23,42,0.6); padding:8px; border-radius:8px; border:1px dashed rgba(56,189,248,0.3);">
                         <strong style="color:#38bdf8;">LANGKAH TERAKHIR:</strong><br>
-                        Wajib salin &amp; tempelkan (paste) link bukti di bawah ini ke <strong>Grup Chat WhatsApp</strong> agar pesanan Anda segera diproses Admin.
+                        Klik <strong>"Kirim ke Grup WhatsApp"</strong> di bawah ini untuk membuka grup &amp; menempelkan bukti pembayaran Anda!
                     </div>
                 </div>
 
@@ -518,10 +518,14 @@ async function renderPaymentPage(req, res, startFlipped = false) {
                 </div>
 
                 <div style="display:flex; flex-direction:column; gap:8px;">
-                    <button type="button" id="btnCopyResult" onclick="copyResultUrl()" style="width:100%; padding:12px; font-size:0.9rem; font-weight:800; background:linear-gradient(135deg, #10b981 0%, #059669 100%); color:#ffffff; border-radius:10px; border:none; cursor:pointer; box-shadow:0 4px 18px rgba(16,185,129,0.45); letter-spacing:0.3px;">
-                        Salin Link Bukti
+                    <button type="button" id="btnSendGroup" onclick="sendToWaGroup()" style="width:100%; padding:13px; font-size:0.92rem; font-weight:800; background:linear-gradient(135deg, #25D366 0%, #128C7E 100%); color:#ffffff; border-radius:10px; border:none; cursor:pointer; box-shadow:0 4px 18px rgba(37,211,102,0.45); letter-spacing:0.3px; display:flex; align-items:center; justify-content:center; gap:8px;">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+                        <span>Kirim ke Grup WhatsApp</span>
                     </button>
-                    <button type="button" class="btn-flip-back" onclick="resetUploadForm()">
+                    <button type="button" id="btnCopyResult" onclick="copyResultUrl()" style="width:100%; padding:10px; font-size:0.82rem; font-weight:700; background:rgba(255,255,255,0.08); color:#e2e8f0; border-radius:8px; border:1px solid rgba(255,255,255,0.15); cursor:pointer;">
+                        Salin Link Bukti Saja
+                    </button>
+                    <button type="button" class="btn-flip-back" onclick="resetUploadForm()" style="margin-top:2px;">
                         <span>← Kembali ke Halaman QRIS</span>
                     </button>
                 </div>
@@ -538,6 +542,31 @@ async function renderPaymentPage(req, res, startFlipped = false) {
     </div>
 
     <script>
+        const waGroupUrl = 'https://chat.whatsapp.com/GKppODkdFKc9YLkqLWQpkO?s=cl&p=a&ilr=4&amv=2';
+
+        function sendToWaGroup() {
+            const linkInput = document.getElementById('resultLinkInput');
+            const fullUrl = linkInput ? linkInput.value : '';
+            const msgTemplate = 'Halo Admin, saya sudah melakukan pembayaran.\n\nBukti Transfer:\n' + fullUrl;
+            
+            try {
+                navigator.clipboard.writeText(msgTemplate);
+            } catch(_) {
+                try {
+                    navigator.clipboard.writeText(fullUrl);
+                } catch(__) {}
+            }
+
+            const btn = document.getElementById('btnSendGroup');
+            if (btn) {
+                const origText = btn.innerHTML;
+                btn.innerHTML = '<span>Teks Disalin! Membuka Grup...</span>';
+                setTimeout(() => { btn.innerHTML = origText; }, 2500);
+            }
+
+            window.open(waGroupUrl, '_blank');
+        }
+
         function toggleFlip() {
             const front = document.getElementById('cardFront');
             const back = document.getElementById('cardBack');
