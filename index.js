@@ -72,7 +72,7 @@ const ADMIN_PASSWORD = config.admin_password || 'bagas123';
 
 // Middleware Autentikasi Dasbor (Bypass portal upload bukti publik & short links)
 function checkAuth(req, res, next) {
-    const publicPaths = ['/login', '/api/login', '/upload-bukti', '/api/upload-bukti', '/qris', '/q', '/u', '/favicon.ico'];
+    const publicPaths = ['/login', '/api/login', '/api/request-reset-otp', '/api/verify-reset-otp', '/upload-bukti', '/api/upload-bukti', '/qris', '/q', '/u', '/favicon.ico'];
     if (publicPaths.includes(req.path) || req.path.startsWith('/uploads/') || req.path.startsWith('/v/') || req.path.startsWith('/b/') || req.path.startsWith('/qris') || req.path.startsWith('/q') || req.path.startsWith('/u') || req.path.startsWith('/media/')) return next();
     let token = null;
     const cookies = req.headers.cookie;
@@ -461,6 +461,82 @@ app.post('/api/login', (req, res) => {
 
     const remaining = 5 - (attempts.count);
     return res.status(401).json({ success: false, error: `Username atau password salah! (${remaining} sisa percobaan)` });
+});
+
+// ─── Otentikasi Reset Password via WA OTP ──────────────────────────────────
+const resetOtpBucket = new Map();
+
+app.post('/api/request-reset-otp', async (req, res) => {
+    try {
+        const { phone } = req.body;
+        if (!phone) return res.status(400).json({ success: false, error: 'Nomor WhatsApp wajib diisi.' });
+
+        const cleanPhone = phone.replace(/[^0-9]/g, '');
+        const bossNum = (config.boss_number || config.owner_number || '6285789863037').replace(/[^0-9]/g, '');
+
+        if (!bossNum || !cleanPhone.includes(bossNum.slice(-8))) {
+            return res.status(400).json({ success: false, error: 'Nomor WhatsApp tidak terdaftar sebagai Super Admin.' });
+        }
+
+        const client = getClient();
+        if (!client || getStatus() !== 'CONNECTED') {
+            return res.status(530).json({ success: false, error: 'Bot WhatsApp sedang offline. Silakan hubungi admin atau gunakan perintah WA.' });
+        }
+
+        const otp = Math.floor(100000 + Math.random() * 900000).toString();
+        resetOtpBucket.set(cleanPhone, { otp, expiresAt: Date.now() + 10 * 60 * 1000 });
+
+        const recipientJid = cleanPhone.startsWith('62') ? `${cleanPhone}@c.us` : `62${cleanPhone.replace(/^0/, '')}@c.us`;
+        const msgText = `*[KEAMANAN DASBOR JAJAN DIGITAL]*\n\nKode OTP Reset Password Admin Anda adalah: *${otp}*\n\nKode ini berlaku selama 10 menit. JANGAN berikan kode ini kepada siapapun demi keamanan akun Anda.`;
+
+        await client.sendMessage(recipientJid, msgText);
+        console.log(`[Auth Reset] OTP sent to ${cleanPhone}: ${otp}`);
+
+        res.json({ success: true, message: 'Kode OTP telah dikirimkan ke WhatsApp Super Admin.' });
+    } catch (err) {
+        console.error('[Auth Reset] Gagal mengirim OTP WA:', err.message);
+        res.status(500).json({ success: false, error: 'Gagal mengirim OTP via WhatsApp: ' + err.message });
+    }
+});
+
+app.post('/api/verify-reset-otp', (req, res) => {
+    try {
+        const { phone, otp, newPassword } = req.body;
+        if (!phone || !otp || !newPassword) {
+            return res.status(400).json({ success: false, error: 'Nomor, OTP, dan Password Baru wajib diisi.' });
+        }
+
+        if (newPassword.length < 6) {
+            return res.status(400).json({ success: false, error: 'Password baru minimal 6 karakter.' });
+        }
+
+        const cleanPhone = phone.replace(/[^0-9]/g, '');
+        const record = resetOtpBucket.get(cleanPhone);
+
+        if (!record || record.expiresAt < Date.now()) {
+            return res.status(400).json({ success: false, error: 'Kode OTP kadaluarsa atau tidak ditemukan. Minta OTP baru.' });
+        }
+
+        if (record.otp !== otp.trim()) {
+            return res.status(400).json({ success: false, error: 'Kode OTP yang dimasukkan salah!' });
+        }
+
+        resetOtpBucket.delete(cleanPhone);
+
+        const { updateConfig } = require('./src/config/config');
+        updateConfig({ admin_password: newPassword });
+
+        const token = Math.random().toString(36).substring(2) + Math.random().toString(36).substring(2);
+        activeSessions.add(token);
+        saveSessions();
+        res.cookie('session_token', token, { httpOnly: true, secure: false, maxAge: 24 * 60 * 60 * 1000 });
+
+        console.log(`[Auth Reset] Password Admin berhasil diubah untuk ${cleanPhone}`);
+        res.json({ success: true, message: 'Password Admin berhasil diubah! Mengalihkan ke dasbor...' });
+    } catch (err) {
+        console.error('[Auth Reset] Gagal mereset password:', err.message);
+        res.status(500).json({ success: false, error: 'Gagal mereset password: ' + err.message });
+    }
 });
 
 app.post('/api/logout', (req, res) => {

@@ -128,10 +128,27 @@ async function handleAdminCommandMessage(msg, {
 
     if (cmd === '.id') {
         if (!isGroup) {
-            await msg.reply("❌ Perintah ini hanya dapat digunakan di dalam grup.");
+            await msg.reply(`📌 *ID Grup WA ini:* \`${groupId}\``);
             return true;
         }
         await msg.reply(`📌 *ID Grup WA ini:* \`${groupId}\``);
+        return true;
+    }
+
+    if (cmd.startsWith('.resetpass')) {
+        const parts = userMessage.trim().split(/\s+/);
+        const newPass = parts[1];
+        if (!newPass || newPass.length < 6) {
+            await msg.reply("⚠️ Format salah! Gunakan: `.resetpass <password_baru>` (minimal 6 karakter)");
+            return true;
+        }
+        try {
+            const { updateConfig } = require('../config/config');
+            updateConfig({ admin_password: newPass });
+            await msg.reply(`✅ *BERHASIL RESET PASSWORD ADMIN*\n\nPassword baru dasbor Anda adalah:\n\`${newPass}\`\n\nGunakan password ini untuk masuk ke Web Dasbor.`);
+        } catch (err) {
+            await msg.reply("❌ Gagal mereset password: " + err.message);
+        }
         return true;
     }
 

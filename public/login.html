@@ -215,18 +215,21 @@
         }
         .status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--success-color); box-shadow: 0 0 8px var(--success-color); }
 
-        /* Modal Lupa Password */
+        /* Modal Lupa Password OTP WA Pro */
         .modal-overlay {
-            display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(8px);
+            display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(8px);
             z-index: 999; align-items: center; justify-content: center; padding: 20px;
         }
         .modal-card {
-            background: #18181b; border: 1px solid var(--border-color); border-radius: 16px; padding: 24px; max-width: 400px; width: 100%; text-align: left;
+            background: #18181b; border: 1px solid var(--border-color); border-radius: 18px; padding: 28px; max-width: 420px; width: 100%; text-align: left;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.6);
         }
-        .modal-card h3 { font-size: 1.1rem; color: #fff; margin-bottom: 10px; }
-        .modal-card p { font-size: 0.85rem; color: var(--text-secondary); line-height: 1.5; margin-bottom: 16px; }
-        .modal-card code { background: rgba(255,255,255,0.08); color: #38bdf8; padding: 2px 6px; border-radius: 4px; font-family: monospace; }
-        .modal-btn { background: var(--primary-color); color: white; border: none; padding: 8px 16px; border-radius: 8px; font-weight: 600; cursor: pointer; float: right; }
+        .modal-card h3 { font-size: 1.15rem; color: #fff; margin-bottom: 6px; font-weight: 700; }
+        .modal-card p.modal-desc { font-size: 0.82rem; color: var(--text-secondary); line-height: 1.4; margin-bottom: 20px; }
+        .modal-banner { padding: 8px 12px; border-radius: 8px; font-size: 0.8rem; margin-bottom: 14px; display: none; }
+        .modal-btn-row { display: flex; gap: 10px; justify-content: flex-end; margin-top: 18px; }
+        .btn-cancel { background: rgba(255,255,255,0.08); color: #cbd5e1; border: none; padding: 9px 16px; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 0.82rem; }
+        .btn-action-modal { background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; border: none; padding: 9px 18px; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 0.82rem; }
     </style>
 </head>
 <body>
@@ -292,15 +295,47 @@
         </div>
     </div>
 
-    <!-- Modal Lupa Password -->
+    <!-- Modal Pro Reset Password via WhatsApp OTP -->
     <div class="modal-overlay" id="forgotModal">
         <div class="modal-card">
-            <h3>Lupa Password Admin?</h3>
-            <p>Untuk mereset atau melihat password admin yang aktif:</p>
-            <p>1. Buka file <code>src/config/config.js</code> di folder server bot Anda.</p>
-            <p>2. Cari baris <code>admin_password</code> untuk melihat/mengubah password.</p>
-            <p>3. Atau atur dari Pengaturan Dasbor jika Anda terhubung.</p>
-            <button class="modal-btn" onclick="closeForgotModal()">Saya Mengerti</button>
+            <h3>Reset Password via WhatsApp OTP</h3>
+            <p class="modal-desc" id="modalDesc">Kode OTP verifikasi akan dikirimkan langsung ke nomor WhatsApp Super Admin yang terdaftar.</p>
+
+            <div id="modalMsg" class="modal-banner"></div>
+
+            <!-- Step 1: Input Nomor HP Admin -->
+            <div id="otpStep1">
+                <div class="form-group">
+                    <label for="adminPhone">Nomor WhatsApp Super Admin</label>
+                    <div class="input-wrapper">
+                        <input type="text" id="adminPhone" class="form-control" placeholder="Contoh: 085789863037" style="padding-left: 16px;">
+                    </div>
+                </div>
+                <div class="modal-btn-row">
+                    <button type="button" class="btn-cancel" onclick="closeForgotModal()">Batal</button>
+                    <button type="button" class="btn-action-modal" id="btnSendOtp" onclick="handleSendOtp()">Kirim Kode OTP WA</button>
+                </div>
+            </div>
+
+            <!-- Step 2: Input OTP & Password Baru -->
+            <div id="otpStep2" style="display: none;">
+                <div class="form-group">
+                    <label for="otpCode">6-Digit Kode OTP</label>
+                    <div class="input-wrapper">
+                        <input type="text" id="otpCode" class="form-control" placeholder="Contoh: 849201" maxlength="6" style="padding-left: 16px; font-family: monospace; letter-spacing: 2px;">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="newAdminPass">Password Baru Admin</label>
+                    <div class="input-wrapper">
+                        <input type="password" id="newAdminPass" class="form-control" placeholder="Minimal 6 karakter" style="padding-left: 16px;">
+                    </div>
+                </div>
+                <div class="modal-btn-row">
+                    <button type="button" class="btn-cancel" onclick="closeForgotModal()">Batal</button>
+                    <button type="button" class="btn-action-modal" id="btnVerifyOtp" onclick="handleVerifyOtp()">Reset & Masuk</button>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -330,13 +365,115 @@
             }
         });
 
-        // Modal Lupa Password
+        // Modal Reset OTP WA
         function openForgotModal(e) {
             e.preventDefault();
             document.getElementById('forgotModal').style.display = 'flex';
+            document.getElementById('otpStep1').style.display = 'block';
+            document.getElementById('otpStep2').style.display = 'none';
+            document.getElementById('modalMsg').style.display = 'none';
         }
         function closeForgotModal() {
             document.getElementById('forgotModal').style.display = 'none';
+        }
+
+        async function handleSendOtp() {
+            const phone = document.getElementById('adminPhone').value.trim();
+            const btn = document.getElementById('btnSendOtp');
+            const msg = document.getElementById('modalMsg');
+
+            if (!phone) {
+                msg.className = 'modal-banner banner-error';
+                msg.textContent = 'Masukkan nomor WhatsApp Super Admin!';
+                msg.style.display = 'block';
+                return;
+            }
+
+            btn.disabled = true;
+            btn.textContent = 'Mengirim...';
+            msg.style.display = 'none';
+
+            try {
+                const res = await fetch('/api/request-reset-otp', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ phone })
+                });
+                const data = await res.json();
+
+                if (res.ok && data.success) {
+                    msg.className = 'modal-banner banner-warning';
+                    msg.style.background = 'rgba(16, 185, 129, 0.15)';
+                    msg.style.borderColor = 'rgba(16, 185, 129, 0.3)';
+                    msg.style.color = '#34d399';
+                    msg.textContent = 'Kode OTP 6-digit telah terkirim ke WhatsApp Anda!';
+                    msg.style.display = 'block';
+
+                    document.getElementById('otpStep1').style.display = 'none';
+                    document.getElementById('otpStep2').style.display = 'block';
+                } else {
+                    msg.className = 'modal-banner banner-error';
+                    msg.textContent = data.error || 'Gagal mengirim OTP.';
+                    msg.style.display = 'block';
+                    btn.disabled = false;
+                    btn.textContent = 'Kirim Kode OTP WA';
+                }
+            } catch (err) {
+                msg.className = 'modal-banner banner-error';
+                msg.textContent = 'Gangguan koneksi ke server.';
+                msg.style.display = 'block';
+                btn.disabled = false;
+                btn.textContent = 'Kirim Kode OTP WA';
+            }
+        }
+
+        async function handleVerifyOtp() {
+            const phone = document.getElementById('adminPhone').value.trim();
+            const otp = document.getElementById('otpCode').value.trim();
+            const newPassword = document.getElementById('newAdminPass').value.trim();
+            const btn = document.getElementById('btnVerifyOtp');
+            const msg = document.getElementById('modalMsg');
+
+            if (!otp || !newPassword) {
+                msg.className = 'modal-banner banner-error';
+                msg.textContent = 'Masukkan OTP dan Password Baru!';
+                msg.style.display = 'block';
+                return;
+            }
+
+            btn.disabled = true;
+            btn.textContent = 'Memverifikasi...';
+
+            try {
+                const res = await fetch('/api/verify-reset-otp', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ phone, otp, newPassword })
+                });
+                const data = await res.json();
+
+                if (res.ok && data.success) {
+                    msg.className = 'modal-banner banner-warning';
+                    msg.style.background = 'rgba(16, 185, 129, 0.2)';
+                    msg.style.color = '#34d399';
+                    msg.textContent = 'Password berhasil diubah! Mengalihkan ke dasbor...';
+                    msg.style.display = 'block';
+
+                    setTimeout(() => { window.location.href = '/'; }, 1200);
+                } else {
+                    msg.className = 'modal-banner banner-error';
+                    msg.textContent = data.error || 'Gagal memverifikasi OTP.';
+                    msg.style.display = 'block';
+                    btn.disabled = false;
+                    btn.textContent = 'Reset & Masuk';
+                }
+            } catch (err) {
+                msg.className = 'modal-banner banner-error';
+                msg.textContent = 'Gangguan koneksi ke server.';
+                msg.style.display = 'block';
+                btn.disabled = false;
+                btn.textContent = 'Reset & Masuk';
+            }
         }
 
         async function handleLogin(event) {
