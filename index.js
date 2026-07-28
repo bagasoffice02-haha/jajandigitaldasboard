@@ -118,20 +118,20 @@ app.get(['/q', '/qris', '/qris/:filename', '/v/qris'], (req, res) => {
 
     const { baseUrl } = getPublicUrlInfo(req);
     const fullImageUrl = rawImageUrl ? `${baseUrl}${rawImageUrl}` : `${baseUrl}/favicon.ico`;
-    const pageUrl = `${baseUrl}/qris`;
+    const pageUrl = `${baseUrl}/q`;
     const mimeType = getImgMimeType(filename);
 
     const html = `<!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>💵 QRIS Pembayaran Resmi - Jajan Digital</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Pembayaran QRIS - Jajan Digital</title>
 
     <!-- Open Graph Meta Tags untuk Preview Gambar QRIS di WhatsApp -->
     <meta property="og:site_name" content="Jajan Digital" />
-    <meta property="og:title" content="💵 QRIS Pembayaran Resmi - Jajan Digital" />
-    <meta property="og:description" content="Scan barcode QRIS ini untuk melakukan pembayaran dari M-Banking / E-Wallet apapun." />
+    <meta property="og:title" content="Pembayaran QRIS & Transfer - Jajan Digital" />
+    <meta property="og:description" content="Scan QRIS atau transfer Bank / E-Wallet Jajan Digital." />
     <meta property="og:image" content="${fullImageUrl}" />
     <meta property="og:image:secure_url" content="${fullImageUrl}" />
     <meta property="og:image:type" content="${mimeType}" />
@@ -144,204 +144,176 @@ app.get(['/q', '/qris', '/qris/:filename', '/v/qris'], (req, res) => {
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
 
     <style>
-        :root {
-            --bg-color: #0f172a;
-            --card-bg: rgba(30, 41, 59, 0.75);
-            --border-color: rgba(255, 255, 255, 0.12);
-            --accent-gradient: linear-gradient(135deg, #10b981 0%, #06b6d4 100%);
-            --text-main: #f8fafc;
-            --text-muted: #94a3b8;
-        }
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Outfit', sans-serif; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Outfit', -apple-system, sans-serif; }
         body {
-            background-color: var(--bg-color);
-            background-image: 
-                radial-gradient(at 0% 0%, rgba(16, 185, 129, 0.15) 0px, transparent 50%),
-                radial-gradient(at 100% 100%, rgba(6, 182, 212, 0.15) 0px, transparent 50%);
-            color: var(--text-main);
+            background: #0b1329;
+            color: #f1f5f9;
             min-height: 100vh;
             display: flex;
-            justify-content: center;
             align-items: center;
-            padding: 1.5rem 1rem;
+            justify-content: center;
+            padding: 8px;
         }
-        .container {
+        .card {
             width: 100%;
-            max-width: 440px;
-            background: var(--card-bg);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            border: 1px solid var(--border-color);
-            border-radius: 24px;
-            padding: 2rem 1.5rem;
-            text-align: center;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+            max-width: 380px;
+            background: rgba(30, 41, 59, 0.85);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 14px;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
         }
-        .badge {
+        .header { text-align: center; }
+        .header h1 { font-size: 1.1rem; font-weight: 700; color: #38bdf8; }
+        .header p { font-size: 0.72rem; color: #94a3b8; margin-top: 1px; }
+
+        .qris-box {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+        }
+        .qris-img-bg {
+            background: white;
+            padding: 5px;
+            border-radius: 8px;
             display: inline-block;
-            padding: 6px 16px;
-            border-radius: 50px;
+        }
+        .qris-img {
+            width: 140px;
+            height: 140px;
+            object-fit: contain;
+            display: block;
+        }
+        .btn-download {
+            background: rgba(56, 189, 248, 0.15);
+            border: 1px solid rgba(56, 189, 248, 0.3);
+            color: #38bdf8;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 0.72rem;
+            font-weight: 600;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .bank-list {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        .bank-item {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 8px;
+            padding: 5px 8px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .bank-name { font-weight: 700; color: #e2e8f0; font-size: 0.68rem; }
+        .bank-num { font-family: monospace; font-size: 0.82rem; font-weight: 700; color: #38bdf8; }
+        .bank-holder { font-size: 0.65rem; color: #94a3b8; }
+        .btn-copy {
             background: rgba(16, 185, 129, 0.15);
             border: 1px solid rgba(16, 185, 129, 0.3);
             color: #34d399;
-            font-size: 0.85rem;
+            padding: 3px 8px;
+            border-radius: 5px;
+            font-size: 0.68rem;
             font-weight: 600;
-            margin-bottom: 0.75rem;
+            cursor: pointer;
         }
-        .title {
-            font-size: 1.5rem;
-            font-weight: 800;
-            background: var(--accent-gradient);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            margin-bottom: 0.5rem;
+
+        .note-bar {
+            background: rgba(234, 179, 8, 0.1);
+            border: 1px solid rgba(234, 179, 8, 0.25);
+            border-radius: 6px;
+            padding: 5px 8px;
+            font-size: 0.68rem;
+            color: #fef08a;
+            line-height: 1.35;
         }
-        .subtitle {
-            font-size: 0.85rem;
-            color: var(--text-muted);
-            margin-bottom: 1.5rem;
-            line-height: 1.4;
-        }
-        .qris-box {
-            background: white;
-            padding: 1rem;
-            border-radius: 18px;
-            display: inline-block;
-            margin-bottom: 1.5rem;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
-        }
-        .qris-img {
-            max-width: 100%;
-            width: 280px;
-            height: auto;
-            display: block;
-            border-radius: 8px;
-        }
-        .instructions {
-            text-align: left;
-            background: rgba(15, 23, 42, 0.5);
-            border: 1px solid var(--border-color);
-            border-radius: 14px;
-            padding: 1rem;
-            margin-bottom: 1.5rem;
-            font-size: 0.85rem;
-            color: #cbd5e1;
-            line-height: 1.6;
-        }
-        .instructions ol { padding-left: 1.2rem; }
-        .instructions li { margin-bottom: 0.25rem; }
-        .btn-upload {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            width: 100%;
-            padding: 0.9rem 1.5rem;
-            border-radius: 14px;
-            background: var(--accent-gradient);
+
+        .btn-action {
+            background: linear-gradient(135deg, #0284c7 0%, #0d9488 100%);
             color: white;
             text-decoration: none;
+            text-align: center;
+            padding: 8px;
+            border-radius: 8px;
+            font-size: 0.8rem;
             font-weight: 700;
-            font-size: 0.95rem;
-            box-shadow: 0 8px 20px rgba(16, 185, 129, 0.3);
-            transition: all 0.3s ease;
-        }
-        .btn-upload:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 12px 25px rgba(16, 185, 129, 0.4);
+            display: block;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <span class="badge">🏪 Jajan Digital Official</span>
-        <h1 class="title">QRIS Pembayaran Resmi</h1>
-        <p class="subtitle">Scan menggunakan M-Banking atau E-Wallet (Gopay, OVO, Dana, ShopeePay, LinkAja, BCA, Mandiri, dll)</p>
+    <div class="card">
+        <div class="header">
+            <h1>Pembayaran Jajan Digital</h1>
+            <p>Scan QRIS atau Transfer Bank / E-Wallet</p>
+        </div>
 
         <div class="qris-box">
-            <img src="${rawImageUrl}" alt="Barcode QRIS Pembayaran" class="qris-img">
+            <div class="qris-img-bg">
+                <img src="${rawImageUrl}" alt="QRIS" class="qris-img">
+            </div>
+            <a href="${rawImageUrl}" download="QRIS_JajanDigital.jpeg" class="btn-download">Unduh QRIS</a>
         </div>
 
-        <!-- Sektor Bank & E-Wallet -->
-        <div class="bank-section" style="margin-bottom: 1.5rem; text-align: left;">
-            <div style="font-weight: 700; font-size: 0.95rem; color: #34d399; margin-bottom: 0.75rem; display: flex; align-items: center; gap: 6px;">
-                <span>🏦 BANK & E-WALLET TRANSFER</span>
-            </div>
-            
-            <div style="display: flex; flex-direction: column; gap: 8px;">
-                <!-- GOPAY -->
-                <div class="bank-card" style="background: rgba(15, 23, 42, 0.6); border: 1px solid var(--border-color); padding: 10px 14px; border-radius: 12px; display: flex; align-items: center; justify-content: space-between;">
-                    <div>
-                        <div style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600;">GOPAY</div>
-                        <div style="font-size: 0.95rem; font-weight: 700; color: #f8fafc; font-family: monospace;">085789863037</div>
-                        <div style="font-size: 0.75rem; color: #94a3b8;">a.n Bagas Saputra</div>
-                    </div>
-                    <button type="button" onclick="copyText('085789863037', this)" style="background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.3); color: #34d399; padding: 6px 12px; border-radius: 8px; font-weight: 600; font-size: 0.75rem; cursor: pointer; transition: all 0.2s;">Salin</button>
+        <div class="bank-list">
+            <div class="bank-item">
+                <div>
+                    <div class="bank-name">GOPAY</div>
+                    <div class="bank-num">085789863037</div>
+                    <div class="bank-holder">a.n Bagas Saputra</div>
                 </div>
-
-                <!-- SEABANK -->
-                <div class="bank-card" style="background: rgba(15, 23, 42, 0.6); border: 1px solid var(--border-color); padding: 10px 14px; border-radius: 12px; display: flex; align-items: center; justify-content: space-between;">
-                    <div>
-                        <div style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600;">SEABANK</div>
-                        <div style="font-size: 0.95rem; font-weight: 700; color: #f8fafc; font-family: monospace;">901346990999</div>
-                        <div style="font-size: 0.75rem; color: #94a3b8;">a.n Bagas Saputra</div>
-                    </div>
-                    <button type="button" onclick="copyText('901346990999', this)" style="background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.3); color: #34d399; padding: 6px 12px; border-radius: 8px; font-weight: 600; font-size: 0.75rem; cursor: pointer; transition: all 0.2s;">Salin</button>
+                <button class="btn-copy" onclick="copyText('085789863037', this)">Salin</button>
+            </div>
+            <div class="bank-item">
+                <div>
+                    <div class="bank-name">SEABANK</div>
+                    <div class="bank-num">901346990999</div>
+                    <div class="bank-holder">a.n Bagas Saputra</div>
                 </div>
-
-                <!-- BRI -->
-                <div class="bank-card" style="background: rgba(15, 23, 42, 0.6); border: 1px solid var(--border-color); padding: 10px 14px; border-radius: 12px; display: flex; align-items: center; justify-content: space-between;">
-                    <div>
-                        <div style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600;">BANK BRI</div>
-                        <div style="font-size: 0.95rem; font-weight: 700; color: #f8fafc; font-family: monospace;">560801027512500</div>
-                        <div style="font-size: 0.75rem; color: #94a3b8;">a.n Bagas Saputra</div>
-                    </div>
-                    <button type="button" onclick="copyText('560801027512500', this)" style="background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.3); color: #34d399; padding: 6px 12px; border-radius: 8px; font-weight: 600; font-size: 0.75rem; cursor: pointer; transition: all 0.2s;">Salin</button>
+                <button class="btn-copy" onclick="copyText('901346990999', this)">Salin</button>
+            </div>
+            <div class="bank-item">
+                <div>
+                    <div class="bank-name">BRI</div>
+                    <div class="bank-num">560801027512500</div>
+                    <div class="bank-holder">a.n Bagas Saputra</div>
                 </div>
+                <button class="btn-copy" onclick="copyText('560801027512500', this)">Salin</button>
             </div>
         </div>
 
-        <div class="instructions">
-            <strong>📌 Cara Melakukan Pembayaran:</strong>
-            <ol>
-                <li>Scan QRIS di atas atau Transfer ke salah satu rekening Bank/E-Wallet.</li>
-                <li>Masukkan nominal sesuai total belanja Anda.</li>
-                <li>Setelah berhasil, klik tombol di bawah untuk unggah bukti bayar.</li>
-            </ol>
+        <div class="note-bar">
+            <strong>Catatan:</strong> QRIS bebas admin. Bank/E-Wallet +Rp500. Kirim bukti transfer setelah bayar.
         </div>
 
-        <!-- Note & Keterangan -->
-        <div class="note-box" style="text-align: left; background: rgba(234, 179, 8, 0.1); border: 1px solid rgba(234, 179, 8, 0.3); border-radius: 14px; padding: 1rem; margin-bottom: 1.5rem; font-size: 0.85rem; color: #fef08a; line-height: 1.6;">
-            <div style="font-weight: 700; color: #facc15; margin-bottom: 0.4rem; display: flex; align-items: center; gap: 6px;">
-                <span>📌 Keterangan & Note:</span>
-            </div>
-            <div style="display: flex; flex-direction: column; gap: 4px;">
-                <div>➥ Bayar via QRIS <strong>Bebas Admin</strong>.</div>
-                <div>➥ Selain QRIS (Bank/E-Wallet) <strong>wajib +fee Rp 500</strong>.</div>
-                <div>➥ Kirim <strong>bukti transfer</strong> setelah bayar.</div>
-            </div>
-        </div>
-
-        <a href="/upload-bukti" class="btn-upload">
-            <span>📸 Unggah Bukti Pembayaran</span>
-        </a>
+        <a href="/u" class="btn-action">Unggah Bukti Transfer</a>
     </div>
 
     <script>
         function copyText(val, btn) {
             navigator.clipboard.writeText(val).then(() => {
                 const orig = btn.textContent;
-                btn.textContent = 'Tersalin! ✓';
+                btn.textContent = 'Tersalin';
                 btn.style.background = '#10b981';
                 btn.style.color = '#ffffff';
                 setTimeout(() => {
                     btn.textContent = orig;
                     btn.style.background = 'rgba(16, 185, 129, 0.15)';
                     btn.style.color = '#34d399';
-                }, 2000);
+                }, 1500);
             }).catch(() => {
                 const temp = document.createElement('input');
                 temp.value = val;
@@ -349,14 +321,14 @@ app.get(['/q', '/qris', '/qris/:filename', '/v/qris'], (req, res) => {
                 temp.select();
                 document.execCommand('copy');
                 document.body.removeChild(temp);
-                btn.textContent = 'Tersalin! ✓';
+                btn.textContent = 'Tersalin';
                 btn.style.background = '#10b981';
                 btn.style.color = '#ffffff';
                 setTimeout(() => {
                     btn.textContent = 'Salin';
                     btn.style.background = 'rgba(16, 185, 129, 0.15)';
                     btn.style.color = '#34d399';
-                }, 2000);
+                }, 1500);
             });
         }
     </script>
@@ -383,13 +355,13 @@ app.get(['/b/:filename', '/v/:filename'], (req, res) => {
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🧾 Bukti Pembayaran - Jajan Digital</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Bukti Transfer - Jajan Digital</title>
 
     <!-- Open Graph Meta Tags untuk Pratinjau Gambar di WhatsApp -->
     <meta property="og:site_name" content="Jajan Digital" />
-    <meta property="og:title" content="🧾 Bukti Pembayaran - Jajan Digital" />
-    <meta property="og:description" content="Klik untuk melihat foto bukti transfer dalam ukuran penuh." />
+    <meta property="og:title" content="Bukti Transfer - Jajan Digital" />
+    <meta property="og:description" content="Foto bukti transfer Jajan Digital." />
     <meta property="og:image" content="${rawImageUrl}" />
     <meta property="og:image:secure_url" content="${rawImageUrl}" />
     <meta property="og:image:type" content="${mimeType}" />
@@ -401,23 +373,22 @@ app.get(['/b/:filename', '/v/:filename'], (req, res) => {
     <meta name="twitter:image" content="${rawImageUrl}" />
 
     <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; }
         body {
-            margin: 0; padding: 0; background: #0f172a; color: white;
-            font-family: system-ui, -apple-system, sans-serif;
+            margin: 0; padding: 10px; background: #0b1329; color: white;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
             min-height: 100vh;
         }
-        .container { max-width: 92%; text-align: center; padding: 20px; }
-        img { max-width: 100%; max-height: 82vh; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.15); }
-        .badge { background: rgba(16, 185, 129, 0.2); border: 1px solid rgba(16, 185, 129, 0.4); color: #34d399; padding: 8px 18px; border-radius: 50px; font-size: 0.95rem; font-weight: 600; margin-bottom: 20px; display: inline-block; }
+        .container { max-width: 95vw; text-align: center; }
+        .title { font-size: 0.9rem; font-weight: 700; color: #34d399; margin-bottom: 8px; }
+        img { max-width: 100%; max-height: 82vh; border-radius: 12px; border: 1px solid rgba(255,255,255,0.15); display: block; margin: 0 auto; }
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="badge">🧾 Bukti Pembayaran - Jajan Digital</div>
-        <br>
+        <div class="title">Bukti Transfer Jajan Digital</div>
         <a href="${rawImageUrl}" target="_blank">
-            <img src="${rawImageUrl}" alt="Bukti Pembayaran">
+            <img src="${rawImageUrl}" alt="Bukti Transfer">
         </a>
     </div>
 </body>
