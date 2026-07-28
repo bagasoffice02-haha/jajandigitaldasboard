@@ -460,7 +460,7 @@ app.post('/api/login', (req, res) => {
     loginAttempts.set(ip, attempts);
 
     const remaining = 5 - (attempts.count);
-    return res.status(401).json({ success: false, error: `Username atau password salah! (${remaining} sisa percobaan)` });
+    return res.status(401).json({ success: false, error: 'Username atau password salah!' });
 });
 
 // ─── Otentikasi Reset Password via WA OTP ──────────────────────────────────
