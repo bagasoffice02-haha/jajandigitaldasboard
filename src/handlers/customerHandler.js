@@ -387,7 +387,7 @@ async function handleCustomerMessage(msg, {
             if (isGroup) {
                 const lastAiTime = groupAiCooldowns.get(chatId) || 0;
                 const now = Date.now();
-                if (now - lastAiTime < 5000) { // 5 detik cooldown
+                if (now - lastAiTime < 5000) {
                     console.log(`[Cooldown Guard] Mengabaikan pemicu AI Grup ${chatId} karena spamming (5s cooldown).`);
                     return true;
                 }
@@ -399,69 +399,124 @@ async function handleCustomerMessage(msg, {
                     const chat = await msg.getChat();
                     await chat.sendStateTyping();
                 } catch (chatErr) { console.warn('[CS AI Warning] Gagal mengirim status typing:', chatErr.message); }
+
                 const knowledge = getGroupKnowledgeContext(activeCfg ? activeCfg.allowedKnowledgeFiles : [], path.join(__dirname, '../../knowledge'));
-                
-                const serializeMenuTree = (node, depth = 0) => {
+
+                // Serialisasi menu RINGKAS (nama + status saja, tanpa teks panjang)
+                const serializeMenuCompact = (node, depth = 0) => {
                     if (!node) return '';
-                    const typeLabel = node.type === 'category' ? 'Kategori' : 'Produk';
-                    const statusLabel = node.status ? ` [Status: ${node.status}]` : '';
-                    const promoLabel = node.isPromo ? ' [🔥 PROMO]' : '';
-                    let res = '  '.repeat(depth) + `- ${node.name} (${typeLabel})${statusLabel}${promoLabel}`;
-                    if (node.text) res += `: ${node.text.replace(/\n/g, ' ')}`;
-                    res += '\n';
+                    const statusLabel = node.status ? ` [${node.status}]` : '';
+                    const promoLabel  = node.isPromo ? ' 🔥' : '';
+                    let res = '  '.repeat(depth) + `- ${node.name}${statusLabel}${promoLabel}\n`;
                     if (node.children && node.children.length > 0) {
-                        node.children.forEach(child => { res += serializeMenuTree(child, depth + 1); });
+                        node.children.forEach(child => { res += serializeMenuCompact(child, depth + 1); });
                     }
                     return res;
                 };
-                const serializedMenu = activeCfg ? serializeMenuTree(activeCfg.menuTree) : 'Belum ada menu produk terkonfigurasi.';
-                
+                const compactMenu = activeCfg ? serializeMenuCompact(activeCfg.menuTree) : 'Belum ada produk.';
+
                 const schedule = activeCfg && activeCfg.autoCloseSchedule ? activeCfg.autoCloseSchedule : { enabled: false };
                 let scheduleText = 'Toko buka 24 jam.';
                 if (schedule.enabled) {
-                    const daysMap = { 1: 'Senin', 2: 'Selasa', 3: 'Rabu', 4: 'Kamis', 5: 'Jumat', 6: 'Sabtu', 0: 'Minggu', 7: 'Minggu' };
+                    const daysMap = { 1:'Senin',2:'Selasa',3:'Rabu',4:'Kamis',5:'Jumat',6:'Sabtu',0:'Minggu',7:'Minggu' };
                     const activeDaysStr = schedule.activeDays ? schedule.activeDays.map(d => daysMap[d]).join(', ') : 'Setiap Hari';
-                    scheduleText = `Toko buka & beroperasi pada hari: ${activeDaysStr} mulai jam ${schedule.openTime || '08:00'} sampai ${schedule.closeTime || '22:00'} WIB. Di luar jam operasional tersebut sistem toko tutup/offline otomatis.`;
+                    scheduleText = `Buka: ${activeDaysStr} jam ${schedule.openTime||'08:00'}–${schedule.closeTime||'22:00'} WIB.`;
                 }
-                
+
                 const contact = await msg.getContact();
                 const customerName = contact.pushname || contact.name || 'Kakak';
-                
+
+                // ── PROMPT BARU: output JSON terstruktur ──────────────────────
                 const customerPrompt = `
-Tugas Anda adalah menjadi Asisten Pelayanan Pelanggan (Customer Service) yang sangat ramah, sopan, dan sigap untuk toko kami "Jajan Digital" yang menyediakan berbagai APK premium murah dan terpercaya.
-Pelanggan yang Anda hadapi saat ini bernama: ${customerName}.
+Kamu adalah CS toko digital "Jajan Digital" yang ramah dan sigap.
+Panggil pelanggan dengan "Kak" atau "Kak ${customerName}".
 
-[PANDUAN UTAMA CS JAJAN DIGITAL]
-1. Sapa pelanggan dengan panggilan "Kak", "Kakak", atau "Kak ${customerName}". JANGAN PERNAH panggil mereka "Bos".
-2. INFORMASI PRODUK & HARGA: Anda sangat dipersilakan untuk membaca [DAFTAR MENU & PRODUK AKTIF SAAT INI] serta [DOKUMEN PENDUKUNG / PENGETAHUAN TOKO] di bawah. Gunakan data tersebut untuk menjawab pertanyaan pelanggan secara langsung, detail, dan akurat mengenai ketersediaan produk, harga, paket, spesifikasi akun, maupun status stoknya. JANGAN PERNAH merekomendasikan, menawarkan, atau mengarang produk/aplikasi premium yang tidak ada pada daftar menu aktif di bawah (misalnya Disney+ atau produk lainnya jika tidak tertera di daftar). Jika produk tidak tertera di daftar, katakan bahwa produk tersebut belum tersedia.
-3. JAWAB LANGSUNG: Jika pelanggan menanyakan produk tertentu (misal: "Ada Netflix?", "Berapa harga Canva?", dll), jawablah secara langsung dengan detail harga dan deskripsi dari database di bawah. Jangan memaksa mereka untuk mengetik perintah "list" jika mereka bertanya langsung, tetapi Anda tetap boleh menawarkan perintah "list" sebagai info tambahan untuk melihat seluruh produk.
-4. Alur Pemesanan Cepat (Terangkan jika pelanggan ingin order):
-   - Pertama: Pelanggan melihat produk (baik bertanya langsung kepada Anda atau mengetik perintah *list*).
-   - Kedua: Pelanggan memilih produk untuk melihat harga dan detail paket.
-   - Ketiga: Pelanggan mengetik perintah *bayar* untuk menampilkan barcode QRIS pembayaran resmi toko kami.
-   - Keempat: Pelanggan melakukan pembayaran lalu mengirimkan Foto Bukti Transfer ke dalam grup ini.
-   - Kelima: Setelah pembayaran diverifikasi oleh Admin, produk/detail akun premium akan dikirim oleh Admin secara pribadi via Chat Pribadi (PC).
-5. FAQ Penting:
-   - Jika ditanya perbedaan "Private" dan "Sharing", jelaskan bahwa Private = 1 akun baru khusus 1 pembeli (bisa multi-device), sedangkan Sharing = 1 akun bersama pembeli lain (lebih murah, max login 1 device).
-   - Durasi 25 - 30 hari dihitung penuh sebagai 1 Bulan.
-6. Jawablah secara singkat, ramah, padat, dan hindari penjelasan bertele-tele.
+[ATURAN PENTING — WAJIB DIIKUTI]
+Balas HANYA dalam format JSON berikut (tidak ada teks lain di luar JSON):
+{
+  "reply": "<jawaban singkat, ramah, max 2-3 kalimat — JANGAN tulis ulang daftar produk di sini>",
+  "show_node": "<nama kategori/produk yang relevan, atau 'root' jika user minta list semua, atau null jika tidak perlu tampilkan menu>"
+}
 
-[JADWAL OPERASIONAL TOKO]
+Aturan pengisian:
+- "reply": jawaban percakapan singkat. JANGAN pernah tulis daftar harga/produk di sini — cukup kalimat pengantar.
+- "show_node": isi nama node jika user bertanya produk/harga/list. Tulis "root" jika minta semua. Tulis null jika pertanyaan umum (salam, terima kasih, dll).
+
+[DAFTAR PRODUK (nama saja, untuk referensi milih show_node)]
+${compactMenu}
+
+[JADWAL]
 ${scheduleText}
 
-[DAFTAR MENU & PRODUK AKTIF SAAT INI]
-${serializedMenu}
-
-[DOKUMEN PENDUKUNG / PENGETAHUAN TOKO]
+[DOKUMEN PENDUKUNG]
 ${knowledge}
 `.trim();
 
-                console.log(`[CS AI] Memproses pesan pelanggan ${chatId}: "${userMessage}" menggunakan config grup: "${activeCfg ? activeCfg.groupName : 'Tanpa Grup'}" (${configGroupId}) dengan ${activeCfg && activeCfg.menuTree && activeCfg.menuTree.children ? activeCfg.menuTree.children.length : 0} produk.`);
+                console.log(`[CS AI] Proses pesan: "${userMessage}" | grup: "${activeCfg ? activeCfg.groupName : '-'}"`);
                 const response = await generateGroupAiResponse(userMessage, customerPrompt, chatId);
-                const aiReply = response.reply || 'Ada yang bisa saya bantu, Kak?';
-                await msg.reply(aiReply);
-                
-                if (ioInstance) ioInstance.emit('message_log', { chatId, body: aiReply, type: 'outgoing', timestamp: Date.now() });
+                const rawReply = response.reply || '{}';
+
+                // ── Parse JSON dari AI ────────────────────────────────────────
+                let aiIntro   = null;
+                let showNode  = null;
+                try {
+                    // Ekstrak JSON dari respons (kadang AI tambah markdown ```json)
+                    const jsonMatch = rawReply.match(/\{[\s\S]*\}/);
+                    if (jsonMatch) {
+                        const parsed = JSON.parse(jsonMatch[0]);
+                        aiIntro  = parsed.reply   || null;
+                        showNode = parsed.show_node || null;
+                    }
+                } catch(_) {
+                    // Jika AI tidak patuh format JSON, gunakan raw sebagai intro
+                    aiIntro  = rawReply;
+                    showNode = null;
+                }
+
+                // Fallback intro jika kosong
+                if (!aiIntro || aiIntro.trim() === '') {
+                    aiIntro = 'Ada yang bisa saya bantu, Kak? 😊';
+                }
+
+                // ── Kirim intro AI ────────────────────────────────────────────
+                await msg.reply(aiIntro);
+
+                // ── Kirim menu dari DB jika AI minta tampilkan node ───────────
+                if (showNode && typeof showNode === 'string' && showNode !== 'null') {
+                    await new Promise(r => setTimeout(r, 800)); // jeda kecil antar pesan
+                    const menuTree = activeCfg && activeCfg.menuTree ? activeCfg.menuTree : null;
+                    if (menuTree) {
+                        let targetNode = null;
+                        if (showNode.toLowerCase() === 'root') {
+                            targetNode = menuTree;
+                        } else {
+                            // Cari node berdasarkan nama
+                            const found = findNodeByName(menuTree, showNode);
+                            targetNode = found ? found.node : menuTree; // fallback ke root
+                        }
+                        if (targetNode) {
+                            const menuMsg = renderGroupMenuMessage(targetNode, activeCfg);
+                            await msg.reply(menuMsg);
+
+                            // Kirim media jika ada di node produk
+                            if (targetNode.type !== 'category' && targetNode.media && targetNode.media.trim()) {
+                                const mediaPath = path.join(__dirname, '../../media', targetNode.media.trim());
+                                if (fs.existsSync(mediaPath)) {
+                                    try {
+                                        const { getMimeType: gmt } = require('./helpers');
+                                        const mimeType = gmt(mediaPath);
+                                        const { MessageMedia: MM } = require('whatsapp-web.js');
+                                        const mediaObj = new MM(mimeType, fs.readFileSync(mediaPath).toString('base64'), path.basename(mediaPath));
+                                        await new Promise(r => setTimeout(r, 500));
+                                        await msg.reply(mediaObj);
+                                    } catch(_) {}
+                                }
+                            }
+                        }
+                    }
+                }
+
+                if (ioInstance) ioInstance.emit('message_log', { chatId, body: aiIntro, type: 'outgoing', timestamp: Date.now() });
             } catch (err) {
                 console.error('Gagal menjalankan CS AI Fallback:', err.message);
                 await msg.reply('Maaf Kak, saat ini sistem CS sedang sibuk. Silakan coba beberapa saat lagi.');
@@ -470,6 +525,7 @@ ${knowledge}
             }
             return true;
         }
+
     }
 
     return false;
