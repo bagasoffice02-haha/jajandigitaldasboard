@@ -95,13 +95,17 @@ app.get('/login', (req, res) => res.sendFile(path.join(__dirname, 'public', 'log
 // Short URLs: /u = upload bukti, /q = qris pembayaran
 app.get(['/u', '/upload-bukti'], (req, res) => {
     res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-    res.sendFile(path.join(__dirname, 'public', 'upload-bukti.html'));
+    renderPaymentPage(req, res, true);
 });
 
 // Route Public QRIS dengan Open Graph Metadata (/q & /qris)
 app.get(['/q', '/qris', '/qris/:filename', '/v/qris'], (req, res) => {
     res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-    let filename = req.params.filename || 'Qris.jpeg';
+    renderPaymentPage(req, res, false);
+});
+
+function renderPaymentPage(req, res, startFlipped = false) {
+    let filename = req.params ? (req.params.filename || 'Qris.jpeg') : 'Qris.jpeg';
     let rawImageUrl = '';
 
     const mediaPath = path.join(__dirname, 'media', filename);
@@ -130,7 +134,7 @@ app.get(['/q', '/qris', '/qris/:filename', '/v/qris'], (req, res) => {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Pembayaran QRIS - Jajan Digital</title>
+    <title>Pembayaran & Upload Bukti — Jajan Digital</title>
 
     <!-- Open Graph Meta Tags untuk Preview Gambar QRIS di WhatsApp -->
     <meta property="og:site_name" content="Jajan Digital" />
@@ -146,94 +150,130 @@ app.get(['/q', '/qris', '/qris/:filename', '/v/qris'], (req, res) => {
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:image" content="${fullImageUrl}" />
 
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
-
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Outfit', -apple-system, sans-serif; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; }
+        html, body {
+            height: 100%;
+            overflow: hidden;
+            background: #070c19;
+            color: #f8fafc;
+        }
+
         body {
-            background: #0b1329;
-            color: #f1f5f9;
-            min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 12px 10px;
+            padding: 8px;
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(56, 189, 248, 0.12) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(13, 148, 136, 0.12) 0px, transparent 50%);
         }
-        .card {
+
+        .scene {
             width: 100%;
-            max-width: 420px;
-            background: rgba(30, 41, 59, 0.88);
+            max-width: 410px;
+            height: min(100vh - 16px, 630px);
+            perspective: 1200px;
+        }
+
+        .card-3d {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .card-3d.is-flipped {
+            transform: rotateY(180deg);
+        }
+
+        .card-face {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            backface-visibility: hidden;
+            -webkit-backface-visibility: hidden;
+            background: rgba(15, 23, 42, 0.88);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
             border: 1px solid rgba(255, 255, 255, 0.12);
-            border-radius: 20px;
-            padding: 18px 16px;
+            border-radius: 18px;
+            padding: 12px 14px;
             display: flex;
             flex-direction: column;
-            gap: 12px;
-            box-shadow: 0 15px 35px rgba(0,0,0,0.5);
+            justify-content: space-between;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.6);
         }
-        .header { text-align: center; }
-        .header h1 { font-size: 1.25rem; font-weight: 700; color: #38bdf8; }
-        .header p { font-size: 0.78rem; color: #94a3b8; margin-top: 2px; }
+
+        .card-back {
+            transform: rotateY(180deg);
+        }
+
+        .header { text-align: center; margin-bottom: 4px; }
+        .header h1 { font-size: 1.05rem; font-weight: 700; color: #38bdf8; letter-spacing: -0.3px; }
+        .header p { font-size: 0.75rem; color: #94a3b8; }
 
         .qris-box {
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 8px;
-            margin: 2px 0;
+            gap: 6px;
+            margin: 4px 0;
         }
         .qris-img-bg {
-            background: white;
-            padding: 8px;
+            background: #ffffff;
+            padding: 6px;
             border-radius: 12px;
-            display: inline-block;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.3);
         }
         .qris-img {
-            width: 220px;
-            height: 220px;
+            width: 190px;
+            height: 190px;
             object-fit: contain;
             display: block;
+            border-radius: 6px;
         }
+
         .btn-zoom {
             background: rgba(56, 189, 248, 0.15);
             border: 1px solid rgba(56, 189, 248, 0.35);
             color: #38bdf8;
-            padding: 6px 14px;
+            padding: 5px 14px;
             border-radius: 8px;
-            font-size: 0.78rem;
-            font-weight: 600;
+            font-size: 0.75rem;
+            font-weight: 700;
             cursor: pointer;
             transition: all 0.2s ease;
-        }
-        .btn-zoom:hover {
-            background: rgba(56, 189, 248, 0.25);
         }
 
         .bank-list {
             display: flex;
             flex-direction: column;
-            gap: 7px;
+            gap: 5px;
+            margin: 4px 0;
         }
         .bank-item {
             background: rgba(15, 23, 42, 0.65);
             border: 1px solid rgba(255, 255, 255, 0.08);
             border-radius: 10px;
-            padding: 7px 10px;
+            padding: 6px 10px;
             display: flex;
             align-items: center;
             justify-content: space-between;
         }
         .bank-name { font-weight: 700; color: #e2e8f0; font-size: 0.72rem; }
-        .bank-num { font-family: monospace; font-size: 0.92rem; font-weight: 700; color: #38bdf8; }
-        .bank-holder { font-size: 0.68rem; color: #94a3b8; }
+        .bank-num { font-family: monospace; font-size: 0.9rem; font-weight: 700; color: #38bdf8; }
+        .bank-holder { font-size: 0.66rem; color: #94a3b8; }
         .btn-copy {
             background: rgba(16, 185, 129, 0.15);
             border: 1px solid rgba(16, 185, 129, 0.35);
             color: #34d399;
-            padding: 5px 12px;
+            padding: 4px 12px;
             border-radius: 6px;
             font-size: 0.75rem;
             font-weight: 600;
@@ -245,72 +285,178 @@ app.get(['/q', '/qris', '/qris/:filename', '/v/qris'], (req, res) => {
             background: rgba(234, 179, 8, 0.1);
             border: 1px solid rgba(234, 179, 8, 0.28);
             border-radius: 8px;
-            padding: 7px 10px;
-            font-size: 0.72rem;
+            padding: 6px 10px;
+            font-size: 0.7rem;
             color: #fef08a;
-            line-height: 1.4;
+            line-height: 1.3;
         }
 
-        .btn-action {
+        .btn-flip {
             background: linear-gradient(135deg, #0284c7 0%, #0d9488 100%);
+            border: 1px solid rgba(255, 255, 255, 0.2);
             color: white;
-            text-decoration: none;
-            text-align: center;
             padding: 10px;
             border-radius: 10px;
             font-size: 0.88rem;
             font-weight: 700;
-            display: block;
-            box-shadow: 0 4px 15px rgba(2, 132, 199, 0.3);
+            cursor: pointer;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            box-shadow: 0 4px 15px rgba(2, 132, 199, 0.35);
         }
+
+        .btn-flip-back {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: #cbd5e1;
+            padding: 9px;
+            border-radius: 10px;
+            font-size: 0.82rem;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        /* Front / Back Dropzone Styles */
+        .dropzone {
+            border: 2px dashed rgba(56, 189, 248, 0.4);
+            background: rgba(15, 23, 42, 0.5);
+            border-radius: 12px;
+            padding: 20px 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            margin: 12px 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 180px;
+        }
+        .dropzone:hover { border-color: #38bdf8; background: rgba(56, 189, 248, 0.08); }
+        .dropzone-icon { font-size: 2.2rem; margin-bottom: 6px; }
+        .dropzone-text { font-size: 0.85rem; font-weight: 600; color: #e2e8f0; }
+        .dropzone-hint { font-size: 0.72rem; color: #94a3b8; margin-top: 4px; }
+
+        .btn-upload-submit {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 10px;
+            font-size: 0.88rem;
+            font-weight: 700;
+            cursor: pointer;
+            width: 100%;
+            margin-bottom: 8px;
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+        }
+        .btn-upload-submit:disabled { opacity: 0.6; cursor: not-allowed; }
+
+        .status-msg {
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 0.78rem;
+            margin-bottom: 8px;
+            display: none;
+            text-align: center;
+        }
+        .status-success { background: rgba(16, 185, 129, 0.2); border: 1px solid rgba(16, 185, 129, 0.4); color: #34d399; }
+        .status-error { background: rgba(248, 113, 113, 0.2); border: 1px solid rgba(248, 113, 113, 0.4); color: #f87171; }
     </style>
 </head>
 <body>
-    <div class="card">
-        <div class="header">
-            <h1>Pembayaran Jajan Digital</h1>
-            <p>Scan QRIS atau Transfer Bank / E-Wallet</p>
-        </div>
 
-        <div class="qris-box">
-            <div class="qris-img-bg" onclick="openZoomModal()" style="cursor: zoom-in;">
-                <img src="${rawImageUrl}" alt="QRIS" class="qris-img">
-            </div>
-            <button type="button" onclick="openZoomModal()" class="btn-zoom">Perbesar QRIS</button>
-        </div>
-
-        <div class="bank-list">
-            <div class="bank-item">
-                <div>
-                    <div class="bank-name">GOPAY</div>
-                    <div class="bank-num">085789863037</div>
-                    <div class="bank-holder">a.n Bagas Saputra</div>
+    <div class="scene">
+        <div class="card-3d ${startFlipped ? 'is-flipped' : ''}" id="card3d">
+            
+            <!-- SISI DEPAN: QRIS & REKENING PEMBAYARAN -->
+            <div class="card-face card-front">
+                <div class="header">
+                    <h1>Pembayaran Jajan Digital</h1>
+                    <p>Scan QRIS atau Transfer Bank / E-Wallet</p>
                 </div>
-                <button class="btn-copy" onclick="copyText('085789863037', this)">Salin</button>
-            </div>
-            <div class="bank-item">
-                <div>
-                    <div class="bank-name">SEABANK</div>
-                    <div class="bank-num">901346990999</div>
-                    <div class="bank-holder">a.n Bagas Saputra</div>
-                </div>
-                <button class="btn-copy" onclick="copyText('901346990999', this)">Salin</button>
-            </div>
-            <div class="bank-item">
-                <div>
-                    <div class="bank-name">BRI</div>
-                    <div class="bank-num">560801027512500</div>
-                    <div class="bank-holder">a.n Bagas Saputra</div>
-                </div>
-                <button class="btn-copy" onclick="copyText('560801027512500', this)">Salin</button>
-            </div>
-        </div>
 
-        <div class="note-bar">
-            <strong>Catatan:</strong> QRIS bebas admin. Bank/E-Wallet +Rp500. Kirim bukti transfer setelah bayar.
-        </div>
+                <div class="qris-box">
+                    <div class="qris-img-bg" onclick="openZoomModal()" style="cursor: zoom-in;">
+                        <img src="${rawImageUrl}" alt="QRIS" class="qris-img">
+                    </div>
+                    <button type="button" onclick="openZoomModal()" class="btn-zoom">Perbesar QRIS</button>
+                </div>
 
-        <a href="/u" class="btn-action">Unggah Bukti Transfer</a>
+                <div class="bank-list">
+                    <div class="bank-item">
+                        <div>
+                            <div class="bank-name">GOPAY</div>
+                            <div class="bank-num">085789863037</div>
+                            <div class="bank-holder">a.n Bagas Saputra</div>
+                        </div>
+                        <button class="btn-copy" onclick="copyText('085789863037', this)">Salin</button>
+                    </div>
+                    <div class="bank-item">
+                        <div>
+                            <div class="bank-name">SEABANK</div>
+                            <div class="bank-num">901346990999</div>
+                            <div class="bank-holder">a.n Bagas Saputra</div>
+                        </div>
+                        <button class="btn-copy" onclick="copyText('901346990999', this)">Salin</button>
+                    </div>
+                    <div class="bank-item">
+                        <div>
+                            <div class="bank-name">BRI</div>
+                            <div class="bank-num">560801027512500</div>
+                            <div class="bank-holder">a.n Bagas Saputra</div>
+                        </div>
+                        <button class="btn-copy" onclick="copyText('560801027512500', this)">Salin</button>
+                    </div>
+                </div>
+
+                <div class="note-bar">
+                    <strong>Catatan:</strong> QRIS bebas admin. Bank/E-Wallet +Rp500. Kirim bukti transfer setelah bayar.
+                </div>
+
+                <button type="button" class="btn-flip" onclick="toggleFlip()">
+                    <span>Sudah Bayar? Unggah Bukti</span> 🔄
+                </button>
+            </div>
+
+            <!-- SISI BELAKANG: FORM UNGGAH BUKTI TRANSFER -->
+            <div class="card-face card-back">
+                <div class="header">
+                    <h1>Unggah Bukti Transfer</h1>
+                    <p>Pilih atau ambil foto bukti pembayaran Anda</p>
+                </div>
+
+                <form id="uploadForm" onsubmit="handleUploadSubmit(event)" style="display:flex; flex-direction:column; justify-content:space-between; flex:1;">
+                    <div id="statusMsg" class="status-msg"></div>
+
+                    <div class="dropzone" onclick="document.getElementById('fileInput').click()">
+                        <div id="dropInitial">
+                            <div class="dropzone-icon">📷</div>
+                            <div class="dropzone-text">Pilih Foto Bukti Transfer</div>
+                            <div class="dropzone-hint">Format JPG, PNG, WEBP (Max 10MB)</div>
+                        </div>
+                        <img id="previewImg" style="display:none; max-height:160px; max-width:100%; border-radius:8px; object-fit:contain;" alt="Pratinjau Bukti">
+                        <input type="file" id="fileInput" accept="image/*" style="display:none;" onchange="handleFileSelect(event)">
+                    </div>
+
+                    <div>
+                        <button type="submit" id="btnSubmitUpload" class="btn-upload-submit">Kirim Bukti Pembayaran</button>
+                        <button type="button" class="btn-flip-back" onclick="toggleFlip()">
+                            <span>← Kembali ke Halaman QRIS</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+        </div>
     </div>
 
     <!-- Modal Lightbox Zoom QRIS -->
@@ -321,6 +467,11 @@ app.get(['/q', '/qris', '/qris/:filename', '/v/qris'], (req, res) => {
     </div>
 
     <script>
+        function toggleFlip() {
+            const card = document.getElementById('card3d');
+            card.classList.toggle('is-flipped');
+        }
+
         function openZoomModal() {
             const modal = document.getElementById('zoomModal');
             modal.style.display = 'flex';
@@ -329,6 +480,7 @@ app.get(['/q', '/qris', '/qris/:filename', '/v/qris'], (req, res) => {
             const modal = document.getElementById('zoomModal');
             modal.style.display = 'none';
         }
+
         function copyText(val, btn) {
             navigator.clipboard.writeText(val).then(() => {
                 const orig = btn.textContent;
@@ -357,12 +509,72 @@ app.get(['/q', '/qris', '/qris/:filename', '/v/qris'], (req, res) => {
                 }, 1500);
             });
         }
+
+        function handleFileSelect(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                document.getElementById('previewImg').src = e.target.result;
+                document.getElementById('previewImg').style.display = 'block';
+                document.getElementById('dropInitial').style.display = 'none';
+            };
+            reader.readAsDataURL(file);
+        }
+
+        async function handleUploadSubmit(event) {
+            event.preventDefault();
+            const fileInput = document.getElementById('fileInput');
+            const btn = document.getElementById('btnSubmitUpload');
+            const statusMsg = document.getElementById('statusMsg');
+
+            if (!fileInput.files || !fileInput.files[0]) {
+                statusMsg.className = 'status-msg status-error';
+                statusMsg.textContent = 'Silakan pilih foto bukti transfer terlebih dahulu!';
+                statusMsg.style.display = 'block';
+                return;
+            }
+
+            btn.disabled = true;
+            btn.textContent = 'Mengunggah...';
+            statusMsg.style.display = 'none';
+
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+
+            try {
+                const res = await fetch('/api/upload-bukti', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await res.json();
+
+                if (res.ok && data.success) {
+                    statusMsg.className = 'status-msg status-success';
+                    statusMsg.innerHTML = '<strong>Unggah Berhasil!</strong><br>Tautan Bukti: <code>' + data.fullUrl + '</code><br><br>Kirim tautan ini ke grup chat WhatsApp.';
+                    statusMsg.style.display = 'block';
+                    btn.textContent = 'Berhasil Terunggah!';
+                } else {
+                    statusMsg.className = 'status-msg status-error';
+                    statusMsg.textContent = data.error || 'Gagal mengunggah bukti.';
+                    statusMsg.style.display = 'block';
+                    btn.disabled = false;
+                    btn.textContent = 'Kirim Bukti Pembayaran';
+                }
+            } catch (err) {
+                statusMsg.className = 'status-msg status-error';
+                statusMsg.textContent = 'Gangguan koneksi ke server.';
+                statusMsg.style.display = 'block';
+                btn.disabled = false;
+                btn.textContent = 'Kirim Bukti Pembayaran';
+            }
+        }
     </script>
 </body>
 </html>`;
 
     res.send(html);
-});
+}
 
 // Route Preview Bukti Pembayaran dengan Open Graph Metadata (/b/:filename & /v/:filename)
 app.get(['/b/:filename', '/v/:filename'], (req, res) => {
