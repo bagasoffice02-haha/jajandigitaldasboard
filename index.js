@@ -125,7 +125,7 @@ async function renderPaymentPage(req, res, startFlipped = false) {
     }
 
     // Ambil total transaksi sukses secara live dari database
-    let txCount = 1420;
+    let txCount = 170;
     try {
         const db = await getDb();
         const row = await db.get("SELECT COUNT(*) as total FROM orders WHERE status = 'DONE'");
