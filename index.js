@@ -18,11 +18,26 @@ const { setSocketIo } = require('./src/services/ai/aiService');
 
 // ─── Setup Express & Socket.io ───────────────────────────────────────────────
 const app = express();
+app.set('trust proxy', true);
 const server = http.createServer(app);
 const io = new Server(server);
 const PORT = config.port || 3000;
 
 app.use(express.json());
+
+// Helper untuk menghasilkan Protocol (HTTPS/HTTP) & Host domain yang akurat di balik Nginx/Cloudflare
+function getPublicUrlInfo(req) {
+    const host = req.headers.host || `localhost:${PORT}`;
+    const isHttps = req.headers['x-forwarded-proto'] === 'https' || req.secure || !host.includes('localhost');
+    const protocol = isHttps ? 'https' : 'http';
+    return { protocol, host, baseUrl: `${protocol}://${host}` };
+}
+
+function getImgMimeType(filename) {
+    if (/\.(png)$/i.test(filename)) return 'image/png';
+    if (/\.(webp)$/i.test(filename)) return 'image/webp';
+    return 'image/jpeg';
+}
 
 // Simpan io & multer instances di app agar bisa diakses route children
 app.set('io', io);
@@ -99,10 +114,10 @@ app.get(['/qris', '/qris/:filename', '/v/qris'], (req, res) => {
         }
     }
 
-    const protocol = req.headers['x-forwarded-proto'] || req.protocol || 'http';
-    const host = req.headers.host || `localhost:${PORT}`;
-    const fullImageUrl = rawImageUrl ? `${protocol}://${host}${rawImageUrl}` : `${protocol}://${host}/favicon.ico`;
-    const pageUrl = `${protocol}://${host}/qris`;
+    const { baseUrl } = getPublicUrlInfo(req);
+    const fullImageUrl = rawImageUrl ? `${baseUrl}${rawImageUrl}` : `${baseUrl}/favicon.ico`;
+    const pageUrl = `${baseUrl}/qris`;
+    const mimeType = getImgMimeType(filename);
 
     const html = `<!DOCTYPE html>
 <html lang="id">
@@ -112,11 +127,14 @@ app.get(['/qris', '/qris/:filename', '/v/qris'], (req, res) => {
     <title>💵 QRIS Pembayaran Resmi - Jajan Digital</title>
 
     <!-- Open Graph Meta Tags untuk Preview Gambar QRIS di WhatsApp -->
+    <meta property="og:site_name" content="Jajan Digital" />
     <meta property="og:title" content="💵 QRIS Pembayaran Resmi - Jajan Digital" />
     <meta property="og:description" content="Scan barcode QRIS ini untuk melakukan pembayaran dari M-Banking / E-Wallet apapun." />
     <meta property="og:image" content="${fullImageUrl}" />
     <meta property="og:image:secure_url" content="${fullImageUrl}" />
-    <meta property="og:image:type" content="image/jpeg" />
+    <meta property="og:image:type" content="${mimeType}" />
+    <meta property="og:image:width" content="600" />
+    <meta property="og:image:height" content="600" />
     <meta property="og:type" content="website" />
     <meta property="og:url" content="${pageUrl}" />
     <meta name="twitter:card" content="summary_large_image" />
@@ -258,90 +276,6 @@ app.get(['/qris', '/qris/:filename', '/v/qris'], (req, res) => {
 
         <a href="/upload-bukti" class="btn-upload">
             <span>📸 Unggah Bukti Pembayaran</span>
-        </a>
-    </div>
-</body>
-</html>`;
-
-    res.send(html);
-});
-
-// Route Preview Bukti Pembayaran dengan Open Graph Metadata (Agar WA Tampilkan Gambar Preview di Link Card)
-app.get('/v/:filename', (req, res) => {
-
-    const filename = req.params.filename;
-    const filePath = path.join(__dirname, 'public', 'uploads', 'payments', filename);
-    if (!fs.existsSync(filePath)) {
-        return res.status(404).send('Bukti pembayaran tidak ditemukan atau sudah kadaluarsa.');
-    }
-
-    const protocol = req.headers['x-forwarded-proto'] || req.protocol || 'http';
-    const host = req.headers.host || `localhost:${PORT}`;
-    const rawImageUrl = `${protocol}://${host}/uploads/payments/${filename}`;
-    const pageUrl = `${protocol}://${host}/v/${filename}`;
-
-    const html = `<!DOCTYPE html>
-<html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🧾 Bukti Pembayaran - Jajan Digital</title>
-
-    <!-- Open Graph Meta Tags untuk Pratinjau Gambar di WhatsApp -->
-    <meta property="og:title" content="🧾 Bukti Pembayaran - Jajan Digital" />
-    <meta property="og:description" content="Klik untuk melihat foto bukti transfer dalam ukuran penuh." />
-    <meta property="og:image" content="${rawImageUrl}" />
-    <meta property="og:image:secure_url" content="${rawImageUrl}" />
-    <meta property="og:image:type" content="image/png" />
-    <meta property="og:type" content="website" />
-    <meta property="og:url" content="${pageUrl}" />
-    <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:image" content="${rawImageUrl}" />
-
-    <style>
-        body {
-            margin: 0;
-            padding: 0;
-            background: #0f172a;
-            color: white;
-            font-family: system-ui, -apple-system, sans-serif;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
-        }
-        .container {
-            max-width: 92%;
-            text-align: center;
-            padding: 20px;
-        }
-        img {
-            max-width: 100%;
-            max-height: 82vh;
-            border-radius: 16px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            border: 1px solid rgba(255,255,255,0.15);
-        }
-        .badge {
-            background: rgba(16, 185, 129, 0.2);
-            border: 1px solid rgba(16, 185, 129, 0.4);
-            color: #34d399;
-            padding: 8px 18px;
-            border-radius: 50px;
-            font-size: 0.95rem;
-            font-weight: 600;
-            margin-bottom: 20px;
-            display: inline-block;
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <div class="badge">🧾 Bukti Pembayaran - Jajan Digital</div>
-        <br>
-        <a href="${rawImageUrl}" target="_blank">
-            <img src="${rawImageUrl}" alt="Bukti Pembayaran">
         </a>
     </div>
 </body>
