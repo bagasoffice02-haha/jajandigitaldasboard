@@ -164,15 +164,6 @@ async function renderPaymentPage(req, res, startFlipped = false) {
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; }
         html, body {
-            height: 100%;
-            overflow: hidden;
-            background: #070c19;
-            color: #f8fafc;
-        }
-
-    <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; }
-        html, body {
             min-height: 100vh;
             background: #070c19;
             color: #f8fafc;
