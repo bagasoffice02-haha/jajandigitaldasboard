@@ -170,78 +170,55 @@ async function renderPaymentPage(req, res, startFlipped = false) {
             color: #f8fafc;
         }
 
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; }
+        html, body {
+            min-height: 100vh;
+            background: #070c19;
+            color: #f8fafc;
+        }
+
         body {
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 8px;
+            padding: 10px;
             background-image: 
                 radial-gradient(at 0% 0%, rgba(56, 189, 248, 0.12) 0px, transparent 50%),
                 radial-gradient(at 100% 100%, rgba(13, 148, 136, 0.12) 0px, transparent 50%);
         }
 
-        .scene {
+        .container-wrapper {
             width: 100%;
             max-width: 410px;
-            height: min(100vh - 16px, 630px);
-            perspective: 1200px;
+            perspective: 1000px;
         }
 
-        .card-3d {
+        .card-box {
             width: 100%;
-            height: 100%;
-            position: relative;
-            transform-style: preserve-3d;
-            transition: transform 0.7s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        .card-3d.is-flipped {
-            transform: rotateY(180deg);
-        }
-
-        .card-face {
-            position: absolute;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            backface-visibility: hidden;
-            -webkit-backface-visibility: hidden;
-            background: rgba(15, 23, 42, 0.88);
+            background: rgba(15, 23, 42, 0.92);
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
             border: 1px solid rgba(255, 255, 255, 0.12);
             border-radius: 18px;
-            padding: 12px 14px;
+            padding: 14px;
             display: flex;
             flex-direction: column;
             justify-content: space-between;
+            gap: 8px;
             box-shadow: 0 15px 40px rgba(0, 0, 0, 0.6);
+            transform-origin: center center;
+            backface-visibility: hidden;
+            -webkit-backface-visibility: hidden;
         }
 
-        .card-front {
-            z-index: 5;
-            visibility: visible;
-            pointer-events: auto;
+        @keyframes flipIn {
+            0% { transform: rotateY(-90deg); opacity: 0; }
+            100% { transform: rotateY(0deg); opacity: 1; }
         }
 
-        .card-back {
-            transform: rotateY(180deg);
-            z-index: 1;
-            visibility: hidden;
-            pointer-events: none;
-        }
-
-        .card-3d.is-flipped .card-front {
-            z-index: 1;
-            visibility: hidden;
-            pointer-events: none;
-            transition: visibility 0s 0.35s;
-        }
-
-        .card-3d.is-flipped .card-back {
-            z-index: 5;
-            visibility: visible;
-            pointer-events: auto;
-            transition: visibility 0s 0.35s;
+        .animate-flip {
+            animation: flipIn 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
         }
 
         .header { text-align: center; margin-bottom: 2px; }
@@ -302,14 +279,11 @@ async function renderPaymentPage(req, res, startFlipped = false) {
             background: rgba(56, 189, 248, 0.15);
             border: 1px solid rgba(56, 189, 248, 0.35);
             color: #38bdf8;
-            padding: 5px 14px;
+            padding: 6px 14px;
             border-radius: 8px;
-            font-size: 0.75rem;
+            font-size: 0.78rem;
             font-weight: 700;
             cursor: pointer;
-            position: relative;
-            z-index: 10;
-            pointer-events: auto;
             transition: all 0.2s ease;
         }
 
@@ -340,9 +314,6 @@ async function renderPaymentPage(req, res, startFlipped = false) {
             font-size: 0.72rem;
             font-weight: 700;
             cursor: pointer;
-            position: relative;
-            z-index: 10;
-            pointer-events: auto;
             transition: all 0.2s ease;
         }
 
@@ -360,7 +331,7 @@ async function renderPaymentPage(req, res, startFlipped = false) {
             background: linear-gradient(135deg, #0284c7 0%, #0d9488 100%);
             border: 1px solid rgba(255, 255, 255, 0.2);
             color: white;
-            padding: 10px;
+            padding: 11px;
             border-radius: 10px;
             font-size: 0.88rem;
             font-weight: 700;
@@ -370,9 +341,6 @@ async function renderPaymentPage(req, res, startFlipped = false) {
             align-items: center;
             justify-content: center;
             gap: 8px;
-            position: relative;
-            z-index: 10;
-            pointer-events: auto;
             box-shadow: 0 4px 15px rgba(2, 132, 199, 0.35);
         }
 
@@ -380,7 +348,7 @@ async function renderPaymentPage(req, res, startFlipped = false) {
             background: rgba(255, 255, 255, 0.08);
             border: 1px solid rgba(255, 255, 255, 0.15);
             color: #cbd5e1;
-            padding: 9px;
+            padding: 10px;
             border-radius: 10px;
             font-size: 0.82rem;
             font-weight: 600;
@@ -390,9 +358,6 @@ async function renderPaymentPage(req, res, startFlipped = false) {
             align-items: center;
             justify-content: center;
             gap: 6px;
-            position: relative;
-            z-index: 10;
-            pointer-events: auto;
         }
 
         /* Front / Back Dropzone Styles */
@@ -420,7 +385,7 @@ async function renderPaymentPage(req, res, startFlipped = false) {
             background: linear-gradient(135deg, #10b981 0%, #059669 100%);
             color: white;
             border: none;
-            padding: 10px;
+            padding: 11px;
             border-radius: 10px;
             font-size: 0.88rem;
             font-weight: 700;
@@ -445,101 +410,99 @@ async function renderPaymentPage(req, res, startFlipped = false) {
 </head>
 <body>
 
-    <div class="scene">
-        <div class="card-3d ${startFlipped ? 'is-flipped' : ''}" id="card3d">
+    <div class="container-wrapper">
             
-            <!-- SISI DEPAN: QRIS & REKENING PEMBAYARAN -->
-            <div class="card-face card-front">
-                <div class="header">
-                    <h1>Pembayaran Jajan Digital</h1>
-                    <div class="trust-badge">
-                        <span class="live-dot"></span>
-                        <span>${formattedTxCount} Total Transaksi Selesai</span>
-                    </div>
+        <!-- SISI DEPAN: QRIS & REKENING PEMBAYARAN -->
+        <div class="card-box" id="cardFront" style="display: ${startFlipped ? 'none' : 'flex'};">
+            <div class="header">
+                <h1>Pembayaran Jajan Digital</h1>
+                <div class="trust-badge">
+                    <span class="live-dot"></span>
+                    <span>${formattedTxCount} Total Transaksi Selesai</span>
                 </div>
-
-                <div class="qris-box">
-                    <div class="qris-img-bg" onclick="openZoomModal()" style="cursor: zoom-in;">
-                        <img src="${rawImageUrl}" alt="QRIS" class="qris-img">
-                    </div>
-                    <button type="button" onclick="openZoomModal()" class="btn-zoom">Perbesar QRIS</button>
-                </div>
-
-                <div class="bank-list">
-                    <div class="bank-item">
-                        <div>
-                            <div class="bank-name">GOPAY</div>
-                            <div class="bank-num">085789863037</div>
-                            <div class="bank-holder">a.n Bagas Saputra</div>
-                        </div>
-                        <button class="btn-copy" onclick="copyText('085789863037', this)">Salin</button>
-                    </div>
-                    <div class="bank-item">
-                        <div>
-                            <div class="bank-name">SEABANK</div>
-                            <div class="bank-num">901346990999</div>
-                            <div class="bank-holder">a.n Bagas Saputra</div>
-                        </div>
-                        <button class="btn-copy" onclick="copyText('901346990999', this)">Salin</button>
-                    </div>
-                    <div class="bank-item">
-                        <div>
-                            <div class="bank-name">BRI</div>
-                            <div class="bank-num">560801027512500</div>
-                            <div class="bank-holder">a.n Bagas Saputra</div>
-                        </div>
-                        <button class="btn-copy" onclick="copyText('560801027512500', this)">Salin</button>
-                    </div>
-                </div>
-
-                <div class="note-bar">
-                    <strong>Catatan:</strong> QRIS bebas admin. Bank/E-Wallet +Rp500. Kirim bukti transfer setelah bayar.
-                </div>
-
-                <button type="button" class="btn-flip" onclick="toggleFlip()">
-                    <span>Sudah Bayar? Unggah Bukti</span>
-                </button>
             </div>
 
-            <!-- SISI BELAKANG: FORM UNGGAH BUKTI TRANSFER -->
-            <div class="card-face card-back">
-                <div class="header">
-                    <h1>Unggah Bukti Transfer</h1>
-                    <div class="trust-badge">
-                        <span class="live-dot"></span>
-                        <span>Verifikasi Aman & Cepat</span>
-                    </div>
+            <div class="qris-box">
+                <div class="qris-img-bg" onclick="openZoomModal()" style="cursor: zoom-in;">
+                    <img src="${rawImageUrl}" alt="QRIS" class="qris-img">
                 </div>
+                <button type="button" onclick="openZoomModal()" class="btn-zoom">Perbesar QRIS</button>
+            </div>
 
-                <form id="uploadForm" onsubmit="handleUploadSubmit(event)" style="display:flex; flex-direction:column; justify-content:space-between; flex:1;">
-                    <div id="statusMsg" class="status-msg"></div>
-
-                    <div class="dropzone" onclick="document.getElementById('fileInput').click()">
-                        <div id="dropInitial">
-                            <div class="dropzone-icon">
-                                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                                    <polyline points="17 8 12 3 7 8"/>
-                                    <line x1="12" y1="3" x2="12" y2="15"/>
-                                </svg>
-                            </div>
-                            <div class="dropzone-text">Pilih Foto Bukti Transfer</div>
-                            <div class="dropzone-hint">Format JPG, PNG, WEBP (Max 2MB)</div>
-                        </div>
-                        <img id="previewImg" style="display:none; max-height:160px; max-width:100%; border-radius:8px; object-fit:contain;" alt="Pratinjau Bukti">
-                        <input type="file" id="fileInput" accept="image/*" style="display:none;" onchange="handleFileSelect(event)">
-                    </div>
-
+            <div class="bank-list">
+                <div class="bank-item">
                     <div>
-                        <button type="submit" id="btnSubmitUpload" class="btn-upload-submit">Kirim Bukti Pembayaran</button>
-                        <button type="button" class="btn-flip-back" onclick="toggleFlip()">
-                            <span>← Kembali ke Halaman QRIS</span>
-                        </button>
+                        <div class="bank-name">GOPAY</div>
+                        <div class="bank-num">085789863037</div>
+                        <div class="bank-holder">a.n Bagas Saputra</div>
                     </div>
-                </form>
+                    <button type="button" class="btn-copy" onclick="copyText('085789863037', this)">Salin</button>
+                </div>
+                <div class="bank-item">
+                    <div>
+                        <div class="bank-name">SEABANK</div>
+                        <div class="bank-num">901346990999</div>
+                        <div class="bank-holder">a.n Bagas Saputra</div>
+                    </div>
+                    <button type="button" class="btn-copy" onclick="copyText('901346990999', this)">Salin</button>
+                </div>
+                <div class="bank-item">
+                    <div>
+                        <div class="bank-name">BRI</div>
+                        <div class="bank-num">560801027512500</div>
+                        <div class="bank-holder">a.n Bagas Saputra</div>
+                    </div>
+                    <button type="button" class="btn-copy" onclick="copyText('560801027512500', this)">Salin</button>
+                </div>
             </div>
 
+            <div class="note-bar">
+                <strong>Catatan:</strong> QRIS bebas admin. Bank/E-Wallet +Rp500. Kirim bukti transfer setelah bayar.
+            </div>
+
+            <button type="button" class="btn-flip" onclick="toggleFlip()">
+                <span>Sudah Bayar? Unggah Bukti</span>
+            </button>
         </div>
+
+        <!-- SISI BELAKANG: FORM UNGGAH BUKTI TRANSFER -->
+        <div class="card-box" id="cardBack" style="display: ${startFlipped ? 'flex' : 'none'};">
+            <div class="header">
+                <h1>Unggah Bukti Transfer</h1>
+                <div class="trust-badge">
+                    <span class="live-dot"></span>
+                    <span>Verifikasi Aman & Cepat</span>
+                </div>
+            </div>
+
+            <form id="uploadForm" onsubmit="handleUploadSubmit(event)" style="display:flex; flex-direction:column; justify-content:space-between; gap:10px; flex:1;">
+                <div id="statusMsg" class="status-msg"></div>
+
+                <div class="dropzone" onclick="document.getElementById('fileInput').click()">
+                    <div id="dropInitial">
+                        <div class="dropzone-icon">
+                            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                                <polyline points="17 8 12 3 7 8"/>
+                                <line x1="12" y1="3" x2="12" y2="15"/>
+                            </svg>
+                        </div>
+                        <div class="dropzone-text">Pilih Foto Bukti Transfer</div>
+                        <div class="dropzone-hint">Format JPG, PNG, WEBP (Max 2MB)</div>
+                    </div>
+                    <img id="previewImg" style="display:none; max-height:160px; max-width:100%; border-radius:8px; object-fit:contain;" alt="Pratinjau Bukti">
+                    <input type="file" id="fileInput" accept="image/*" style="display:none;" onchange="handleFileSelect(event)">
+                </div>
+
+                <div>
+                    <button type="submit" id="btnSubmitUpload" class="btn-upload-submit">Kirim Bukti Pembayaran</button>
+                    <button type="button" class="btn-flip-back" onclick="toggleFlip()">
+                        <span>← Kembali ke Halaman QRIS</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+
     </div>
 
     <!-- Modal Lightbox Zoom QRIS -->
@@ -551,28 +514,20 @@ async function renderPaymentPage(req, res, startFlipped = false) {
 
     <script>
         function toggleFlip() {
-            const card = document.getElementById('card3d');
-            const front = document.querySelector('.card-front');
-            const back = document.querySelector('.card-back');
-            const isFlipped = card.classList.toggle('is-flipped');
-            if (isFlipped) {
-                back.style.visibility = 'visible';
-                back.style.pointerEvents = 'auto';
-                setTimeout(() => {
-                    if (card.classList.contains('is-flipped')) {
-                        front.style.visibility = 'hidden';
-                        front.style.pointerEvents = 'none';
-                    }
-                }, 350);
+            const front = document.getElementById('cardFront');
+            const back = document.getElementById('cardBack');
+            if (front.style.display !== 'none') {
+                front.style.display = 'none';
+                back.style.display = 'flex';
+                back.classList.remove('animate-flip');
+                void back.offsetWidth;
+                back.classList.add('animate-flip');
             } else {
-                front.style.visibility = 'visible';
-                front.style.pointerEvents = 'auto';
-                setTimeout(() => {
-                    if (!card.classList.contains('is-flipped')) {
-                        back.style.visibility = 'hidden';
-                        back.style.pointerEvents = 'none';
-                    }
-                }, 350);
+                back.style.display = 'none';
+                front.style.display = 'flex';
+                front.classList.remove('animate-flip');
+                void front.offsetWidth;
+                front.classList.add('animate-flip');
             }
         }
 
