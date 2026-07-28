@@ -472,10 +472,19 @@ app.post('/api/request-reset-otp', async (req, res) => {
         if (!phone) return res.status(400).json({ success: false, error: 'Nomor WhatsApp wajib diisi.' });
 
         const cleanPhone = phone.replace(/[^0-9]/g, '');
-        const bossNum = (config.boss_number || config.owner_number || '6285789863037').replace(/[^0-9]/g, '');
 
-        if (!bossNum || !cleanPhone.includes(bossNum.slice(-8))) {
-            return res.status(400).json({ success: false, error: 'Nomor WhatsApp tidak terdaftar sebagai Super Admin.' });
+        // Ambil boss_number secara dinamis dari config & SQLite settings (Pengaturan Dasbor)
+        let bossNumSetting = config.boss_number || config.owner_number || '';
+        try {
+            const db = await getDb();
+            const row = await db.get("SELECT value FROM settings WHERE key = 'boss_number'");
+            if (row && row.value) bossNumSetting = row.value;
+        } catch(_) {}
+
+        const cleanBossNum = bossNumSetting.replace(/[^0-9]/g, '');
+
+        if (!cleanBossNum || !cleanPhone.includes(cleanBossNum.slice(-8))) {
+            return res.status(400).json({ success: false, error: 'Nomor WhatsApp tidak cocok dengan nomor yang diatur di Menu Pengaturan Dasbor.' });
         }
 
         const client = getClient();
