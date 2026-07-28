@@ -56,6 +56,28 @@ setInterval(() => {
     for (const [key, session] of customerMenuStates) {
         if (now - (session.lastActive || 0) > 2 * 60 * 60 * 1000) customerMenuStates.delete(key);
     }
+
+    // Bersihkan foto bukti pembayaran lama (>30 hari) di public/uploads/payments
+    try {
+        const path = require('path');
+        const fs = require('fs');
+        const paymentsDir = path.join(__dirname, '../../../public/uploads/payments');
+        if (fs.existsSync(paymentsDir)) {
+            const files = fs.readdirSync(paymentsDir);
+            const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
+            files.forEach(file => {
+                const fp = path.join(paymentsDir, file);
+                try {
+                    const stat = fs.statSync(fp);
+                    if (now - stat.mtimeMs > THIRTY_DAYS_MS) {
+                        fs.unlinkSync(fp);
+                        console.log(`[MemCleanup] Menghapus bukti pembayaran expired (>30h): ${file}`);
+                    }
+                } catch(_) {}
+            });
+        }
+    } catch(_) {}
+
     console.log(`[MemCleanup] Done — userLastReply:${userLastReplyTime.size} bucket:${userMsgBucket.size} cmdCooldown:${groupCommandCooldowns.size} menuState:${customerMenuStates.size}`);
 }, 30 * 60 * 1000);
 

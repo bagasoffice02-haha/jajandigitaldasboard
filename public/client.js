@@ -392,14 +392,39 @@ function appendMessageLog(msg) {
     }
 }
 
+let currentMediaCategory = 'media';
+let cachedFilesData = { knowledge: [], media: [], stickers: [], payments: [], products: [] };
+
+function switchMediaCategory(category) {
+    currentMediaCategory = category;
+    const catButtons = document.querySelectorAll('.media-category-tabs button');
+    catButtons.forEach(btn => {
+        if (btn.id === `tab-cat-${category}`) btn.classList.add('active');
+        else btn.classList.remove('active');
+    });
+
+    const subTitle = document.getElementById('media-card-subtitle');
+    const descriptions = {
+        media: 'Berkas media dikirim AI lewat tag [KIRIM_MEDIA: nama_file] (Format bebas)',
+        stickers: 'Berkas stiker WhatsApp bot & toko (PNG/WEBP)',
+        payments: 'Foto bukti pembayaran unik yang diunggah oleh pelanggan via Portal Web',
+        products: 'Foto & aset media katalog produk toko'
+    };
+    if (subTitle) subTitle.textContent = descriptions[category] || 'Pilih kategori berkas media.';
+
+    renderFileList(mediaList, cachedFilesData[category] || [], category);
+}
+window.switchMediaCategory = switchMediaCategory;
+
 // Fetch files list from server
 async function loadFiles() {
     try {
         const res = await fetch('/api/files');
         const data = await res.json();
+        cachedFilesData = data;
         
         renderFileList(knowledgeList, data.knowledge, 'knowledge');
-        renderFileList(mediaList, data.media, 'media');
+        renderFileList(mediaList, data[currentMediaCategory] || [], currentMediaCategory);
     } catch (err) {
         console.error('Gagal memuat berkas:', err);
     }
@@ -410,31 +435,48 @@ function renderFileList(container, files, type) {
     container.innerHTML = '';
     
     if (!files || files.length === 0) {
-        container.innerHTML = `<div class="file-item-placeholder">Tidak ada berkas tersedia.</div>`;
+        container.innerHTML = `<div class="file-item-placeholder">Tidak ada berkas di kategori ini.</div>`;
         return;
     }
     
     files.forEach(fileObj => {
         const file = typeof fileObj === 'string' ? fileObj : (fileObj.name || '');
+        const fileUrl = typeof fileObj === 'object' && fileObj.url ? fileObj.url : (
+            type === 'knowledge' ? `/knowledge/${file}` : 
+            type === 'media' ? `/media/${file}` : 
+            `/uploads/${type}/${file}`
+        );
         if (!file) return;
 
         const item = document.createElement('div');
         item.className = 'file-item';
+        item.style.alignItems = 'center';
         
-        const nameSpan = document.createElement('span');
+        // Render thumbnail if image
+        const isImg = /\.(jpg|jpeg|png|webp|gif)$/i.test(file);
+        let thumbHtml = '';
+        if (isImg) {
+            thumbHtml = `<img src="${fileUrl}" style="width: 34px; height: 34px; object-fit: cover; border-radius: 6px; border: 1px solid rgba(255,255,255,0.15); margin-right: 8px; flex-shrink: 0;" alt="thumb">`;
+        }
+
+        const nameSpan = document.createElement('div');
         nameSpan.className = 'file-name';
-        nameSpan.textContent = file;
-        nameSpan.title = file;
+        nameSpan.style.display = 'flex';
+        nameSpan.style.alignItems = 'center';
+        nameSpan.style.flex = '1';
+        nameSpan.style.minWidth = '0';
+        nameSpan.innerHTML = `${thumbHtml}<span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${file}">${file}</span>`;
         
         const actionsDiv = document.createElement('div');
         actionsDiv.className = 'file-actions';
         actionsDiv.style.display = 'flex';
         actionsDiv.style.gap = '5px';
+        actionsDiv.style.flexShrink = '0';
         
         const viewBtn = document.createElement('button');
         viewBtn.className = 'btn btn-secondary btn-sm';
         viewBtn.innerHTML = 'Lihat';
-        viewBtn.onclick = () => window.open(`/${type}/${file}`, '_blank');
+        viewBtn.onclick = () => window.open(fileUrl, '_blank');
         
         const renameBtn = document.createElement('button');
         renameBtn.className = 'btn btn-secondary btn-sm';
@@ -447,7 +489,7 @@ function renderFileList(container, files, type) {
         deleteBtn.onclick = () => deleteFile(type, file);
         
         actionsDiv.appendChild(viewBtn);
-        actionsDiv.appendChild(renameBtn);
+        if (type === 'media' || type === 'knowledge') actionsDiv.appendChild(renameBtn);
         actionsDiv.appendChild(deleteBtn);
         
         item.appendChild(nameSpan);
@@ -482,7 +524,7 @@ async function renameFile(type, filename) {
 // Setup File Upload inputs change listeners
 function setupUploadHandlers() {
     knowledgeUpload.addEventListener('change', () => handleFileUpload(knowledgeUpload, 'knowledge'));
-    mediaUpload.addEventListener('change', () => handleFileUpload(mediaUpload, 'media'));
+    mediaUpload.addEventListener('change', () => handleFileUpload(mediaUpload, currentMediaCategory));
 }
 
 // Handle file upload to backend
@@ -513,6 +555,7 @@ async function handleFileUpload(inputElement, type) {
         inputElement.value = '';
     }
 }
+
 
 // Delete file on server
 async function deleteFile(type, filename) {

@@ -162,13 +162,32 @@ const hostAdminRouter = require('./src/routes/hostAdmin');
 const miscRouter      = require('./src/routes/misc');
 const configRouter    = require('./src/routes/configRoute');
 
-// Public Payment Upload Route
-app.post('/api/upload-bukti', paymentUpload.single('file'), (req, res) => {
+// Public Payment Upload Route (dengan IP Rate Limiter: max 5 upload / 10 mnt)
+const uploadRateBucket = new Map();
+
+app.post('/api/upload-bukti', (req, res, next) => {
+    const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress || 'unknown';
+    const now = Date.now();
+    const timestamps = (uploadRateBucket.get(ip) || []).filter(t => now - t < 10 * 60 * 1000);
+    
+    if (timestamps.length >= 5) {
+        return res.status(429).json({ success: false, error: 'Terlalu banyak unggahan. Batas 5 file per 10 menit.' });
+    }
+    
+    timestamps.push(now);
+    uploadRateBucket.set(ip, timestamps);
+    next();
+}, paymentUpload.single('file'), (req, res) => {
     if (!req.file) return res.status(400).json({ success: false, error: 'File tidak ditemukan' });
+    const protocol = req.headers['x-forwarded-proto'] || req.protocol || 'http';
+    const host = req.headers.host || `localhost:${PORT}`;
     const fileUrl = `/uploads/payments/${req.file.filename}`;
-    console.log(`[Payment Upload] Bukti baru tersimpan: ${req.file.filename} -> ${fileUrl}`);
-    res.json({ success: true, url: fileUrl, filename: req.file.filename });
+    const fullUrl = `${protocol}://${host}${fileUrl}`;
+    
+    console.log(`[Payment Upload] Bukti baru tersimpan: ${req.file.filename} -> ${fullUrl}`);
+    res.json({ success: true, url: fileUrl, fullUrl, filename: req.file.filename });
 });
+
 
 // Upload routes perlu multer langsung — dipasang sebelum mount router
 app.post('/api/upload/knowledge', knowledgeUpload.single('file'), (req, res) => res.json({ success: true }));

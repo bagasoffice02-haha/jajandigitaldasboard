@@ -190,19 +190,29 @@
             <!-- PANEL KANAN: Media Assets -->
             <section class="panel panel-right">
                 <div class="card media-card">
-                    <div class="card-header-btn">
-                        <h2><i data-lucide="paperclip"></i> Aset Media</h2>
+                    <div class="card-header-btn" style="flex-wrap: wrap; gap: 8px;">
+                        <h2><i data-lucide="folder"></i> Pengelola Berkas Media</h2>
                         <label for="media-upload" class="btn btn-primary btn-sm">
                             <i data-lucide="upload"></i> Unggah
                         </label>
                         <input type="file" id="media-upload" style="display:none;">
                     </div>
-                    <p class="card-subtitle">Berkas media dikirim AI lewat tag <code>[KIRIM_MEDIA: nama_file]</code> (Format bebas/apapun)</p>
+                    <p class="card-subtitle" id="media-card-subtitle">Pilih kategori berkas media di bawah ini untuk mengelola aset toko.</p>
+
+                    <!-- Navigasi Kategori Media -->
+                    <div class="media-category-tabs" style="display: flex; gap: 6px; margin: 12px 0; flex-wrap: wrap;">
+                        <button type="button" class="btn btn-secondary btn-sm active" id="tab-cat-media" onclick="switchMediaCategory('media')">🖼️ Media Umum</button>
+                        <button type="button" class="btn btn-secondary btn-sm" id="tab-cat-stickers" onclick="switchMediaCategory('stickers')">🏷️ Stiker</button>
+                        <button type="button" class="btn btn-secondary btn-sm" id="tab-cat-payments" onclick="switchMediaCategory('payments')">🧾 Bukti Bayar</button>
+                        <button type="button" class="btn btn-secondary btn-sm" id="tab-cat-products" onclick="switchMediaCategory('products')">📦 Foto Produk</button>
+                    </div>
+
                     <div id="media-list" class="file-list">
                         <div class="file-item-placeholder">Memuat berkas…</div>
                     </div>
                 </div>
             </section>
+
 
         </main>
     </div>
