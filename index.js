@@ -538,7 +538,7 @@ async function renderPaymentPage(req, res, startFlipped = false) {
         function copyTemplateBeforeRedirect() {
             const linkInput = document.getElementById('resultLinkInput');
             const fullUrl = linkInput ? linkInput.value : '';
-            const msgTemplate = 'Halo Admin, saya sudah melakukan pembayaran.\n\nBukti Transfer:\n' + fullUrl;
+            const msgTemplate = ['Halo Admin, saya sudah melakukan pembayaran.', '', 'Bukti Transfer:', fullUrl].join(String.fromCharCode(10));
             
             try {
                 navigator.clipboard.writeText(msgTemplate);
