@@ -87,7 +87,6 @@
 
         .input-wrapper { position: relative; display: flex; align-items: center; }
 
-        /* PERBAIKAN SELEKTOR ICON (Cocok untuk <i> maupun <svg> Lucide) */
         .input-wrapper .icon-left {
             position: absolute;
             left: 14px;
@@ -217,11 +216,11 @@
             box-shadow: 0 20px 40px rgba(0,0,0,0.6);
         }
         .modal-card h3 { font-size: 1.1rem; color: #fff; margin-bottom: 6px; font-weight: 700; }
-        .modal-card p.modal-desc { font-size: 0.8rem; color: var(--text-secondary); line-height: 1.4; margin-bottom: 18px; }
-        .modal-banner { padding: 8px 12px; border-radius: 8px; font-size: 0.78rem; margin-bottom: 12px; display: none; }
+        .modal-card p.modal-desc { font-size: 0.82rem; color: var(--text-secondary); line-height: 1.4; margin-bottom: 18px; }
+        .modal-banner { padding: 10px 14px; border-radius: 10px; font-size: 0.8rem; margin-bottom: 14px; display: none; line-height: 1.4; }
         .modal-btn-row { display: flex; gap: 8px; justify-content: flex-end; margin-top: 16px; }
-        .btn-cancel { background: rgba(255,255,255,0.08); color: #cbd5e1; border: none; padding: 8px 14px; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 0.8rem; }
-        .btn-action-modal { background: var(--primary-gradient); color: white; border: none; padding: 8px 16px; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 0.8rem; }
+        .btn-cancel { background: rgba(255,255,255,0.08); color: #cbd5e1; border: none; padding: 10px 16px; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 0.85rem; }
+        .btn-action-modal { background: var(--primary-gradient); color: white; border: none; padding: 10px 18px; border-radius: 8px; font-weight: 700; cursor: pointer; font-size: 0.85rem; width: 100%; }
     </style>
 </head>
 <body>
@@ -284,25 +283,19 @@
         </div>
     </div>
 
-    <!-- Modal Pro Reset Password via WhatsApp OTP -->
+    <!-- Modal Pro Reset Password via WhatsApp OTP (Otomatis tanpa input nomor) -->
     <div class="modal-overlay" id="forgotModal">
         <div class="modal-card">
-            <h3>Reset Password via WhatsApp OTP</h3>
-            <p class="modal-desc" id="modalDesc">Kode OTP verifikasi akan dikirimkan langsung ke nomor WhatsApp Super Admin yang terdaftar.</p>
+            <h3>Reset Password via WhatsApp</h3>
+            <p class="modal-desc" id="modalDesc">Sistem akan mengirimkan 6-digit kode OTP langsung ke WhatsApp Super Admin yang terdaftar di Pengaturan Dasbor.</p>
 
             <div id="modalMsg" class="modal-banner"></div>
 
-            <!-- Step 1: Input Nomor HP Admin -->
+            <!-- Step 1: 1-Click Kirim OTP -->
             <div id="otpStep1">
-                <div class="form-group">
-                    <label for="adminPhone">Nomor WhatsApp Super Admin</label>
-                    <div class="input-wrapper">
-                        <input type="text" id="adminPhone" class="form-control" placeholder="Contoh: 085789863037" style="padding-left: 16px;">
-                    </div>
-                </div>
-                <div class="modal-btn-row">
-                    <button type="button" class="btn-cancel" onclick="closeForgotModal()">Batal</button>
-                    <button type="button" class="btn-action-modal" id="btnSendOtp" onclick="handleSendOtp()">Kirim Kode OTP WA</button>
+                <div style="display: flex; gap: 10px; margin-top: 10px;">
+                    <button type="button" class="btn-cancel" onclick="closeForgotModal()" style="width: 35%;">Batal</button>
+                    <button type="button" class="btn-action-modal" id="btnSendOtp" onclick="handleSendOtp()" style="width: 65%;">Kirim Kode OTP WA</button>
                 </div>
             </div>
 
@@ -311,7 +304,7 @@
                 <div class="form-group">
                     <label for="otpCode">6-Digit Kode OTP</label>
                     <div class="input-wrapper">
-                        <input type="text" id="otpCode" class="form-control" placeholder="Contoh: 849201" maxlength="6" style="padding-left: 16px; font-family: monospace; letter-spacing: 2px;">
+                        <input type="text" id="otpCode" class="form-control" placeholder="Contoh: 849201" maxlength="6" style="padding-left: 16px; font-family: monospace; letter-spacing: 3px; font-size: 1rem;">
                     </div>
                 </div>
                 <div class="form-group">
@@ -320,9 +313,9 @@
                         <input type="password" id="newAdminPass" class="form-control" placeholder="Minimal 6 karakter" style="padding-left: 16px;">
                     </div>
                 </div>
-                <div class="modal-btn-row">
-                    <button type="button" class="btn-cancel" onclick="closeForgotModal()">Batal</button>
-                    <button type="button" class="btn-action-modal" id="btnVerifyOtp" onclick="handleVerifyOtp()">Reset & Masuk</button>
+                <div style="display: flex; gap: 10px; margin-top: 10px;">
+                    <button type="button" class="btn-cancel" onclick="closeForgotModal()" style="width: 35%;">Batal</button>
+                    <button type="button" class="btn-action-modal" id="btnVerifyOtp" onclick="handleVerifyOtp()" style="width: 65%;">Reset & Masuk</button>
                 </div>
             </div>
         </div>
@@ -354,7 +347,7 @@
             }
         });
 
-        // Modal Reset OTP WA
+        // Modal Reset OTP WA (Auto)
         function openForgotModal(e) {
             e.preventDefault();
             document.getElementById('forgotModal').style.display = 'flex';
@@ -367,16 +360,8 @@
         }
 
         async function handleSendOtp() {
-            const phone = document.getElementById('adminPhone').value.trim();
             const btn = document.getElementById('btnSendOtp');
             const msg = document.getElementById('modalMsg');
-
-            if (!phone) {
-                msg.className = 'modal-banner banner-error';
-                msg.textContent = 'Masukkan nomor WhatsApp Super Admin!';
-                msg.style.display = 'block';
-                return;
-            }
 
             btn.disabled = true;
             btn.textContent = 'Mengirim...';
@@ -385,8 +370,7 @@
             try {
                 const res = await fetch('/api/request-reset-otp', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ phone })
+                    headers: { 'Content-Type': 'application/json' }
                 });
                 const data = await res.json();
 
@@ -395,7 +379,7 @@
                     msg.style.background = 'rgba(16, 185, 129, 0.15)';
                     msg.style.borderColor = 'rgba(16, 185, 129, 0.3)';
                     msg.style.color = '#34d399';
-                    msg.textContent = 'Kode OTP 6-digit telah terkirim ke WhatsApp Anda!';
+                    msg.textContent = data.message || 'Kode OTP 6-digit telah dikirimkan ke WhatsApp Anda!';
                     msg.style.display = 'block';
 
                     document.getElementById('otpStep1').style.display = 'none';
@@ -417,7 +401,6 @@
         }
 
         async function handleVerifyOtp() {
-            const phone = document.getElementById('adminPhone').value.trim();
             const otp = document.getElementById('otpCode').value.trim();
             const newPassword = document.getElementById('newAdminPass').value.trim();
             const btn = document.getElementById('btnVerifyOtp');
@@ -437,7 +420,7 @@
                 const res = await fetch('/api/verify-reset-otp', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ phone, otp, newPassword })
+                    body: JSON.stringify({ otp, newPassword })
                 });
                 const data = await res.json();
 

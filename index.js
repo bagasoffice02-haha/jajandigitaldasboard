@@ -468,12 +468,7 @@ const resetOtpBucket = new Map();
 
 app.post('/api/request-reset-otp', async (req, res) => {
     try {
-        const { phone } = req.body;
-        if (!phone) return res.status(400).json({ success: false, error: 'Nomor WhatsApp wajib diisi.' });
-
-        const cleanPhone = phone.replace(/[^0-9]/g, '');
-
-        // Ambil boss_number secara dinamis dari config & SQLite settings (Pengaturan Dasbor)
+        // Ambil boss_number secara otomatis dari config & SQLite settings (Pengaturan Dasbor)
         let bossNumSetting = config.boss_number || config.owner_number || '';
         try {
             const db = await getDb();
@@ -483,54 +478,62 @@ app.post('/api/request-reset-otp', async (req, res) => {
 
         const cleanBossNum = bossNumSetting.replace(/[^0-9]/g, '');
 
-        if (!cleanBossNum || !cleanPhone.includes(cleanBossNum.slice(-8))) {
-            return res.status(400).json({ success: false, error: 'Nomor WhatsApp tidak cocok dengan nomor yang diatur di Menu Pengaturan Dasbor.' });
+        if (!cleanBossNum) {
+            return res.status(400).json({ success: false, error: 'Nomor WhatsApp Super Admin belum diatur di Pengaturan Dasbor.' });
         }
 
         const client = getClient();
         if (!client || getStatus() !== 'CONNECTED') {
-            return res.status(530).json({ success: false, error: 'Bot WhatsApp sedang offline. Silakan hubungi admin atau gunakan perintah WA.' });
+            return res.status(530).json({ success: false, error: 'Bot WhatsApp sedang offline. Pastikan bot terhubung.' });
         }
 
         const otp = Math.floor(100000 + Math.random() * 900000).toString();
-        resetOtpBucket.set(cleanPhone, { otp, expiresAt: Date.now() + 10 * 60 * 1000 });
+        resetOtpBucket.set(cleanBossNum, { otp, expiresAt: Date.now() + 10 * 60 * 1000 });
 
-        const recipientJid = cleanPhone.startsWith('62') ? `${cleanPhone}@c.us` : `62${cleanPhone.replace(/^0/, '')}@c.us`;
+        const recipientJid = cleanBossNum.startsWith('62') ? `${cleanBossNum}@c.us` : `62${cleanBossNum.replace(/^0/, '')}@c.us`;
+        const maskedPhone = cleanBossNum.slice(0, 4) + '****' + cleanBossNum.slice(-4);
         const msgText = `*[KEAMANAN DASBOR JAJAN DIGITAL]*\n\nKode OTP Reset Password Admin Anda adalah: *${otp}*\n\nKode ini berlaku selama 10 menit. JANGAN berikan kode ini kepada siapapun demi keamanan akun Anda.`;
 
         await client.sendMessage(recipientJid, msgText);
-        console.log(`[Auth Reset] OTP sent to ${cleanPhone}: ${otp}`);
+        console.log(`[Auth Reset] OTP sent to ${cleanBossNum}: ${otp}`);
 
-        res.json({ success: true, message: 'Kode OTP telah dikirimkan ke WhatsApp Super Admin.' });
+        res.json({ success: true, message: `Kode OTP telah dikirimkan ke WhatsApp Super Admin (${maskedPhone}).` });
     } catch (err) {
         console.error('[Auth Reset] Gagal mengirim OTP WA:', err.message);
         res.status(500).json({ success: false, error: 'Gagal mengirim OTP via WhatsApp: ' + err.message });
     }
 });
 
-app.post('/api/verify-reset-otp', (req, res) => {
+app.post('/api/verify-reset-otp', async (req, res) => {
     try {
-        const { phone, otp, newPassword } = req.body;
-        if (!phone || !otp || !newPassword) {
-            return res.status(400).json({ success: false, error: 'Nomor, OTP, dan Password Baru wajib diisi.' });
+        const { otp, newPassword } = req.body;
+        if (!otp || !newPassword) {
+            return res.status(400).json({ success: false, error: 'OTP dan Password Baru wajib diisi.' });
         }
 
         if (newPassword.length < 6) {
             return res.status(400).json({ success: false, error: 'Password baru minimal 6 karakter.' });
         }
 
-        const cleanPhone = phone.replace(/[^0-9]/g, '');
-        const record = resetOtpBucket.get(cleanPhone);
+        let bossNumSetting = config.boss_number || config.owner_number || '';
+        try {
+            const db = await getDb();
+            const row = await db.get("SELECT value FROM settings WHERE key = 'boss_number'");
+            if (row && row.value) bossNumSetting = row.value;
+        } catch(_) {}
+        const cleanBossNum = bossNumSetting.replace(/[^0-9]/g, '');
+
+        const record = resetOtpBucket.get(cleanBossNum);
 
         if (!record || record.expiresAt < Date.now()) {
-            return res.status(400).json({ success: false, error: 'Kode OTP kadaluarsa atau tidak ditemukan. Minta OTP baru.' });
+            return res.status(400).json({ success: false, error: 'Kode OTP kadaluarsa atau belum diminta. Klik kirim OTP ulang.' });
         }
 
         if (record.otp !== otp.trim()) {
             return res.status(400).json({ success: false, error: 'Kode OTP yang dimasukkan salah!' });
         }
 
-        resetOtpBucket.delete(cleanPhone);
+        resetOtpBucket.delete(cleanBossNum);
 
         const { updateConfig } = require('./src/config/config');
         updateConfig({ admin_password: newPassword });
@@ -540,7 +543,7 @@ app.post('/api/verify-reset-otp', (req, res) => {
         saveSessions();
         res.cookie('session_token', token, { httpOnly: true, secure: false, maxAge: 24 * 60 * 60 * 1000 });
 
-        console.log(`[Auth Reset] Password Admin berhasil diubah untuk ${cleanPhone}`);
+        console.log(`[Auth Reset] Password Admin berhasil diubah untuk ${cleanBossNum}`);
         res.json({ success: true, message: 'Password Admin berhasil diubah! Mengalihkan ke dasbor...' });
     } catch (err) {
         console.error('[Auth Reset] Gagal mereset password:', err.message);
