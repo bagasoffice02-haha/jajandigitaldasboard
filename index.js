@@ -265,12 +265,49 @@ app.get(['/q', '/qris', '/qris/:filename', '/v/qris'], (req, res) => {
             <img src="${rawImageUrl}" alt="Barcode QRIS Pembayaran" class="qris-img">
         </div>
 
+        <!-- Sektor Bank & E-Wallet -->
+        <div class="bank-section" style="margin-bottom: 1.5rem; text-align: left;">
+            <div style="font-weight: 700; font-size: 0.95rem; color: #34d399; margin-bottom: 0.75rem; display: flex; align-items: center; gap: 6px;">
+                <span>🏦 BANK & E-WALLET TRANSFER</span>
+            </div>
+            
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+                <!-- GOPAY -->
+                <div class="bank-card" style="background: rgba(15, 23, 42, 0.6); border: 1px solid var(--border-color); padding: 10px 14px; border-radius: 12px; display: flex; align-items: center; justify-content: space-between;">
+                    <div>
+                        <div style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600;">GOPAY</div>
+                        <div style="font-size: 0.95rem; font-weight: 700; color: #f8fafc; font-family: monospace;">085789863037</div>
+                        <div style="font-size: 0.75rem; color: #94a3b8;">a.n Bagas Saputra</div>
+                    </div>
+                    <button type="button" onclick="copyText('085789863037', this)" style="background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.3); color: #34d399; padding: 6px 12px; border-radius: 8px; font-weight: 600; font-size: 0.75rem; cursor: pointer; transition: all 0.2s;">Salin</button>
+                </div>
+
+                <!-- SEABANK -->
+                <div class="bank-card" style="background: rgba(15, 23, 42, 0.6); border: 1px solid var(--border-color); padding: 10px 14px; border-radius: 12px; display: flex; align-items: center; justify-content: space-between;">
+                    <div>
+                        <div style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600;">SEABANK</div>
+                        <div style="font-size: 0.95rem; font-weight: 700; color: #f8fafc; font-family: monospace;">901346990999</div>
+                        <div style="font-size: 0.75rem; color: #94a3b8;">a.n Bagas Saputra</div>
+                    </div>
+                    <button type="button" onclick="copyText('901346990999', this)" style="background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.3); color: #34d399; padding: 6px 12px; border-radius: 8px; font-weight: 600; font-size: 0.75rem; cursor: pointer; transition: all 0.2s;">Salin</button>
+                </div>
+
+                <!-- BRI -->
+                <div class="bank-card" style="background: rgba(15, 23, 42, 0.6); border: 1px solid var(--border-color); padding: 10px 14px; border-radius: 12px; display: flex; align-items: center; justify-content: space-between;">
+                    <div>
+                        <div style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600;">BANK BRI</div>
+                        <div style="font-size: 0.95rem; font-weight: 700; color: #f8fafc; font-family: monospace;">560801027512500</div>
+                        <div style="font-size: 0.75rem; color: #94a3b8;">a.n Bagas Saputra</div>
+                    </div>
+                    <button type="button" onclick="copyText('560801027512500', this)" style="background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.3); color: #34d399; padding: 6px 12px; border-radius: 8px; font-weight: 600; font-size: 0.75rem; cursor: pointer; transition: all 0.2s;">Salin</button>
+                </div>
+            </div>
+        </div>
+
         <div class="instructions">
             <strong>📌 Cara Melakukan Pembayaran:</strong>
             <ol>
-                <li>Simpan / Screenshot barcode QRIS di atas.</li>
-                <li>Buka aplikasi m-Banking / e-Wallet Anda.</li>
-                <li>Pilih menu <strong>Scan / Bayar QRIS</strong> dan upload gambar QRIS.</li>
+                <li>Scan QRIS di atas atau Transfer ke salah satu rekening Bank/E-Wallet.</li>
                 <li>Masukkan nominal sesuai total belanja Anda.</li>
                 <li>Setelah berhasil, klik tombol di bawah untuk unggah bukti bayar.</li>
             </ol>
@@ -280,6 +317,37 @@ app.get(['/q', '/qris', '/qris/:filename', '/v/qris'], (req, res) => {
             <span>📸 Unggah Bukti Pembayaran</span>
         </a>
     </div>
+
+    <script>
+        function copyText(val, btn) {
+            navigator.clipboard.writeText(val).then(() => {
+                const orig = btn.textContent;
+                btn.textContent = 'Tersalin! ✓';
+                btn.style.background = '#10b981';
+                btn.style.color = '#ffffff';
+                setTimeout(() => {
+                    btn.textContent = orig;
+                    btn.style.background = 'rgba(16, 185, 129, 0.15)';
+                    btn.style.color = '#34d399';
+                }, 2000);
+            }).catch(() => {
+                const temp = document.createElement('input');
+                temp.value = val;
+                document.body.appendChild(temp);
+                temp.select();
+                document.execCommand('copy');
+                document.body.removeChild(temp);
+                btn.textContent = 'Tersalin! ✓';
+                btn.style.background = '#10b981';
+                btn.style.color = '#ffffff';
+                setTimeout(() => {
+                    btn.textContent = 'Salin';
+                    btn.style.background = 'rgba(16, 185, 129, 0.15)';
+                    btn.style.color = '#34d399';
+                }, 2000);
+            });
+        }
+    </script>
 </body>
 </html>`;
 
