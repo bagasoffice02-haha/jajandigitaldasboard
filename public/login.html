@@ -2,136 +2,127 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login Admin — WA Bot CS</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Selamat Datang — Login Admin Jajan Digital</title>
     <!-- Google Fonts & Lucide Icons -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
     
     <style>
         :root {
-            --bg-dark: #09090b;
-            --panel-bg: rgba(18, 18, 24, 0.85);
-            --border-color: rgba(255, 255, 255, 0.08);
-            --primary-color: #3b82f6;
-            --primary-glow: rgba(59, 130, 246, 0.25);
-            --text-primary: #f4f4f5;
-            --text-secondary: #a1a1aa;
-            --error-color: #ef4444;
-            --warning-color: #eab308;
-            --success-color: #10b981;
-            --radius-lg: 18px;
-            --transition-smooth: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            --bg-dark: #070c19;
+            --panel-bg: rgba(15, 23, 42, 0.85);
+            --border-color: rgba(255, 255, 255, 0.1);
+            --primary-color: #38bdf8;
+            --primary-gradient: linear-gradient(135deg, #0284c7 0%, #0d9488 100%);
+            --primary-glow: rgba(56, 189, 248, 0.25);
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --error-color: #f87171;
+            --warning-color: #facc15;
+            --success-color: #34d399;
+            --radius-lg: 20px;
         }
 
-        * { box-sizing: border-box; margin: 0; padding: 0; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Outfit', -apple-system, sans-serif; }
 
         body {
-            font-family: 'Outfit', sans-serif;
             background-color: var(--bg-dark);
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(56, 189, 248, 0.12) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(13, 148, 136, 0.12) 0px, transparent 50%);
             color: var(--text-primary);
             min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
-            overflow: hidden;
+            padding: 16px;
             position: relative;
         }
 
-        body::before {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background-image: 
-                linear-gradient(rgba(255, 255, 255, 0.015) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(255, 255, 255, 0.015) 1px, transparent 1px);
-            background-size: 36px 36px;
-            background-position: center;
-            mask-image: radial-gradient(ellipse at 50% 50%, black 30%, transparent 70%);
-            -webkit-mask-image: radial-gradient(ellipse at 50% 50%, black 30%, transparent 70%);
-            z-index: 0;
-            pointer-events: none;
-        }
-
-        .blur-circle {
-            position: absolute;
-            border-radius: 50%;
-            filter: blur(120px);
-            z-index: 1;
-            opacity: 0.15;
-            pointer-events: none;
-        }
-
-        .blur-circle-1 { width: 350px; height: 350px; background: #3b82f6; top: 10%; left: 15%; }
-        .blur-circle-2 { width: 400px; height: 400px; background: #8b5cf6; bottom: 10%; right: 15%; }
-
         .login-card {
             width: 100%;
-            max-width: 420px;
-            padding: 42px 34px;
+            max-width: 400px;
+            padding: 38px 28px;
             background: var(--panel-bg);
             backdrop-filter: blur(24px);
             -webkit-backdrop-filter: blur(24px);
             border: 1px solid var(--border-color);
             border-radius: var(--radius-lg);
             box-shadow: 
-                0 0 0 1px rgba(255, 255, 255, 0.03),
                 0 20px 50px rgba(0, 0, 0, 0.5),
-                0 0 60px var(--primary-glow);
+                0 0 50px var(--primary-glow);
             z-index: 10;
             text-align: center;
-            animation: cardFadeIn 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+            animation: cardFadeIn 0.4s ease-out;
         }
 
         @keyframes cardFadeIn {
-            from { opacity: 0; transform: translateY(12px) scale(0.97); }
+            from { opacity: 0; transform: translateY(10px) scale(0.98); }
             to { opacity: 1; transform: translateY(0) scale(1); }
         }
 
         .logo-wrapper {
-            width: 58px;
-            height: 58px;
-            background: linear-gradient(135deg, #3b82f6 0%, #06b6d4 100%);
+            width: 56px;
+            height: 56px;
+            background: var(--primary-gradient);
             border-radius: 16px;
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            margin-bottom: 20px;
-            box-shadow: 0 6px 20px rgba(59, 130, 246, 0.35);
-            border: 1px solid rgba(255, 255, 255, 0.15);
+            margin-bottom: 16px;
+            box-shadow: 0 6px 20px rgba(2, 132, 199, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.2);
         }
 
-        .logo-wrapper i { color: #ffffff; width: 28px; height: 28px; }
+        .logo-wrapper .lucide { color: #ffffff; width: 26px; height: 26px; }
 
-        h2 { font-size: 1.5rem; font-weight: 700; margin-bottom: 6px; color: #ffffff; letter-spacing: -0.3px; }
-        p.subtitle { color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 28px; }
+        .welcome-title { font-size: 1.45rem; font-weight: 700; color: #ffffff; margin-bottom: 4px; letter-spacing: -0.3px; }
+        .welcome-subtitle { color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 26px; line-height: 1.4; }
 
-        .form-group { text-align: left; margin-bottom: 20px; position: relative; }
-        label { display: block; font-size: 0.72rem; font-weight: 600; color: #e4e4e7; margin-bottom: 7px; text-transform: uppercase; letter-spacing: 0.8px; }
+        .form-group { text-align: left; margin-bottom: 18px; position: relative; }
+        label { display: block; font-size: 0.78rem; font-weight: 600; color: #cbd5e1; margin-bottom: 6px; }
 
         .input-wrapper { position: relative; display: flex; align-items: center; }
-        .input-wrapper i.icon-left { position: absolute; left: 14px; color: var(--text-secondary); width: 18px; height: 18px; pointer-events: none; transition: var(--transition-smooth); }
+
+        /* PERBAIKAN SELEKTOR ICON (Cocok untuk <i> maupun <svg> Lucide) */
+        .input-wrapper .icon-left {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-secondary);
+            width: 18px;
+            height: 18px;
+            pointer-events: none;
+            transition: all 0.2s ease;
+            z-index: 2;
+        }
 
         .form-control {
             width: 100%;
             height: 46px;
             padding: 12px 42px 12px 44px;
-            background: rgba(255, 255, 255, 0.035);
-            border: 1px solid var(--border-color);
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.12);
             border-radius: 10px;
             color: var(--text-primary);
             font-family: inherit;
             font-size: 0.9rem;
-            transition: var(--transition-smooth);
+            transition: all 0.2s ease;
         }
 
-        .form-control::placeholder { color: #52525b; }
-        .form-control:focus { outline: none; background: rgba(255, 255, 255, 0.06); border-color: var(--primary-color); box-shadow: 0 0 0 3px var(--primary-glow); }
-        .form-control:focus ~ i.icon-left { color: var(--primary-color); }
+        .form-control::placeholder { color: #64748b; }
+        .form-control:focus { outline: none; background: rgba(15, 23, 42, 0.9); border-color: var(--primary-color); box-shadow: 0 0 0 3px var(--primary-glow); }
+        .form-control:focus ~ .icon-left { color: var(--primary-color); }
 
         .toggle-password {
             position: absolute;
-            right: 14px;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
             background: none;
             border: none;
             color: var(--text-secondary);
@@ -140,7 +131,8 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: var(--transition-smooth);
+            transition: all 0.2s ease;
+            z-index: 5;
         }
         .toggle-password:hover { color: var(--text-primary); }
 
@@ -160,52 +152,52 @@
             cursor: pointer;
             user-select: none;
         }
-        .remember-me input { accent-color: var(--primary-color); width: 15px; height: 15px; cursor: pointer; }
+        .remember-me input { accent-color: #0284c7; width: 15px; height: 15px; cursor: pointer; }
 
         .forgot-link {
             color: var(--primary-color);
             text-decoration: none;
             font-weight: 500;
-            transition: var(--transition-smooth);
+            transition: all 0.2s ease;
         }
-        .forgot-link:hover { text-decoration: underline; color: #60a5fa; }
+        .forgot-link:hover { text-decoration: underline; color: #7dd3fc; }
 
         .btn-submit {
             width: 100%;
             height: 46px;
-            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: var(--primary-gradient);
+            border: 1px solid rgba(255, 255, 255, 0.15);
             border-radius: 10px;
             color: #ffffff;
             font-family: inherit;
             font-size: 0.9rem;
-            font-weight: 600;
+            font-weight: 700;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
             gap: 8px;
-            box-shadow: 0 4px 14px rgba(59, 130, 246, 0.25);
-            transition: var(--transition-smooth);
+            box-shadow: 0 4px 15px rgba(2, 132, 199, 0.35);
+            transition: all 0.2s ease;
         }
-        .btn-submit:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4); background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%); }
+        .btn-submit:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(2, 132, 199, 0.5); }
         .btn-submit:disabled { opacity: 0.6; cursor: not-allowed; transform: none; box-shadow: none; }
 
         .banner-msg {
             padding: 10px 14px;
             border-radius: 10px;
             font-size: 0.82rem;
-            margin-bottom: 20px;
+            margin-bottom: 18px;
             display: none;
             align-items: center;
             gap: 10px;
             text-align: left;
         }
-        .banner-error { background: rgba(239, 68, 68, 0.12); border: 1px solid rgba(239, 68, 68, 0.25); color: var(--error-color); }
-        .banner-warning { background: rgba(234, 179, 8, 0.12); border: 1px solid rgba(234, 179, 8, 0.25); color: var(--warning-color); margin-bottom: 12px; }
+        .banner-error { background: rgba(248, 113, 113, 0.12); border: 1px solid rgba(248, 113, 113, 0.25); color: var(--error-color); }
+        .banner-warning { background: rgba(250, 204, 21, 0.12); border: 1px solid rgba(250, 204, 21, 0.25); color: var(--warning-color); margin-bottom: 12px; }
 
         .system-status {
-            margin-top: 24px;
+            margin-top: 22px;
             font-size: 0.75rem;
             color: var(--text-secondary);
             display: flex;
@@ -215,35 +207,32 @@
         }
         .status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--success-color); box-shadow: 0 0 8px var(--success-color); }
 
-        /* Modal Lupa Password OTP WA Pro */
+        /* Modal Reset OTP WA */
         .modal-overlay {
             display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(8px);
-            z-index: 999; align-items: center; justify-content: center; padding: 20px;
+            z-index: 999; align-items: center; justify-content: center; padding: 16px;
         }
         .modal-card {
-            background: #18181b; border: 1px solid var(--border-color); border-radius: 18px; padding: 28px; max-width: 420px; width: 100%; text-align: left;
+            background: #0f172a; border: 1px solid var(--border-color); border-radius: 18px; padding: 24px; max-width: 380px; width: 100%; text-align: left;
             box-shadow: 0 20px 40px rgba(0,0,0,0.6);
         }
-        .modal-card h3 { font-size: 1.15rem; color: #fff; margin-bottom: 6px; font-weight: 700; }
-        .modal-card p.modal-desc { font-size: 0.82rem; color: var(--text-secondary); line-height: 1.4; margin-bottom: 20px; }
-        .modal-banner { padding: 8px 12px; border-radius: 8px; font-size: 0.8rem; margin-bottom: 14px; display: none; }
-        .modal-btn-row { display: flex; gap: 10px; justify-content: flex-end; margin-top: 18px; }
-        .btn-cancel { background: rgba(255,255,255,0.08); color: #cbd5e1; border: none; padding: 9px 16px; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 0.82rem; }
-        .btn-action-modal { background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; border: none; padding: 9px 18px; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 0.82rem; }
+        .modal-card h3 { font-size: 1.1rem; color: #fff; margin-bottom: 6px; font-weight: 700; }
+        .modal-card p.modal-desc { font-size: 0.8rem; color: var(--text-secondary); line-height: 1.4; margin-bottom: 18px; }
+        .modal-banner { padding: 8px 12px; border-radius: 8px; font-size: 0.78rem; margin-bottom: 12px; display: none; }
+        .modal-btn-row { display: flex; gap: 8px; justify-content: flex-end; margin-top: 16px; }
+        .btn-cancel { background: rgba(255,255,255,0.08); color: #cbd5e1; border: none; padding: 8px 14px; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 0.8rem; }
+        .btn-action-modal { background: var(--primary-gradient); color: white; border: none; padding: 8px 16px; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 0.8rem; }
     </style>
 </head>
 <body>
-
-    <div class="blur-circle blur-circle-1"></div>
-    <div class="blur-circle blur-circle-2"></div>
 
     <div class="login-card">
         <div class="logo-wrapper">
             <i data-lucide="shield-check"></i>
         </div>
         
-        <h2>Dasbor WA Bot CS</h2>
-        <p class="subtitle">Masuk menggunakan kredensial admin Anda</p>
+        <h1 class="welcome-title">Selamat Datang! 👋</h1>
+        <p class="welcome-subtitle">Silakan masuk ke Dasbor Jajan Digital untuk mengelola bot & transaksi Anda.</p>
         
         <div id="error-box" class="banner-msg banner-error">
             <i data-lucide="alert-circle" style="width: 18px; height: 18px; flex-shrink: 0;"></i>
@@ -252,7 +241,7 @@
 
         <div id="caps-warning" class="banner-msg banner-warning">
             <i data-lucide="alert-triangle" style="width: 16px; height: 16px; flex-shrink: 0;"></i>
-            <span>Peringatan: Caps Lock sedang Aktif!</span>
+            <span>Peringatan: Caps Lock sedang aktif!</span>
         </div>
 
         <form id="login-form" onsubmit="handleLogin(event)">
@@ -284,14 +273,14 @@
             </div>
 
             <button type="submit" id="btn-login" class="btn-submit">
-                <span>Masuk Ke Dasbor</span>
+                <span>Masuk ke Dasbor</span>
                 <i data-lucide="arrow-right" style="width: 18px; height: 18px;"></i>
             </button>
         </form>
 
         <div class="system-status">
             <div class="status-dot"></div>
-            <span>Sistem WA Bot & Dasbor Aktif</span>
+            <span>Sistem Bot & Dasbor Aktif</span>
         </div>
     </div>
 
@@ -508,7 +497,7 @@
                     errorMessage.textContent = data.error || 'Gagal login. Hubungi administrator.';
                     errorBox.style.display = 'flex';
                     btnLogin.disabled = false;
-                    btnLogin.innerHTML = `<span>Masuk Ke Dasbor</span><i data-lucide="arrow-right" style="width: 18px; height: 18px;"></i>`;
+                    btnLogin.innerHTML = `<span>Masuk ke Dasbor</span><i data-lucide="arrow-right" style="width: 18px; height: 18px;"></i>`;
                     lucide.createIcons();
                 }
             } catch (err) {
@@ -516,7 +505,7 @@
                 errorMessage.textContent = 'Gagal terhubung ke server backend.';
                 errorBox.style.display = 'flex';
                 btnLogin.disabled = false;
-                btnLogin.innerHTML = `<span>Masuk Ke Dasbor</span><i data-lucide="arrow-right" style="width: 18px; height: 18px;"></i>`;
+                btnLogin.innerHTML = `<span>Masuk ke Dasbor</span><i data-lucide="arrow-right" style="width: 18px; height: 18px;"></i>`;
                 lucide.createIcons();
             }
         }
