@@ -155,90 +155,97 @@ app.get(['/q', '/qris', '/qris/:filename', '/v/qris'], (req, res) => {
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 8px;
+            padding: 12px 10px;
         }
         .card {
             width: 100%;
-            max-width: 380px;
-            background: rgba(30, 41, 59, 0.85);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 14px;
-            padding: 12px;
+            max-width: 420px;
+            background: rgba(30, 41, 59, 0.88);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 20px;
+            padding: 18px 16px;
             display: flex;
             flex-direction: column;
-            gap: 8px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            gap: 12px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.5);
         }
         .header { text-align: center; }
-        .header h1 { font-size: 1.1rem; font-weight: 700; color: #38bdf8; }
-        .header p { font-size: 0.72rem; color: #94a3b8; margin-top: 1px; }
+        .header h1 { font-size: 1.25rem; font-weight: 700; color: #38bdf8; }
+        .header p { font-size: 0.78rem; color: #94a3b8; margin-top: 2px; }
 
         .qris-box {
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 5px;
+            gap: 8px;
+            margin: 2px 0;
         }
         .qris-img-bg {
             background: white;
-            padding: 5px;
-            border-radius: 8px;
+            padding: 8px;
+            border-radius: 12px;
             display: inline-block;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
         }
         .qris-img {
-            width: 140px;
-            height: 140px;
+            width: 220px;
+            height: 220px;
             object-fit: contain;
             display: block;
         }
         .btn-download {
             background: rgba(56, 189, 248, 0.15);
-            border: 1px solid rgba(56, 189, 248, 0.3);
+            border: 1px solid rgba(56, 189, 248, 0.35);
             color: #38bdf8;
-            padding: 4px 10px;
-            border-radius: 6px;
-            font-size: 0.72rem;
+            padding: 6px 14px;
+            border-radius: 8px;
+            font-size: 0.78rem;
             font-weight: 600;
             text-decoration: none;
             cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .btn-download:hover {
+            background: rgba(56, 189, 248, 0.25);
         }
 
         .bank-list {
             display: flex;
             flex-direction: column;
-            gap: 5px;
+            gap: 7px;
         }
         .bank-item {
-            background: rgba(15, 23, 42, 0.6);
+            background: rgba(15, 23, 42, 0.65);
             border: 1px solid rgba(255, 255, 255, 0.08);
-            border-radius: 8px;
-            padding: 5px 8px;
+            border-radius: 10px;
+            padding: 7px 10px;
             display: flex;
             align-items: center;
             justify-content: space-between;
         }
-        .bank-name { font-weight: 700; color: #e2e8f0; font-size: 0.68rem; }
-        .bank-num { font-family: monospace; font-size: 0.82rem; font-weight: 700; color: #38bdf8; }
-        .bank-holder { font-size: 0.65rem; color: #94a3b8; }
+        .bank-name { font-weight: 700; color: #e2e8f0; font-size: 0.72rem; }
+        .bank-num { font-family: monospace; font-size: 0.92rem; font-weight: 700; color: #38bdf8; }
+        .bank-holder { font-size: 0.68rem; color: #94a3b8; }
         .btn-copy {
             background: rgba(16, 185, 129, 0.15);
-            border: 1px solid rgba(16, 185, 129, 0.3);
+            border: 1px solid rgba(16, 185, 129, 0.35);
             color: #34d399;
-            padding: 3px 8px;
-            border-radius: 5px;
-            font-size: 0.68rem;
+            padding: 5px 12px;
+            border-radius: 6px;
+            font-size: 0.75rem;
             font-weight: 600;
             cursor: pointer;
+            transition: all 0.2s ease;
         }
 
         .note-bar {
             background: rgba(234, 179, 8, 0.1);
-            border: 1px solid rgba(234, 179, 8, 0.25);
-            border-radius: 6px;
-            padding: 5px 8px;
-            font-size: 0.68rem;
+            border: 1px solid rgba(234, 179, 8, 0.28);
+            border-radius: 8px;
+            padding: 7px 10px;
+            font-size: 0.72rem;
             color: #fef08a;
-            line-height: 1.35;
+            line-height: 1.4;
         }
 
         .btn-action {
@@ -246,11 +253,12 @@ app.get(['/q', '/qris', '/qris/:filename', '/v/qris'], (req, res) => {
             color: white;
             text-decoration: none;
             text-align: center;
-            padding: 8px;
-            border-radius: 8px;
-            font-size: 0.8rem;
+            padding: 10px;
+            border-radius: 10px;
+            font-size: 0.88rem;
             font-weight: 700;
             display: block;
+            box-shadow: 0 4px 15px rgba(2, 132, 199, 0.3);
         }
     </style>
 </head>
