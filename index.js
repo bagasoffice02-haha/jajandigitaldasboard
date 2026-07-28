@@ -501,6 +501,28 @@ async function renderPaymentPage(req, res, startFlipped = false) {
                     </button>
                 </div>
             </form>
+
+            <!-- KOTAK HASIL UPLOAD (1-KLIK COPY LINK BUKTI) -->
+            <div id="successResultBox" style="display:none; flex-direction:column; justify-content:space-between; gap:12px; flex:1; text-align:center; padding:6px 0;">
+                <div style="background:rgba(16, 185, 129, 0.15); border:1px solid rgba(16, 185, 129, 0.35); padding:10px; border-radius:10px;">
+                    <div style="font-weight:800; font-size:0.95rem; color:#34d399; margin-bottom:4px;">Unggah Bukti Berhasil!</div>
+                    <div style="font-size:0.73rem; color:#cbd5e1;">Link bukti pembayaran disalin ke clipboard. Kirim link ini ke grup chat WhatsApp.</div>
+                </div>
+
+                <div style="display:flex; flex-direction:column; gap:6px;">
+                    <div style="font-size:0.72rem; color:#94a3b8; text-align:left;">Tautan Bukti Pembayaran:</div>
+                    <input type="text" id="resultLinkInput" readonly style="width:100%; background:rgba(15,23,42,0.9); border:1px solid rgba(56,189,248,0.4); padding:10px 12px; border-radius:8px; font-family:monospace; font-size:0.82rem; color:#38bdf8; text-align:center; outline:none;" onclick="this.select();">
+                </div>
+
+                <div style="display:flex; flex-direction:column; gap:8px;">
+                    <button type="button" id="btnCopyResult" onclick="copyResultUrl()" style="width:100%; padding:11px; font-size:0.88rem; font-weight:700; background:linear-gradient(135deg, #10b981 0%, #059669 100%); color:#ffffff; border-radius:10px; border:none; cursor:pointer; box-shadow:0 4px 15px rgba(16,185,129,0.4);">
+                        Salin Link Bukti
+                    </button>
+                    <button type="button" class="btn-flip-back" onclick="resetUploadForm()">
+                        <span>← Kembali ke Halaman QRIS</span>
+                    </button>
+                </div>
+            </div>
         </div>
 
     </div>
@@ -569,6 +591,42 @@ async function renderPaymentPage(req, res, startFlipped = false) {
             });
         }
 
+        function copyResultUrl() {
+            const input = document.getElementById('resultLinkInput');
+            const btn = document.getElementById('btnCopyResult');
+            input.select();
+            input.setSelectionRange(0, 99999);
+            
+            navigator.clipboard.writeText(input.value).then(() => {
+                btn.textContent = 'Link Berhasil Disalin!';
+                btn.style.background = '#059669';
+                setTimeout(() => {
+                    btn.textContent = 'Salin Link Bukti';
+                    btn.style.background = 'linear-gradient(135deg, #10b981 0%, #059669 100%)';
+                }, 2000);
+            }).catch(() => {
+                document.execCommand('copy');
+                btn.textContent = 'Link Berhasil Disalin!';
+                btn.style.background = '#059669';
+                setTimeout(() => {
+                    btn.textContent = 'Salin Link Bukti';
+                    btn.style.background = 'linear-gradient(135deg, #10b981 0%, #059669 100%)';
+                }, 2000);
+            });
+        }
+
+        function resetUploadForm() {
+            document.getElementById('uploadForm').reset();
+            document.getElementById('previewImg').style.display = 'none';
+            document.getElementById('dropInitial').style.display = 'flex';
+            document.getElementById('statusMsg').style.display = 'none';
+            document.getElementById('btnSubmitUpload').disabled = false;
+            document.getElementById('btnSubmitUpload').textContent = 'Kirim Bukti Pembayaran';
+            document.getElementById('uploadForm').style.display = 'flex';
+            document.getElementById('successResultBox').style.display = 'none';
+            toggleFlip();
+        }
+
         function handleFileSelect(event) {
             const file = event.target.files[0];
             if (!file) return;
@@ -626,22 +684,15 @@ async function renderPaymentPage(req, res, startFlipped = false) {
 
                 if (res.ok && data.success) {
                     const fullUrl = data.fullUrl || (window.location.origin + data.url);
+                    
+                    document.getElementById('uploadForm').style.display = 'none';
+                    const resultInput = document.getElementById('resultLinkInput');
+                    resultInput.value = fullUrl;
+                    document.getElementById('successResultBox').style.display = 'flex';
 
-                    // Otomatis salin ke clipboard jika diizinkan browser
                     try {
                         navigator.clipboard.writeText(fullUrl);
                     } catch(_) {}
-
-                    statusMsg.className = 'status-msg status-success';
-                    statusMsg.innerHTML = '<div style="font-weight:700; font-size:0.95rem; color:#34d399; margin-bottom:4px;">Unggah Bukti Berhasil!</div>' +
-                        '<div style="font-size:0.74rem; color:#94a3b8; margin-bottom:8px;">Link telah disalin ke clipboard. Tempelkan di chat WhatsApp:</div>' +
-                        '<div style="background:rgba(15,23,42,0.85); border:1px solid rgba(56,189,248,0.35); padding:8px 10px; border-radius:8px; font-family:monospace; font-size:0.8rem; color:#38bdf8; word-break:break-all; user-select:all; margin-bottom:10px; text-align:center;" onclick="copyText(\'' + fullUrl + '\', document.getElementById(\'btnCopyResult\'))">' + fullUrl + '</div>' +
-                        '<button type="button" id="btnCopyResult" class="btn-copy" onclick="copyText(\'' + fullUrl + '\', this)" style="width:100%; padding:10px; font-size:0.85rem; font-weight:700; background:#10b981; color:#ffffff; border-radius:8px; border:none; box-shadow:0 4px 12px rgba(16,185,129,0.35);">Salin Link Bukti</button>';
-                    statusMsg.style.display = 'block';
-
-                    const dropzoneEl = document.querySelector('.dropzone');
-                    if (dropzoneEl) dropzoneEl.style.display = 'none';
-                    btn.style.display = 'none';
                 } else {
                     statusMsg.className = 'status-msg status-error';
                     statusMsg.textContent = data.error || 'Gagal mengunggah bukti.';
