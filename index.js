@@ -441,7 +441,7 @@ function renderPaymentPage(req, res, startFlipped = false) {
                         <div id="dropInitial">
                             <div class="dropzone-icon">📷</div>
                             <div class="dropzone-text">Pilih Foto Bukti Transfer</div>
-                            <div class="dropzone-hint">Format JPG, PNG, WEBP (Max 10MB)</div>
+                            <div class="dropzone-hint">Format JPG, PNG, WEBP (Max 2MB)</div>
                         </div>
                         <img id="previewImg" style="display:none; max-height:160px; max-width:100%; border-radius:8px; object-fit:contain;" alt="Pratinjau Bukti">
                         <input type="file" id="fileInput" accept="image/*" style="display:none;" onchange="handleFileSelect(event)">
@@ -513,6 +513,14 @@ function renderPaymentPage(req, res, startFlipped = false) {
         function handleFileSelect(event) {
             const file = event.target.files[0];
             if (!file) return;
+            if (file.size > 2 * 1024 * 1024) {
+                const statusMsg = document.getElementById('statusMsg');
+                statusMsg.className = 'status-msg status-error';
+                statusMsg.textContent = 'Ukuran file foto terlalu besar! Maksimal 2MB.';
+                statusMsg.style.display = 'block';
+                event.target.value = '';
+                return;
+            }
             const reader = new FileReader();
             reader.onload = function(e) {
                 document.getElementById('previewImg').src = e.target.result;
@@ -531,6 +539,14 @@ function renderPaymentPage(req, res, startFlipped = false) {
             if (!fileInput.files || !fileInput.files[0]) {
                 statusMsg.className = 'status-msg status-error';
                 statusMsg.textContent = 'Silakan pilih foto bukti transfer terlebih dahulu!';
+                statusMsg.style.display = 'block';
+                return;
+            }
+
+            const file = fileInput.files[0];
+            if (file.size > 2 * 1024 * 1024) {
+                statusMsg.className = 'status-msg status-error';
+                statusMsg.textContent = 'Ukuran file foto terlalu besar! Maksimal 2MB.';
                 statusMsg.style.display = 'block';
                 return;
             }
@@ -871,7 +887,7 @@ const paymentUpload = multer({
         }
         cb(new Error('Hanya file gambar (JPG, PNG, WEBP) yang diizinkan!'));
     },
-    limits: { fileSize: 10 * 1024 * 1024 }
+    limits: { fileSize: 2 * 1024 * 1024 }
 });
 
 const uploadZip = multer({
