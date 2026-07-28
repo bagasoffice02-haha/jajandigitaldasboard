@@ -218,24 +218,30 @@ async function renderPaymentPage(req, res, startFlipped = false) {
         }
 
         .card-front {
-            z-index: 2;
+            z-index: 5;
+            visibility: visible;
             pointer-events: auto;
         }
 
         .card-back {
             transform: rotateY(180deg);
             z-index: 1;
+            visibility: hidden;
             pointer-events: none;
         }
 
         .card-3d.is-flipped .card-front {
             z-index: 1;
+            visibility: hidden;
             pointer-events: none;
+            transition: visibility 0s 0.35s;
         }
 
         .card-3d.is-flipped .card-back {
-            z-index: 2;
+            z-index: 5;
+            visibility: visible;
             pointer-events: auto;
+            transition: visibility 0s 0.35s;
         }
 
         .header { text-align: center; margin-bottom: 2px; }
@@ -301,6 +307,9 @@ async function renderPaymentPage(req, res, startFlipped = false) {
             font-size: 0.75rem;
             font-weight: 700;
             cursor: pointer;
+            position: relative;
+            z-index: 10;
+            pointer-events: auto;
             transition: all 0.2s ease;
         }
 
@@ -331,6 +340,9 @@ async function renderPaymentPage(req, res, startFlipped = false) {
             font-size: 0.72rem;
             font-weight: 700;
             cursor: pointer;
+            position: relative;
+            z-index: 10;
+            pointer-events: auto;
             transition: all 0.2s ease;
         }
 
@@ -358,6 +370,9 @@ async function renderPaymentPage(req, res, startFlipped = false) {
             align-items: center;
             justify-content: center;
             gap: 8px;
+            position: relative;
+            z-index: 10;
+            pointer-events: auto;
             box-shadow: 0 4px 15px rgba(2, 132, 199, 0.35);
         }
 
@@ -375,6 +390,9 @@ async function renderPaymentPage(req, res, startFlipped = false) {
             align-items: center;
             justify-content: center;
             gap: 6px;
+            position: relative;
+            z-index: 10;
+            pointer-events: auto;
         }
 
         /* Front / Back Dropzone Styles */
@@ -534,7 +552,28 @@ async function renderPaymentPage(req, res, startFlipped = false) {
     <script>
         function toggleFlip() {
             const card = document.getElementById('card3d');
-            card.classList.toggle('is-flipped');
+            const front = document.querySelector('.card-front');
+            const back = document.querySelector('.card-back');
+            const isFlipped = card.classList.toggle('is-flipped');
+            if (isFlipped) {
+                back.style.visibility = 'visible';
+                back.style.pointerEvents = 'auto';
+                setTimeout(() => {
+                    if (card.classList.contains('is-flipped')) {
+                        front.style.visibility = 'hidden';
+                        front.style.pointerEvents = 'none';
+                    }
+                }, 350);
+            } else {
+                front.style.visibility = 'visible';
+                front.style.pointerEvents = 'auto';
+                setTimeout(() => {
+                    if (!card.classList.contains('is-flipped')) {
+                        back.style.visibility = 'hidden';
+                        back.style.pointerEvents = 'none';
+                    }
+                }, 350);
+            }
         }
 
         function openZoomModal() {
