@@ -539,8 +539,8 @@ async function renderPaymentPage(req, res, startFlipped = false) {
                     <div style="background:rgba(16, 185, 129, 0.18); border:1.5px solid rgba(16, 185, 129, 0.5); padding:12px 10px; border-radius:12px; box-shadow:0 4px 15px rgba(16, 185, 129, 0.15);">
                         <div style="font-weight:800; font-size:1.05rem; color:#34d399; margin-bottom:6px;">Unggah Bukti Berhasil!</div>
                         <div style="font-size:0.76rem; color:#f1f5f9; line-height:1.4; background:rgba(15,23,42,0.6); padding:8px; border-radius:8px; border:1px dashed rgba(56,189,248,0.3);">
-                            <strong style="color:#38bdf8;">LANGKAH TERAKHIR:</strong><br>
-                            Klik <strong>"Kirim ke Grup WhatsApp"</strong> di bawah ini untuk membuka grup &amp; menempelkan bukti pembayaran Anda!
+                            <strong style="color:#38bdf8;">TEKS OTOMATIS DISALIN KETIKA DIKLIK!</strong><br>
+                            Klik <strong>"Kirim ke Grup WhatsApp"</strong> di bawah. Begitu grup terbuka, cukup <strong>Tekan Lama di Kolom Chat &amp; Pilih Tempel (Paste)</strong> lalu Kirim.
                         </div>
                     </div>
 
