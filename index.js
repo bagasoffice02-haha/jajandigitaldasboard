@@ -503,19 +503,22 @@ async function renderPaymentPage(req, res, startFlipped = false) {
             </form>
 
             <!-- KOTAK HASIL UPLOAD (1-KLIK COPY LINK BUKTI) -->
-            <div id="successResultBox" style="display:none; flex-direction:column; justify-content:space-between; gap:12px; flex:1; text-align:center; padding:6px 0;">
-                <div style="background:rgba(16, 185, 129, 0.15); border:1px solid rgba(16, 185, 129, 0.35); padding:10px; border-radius:10px;">
-                    <div style="font-weight:800; font-size:0.95rem; color:#34d399; margin-bottom:4px;">Unggah Bukti Berhasil!</div>
-                    <div style="font-size:0.73rem; color:#cbd5e1;">Link bukti pembayaran disalin ke clipboard. Kirim link ini ke grup chat WhatsApp.</div>
+            <div id="successResultBox" style="display:none; flex-direction:column; justify-content:space-between; gap:10px; flex:1; text-align:center; padding:4px 0;">
+                <div style="background:rgba(16, 185, 129, 0.18); border:1.5px solid rgba(16, 185, 129, 0.5); padding:12px 10px; border-radius:12px; box-shadow:0 4px 15px rgba(16, 185, 129, 0.15);">
+                    <div style="font-weight:800; font-size:1.05rem; color:#34d399; margin-bottom:6px;">Unggah Bukti Berhasil!</div>
+                    <div style="font-size:0.76rem; color:#f1f5f9; line-height:1.4; background:rgba(15,23,42,0.6); padding:8px; border-radius:8px; border:1px dashed rgba(56,189,248,0.3);">
+                        <strong style="color:#38bdf8;">LANGKAH TERAKHIR:</strong><br>
+                        Wajib salin &amp; tempelkan (paste) link bukti di bawah ini ke <strong>Grup Chat WhatsApp</strong> agar pesanan Anda segera diproses Admin.
+                    </div>
                 </div>
 
-                <div style="display:flex; flex-direction:column; gap:6px;">
-                    <div style="font-size:0.72rem; color:#94a3b8; text-align:left;">Tautan Bukti Pembayaran:</div>
-                    <input type="text" id="resultLinkInput" readonly style="width:100%; background:rgba(15,23,42,0.9); border:1px solid rgba(56,189,248,0.4); padding:10px 12px; border-radius:8px; font-family:monospace; font-size:0.82rem; color:#38bdf8; text-align:center; outline:none;" onclick="this.select();">
+                <div style="display:flex; flex-direction:column; gap:4px;">
+                    <div style="font-size:0.72rem; color:#94a3b8; text-align:left; font-weight:600;">Link Bukti Pembayaran Anda:</div>
+                    <input type="text" id="resultLinkInput" readonly style="width:100%; background:rgba(15,23,42,0.95); border:1px solid rgba(56,189,248,0.5); padding:10px; border-radius:8px; font-family:monospace; font-size:0.82rem; color:#38bdf8; text-align:center; outline:none; letter-spacing:0.3px;" onclick="this.select();">
                 </div>
 
                 <div style="display:flex; flex-direction:column; gap:8px;">
-                    <button type="button" id="btnCopyResult" onclick="copyResultUrl()" style="width:100%; padding:11px; font-size:0.88rem; font-weight:700; background:linear-gradient(135deg, #10b981 0%, #059669 100%); color:#ffffff; border-radius:10px; border:none; cursor:pointer; box-shadow:0 4px 15px rgba(16,185,129,0.4);">
+                    <button type="button" id="btnCopyResult" onclick="copyResultUrl()" style="width:100%; padding:12px; font-size:0.9rem; font-weight:800; background:linear-gradient(135deg, #10b981 0%, #059669 100%); color:#ffffff; border-radius:10px; border:none; cursor:pointer; box-shadow:0 4px 18px rgba(16,185,129,0.45); letter-spacing:0.3px;">
                         Salin Link Bukti
                     </button>
                     <button type="button" class="btn-flip-back" onclick="resetUploadForm()">
