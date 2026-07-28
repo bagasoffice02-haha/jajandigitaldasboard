@@ -313,6 +313,18 @@ app.get(['/q', '/qris', '/qris/:filename', '/v/qris'], (req, res) => {
             </ol>
         </div>
 
+        <!-- Note & Keterangan -->
+        <div class="note-box" style="text-align: left; background: rgba(234, 179, 8, 0.1); border: 1px solid rgba(234, 179, 8, 0.3); border-radius: 14px; padding: 1rem; margin-bottom: 1.5rem; font-size: 0.85rem; color: #fef08a; line-height: 1.6;">
+            <div style="font-weight: 700; color: #facc15; margin-bottom: 0.4rem; display: flex; align-items: center; gap: 6px;">
+                <span>📌 Keterangan & Note:</span>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 4px;">
+                <div>➥ Bayar via QRIS <strong>Bebas Admin</strong>.</div>
+                <div>➥ Selain QRIS (Bank/E-Wallet) <strong>wajib +fee Rp 500</strong>.</div>
+                <div>➥ Kirim <strong>bukti transfer</strong> setelah bayar.</div>
+            </div>
+        </div>
+
         <a href="/upload-bukti" class="btn-upload">
             <span>📸 Unggah Bukti Pembayaran</span>
         </a>
