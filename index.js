@@ -179,12 +179,25 @@ async function renderPaymentPage(req, res, startFlipped = false) {
                 radial-gradient(at 100% 100%, rgba(13, 148, 136, 0.12) 0px, transparent 50%);
         }
 
-        .container-wrapper {
+        .scene {
             width: 100%;
             max-width: 410px;
+            perspective: 1200px;
+            margin: 0 auto;
         }
 
-        .card-box {
+        .card-3d {
+            width: 100%;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .card-3d.is-flipped {
+            transform: rotateY(180deg);
+        }
+
+        .card-face {
             width: 100%;
             background: rgba(15, 23, 42, 0.92);
             backdrop-filter: blur(20px);
@@ -197,15 +210,40 @@ async function renderPaymentPage(req, res, startFlipped = false) {
             justify-content: space-between;
             gap: 8px;
             box-shadow: 0 15px 40px rgba(0, 0, 0, 0.6);
+            backface-visibility: hidden;
+            -webkit-backface-visibility: hidden;
         }
 
-        @keyframes cardFadeIn {
-            0% { opacity: 0; transform: scale(0.97); }
-            100% { opacity: 1; transform: scale(1); }
+        .card-front {
+            position: relative;
+            transform: rotateY(0deg);
+            z-index: 2;
+            visibility: visible;
+            pointer-events: auto;
         }
 
-        .animate-card {
-            animation: cardFadeIn 0.25s ease-out forwards;
+        .card-back {
+            position: absolute;
+            top: 0; left: 0;
+            height: 100%;
+            transform: rotateY(180deg);
+            z-index: 1;
+            visibility: hidden;
+            pointer-events: none;
+        }
+
+        .card-3d.is-flipped .card-front {
+            z-index: 1;
+            visibility: hidden;
+            pointer-events: none;
+            transition: visibility 0s 0.3s;
+        }
+
+        .card-3d.is-flipped .card-back {
+            z-index: 2;
+            visibility: visible;
+            pointer-events: auto;
+            transition: visibility 0s 0.3s;
         }
 
         .header { text-align: center; margin-bottom: 2px; }
@@ -403,128 +441,130 @@ async function renderPaymentPage(req, res, startFlipped = false) {
 </head>
 <body>
 
-    <div class="container-wrapper">
+    <div class="scene">
+        <div class="card-3d ${startFlipped ? 'is-flipped' : ''}" id="card3d">
             
-        <!-- SISI DEPAN: QRIS & REKENING PEMBAYARAN -->
-        <div class="card-box animate-card" id="cardFront" style="display: ${startFlipped ? 'none' : 'flex'};">
-            <div class="header">
-                <h1>Pembayaran Jajan Digital</h1>
-                <div class="trust-badge">
-                    <span class="live-dot"></span>
-                    <span>${formattedTxCount} Total Transaksi Selesai</span>
-                </div>
-            </div>
-
-            <div class="qris-box">
-                <div class="qris-img-bg" onclick="openZoomModal()" style="cursor: zoom-in;">
-                    <img src="${rawImageUrl}" alt="QRIS" class="qris-img">
-                </div>
-                <button type="button" onclick="openZoomModal()" class="btn-zoom">Perbesar QRIS</button>
-            </div>
-
-            <div class="bank-list">
-                <div class="bank-item">
-                    <div>
-                        <div class="bank-name">GOPAY</div>
-                        <div class="bank-num">085789863037</div>
-                        <div class="bank-holder">a.n Bagas Saputra</div>
+            <!-- SISI DEPAN: QRIS & REKENING PEMBAYARAN -->
+            <div class="card-face card-front" id="cardFront">
+                <div class="header">
+                    <h1>Pembayaran Jajan Digital</h1>
+                    <div class="trust-badge">
+                        <span class="live-dot"></span>
+                        <span>${formattedTxCount} Total Transaksi Selesai</span>
                     </div>
-                    <button type="button" class="btn-copy" onclick="copyText('085789863037', this)">Salin</button>
                 </div>
-                <div class="bank-item">
-                    <div>
-                        <div class="bank-name">SEABANK</div>
-                        <div class="bank-num">901346990999</div>
-                        <div class="bank-holder">a.n Bagas Saputra</div>
+
+                <div class="qris-box">
+                    <div class="qris-img-bg" onclick="openZoomModal()" style="cursor: zoom-in;">
+                        <img src="${rawImageUrl}" alt="QRIS" class="qris-img">
                     </div>
-                    <button type="button" class="btn-copy" onclick="copyText('901346990999', this)">Salin</button>
+                    <button type="button" onclick="openZoomModal()" class="btn-zoom">Perbesar QRIS</button>
                 </div>
-                <div class="bank-item">
-                    <div>
-                        <div class="bank-name">BRI</div>
-                        <div class="bank-num">560801027512500</div>
-                        <div class="bank-holder">a.n Bagas Saputra</div>
-                    </div>
-                    <button type="button" class="btn-copy" onclick="copyText('560801027512500', this)">Salin</button>
-                </div>
-            </div>
 
-            <div class="note-bar">
-                <strong>Catatan:</strong> QRIS bebas admin. Bank/E-Wallet +Rp500. Kirim bukti transfer setelah bayar.
-            </div>
-
-            <button type="button" class="btn-flip" onclick="toggleFlip()">
-                <span>Sudah Bayar? Unggah Bukti</span>
-            </button>
-        </div>
-
-        <!-- SISI BELAKANG: FORM UNGGAH BUKTI TRANSFER -->
-        <div class="card-box animate-card" id="cardBack" style="display: ${startFlipped ? 'flex' : 'none'};">
-            <div class="header">
-                <h1>Unggah Bukti Transfer</h1>
-                <div class="trust-badge">
-                    <span class="live-dot"></span>
-                    <span>Verifikasi Aman &amp; Cepat</span>
-                </div>
-            </div>
-
-            <form id="uploadForm" onsubmit="handleUploadSubmit(event)" style="display:flex; flex-direction:column; justify-content:space-between; gap:10px; flex:1;">
-                <div id="statusMsg" class="status-msg"></div>
-
-                <div class="dropzone" onclick="document.getElementById('fileInput').click()">
-                    <div id="dropInitial">
-                        <div class="dropzone-icon">
-                            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                                <polyline points="17 8 12 3 7 8"/>
-                                <line x1="12" y1="3" x2="12" y2="15"/>
-                            </svg>
+                <div class="bank-list">
+                    <div class="bank-item">
+                        <div>
+                            <div class="bank-name">GOPAY</div>
+                            <div class="bank-num">085789863037</div>
+                            <div class="bank-holder">a.n Bagas Saputra</div>
                         </div>
-                        <div class="dropzone-text">Pilih Foto Bukti Transfer</div>
-                        <div class="dropzone-hint">Format JPG, PNG, WEBP (Max 2MB)</div>
+                        <button type="button" class="btn-copy" onclick="copyText('085789863037', this)">Salin</button>
                     </div>
-                    <img id="previewImg" style="display:none; max-height:160px; max-width:100%; border-radius:8px; object-fit:contain;" alt="Pratinjau Bukti">
-                    <input type="file" id="fileInput" accept="image/*" style="display:none;" onchange="handleFileSelect(event)">
-                </div>
-
-                <div>
-                    <button type="submit" id="btnSubmitUpload" class="btn-upload-submit">Kirim Bukti Pembayaran</button>
-                    <button type="button" class="btn-flip-back" onclick="toggleFlip()">
-                        <span>← Kembali ke Halaman QRIS</span>
-                    </button>
-                </div>
-            </form>
-
-            <!-- KOTAK HASIL UPLOAD (1-KLIK COPY LINK BUKTI & KIRIM KE GRUP) -->
-            <div id="successResultBox" style="display:none; flex-direction:column; justify-content:space-between; gap:10px; flex:1; text-align:center; padding:4px 0;">
-                <div style="background:rgba(16, 185, 129, 0.18); border:1.5px solid rgba(16, 185, 129, 0.5); padding:12px 10px; border-radius:12px; box-shadow:0 4px 15px rgba(16, 185, 129, 0.15);">
-                    <div style="font-weight:800; font-size:1.05rem; color:#34d399; margin-bottom:6px;">Unggah Bukti Berhasil!</div>
-                    <div style="font-size:0.76rem; color:#f1f5f9; line-height:1.4; background:rgba(15,23,42,0.6); padding:8px; border-radius:8px; border:1px dashed rgba(56,189,248,0.3);">
-                        <strong style="color:#38bdf8;">LANGKAH TERAKHIR:</strong><br>
-                        Klik <strong>"Kirim ke Grup WhatsApp"</strong> di bawah ini untuk membuka grup &amp; menempelkan bukti pembayaran Anda!
+                    <div class="bank-item">
+                        <div>
+                            <div class="bank-name">SEABANK</div>
+                            <div class="bank-num">901346990999</div>
+                            <div class="bank-holder">a.n Bagas Saputra</div>
+                        </div>
+                        <button type="button" class="btn-copy" onclick="copyText('901346990999', this)">Salin</button>
+                    </div>
+                    <div class="bank-item">
+                        <div>
+                            <div class="bank-name">BRI</div>
+                            <div class="bank-num">560801027512500</div>
+                            <div class="bank-holder">a.n Bagas Saputra</div>
+                        </div>
+                        <button type="button" class="btn-copy" onclick="copyText('560801027512500', this)">Salin</button>
                     </div>
                 </div>
 
-                <div style="display:flex; flex-direction:column; gap:4px;">
-                    <div style="font-size:0.72rem; color:#94a3b8; text-align:left; font-weight:600;">Link Bukti Pembayaran Anda:</div>
-                    <input type="text" id="resultLinkInput" readonly style="width:100%; background:rgba(15,23,42,0.95); border:1px solid rgba(56,189,248,0.5); padding:10px; border-radius:8px; font-family:monospace; font-size:0.82rem; color:#38bdf8; text-align:center; outline:none; letter-spacing:0.3px;" onclick="this.select();">
+                <div class="note-bar">
+                    <strong>Catatan:</strong> QRIS bebas admin. Bank/E-Wallet +Rp500. Kirim bukti transfer setelah bayar.
                 </div>
 
-                <div style="display:flex; flex-direction:column; gap:8px;">
-                    <a id="btnSendGroup" href="https://chat.whatsapp.com/GKppODkdFKc9YLkqLWQpkO?s=cl&p=a&ilr=4&amv=2" target="_blank" rel="noopener noreferrer" onclick="copyTemplateBeforeRedirect()" style="width:100%; padding:13px; font-size:0.92rem; font-weight:800; background:linear-gradient(135deg, #25D366 0%, #128C7E 100%); color:#ffffff; border-radius:10px; border:none; cursor:pointer; box-shadow:0 4px 18px rgba(37,211,102,0.45); letter-spacing:0.3px; display:flex; align-items:center; justify-content:center; gap:8px; text-decoration:none; box-sizing:border-box; -webkit-tap-highlight-color:transparent;">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
-                        <span>Kirim ke Grup WhatsApp</span>
-                    </a>
-                    <button type="button" id="btnCopyResult" onclick="copyResultUrl()" style="width:100%; padding:10px; font-size:0.82rem; font-weight:700; background:rgba(255,255,255,0.08); color:#e2e8f0; border-radius:8px; border:1px solid rgba(255,255,255,0.15); cursor:pointer; -webkit-tap-highlight-color:transparent;">
-                        Salin Link Bukti Saja
-                    </button>
-                    <button type="button" class="btn-flip-back" onclick="resetUploadForm()" style="margin-top:2px;">
-                        <span>← Kembali ke Halaman QRIS</span>
-                    </button>
+                <button type="button" class="btn-flip" onclick="toggleFlip()">
+                    <span>Sudah Bayar? Unggah Bukti</span>
+                </button>
+            </div>
+
+            <!-- SISI BELAKANG: FORM UNGGAH BUKTI TRANSFER -->
+            <div class="card-face card-back" id="cardBack">
+                <div class="header">
+                    <h1>Unggah Bukti Transfer</h1>
+                    <div class="trust-badge">
+                        <span class="live-dot"></span>
+                        <span>Verifikasi Aman &amp; Cepat</span>
+                    </div>
+                </div>
+
+                <form id="uploadForm" onsubmit="handleUploadSubmit(event)" style="display:flex; flex-direction:column; justify-content:space-between; gap:10px; flex:1;">
+                    <div id="statusMsg" class="status-msg"></div>
+
+                    <div class="dropzone" onclick="document.getElementById('fileInput').click()">
+                        <div id="dropInitial">
+                            <div class="dropzone-icon">
+                                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                                    <polyline points="17 8 12 3 7 8"/>
+                                    <line x1="12" y1="3" x2="12" y2="15"/>
+                                </svg>
+                            </div>
+                            <div class="dropzone-text">Pilih Foto Bukti Transfer</div>
+                            <div class="dropzone-hint">Format JPG, PNG, WEBP (Max 2MB)</div>
+                        </div>
+                        <img id="previewImg" style="display:none; max-height:160px; max-width:100%; border-radius:8px; object-fit:contain;" alt="Pratinjau Bukti">
+                        <input type="file" id="fileInput" accept="image/*" style="display:none;" onchange="handleFileSelect(event)">
+                    </div>
+
+                    <div>
+                        <button type="submit" id="btnSubmitUpload" class="btn-upload-submit">Kirim Bukti Pembayaran</button>
+                        <button type="button" class="btn-flip-back" onclick="toggleFlip()">
+                            <span>← Kembali ke Halaman QRIS</span>
+                        </button>
+                    </div>
+                </form>
+
+                <!-- KOTAK HASIL UPLOAD (1-KLIK COPY LINK BUKTI & KIRIM KE GRUP) -->
+                <div id="successResultBox" style="display:none; flex-direction:column; justify-content:space-between; gap:10px; flex:1; text-align:center; padding:4px 0;">
+                    <div style="background:rgba(16, 185, 129, 0.18); border:1.5px solid rgba(16, 185, 129, 0.5); padding:12px 10px; border-radius:12px; box-shadow:0 4px 15px rgba(16, 185, 129, 0.15);">
+                        <div style="font-weight:800; font-size:1.05rem; color:#34d399; margin-bottom:6px;">Unggah Bukti Berhasil!</div>
+                        <div style="font-size:0.76rem; color:#f1f5f9; line-height:1.4; background:rgba(15,23,42,0.6); padding:8px; border-radius:8px; border:1px dashed rgba(56,189,248,0.3);">
+                            <strong style="color:#38bdf8;">LANGKAH TERAKHIR:</strong><br>
+                            Klik <strong>"Kirim ke Grup WhatsApp"</strong> di bawah ini untuk membuka grup &amp; menempelkan bukti pembayaran Anda!
+                        </div>
+                    </div>
+
+                    <div style="display:flex; flex-direction:column; gap:4px;">
+                        <div style="font-size:0.72rem; color:#94a3b8; text-align:left; font-weight:600;">Link Bukti Pembayaran Anda:</div>
+                        <input type="text" id="resultLinkInput" readonly style="width:100%; background:rgba(15,23,42,0.95); border:1px solid rgba(56,189,248,0.5); padding:10px; border-radius:8px; font-family:monospace; font-size:0.82rem; color:#38bdf8; text-align:center; outline:none; letter-spacing:0.3px;" onclick="this.select();">
+                    </div>
+
+                    <div style="display:flex; flex-direction:column; gap:8px;">
+                        <a id="btnSendGroup" href="https://chat.whatsapp.com/GKppODkdFKc9YLkqLWQpkO?s=cl&p=a&ilr=4&amv=2" target="_blank" rel="noopener noreferrer" onclick="copyTemplateBeforeRedirect()" style="width:100%; padding:13px; font-size:0.92rem; font-weight:800; background:linear-gradient(135deg, #25D366 0%, #128C7E 100%); color:#ffffff; border-radius:10px; border:none; cursor:pointer; box-shadow:0 4px 18px rgba(37,211,102,0.45); letter-spacing:0.3px; display:flex; align-items:center; justify-content:center; gap:8px; text-decoration:none; box-sizing:border-box; -webkit-tap-highlight-color:transparent;">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+                            <span>Kirim ke Grup WhatsApp</span>
+                        </a>
+                        <button type="button" id="btnCopyResult" onclick="copyResultUrl()" style="width:100%; padding:10px; font-size:0.82rem; font-weight:700; background:rgba(255,255,255,0.08); color:#e2e8f0; border-radius:8px; border:1px solid rgba(255,255,255,0.15); cursor:pointer; -webkit-tap-highlight-color:transparent;">
+                            Salin Link Bukti Saja
+                        </button>
+                        <button type="button" class="btn-flip-back" onclick="resetUploadForm()" style="margin-top:2px;">
+                            <span>← Kembali ke Halaman QRIS</span>
+                        </button>
+                    </div>
                 </div>
             </div>
-        </div>
 
+        </div>
     </div>
 
     <!-- Modal Lightbox Zoom QRIS -->
@@ -555,20 +595,29 @@ async function renderPaymentPage(req, res, startFlipped = false) {
         }
 
         function toggleFlip() {
+            const card = document.getElementById('card3d');
             const front = document.getElementById('cardFront');
             const back = document.getElementById('cardBack');
-            if (front.style.display !== 'none') {
-                front.style.display = 'none';
-                back.style.display = 'flex';
-                back.classList.remove('animate-card');
-                void back.offsetWidth;
-                back.classList.add('animate-card');
+            const isFlipped = card.classList.toggle('is-flipped');
+
+            if (isFlipped) {
+                back.style.visibility = 'visible';
+                back.style.pointerEvents = 'auto';
+                setTimeout(() => {
+                    if (card.classList.contains('is-flipped')) {
+                        front.style.visibility = 'hidden';
+                        front.style.pointerEvents = 'none';
+                    }
+                }, 300);
             } else {
-                back.style.display = 'none';
-                front.style.display = 'flex';
-                front.classList.remove('animate-card');
-                void front.offsetWidth;
-                front.classList.add('animate-card');
+                front.style.visibility = 'visible';
+                front.style.pointerEvents = 'auto';
+                setTimeout(() => {
+                    if (!card.classList.contains('is-flipped')) {
+                        back.style.visibility = 'hidden';
+                        back.style.pointerEvents = 'none';
+                    }
+                }, 300);
             }
         }
 
