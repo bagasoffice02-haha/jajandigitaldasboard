@@ -577,23 +577,35 @@ async function renderPaymentPage(req, res, startFlipped = false) {
     </div>
 
     <script>
+        function performCopyText(str) {
+            if (!str) return;
+            try {
+                const ta = document.createElement('textarea');
+                ta.value = str;
+                ta.style.position = 'fixed';
+                ta.style.top = '0';
+                ta.style.left = '0';
+                ta.style.opacity = '0';
+                document.body.appendChild(ta);
+                ta.focus();
+                ta.select();
+                ta.setSelectionRange(0, 99999);
+                document.execCommand('copy');
+                document.body.removeChild(ta);
+            } catch (_) {}
+
+            try {
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(str);
+                }
+            } catch (_) {}
+        }
+
         function copyTemplateBeforeRedirect() {
             const linkInput = document.getElementById('resultLinkInput');
             const fullUrl = linkInput ? linkInput.value : '';
             const msgTemplate = ['Halo Admin, saya sudah melakukan pembayaran.', '', 'Bukti Transfer:', fullUrl].join(String.fromCharCode(10));
-            
-            try {
-                navigator.clipboard.writeText(msgTemplate);
-            } catch(_) {
-                try {
-                    const temp = document.createElement('textarea');
-                    temp.value = msgTemplate;
-                    document.body.appendChild(temp);
-                    temp.select();
-                    document.execCommand('copy');
-                    document.body.removeChild(temp);
-                } catch(__) {}
-            }
+            performCopyText(msgTemplate);
         }
 
         function toggleFlip() {
@@ -751,9 +763,7 @@ async function renderPaymentPage(req, res, startFlipped = false) {
                     resultInput.value = fullUrl;
                     document.getElementById('successResultBox').style.display = 'flex';
 
-                    try {
-                        navigator.clipboard.writeText(fullUrl);
-                    } catch(_) {}
+                    copyTemplateBeforeRedirect();
                 } else {
                     statusMsg.className = 'status-msg status-error';
                     statusMsg.textContent = data.error || 'Gagal mengunggah bukti.';
