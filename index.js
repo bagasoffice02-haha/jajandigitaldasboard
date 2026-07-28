@@ -193,7 +193,7 @@ app.get(['/q', '/qris', '/qris/:filename', '/v/qris'], (req, res) => {
             object-fit: contain;
             display: block;
         }
-        .btn-download {
+        .btn-zoom {
             background: rgba(56, 189, 248, 0.15);
             border: 1px solid rgba(56, 189, 248, 0.35);
             color: #38bdf8;
@@ -201,11 +201,10 @@ app.get(['/q', '/qris', '/qris/:filename', '/v/qris'], (req, res) => {
             border-radius: 8px;
             font-size: 0.78rem;
             font-weight: 600;
-            text-decoration: none;
             cursor: pointer;
             transition: all 0.2s ease;
         }
-        .btn-download:hover {
+        .btn-zoom:hover {
             background: rgba(56, 189, 248, 0.25);
         }
 
@@ -270,10 +269,10 @@ app.get(['/q', '/qris', '/qris/:filename', '/v/qris'], (req, res) => {
         </div>
 
         <div class="qris-box">
-            <div class="qris-img-bg">
+            <div class="qris-img-bg" onclick="openZoomModal()" style="cursor: zoom-in;">
                 <img src="${rawImageUrl}" alt="QRIS" class="qris-img">
             </div>
-            <a href="${rawImageUrl}" download="QRIS_JajanDigital.jpeg" class="btn-download">Unduh QRIS</a>
+            <button type="button" onclick="openZoomModal()" class="btn-zoom">Perbesar QRIS</button>
         </div>
 
         <div class="bank-list">
@@ -310,7 +309,22 @@ app.get(['/q', '/qris', '/qris/:filename', '/v/qris'], (req, res) => {
         <a href="/u" class="btn-action">Unggah Bukti Transfer</a>
     </div>
 
+    <!-- Modal Lightbox Zoom QRIS -->
+    <div id="zoomModal" onclick="closeZoomModal()" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.92); z-index:9999; flex-direction:column; align-items:center; justify-content:center; padding:15px; cursor:zoom-out;">
+        <div style="position:absolute; top:20px; right:20px; color:white; font-size:22px; font-weight:bold; background:rgba(255,255,255,0.2); width:38px; height:38px; border-radius:50%; display:flex; align-items:center; justify-content:center;">✕</div>
+        <img src="${rawImageUrl}" style="max-width:92vw; max-height:80vh; border-radius:12px; background:white; padding:10px; box-shadow:0 10px 30px rgba(0,0,0,0.8);" alt="QRIS Perbesar">
+        <div style="color:#94a3b8; font-size:0.8rem; margin-top:14px;">Ketuk di mana saja untuk menutup</div>
+    </div>
+
     <script>
+        function openZoomModal() {
+            const modal = document.getElementById('zoomModal');
+            modal.style.display = 'flex';
+        }
+        function closeZoomModal() {
+            const modal = document.getElementById('zoomModal');
+            modal.style.display = 'none';
+        }
         function copyText(val, btn) {
             navigator.clipboard.writeText(val).then(() => {
                 const orig = btn.textContent;
