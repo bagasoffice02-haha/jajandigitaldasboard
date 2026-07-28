@@ -127,10 +127,12 @@ async function renderPaymentPage(req, res, startFlipped = false) {
     // Ambil total transaksi sukses secara live dari database (mulai dari 176)
     let txCount = 176;
     try {
-        const db = await getDb();
-        const row = await db.get("SELECT COUNT(*) as total FROM orders WHERE status = 'DONE'");
-        if (row && row.total) {
-            txCount += row.total;
+        const db = getDb();
+        if (db) {
+            const rowOrders = await db.get("SELECT COUNT(*) as total FROM orders WHERE UPPER(status) IN ('SELESAI', 'DONE', 'COMPLETED', 'PAID')");
+            const rowInvoices = await db.get("SELECT COUNT(*) as total FROM invoices WHERE UPPER(status) IN ('SELESAI', 'DONE', 'COMPLETED', 'PAID')");
+            const totalDone = ((rowOrders && rowOrders.total) || 0) + ((rowInvoices && rowInvoices.total) || 0);
+            txCount += totalDone;
         }
     } catch(_) {}
     const formattedTxCount = txCount.toLocaleString('id-ID');
