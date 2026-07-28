@@ -3,6 +3,7 @@ if (typeof global.DOMMatrix === 'undefined') {
     global.DOMMatrix = class DOMMatrix {};
 }
 
+const crypto = require('crypto');
 const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
@@ -54,10 +55,10 @@ loadSessions();
 const ADMIN_USERNAME = config.admin_username || 'admin';
 const ADMIN_PASSWORD = config.admin_password || 'bagas123';
 
-// Middleware Autentikasi Dasbor
+// Middleware Autentikasi Dasbor (Bypass portal upload bukti publik)
 function checkAuth(req, res, next) {
-    const publicPaths = ['/login', '/api/login', '/favicon.ico'];
-    if (publicPaths.includes(req.path)) return next();
+    const publicPaths = ['/login', '/api/login', '/upload-bukti', '/api/upload-bukti', '/favicon.ico'];
+    if (publicPaths.includes(req.path) || req.path.startsWith('/uploads/')) return next();
     let token = null;
     const cookies = req.headers.cookie;
     if (cookies) {
@@ -73,8 +74,9 @@ function checkAuth(req, res, next) {
 
 app.use(checkAuth);
 
-// ─── Auth Routes (login/logout inline — singkat, tidak perlu file terpisah) ──
+// ─── Auth & Public Upload Portal Routes ─────────────────────────────────────────
 app.get('/login', (req, res) => res.sendFile(path.join(__dirname, 'public', 'login.html')));
+app.get('/upload-bukti', (req, res) => res.sendFile(path.join(__dirname, 'public', 'upload-bukti.html')));
 
 app.post('/api/login', (req, res) => {
     const { username, password } = req.body;
@@ -106,15 +108,36 @@ app.get('/api/auth-status', (req, res) => res.json({ authenticated: true }));
 app.use(express.static(path.join(__dirname, 'public')));
 app.use('/knowledge', express.static(path.join(__dirname, 'knowledge')));
 app.use('/media', express.static(path.join(__dirname, 'media')));
+app.use('/uploads', express.static(path.join(__dirname, 'public', 'uploads')));
 
 const KNOWLEDGE_DIR = './knowledge';
 const MEDIA_DIR = './media';
-if (!fs.existsSync(KNOWLEDGE_DIR)) fs.mkdirSync(KNOWLEDGE_DIR);
-if (!fs.existsSync(MEDIA_DIR)) fs.mkdirSync(MEDIA_DIR);
+const PAYMENTS_DIR = './public/uploads/payments';
+const STICKERS_DIR = './public/uploads/stickers';
+const PRODUCTS_DIR = './public/uploads/products';
+
+[KNOWLEDGE_DIR, MEDIA_DIR, PAYMENTS_DIR, STICKERS_DIR, PRODUCTS_DIR].forEach(dir => {
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+});
 
 // ─── Multer Setup ─────────────────────────────────────────────────────────────
 const knowledgeUpload = multer({ storage: multer.diskStorage({ destination: (req, file, cb) => cb(null, KNOWLEDGE_DIR), filename: (req, file, cb) => cb(null, file.originalname) }) });
 const mediaUpload = multer({ storage: multer.diskStorage({ destination: (req, file, cb) => cb(null, MEDIA_DIR), filename: (req, file, cb) => cb(null, file.originalname) }) });
+const stickersUpload = multer({ storage: multer.diskStorage({ destination: (req, file, cb) => cb(null, STICKERS_DIR), filename: (req, file, cb) => cb(null, file.originalname) }) });
+const productsUpload = multer({ storage: multer.diskStorage({ destination: (req, file, cb) => cb(null, PRODUCTS_DIR), filename: (req, file, cb) => cb(null, file.originalname) }) });
+
+const paymentUpload = multer({
+    storage: multer.diskStorage({
+        destination: (req, file, cb) => cb(null, PAYMENTS_DIR),
+        filename: (req, file, cb) => {
+            const ext = path.extname(file.originalname) || '.jpg';
+            const randomName = 'pay_' + crypto.randomBytes(8).toString('hex') + ext;
+            cb(null, randomName);
+        }
+    }),
+    limits: { fileSize: 10 * 1024 * 1024 }
+});
+
 const uploadZip = multer({
     storage: multer.diskStorage({ destination: (req, file, cb) => cb(null, require('os').tmpdir()), filename: (req, file, cb) => cb(null, `import-backup-${Date.now()}.zip`) }),
     fileFilter: (req, file, cb) => (file.mimetype === 'application/zip' || file.originalname.endsWith('.zip')) ? cb(null, true) : cb(new Error('Hanya file .zip yang diizinkan'), false),
@@ -124,6 +147,9 @@ const uploadZip = multer({
 // Simpan multer instances ke app agar bisa dipakai di route files
 app.set('knowledgeUpload', knowledgeUpload);
 app.set('mediaUpload', mediaUpload);
+app.set('stickersUpload', stickersUpload);
+app.set('productsUpload', productsUpload);
+app.set('paymentUpload', paymentUpload);
 app.set('uploadZip', uploadZip);
 
 // ─── Mount Routers ────────────────────────────────────────────────────────────
@@ -136,9 +162,20 @@ const hostAdminRouter = require('./src/routes/hostAdmin');
 const miscRouter      = require('./src/routes/misc');
 const configRouter    = require('./src/routes/configRoute');
 
+// Public Payment Upload Route
+app.post('/api/upload-bukti', paymentUpload.single('file'), (req, res) => {
+    if (!req.file) return res.status(400).json({ success: false, error: 'File tidak ditemukan' });
+    const fileUrl = `/uploads/payments/${req.file.filename}`;
+    console.log(`[Payment Upload] Bukti baru tersimpan: ${req.file.filename} -> ${fileUrl}`);
+    res.json({ success: true, url: fileUrl, filename: req.file.filename });
+});
+
 // Upload routes perlu multer langsung — dipasang sebelum mount router
 app.post('/api/upload/knowledge', knowledgeUpload.single('file'), (req, res) => res.json({ success: true }));
 app.post('/api/upload/media',    mediaUpload.single('file'),    (req, res) => res.json({ success: true }));
+app.post('/api/upload/stickers', stickersUpload.single('file'), (req, res) => res.json({ success: true }));
+app.post('/api/upload/products', productsUpload.single('file'), (req, res) => res.json({ success: true }));
+
 
 app.use('/api', ordersRouter);
 app.use('/api/premium', premiumRouter);

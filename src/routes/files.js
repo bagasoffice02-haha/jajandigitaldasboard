@@ -1,20 +1,54 @@
-// src/routes/files.js — API Routes untuk Manajemen File, OCR
+// src/routes/files.js — API Routes untuk Manajemen File, OCR & Categorized File Manager
 const express = require('express');
 const router = express.Router();
 const fs = require('fs');
 const path = require('path');
 
-const KNOWLEDGE_DIR = './knowledge';
-const MEDIA_DIR = './media';
+const DIRS = {
+    knowledge: './knowledge',
+    media: './media',
+    stickers: './public/uploads/stickers',
+    payments: './public/uploads/payments',
+    products: './public/uploads/products'
+};
 
-// ─── FILE LIST ────────────────────────────────────────────
+const URL_PREFIXES = {
+    knowledge: '/knowledge',
+    media: '/media',
+    stickers: '/uploads/stickers',
+    payments: '/uploads/payments',
+    products: '/uploads/products'
+};
+
+function getFileInfo(dirPath, urlPrefix) {
+    if (!fs.existsSync(dirPath)) return [];
+    try {
+        const files = fs.readdirSync(dirPath);
+        return files.map(name => {
+            const filePath = path.join(dirPath, name);
+            let stats = { size: 0, mtime: new Date() };
+            try { stats = fs.statSync(filePath); } catch(_) {}
+            return {
+                name,
+                url: `${urlPrefix}/${name}`,
+                size: stats.size,
+                mtime: stats.mtime
+            };
+        }).sort((a, b) => b.mtime - a.mtime);
+    } catch (_) {
+        return [];
+    }
+}
+
+// ─── FILE LIST (Categorized) ────────────────────────────────────────────
 router.get('/files', (req, res) => {
     try {
-        const knowledgeFiles = fs.existsSync(KNOWLEDGE_DIR) ? fs.readdirSync(KNOWLEDGE_DIR) : [];
-        const mediaFiles = fs.existsSync(MEDIA_DIR) ? fs.readdirSync(MEDIA_DIR) : [];
         res.json({
-            knowledge: knowledgeFiles.map(name => ({ name })),
-            media: mediaFiles.map(name => ({ name }))
+            knowledge: getFileInfo(DIRS.knowledge, URL_PREFIXES.knowledge),
+            media: getFileInfo(DIRS.media, URL_PREFIXES.media),
+            stickers: getFileInfo(DIRS.stickers, URL_PREFIXES.stickers),
+            payments: getFileInfo(DIRS.payments, URL_PREFIXES.payments),
+            products: getFileInfo(DIRS.products, URL_PREFIXES.products)
         });
     } catch (err) {
         res.status(500).json({ error: err.message });
@@ -22,24 +56,36 @@ router.get('/files', (req, res) => {
 });
 
 // ─── UPLOAD ───────────────────────────────────────────────
-// Note: multer instances are passed from index.js via router.use
-router.post('/upload/knowledge', (req, res, next) => {
-    // multer dipasang dari index.js
+router.post('/upload/knowledge', (req, res) => {
     req.app.get('knowledgeUpload').single('file')(req, res, (err) => {
         if (err) return res.status(500).json({ error: err.message });
         res.json({ success: true });
     });
 });
 
-router.post('/upload/media', (req, res, next) => {
+router.post('/upload/media', (req, res) => {
     req.app.get('mediaUpload').single('file')(req, res, (err) => {
         if (err) return res.status(500).json({ error: err.message });
         res.json({ success: true });
     });
 });
 
+router.post('/upload/stickers', (req, res) => {
+    req.app.get('stickersUpload').single('file')(req, res, (err) => {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json({ success: true });
+    });
+});
+
+router.post('/upload/products', (req, res) => {
+    req.app.get('productsUpload').single('file')(req, res, (err) => {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json({ success: true });
+    });
+});
+
 // ─── OCR ──────────────────────────────────────────────────
-router.post('/ocr', (req, res, next) => {
+router.post('/ocr', (req, res) => {
     req.app.get('mediaUpload').single('file')(req, res, async (err) => {
         if (err) return res.status(500).json({ error: err.message });
         if (!req.file) return res.status(400).json({ error: 'Tidak ada file gambar yang diupload' });
@@ -66,7 +112,7 @@ router.post('/ocr', (req, res, next) => {
 // ─── DELETE FILE ─────────────────────────────────────────
 router.post('/files/delete', (req, res) => {
     const { type, filename } = req.body;
-    const targetDir = type === 'media' ? MEDIA_DIR : KNOWLEDGE_DIR;
+    const targetDir = DIRS[type] || DIRS.media;
     const filePath = path.join(targetDir, filename);
     if (fs.existsSync(filePath)) {
         try {
@@ -88,7 +134,7 @@ router.post('/files/rename', (req, res) => {
     if (!oldNameFinal || !newNameFinal) {
         return res.status(400).json({ error: 'Nama file lama atau baru tidak valid' });
     }
-    const targetDir = type === 'media' ? MEDIA_DIR : KNOWLEDGE_DIR;
+    const targetDir = DIRS[type] || DIRS.media;
     const oldPath = path.join(targetDir, oldNameFinal);
     const newPath = path.join(targetDir, newNameFinal);
     if (fs.existsSync(oldPath)) {
@@ -104,3 +150,4 @@ router.post('/files/rename', (req, res) => {
 });
 
 module.exports = router;
+

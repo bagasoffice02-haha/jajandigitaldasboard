@@ -479,7 +479,7 @@ Isi null jika user salam, terima kasih, atau pertanyaan umum (cara order, bedany
   → Contoh untuk "cara ordernya gimana?": jelaskan semua langkah pemesanan secara detail
 
 [PANDUAN TOKO]
-- Alur order: 1) Pilih produk → 2) Ketik "bayar" untuk QRIS → 3) Bayar → 4) Kirim bukti transfer → 5) Admin kirim akun via chat pribadi
+- Alur order: 1) Pilih produk → 2) Ketik "bayar" untuk QRIS → 3) Bayar → 4) Upload foto bukti transfer di portal web link: /upload-bukti → 5) Salin & tempelkan link bukti ke grup ini → 6) Admin verifikasi manual & kirim akun via chat pribadi
 - Paket Private: 1 akun baru khusus 1 pembeli, bisa multi-device
 - Paket Sharing: 1 akun bersama, lebih murah, max 1 device login
 - Durasi 25-30 hari = 1 bulan penuh
