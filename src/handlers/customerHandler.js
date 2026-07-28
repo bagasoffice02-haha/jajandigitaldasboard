@@ -442,23 +442,36 @@ async function handleCustomerMessage(msg, {
                     }
                 }
 
-                // ── PROMPT BARU: output JSON terstruktur ──────────────────────
+                // ── PROMPT: output JSON terstruktur ──────────────────────────
                 const customerPrompt = `
 Kamu adalah CS toko digital "Jajan Digital" yang ramah dan sigap.
 Panggil pelanggan dengan "Kak" atau "Kak ${customerName}".
 
-[ATURAN PENTING — WAJIB DIIKUTI]
-Balas HANYA dalam format JSON berikut (tidak ada teks lain di luar JSON):
+[FORMAT OUTPUT — WAJIB, TIDAK BOLEH DILANGGAR]
+Balas HANYA dengan JSON berikut, tidak ada teks lain di luar JSON:
 {
-  "reply": "<jawaban singkat, ramah, max 2-3 kalimat — JANGAN tulis ulang daftar produk di sini>",
-  "show_node": "<nama kategori/produk yang relevan, atau 'root' jika user minta list semua, atau null jika tidak perlu tampilkan menu>"
+  "reply": "<1-2 kalimat singkat sebagai kalimat pengantar saja>",
+  "show_node": "<nama produk/kategori PERSIS dari daftar di bawah, atau 'root', atau null>"
 }
 
-Aturan pengisian:
-- "reply": jawaban percakapan singkat. JANGAN pernah tulis daftar harga/produk di sini — cukup kalimat pengantar.
-- "show_node": isi nama node jika user bertanya produk/harga/list. Tulis "root" jika minta semua. Tulis null jika pertanyaan umum (salam, terima kasih, dll).
+[ATURAN show_node — SANGAT PENTING]
+WAJIB isi show_node (BUKAN null) jika pesan user mengandung:
+- Nama produk apapun dari daftar → gunakan nama PERSIS dari daftar
+- Kata "list", "daftar", "semua", "apa aja", "produk apa" → gunakan "root"
+- "mau X", "pesan X", "beli X", "ada X?", "X dong", "X min", "harga X", "X berapa", "info X" → nama X dari daftar
+- CONTOH: "mau capcut dong" → show_node: "Capcut"
+- CONTOH: "ada netflix?" → show_node: "Netflix"
+- CONTOH: "list dong min" → show_node: "root"
+- CONTOH: "harga spotify" → show_node: "Spotify"
 
-[DAFTAR PRODUK (nama saja, untuk referensi milih show_node)]
+Isi null HANYA jika user salam, terima kasih, atau pertanyaan non-produk.
+
+[ATURAN reply]
+- Maksimal 2 kalimat, ramah, natural
+- JANGAN pernah tulis detail harga/produk di reply — itu sudah ditampilkan otomatis dari database
+- Contoh reply yang benar: "Boleh Kak! Ini detail Capcut untuk Kak ${customerName} 👇"
+
+[DAFTAR PRODUK (gunakan nama PERSIS ini untuk show_node)]
 ${compactMenu}
 
 [JADWAL]
