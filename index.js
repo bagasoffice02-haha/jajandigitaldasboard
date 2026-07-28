@@ -72,7 +72,7 @@ const ADMIN_PASSWORD = config.admin_password || 'bagas123';
 
 // Middleware Autentikasi Dasbor (Bypass portal upload bukti publik & short links)
 function checkAuth(req, res, next) {
-    const publicPaths = ['/login', '/api/login', '/api/request-reset-otp', '/api/verify-reset-otp', '/upload-bukti', '/api/upload-bukti', '/qris', '/q', '/u', '/favicon.ico'];
+    const publicPaths = ['/login', '/api/login', '/api/get-registered-admin-phone', '/api/request-reset-otp', '/api/verify-reset-otp', '/upload-bukti', '/api/upload-bukti', '/qris', '/q', '/u', '/favicon.ico'];
     if (publicPaths.includes(req.path) || req.path.startsWith('/uploads/') || req.path.startsWith('/v/') || req.path.startsWith('/b/') || req.path.startsWith('/qris') || req.path.startsWith('/q') || req.path.startsWith('/u') || req.path.startsWith('/media/')) return next();
     let token = null;
     const cookies = req.headers.cookie;
@@ -466,9 +466,8 @@ app.post('/api/login', (req, res) => {
 // ─── Otentikasi Reset Password via WA OTP ──────────────────────────────────
 const resetOtpBucket = new Map();
 
-app.post('/api/request-reset-otp', async (req, res) => {
+app.get('/api/get-registered-admin-phone', async (req, res) => {
     try {
-        // Ambil boss_number secara otomatis dari config & SQLite settings (Pengaturan Dasbor)
         let bossNumSetting = config.boss_number || config.owner_number || '';
         try {
             const db = await getDb();
@@ -479,7 +478,52 @@ app.post('/api/request-reset-otp', async (req, res) => {
         const cleanBossNum = bossNumSetting.replace(/[^0-9]/g, '');
 
         if (!cleanBossNum) {
-            return res.status(400).json({ success: false, error: 'Nomor WhatsApp Super Admin belum diatur di Pengaturan Dasbor.' });
+            return res.json({ hasNumber: false });
+        }
+
+        let maskedPhone = cleanBossNum;
+        if (cleanBossNum.length >= 8) {
+            const prefix = cleanBossNum.slice(0, 4);
+            const suffix = cleanBossNum.slice(-4);
+            maskedPhone = `${prefix}****${suffix}`;
+        }
+
+        return res.json({ hasNumber: true, maskedPhone });
+    } catch (err) {
+        return res.json({ hasNumber: false });
+    }
+});
+
+app.post('/api/request-reset-otp', async (req, res) => {
+    try {
+        const { newPhone } = req.body || {};
+
+        // Ambil boss_number secara otomatis dari config & SQLite settings (Pengaturan Dasbor)
+        let bossNumSetting = config.boss_number || config.owner_number || '';
+        try {
+            const db = await getDb();
+            const row = await db.get("SELECT value FROM settings WHERE key = 'boss_number'");
+            if (row && row.value) bossNumSetting = row.value;
+        } catch(_) {}
+
+        let cleanBossNum = bossNumSetting.replace(/[^0-9]/g, '');
+
+        // Jika belum ada nomor terdaftar & user mengirimkan nomor baru
+        if (!cleanBossNum) {
+            if (!newPhone || newPhone.trim().length < 8) {
+                return res.status(400).json({ success: false, error: 'Belum ada nomor terdaftar. Harap masukkan nomor WhatsApp Super Admin Anda.' });
+            }
+            cleanBossNum = newPhone.replace(/[^0-9]/g, '');
+            if (cleanBossNum.startsWith('0')) cleanBossNum = '62' + cleanBossNum.slice(1);
+
+            // Simpan ke config & SQLite
+            const { updateConfig } = require('./src/config/config');
+            updateConfig({ boss_number: cleanBossNum });
+            try {
+                const db = await getDb();
+                await db.run("INSERT OR REPLACE INTO settings (key, value) VALUES ('boss_number', ?)", [cleanBossNum]);
+            } catch(_) {}
+            console.log(`[Auth Reset] Nomor Super Admin baru didaftarkan: ${cleanBossNum}`);
         }
 
         const client = getClient();
