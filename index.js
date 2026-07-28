@@ -424,16 +424,43 @@ app.get(['/b/:filename', '/v/:filename'], (req, res) => {
 });
 
 
+const loginAttempts = new Map();
+
 app.post('/api/login', (req, res) => {
-    const { username, password } = req.body;
-    if (username === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
+    const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress || 'unknown';
+    const now = Date.now();
+    const attempts = loginAttempts.get(ip) || { count: 0, lockUntil: 0 };
+
+    if (attempts.lockUntil > now) {
+        const remainingSec = Math.ceil((attempts.lockUntil - now) / 1000);
+        return res.status(429).json({ success: false, error: `Terlalu banyak percobaan gagal. Coba lagi dalam ${remainingSec} detik.` });
+    }
+
+    const { username, password, rememberMe } = req.body;
+
+    // Load credentials secara dinamis dari config
+    const currentAdminUser = config.admin_username || ADMIN_USERNAME;
+    const currentAdminPass = config.admin_password || ADMIN_PASSWORD;
+
+    if (username === currentAdminUser && password === currentAdminPass) {
+        loginAttempts.delete(ip);
         const token = Math.random().toString(36).substring(2) + Math.random().toString(36).substring(2);
         activeSessions.add(token);
         saveSessions();
-        res.cookie('session_token', token, { httpOnly: true, secure: false, maxAge: 24 * 60 * 60 * 1000 });
+        const maxAge = rememberMe ? (30 * 24 * 60 * 60 * 1000) : (24 * 60 * 60 * 1000); // 30 hari vs 1 hari
+        res.cookie('session_token', token, { httpOnly: true, secure: false, maxAge });
         return res.json({ success: true });
     }
-    return res.status(401).json({ success: false, error: 'Username atau password salah!' });
+
+    attempts.count += 1;
+    if (attempts.count >= 5) {
+        attempts.lockUntil = now + (5 * 60 * 1000); // Lockout 5 menit
+        attempts.count = 0;
+    }
+    loginAttempts.set(ip, attempts);
+
+    const remaining = 5 - (attempts.count);
+    return res.status(401).json({ success: false, error: `Username atau password salah! (${remaining} sisa percobaan)` });
 });
 
 app.post('/api/logout', (req, res) => {
