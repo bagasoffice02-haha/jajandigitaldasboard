@@ -93,10 +93,14 @@ app.use(checkAuth);
 app.get('/login', (req, res) => res.sendFile(path.join(__dirname, 'public', 'login.html')));
 
 // Short URLs: /u = upload bukti, /q = qris pembayaran
-app.get(['/u', '/upload-bukti'], (req, res) => res.sendFile(path.join(__dirname, 'public', 'upload-bukti.html')));
+app.get(['/u', '/upload-bukti'], (req, res) => {
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.sendFile(path.join(__dirname, 'public', 'upload-bukti.html'));
+});
 
 // Route Public QRIS dengan Open Graph Metadata (/q & /qris)
 app.get(['/q', '/qris', '/qris/:filename', '/v/qris'], (req, res) => {
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
     let filename = req.params.filename || 'Qris.jpeg';
     let rawImageUrl = '';
 
