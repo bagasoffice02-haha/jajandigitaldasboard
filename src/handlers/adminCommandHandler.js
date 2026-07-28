@@ -290,6 +290,31 @@ ${extraNote ? `📝 _Catatan: ${extraNote}_\n\n` : ''}🙏 Mohon tunggu sebentar
         } catch(_) {
             await msg.reply(replyText);
         }
+
+        // Fix 3: Update status order di DB berdasarkan nomor customer
+        if (targetId) {
+            try {
+                const db = getDb();
+                const customerPhone = targetId.split('@')[0].replace(/\D/g, '');
+                const newStatus = isDoneCmd ? 'DONE' : 'PROCESS';
+                // Update order PENDING/PROCESS terbaru dari customer ini
+                await db.run(
+                    `UPDATE orders SET status = ?, updated_at = CURRENT_TIMESTAMP
+                     WHERE id = (
+                       SELECT id FROM orders
+                       WHERE customer_number LIKE ?
+                         AND status IN ('PENDING','PROCESS')
+                       ORDER BY created_at DESC
+                       LIMIT 1
+                     )`,
+                    newStatus, `%${customerPhone}%`
+                );
+                console.log(`[Order DB] Status order customer ${customerPhone} \u2192 ${newStatus}`);
+            } catch(dbErr) {
+                console.warn('[Order DB] Gagal update status order:', dbErr.message);
+            }
+        }
+
         return true;
     }
 

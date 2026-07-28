@@ -394,11 +394,16 @@ async function handleCustomerMessage(msg, {
                 groupAiCooldowns.set(chatId, now);
             }
             activeLocks.add(chatId);
+            let typingInterval = null; // Fix 2: typing loop
             try {
+                // Fix 2: Loop typing indicator setiap 4 detik selama AI berpikir
                 try {
-                    const chat = await msg.getChat();
-                    await chat.sendStateTyping();
-                } catch (chatErr) { console.warn('[CS AI Warning] Gagal mengirim status typing:', chatErr.message); }
+                    const chatForTyping = await msg.getChat();
+                    await chatForTyping.sendStateTyping();
+                    typingInterval = setInterval(async () => {
+                        try { await chatForTyping.sendStateTyping(); } catch(_) {}
+                    }, 4000);
+                } catch (chatErr) { console.warn('[CS AI Warning] Gagal typing:', chatErr.message); }
 
                 const knowledge = getGroupKnowledgeContext(activeCfg ? activeCfg.allowedKnowledgeFiles : [], path.join(__dirname, '../../knowledge'));
 
@@ -426,6 +431,17 @@ async function handleCustomerMessage(msg, {
                 const contact = await msg.getContact();
                 const customerName = contact.pushname || contact.name || 'Kakak';
 
+                // Fix 4: Cek posisi menu aktif user (jika sedang navigasi)
+                const sessionKey = `${chatId}_${senderId}`;
+                const activeSession = customerMenuStates.get(sessionKey);
+                let sessionContext = '';
+                if (activeSession && (Date.now() - activeSession.lastActive < 120000)) {
+                    const currentNode = findNodeById(activeCfg.menuTree, activeSession.currentNodeId);
+                    if (currentNode) {
+                        sessionContext = `\n[POSISI MENU USER SAAT INI]\nUser sedang berada di menu: "${currentNode.name}" (${currentNode.type === 'category' ? 'Kategori' : 'Produk'}). Pertimbangkan konteks ini saat menjawab.`;
+                    }
+                }
+
                 // ── PROMPT BARU: output JSON terstruktur ──────────────────────
                 const customerPrompt = `
 Kamu adalah CS toko digital "Jajan Digital" yang ramah dan sigap.
@@ -447,7 +463,7 @@ ${compactMenu}
 
 [JADWAL]
 ${scheduleText}
-
+${sessionContext}
 [DOKUMEN PENDUKUNG]
 ${knowledge}
 `.trim();
@@ -521,6 +537,8 @@ ${knowledge}
                 console.error('Gagal menjalankan CS AI Fallback:', err.message);
                 await msg.reply('Maaf Kak, saat ini sistem CS sedang sibuk. Silakan coba beberapa saat lagi.');
             } finally {
+                // Stop typing loop & release lock
+                if (typingInterval) clearInterval(typingInterval);
                 activeLocks.delete(chatId);
             }
             return true;

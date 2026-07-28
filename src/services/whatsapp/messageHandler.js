@@ -34,6 +34,31 @@ const USER_REPLY_COOLDOWN_MS  = 3000;  // 3 detik min antar balasan ke 1 user
 const USER_MAX_MSG_PER_MINUTE = 15;    // max pesan diproses per user per menit
 const USER_FLOOD_WARN_AT      = 10;    // kirim peringatan sekali di pesan ke-10
 
+// ─── Memory Leak Prevention: Cleanup Map setiap 30 menit ────────────────
+setInterval(() => {
+    const now = Date.now();
+    const STALE_MS = 30 * 60 * 1000; // 30 menit
+
+    // Bersihkan user yang sudah >30 menit tidak aktif
+    for (const [id, ts] of userLastReplyTime) {
+        if (now - ts > STALE_MS) userLastReplyTime.delete(id);
+    }
+    for (const [id, bucket] of userMsgBucket) {
+        const fresh = bucket.filter(t => now - t < 60000);
+        if (fresh.length === 0) userMsgBucket.delete(id);
+        else userMsgBucket.set(id, fresh);
+    }
+    // Bersihkan cooldown grup yang sudah lama
+    for (const [id, ts] of groupCommandCooldowns) {
+        if (now - ts > STALE_MS) groupCommandCooldowns.delete(id);
+    }
+    // Bersihkan sesi menu yang expired (>2 jam)
+    for (const [key, session] of customerMenuStates) {
+        if (now - (session.lastActive || 0) > 2 * 60 * 60 * 1000) customerMenuStates.delete(key);
+    }
+    console.log(`[MemCleanup] Done — userLastReply:${userLastReplyTime.size} bucket:${userMsgBucket.size} cmdCooldown:${groupCommandCooldowns.size} menuState:${customerMenuStates.size}`);
+}, 30 * 60 * 1000);
+
 function checkUserAntiSpam(senderId) {
     const now = Date.now();
 
