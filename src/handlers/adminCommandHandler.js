@@ -219,23 +219,54 @@ async function handleAdminCommandMessage(msg, {
 
         const hasQuote = msg.hasQuotedMsg || Boolean(msg._data && (msg._data.quotedMsg || msg._data.quotedParticipant));
         if (hasQuote) {
+            let participantId = null;
+
+            if (msg._data) {
+                if (typeof msg._data.quotedParticipant === 'string') {
+                    participantId = msg._data.quotedParticipant;
+                } else if (msg._data.quotedParticipant && msg._data.quotedParticipant._serialized) {
+                    participantId = msg._data.quotedParticipant._serialized;
+                } else if (msg._data.quotedMsg) {
+                    participantId = msg._data.quotedMsg.author || (msg._data.quotedMsg.from && !msg._data.quotedMsg.from.endsWith('@g.us') ? msg._data.quotedMsg.from : null);
+                }
+            }
+
             try {
                 const quotedMsg = await msg.getQuotedMessage();
-                targetId = quotedMsg.author || quotedMsg.from;
-                quotedText = quotedMsg.body || '';
+                if (quotedMsg) {
+                    if (!participantId) {
+                        participantId = quotedMsg.author || (quotedMsg.from && !quotedMsg.from.endsWith('@g.us') ? quotedMsg.from : null);
+                    }
+                    quotedText = quotedMsg.body || '';
 
-                // Ambil nama pelanggan dari kontak
-                try {
-                    const contact = await quotedMsg.getContact();
-                    customerName = contact.pushname || contact.name || '';
-                    customerNumber = (contact.number || (contact.id && contact.id.user) || '').replace(/\D/g, '');
-                } catch(_) {}
+                    try {
+                        const contact = await quotedMsg.getContact();
+                        if (contact) {
+                            customerName = contact.pushname || contact.name || contact.shortName || '';
+                            const num = contact.number || (contact.id && contact.id.user) || '';
+                            if (num) customerNumber = num.replace(/\D/g, '');
+                        }
+                    } catch (_) {}
+                }
+            } catch (_) {}
 
-                if (!customerNumber && targetId) {
-                    customerNumber = (targetId.split('@')[0] || '').replace(/\D/g, '');
+            if (participantId) {
+                targetId = participantId;
+                if (!customerNumber) {
+                    customerNumber = (participantId.split('@')[0] || '').replace(/\D/g, '');
                 }
 
-                // Ekstrak detail pesanan dari teks kutipan
+                if (!customerName && clientInstance && typeof clientInstance.getContactById === 'function') {
+                    try {
+                        const c = await clientInstance.getContactById(participantId);
+                        if (c) {
+                            customerName = c.pushname || c.name || c.shortName || '';
+                        }
+                    } catch (_) {}
+                }
+            }
+
+            if (quotedText) {
                 const lowerQuoted = quotedText.toLowerCase();
                 if (lowerQuoted.startsWith('pesan:') || lowerQuoted.startsWith('pesan ')) {
                     orderDetails = quotedText.substring(6).trim();
@@ -244,7 +275,7 @@ async function handleAdminCommandMessage(msg, {
                 } else {
                     orderDetails = quotedText.length > 100 ? quotedText.substring(0, 100) + '...' : quotedText;
                 }
-            } catch (_) {}
+            }
         } else {
             // Jika tidak me-reply pesan, cek apakah ada mention atau nomor HP di pesan admin
             try {
@@ -252,7 +283,7 @@ async function handleAdminCommandMessage(msg, {
                 if (mentions && mentions.length > 0) {
                     const contact = mentions[0];
                     targetId = (contact.id && contact.id._serialized) ? contact.id._serialized : String(contact.id);
-                    customerName = contact.pushname || contact.name || '';
+                    customerName = contact.pushname || contact.name || contact.shortName || '';
                     customerNumber = (contact.number || (contact.id && contact.id.user) || '').replace(/\D/g, '');
                 }
             } catch (_) {}
@@ -266,6 +297,19 @@ async function handleAdminCommandMessage(msg, {
                     customerNumber = rawNum;
                 }
             }
+        }
+
+        // Cek database shop_customers sebagai fallback jika nama kontak belum ada
+        if (customerNumber && (!customerName || customerName === 'Pelanggan')) {
+            try {
+                const db = getDb();
+                if (db) {
+                    const existingCust = await db.get("SELECT name FROM shop_customers WHERE phone LIKE ?", `%${customerNumber}%`);
+                    if (existingCust && existingCust.name && existingCust.name !== 'Pelanggan') {
+                        customerName = existingCust.name;
+                    }
+                }
+            } catch (_) {}
         }
 
         // Nomor invoice otomatis: INV-YYYYMMDD-HHMMSS (zona waktu Jakarta)
