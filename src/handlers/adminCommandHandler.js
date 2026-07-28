@@ -122,9 +122,9 @@ async function handleAdminCommandMessage(msg, {
     clientInstance, ioInstance, setMessagesAdminsOnly, gConfigs, groupId
 }) {
     if (!isSenderHostAdmin) return false;
-    if (!userMessage.startsWith('!') && !userMessage.startsWith('.')) return false;
-
     const cmd = userMessage.toLowerCase().trim();
+    const isBareDone = cmd === 'done' || cmd.startsWith('done ');
+    if (!userMessage.startsWith('!') && !userMessage.startsWith('.') && !isBareDone) return false;
 
     if (cmd === '.id') {
         if (!isGroup) {
@@ -196,9 +196,9 @@ async function handleAdminCommandMessage(msg, {
         return true;
     }
 
-    // .done / .proses — Invoice / Konfirmasi Pesanan
+    // .done / done / .proses — Invoice / Konfirmasi Pesanan
     const isProcessCmd = cmd.startsWith('.proses') || cmd.startsWith('.process');
-    const isDoneCmd    = cmd.startsWith('.done')   || cmd.startsWith('.doen');
+    const isDoneCmd    = cmd.startsWith('.done')   || cmd.startsWith('.doen') || isBareDone;
     if (isProcessCmd || isDoneCmd) {
         // Tampilkan typing indicator dulu
         try {
