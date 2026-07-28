@@ -191,7 +191,6 @@ async function renderPaymentPage(req, res, startFlipped = false) {
         .container-wrapper {
             width: 100%;
             max-width: 410px;
-            perspective: 1000px;
         }
 
         .card-box {
@@ -207,18 +206,15 @@ async function renderPaymentPage(req, res, startFlipped = false) {
             justify-content: space-between;
             gap: 8px;
             box-shadow: 0 15px 40px rgba(0, 0, 0, 0.6);
-            transform-origin: center center;
-            backface-visibility: hidden;
-            -webkit-backface-visibility: hidden;
         }
 
-        @keyframes flipIn {
-            0% { transform: rotateY(-90deg); opacity: 0; }
-            100% { transform: rotateY(0deg); opacity: 1; }
+        @keyframes cardFadeIn {
+            0% { opacity: 0; transform: scale(0.97); }
+            100% { opacity: 1; transform: scale(1); }
         }
 
-        .animate-flip {
-            animation: flipIn 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        .animate-card {
+            animation: cardFadeIn 0.25s ease-out forwards;
         }
 
         .header { text-align: center; margin-bottom: 2px; }
@@ -285,6 +281,7 @@ async function renderPaymentPage(req, res, startFlipped = false) {
             font-weight: 700;
             cursor: pointer;
             transition: all 0.2s ease;
+            -webkit-tap-highlight-color: transparent;
         }
 
         .bank-list {
@@ -315,6 +312,7 @@ async function renderPaymentPage(req, res, startFlipped = false) {
             font-weight: 700;
             cursor: pointer;
             transition: all 0.2s ease;
+            -webkit-tap-highlight-color: transparent;
         }
 
         .note-bar {
@@ -342,6 +340,7 @@ async function renderPaymentPage(req, res, startFlipped = false) {
             justify-content: center;
             gap: 8px;
             box-shadow: 0 4px 15px rgba(2, 132, 199, 0.35);
+            -webkit-tap-highlight-color: transparent;
         }
 
         .btn-flip-back {
@@ -358,6 +357,7 @@ async function renderPaymentPage(req, res, startFlipped = false) {
             align-items: center;
             justify-content: center;
             gap: 6px;
+            -webkit-tap-highlight-color: transparent;
         }
 
         /* Front / Back Dropzone Styles */
@@ -375,6 +375,7 @@ async function renderPaymentPage(req, res, startFlipped = false) {
             align-items: center;
             justify-content: center;
             min-height: 180px;
+            -webkit-tap-highlight-color: transparent;
         }
         .dropzone:hover { border-color: #38bdf8; background: rgba(56, 189, 248, 0.08); }
         .dropzone-icon { margin-bottom: 6px; display: flex; align-items: center; justify-content: center; }
@@ -393,6 +394,7 @@ async function renderPaymentPage(req, res, startFlipped = false) {
             width: 100%;
             margin-bottom: 8px;
             box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+            -webkit-tap-highlight-color: transparent;
         }
         .btn-upload-submit:disabled { opacity: 0.6; cursor: not-allowed; }
 
@@ -413,7 +415,7 @@ async function renderPaymentPage(req, res, startFlipped = false) {
     <div class="container-wrapper">
             
         <!-- SISI DEPAN: QRIS & REKENING PEMBAYARAN -->
-        <div class="card-box" id="cardFront" style="display: ${startFlipped ? 'none' : 'flex'};">
+        <div class="card-box animate-card" id="cardFront" style="display: ${startFlipped ? 'none' : 'flex'};">
             <div class="header">
                 <h1>Pembayaran Jajan Digital</h1>
                 <div class="trust-badge">
@@ -466,12 +468,12 @@ async function renderPaymentPage(req, res, startFlipped = false) {
         </div>
 
         <!-- SISI BELAKANG: FORM UNGGAH BUKTI TRANSFER -->
-        <div class="card-box" id="cardBack" style="display: ${startFlipped ? 'flex' : 'none'};">
+        <div class="card-box animate-card" id="cardBack" style="display: ${startFlipped ? 'flex' : 'none'};">
             <div class="header">
                 <h1>Unggah Bukti Transfer</h1>
                 <div class="trust-badge">
                     <span class="live-dot"></span>
-                    <span>Verifikasi Aman & Cepat</span>
+                    <span>Verifikasi Aman &amp; Cepat</span>
                 </div>
             </div>
 
@@ -518,11 +520,11 @@ async function renderPaymentPage(req, res, startFlipped = false) {
                 </div>
 
                 <div style="display:flex; flex-direction:column; gap:8px;">
-                    <button type="button" id="btnSendGroup" onclick="sendToWaGroup()" style="width:100%; padding:13px; font-size:0.92rem; font-weight:800; background:linear-gradient(135deg, #25D366 0%, #128C7E 100%); color:#ffffff; border-radius:10px; border:none; cursor:pointer; box-shadow:0 4px 18px rgba(37,211,102,0.45); letter-spacing:0.3px; display:flex; align-items:center; justify-content:center; gap:8px;">
+                    <button type="button" id="btnSendGroup" onclick="sendToWaGroup()" style="width:100%; padding:13px; font-size:0.92rem; font-weight:800; background:linear-gradient(135deg, #25D366 0%, #128C7E 100%); color:#ffffff; border-radius:10px; border:none; cursor:pointer; box-shadow:0 4px 18px rgba(37,211,102,0.45); letter-spacing:0.3px; display:flex; align-items:center; justify-content:center; gap:8px; -webkit-tap-highlight-color:transparent;">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
                         <span>Kirim ke Grup WhatsApp</span>
                     </button>
-                    <button type="button" id="btnCopyResult" onclick="copyResultUrl()" style="width:100%; padding:10px; font-size:0.82rem; font-weight:700; background:rgba(255,255,255,0.08); color:#e2e8f0; border-radius:8px; border:1px solid rgba(255,255,255,0.15); cursor:pointer;">
+                    <button type="button" id="btnCopyResult" onclick="copyResultUrl()" style="width:100%; padding:10px; font-size:0.82rem; font-weight:700; background:rgba(255,255,255,0.08); color:#e2e8f0; border-radius:8px; border:1px solid rgba(255,255,255,0.15); cursor:pointer; -webkit-tap-highlight-color:transparent;">
                         Salin Link Bukti Saja
                     </button>
                     <button type="button" class="btn-flip-back" onclick="resetUploadForm()" style="margin-top:2px;">
@@ -553,18 +555,16 @@ async function renderPaymentPage(req, res, startFlipped = false) {
                 navigator.clipboard.writeText(msgTemplate);
             } catch(_) {
                 try {
-                    navigator.clipboard.writeText(fullUrl);
+                    const temp = document.createElement('textarea');
+                    temp.value = msgTemplate;
+                    document.body.appendChild(temp);
+                    temp.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(temp);
                 } catch(__) {}
             }
 
-            const btn = document.getElementById('btnSendGroup');
-            if (btn) {
-                const origText = btn.innerHTML;
-                btn.innerHTML = '<span>Teks Disalin! Membuka Grup...</span>';
-                setTimeout(() => { btn.innerHTML = origText; }, 2500);
-            }
-
-            window.open(waGroupUrl, '_blank');
+            window.location.href = waGroupUrl;
         }
 
         function toggleFlip() {
@@ -573,15 +573,15 @@ async function renderPaymentPage(req, res, startFlipped = false) {
             if (front.style.display !== 'none') {
                 front.style.display = 'none';
                 back.style.display = 'flex';
-                back.classList.remove('animate-flip');
+                back.classList.remove('animate-card');
                 void back.offsetWidth;
-                back.classList.add('animate-flip');
+                back.classList.add('animate-card');
             } else {
                 back.style.display = 'none';
                 front.style.display = 'flex';
-                front.classList.remove('animate-flip');
+                front.classList.remove('animate-card');
                 void front.offsetWidth;
-                front.classList.add('animate-flip');
+                front.classList.add('animate-card');
             }
         }
 
@@ -595,32 +595,25 @@ async function renderPaymentPage(req, res, startFlipped = false) {
         }
 
         function copyText(val, btn) {
-            navigator.clipboard.writeText(val).then(() => {
-                const orig = btn.textContent;
-                btn.textContent = 'Tersalin';
-                btn.style.background = '#10b981';
-                btn.style.color = '#ffffff';
-                setTimeout(() => {
-                    btn.textContent = orig;
-                    btn.style.background = 'rgba(16, 185, 129, 0.15)';
-                    btn.style.color = '#34d399';
-                }, 1500);
-            }).catch(() => {
+            try {
+                navigator.clipboard.writeText(val);
+            } catch(_) {
                 const temp = document.createElement('input');
                 temp.value = val;
                 document.body.appendChild(temp);
                 temp.select();
                 document.execCommand('copy');
                 document.body.removeChild(temp);
-                btn.textContent = 'Tersalin';
-                btn.style.background = '#10b981';
-                btn.style.color = '#ffffff';
-                setTimeout(() => {
-                    btn.textContent = 'Salin';
-                    btn.style.background = 'rgba(16, 185, 129, 0.15)';
-                    btn.style.color = '#34d399';
-                }, 1500);
-            });
+            }
+            const orig = btn.textContent;
+            btn.textContent = 'Tersalin';
+            btn.style.background = '#10b981';
+            btn.style.color = '#ffffff';
+            setTimeout(() => {
+                btn.textContent = orig;
+                btn.style.background = 'rgba(16, 185, 129, 0.15)';
+                btn.style.color = '#34d399';
+            }, 1500);
         }
 
         function copyResultUrl() {
@@ -629,22 +622,20 @@ async function renderPaymentPage(req, res, startFlipped = false) {
             input.select();
             input.setSelectionRange(0, 99999);
             
-            navigator.clipboard.writeText(input.value).then(() => {
-                btn.textContent = 'Link Berhasil Disalin!';
-                btn.style.background = '#059669';
-                setTimeout(() => {
-                    btn.textContent = 'Salin Link Bukti';
-                    btn.style.background = 'linear-gradient(135deg, #10b981 0%, #059669 100%)';
-                }, 2000);
-            }).catch(() => {
+            try {
+                navigator.clipboard.writeText(input.value);
+            } catch(_) {
                 document.execCommand('copy');
-                btn.textContent = 'Link Berhasil Disalin!';
-                btn.style.background = '#059669';
-                setTimeout(() => {
-                    btn.textContent = 'Salin Link Bukti';
-                    btn.style.background = 'linear-gradient(135deg, #10b981 0%, #059669 100%)';
-                }, 2000);
-            });
+            }
+
+            btn.textContent = 'Link Berhasil Disalin!';
+            btn.style.background = 'rgba(16, 185, 129, 0.3)';
+            btn.style.color = '#34d399';
+            setTimeout(() => {
+                btn.textContent = 'Salin Link Bukti Saja';
+                btn.style.background = 'rgba(255, 255, 255, 0.08)';
+                btn.style.color = '#e2e8f0';
+            }, 2000);
         }
 
         function resetUploadForm() {
