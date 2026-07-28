@@ -614,10 +614,23 @@ async function renderPaymentPage(req, res, startFlipped = false) {
                 const data = await res.json();
 
                 if (res.ok && data.success) {
+                    const fullUrl = data.fullUrl || (window.location.origin + data.url);
+
+                    // Otomatis salin ke clipboard jika diizinkan browser
+                    try {
+                        navigator.clipboard.writeText(fullUrl);
+                    } catch(_) {}
+
                     statusMsg.className = 'status-msg status-success';
-                    statusMsg.innerHTML = '<strong>Unggah Berhasil!</strong><br>Tautan Bukti: <code>' + data.fullUrl + '</code><br><br>Kirim tautan ini ke grup chat WhatsApp.';
+                    statusMsg.innerHTML = '<div style="font-weight:700; font-size:0.95rem; color:#34d399; margin-bottom:4px;">Unggah Bukti Berhasil!</div>' +
+                        '<div style="font-size:0.74rem; color:#94a3b8; margin-bottom:8px;">Link telah disalin ke clipboard. Tempelkan di chat WhatsApp:</div>' +
+                        '<div style="background:rgba(15,23,42,0.85); border:1px solid rgba(56,189,248,0.35); padding:8px 10px; border-radius:8px; font-family:monospace; font-size:0.8rem; color:#38bdf8; word-break:break-all; user-select:all; margin-bottom:10px; text-align:center;" onclick="copyText(\'' + fullUrl + '\', document.getElementById(\'btnCopyResult\'))">' + fullUrl + '</div>' +
+                        '<button type="button" id="btnCopyResult" class="btn-copy" onclick="copyText(\'' + fullUrl + '\', this)" style="width:100%; padding:10px; font-size:0.85rem; font-weight:700; background:#10b981; color:#ffffff; border-radius:8px; border:none; box-shadow:0 4px 12px rgba(16,185,129,0.35);">Salin Link Bukti</button>';
                     statusMsg.style.display = 'block';
-                    btn.textContent = 'Berhasil Terunggah!';
+
+                    const dropzoneEl = document.querySelector('.dropzone');
+                    if (dropzoneEl) dropzoneEl.style.display = 'none';
+                    btn.style.display = 'none';
                 } else {
                     statusMsg.className = 'status-msg status-error';
                     statusMsg.textContent = data.error || 'Gagal mengunggah bukti.';
