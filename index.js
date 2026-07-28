@@ -465,6 +465,7 @@ app.post('/api/login', (req, res) => {
 
 // ─── Otentikasi Reset Password via WA OTP ──────────────────────────────────
 const resetOtpBucket = new Map();
+const otpRateBucket = new Map();
 
 app.get('/api/get-registered-admin-phone', async (req, res) => {
     try {
@@ -496,6 +497,15 @@ app.get('/api/get-registered-admin-phone', async (req, res) => {
 
 app.post('/api/request-reset-otp', async (req, res) => {
     try {
+        const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress || 'unknown';
+        const now = Date.now();
+        const lastRequest = otpRateBucket.get(ip) || 0;
+
+        if (now - lastRequest < 60 * 1000) {
+            const remaining = Math.ceil((60 * 1000 - (now - lastRequest)) / 1000);
+            return res.status(429).json({ success: false, error: `Harap tunggu ${remaining} detik sebelum meminta OTP lagi.` });
+        }
+
         const { newPhone } = req.body || {};
 
         // Ambil boss_number secara otomatis dari config & SQLite settings (Pengaturan Dasbor)
@@ -531,6 +541,7 @@ app.post('/api/request-reset-otp', async (req, res) => {
             return res.status(530).json({ success: false, error: 'Bot WhatsApp sedang offline. Pastikan bot terhubung.' });
         }
 
+        otpRateBucket.set(ip, now);
         const otp = Math.floor(100000 + Math.random() * 900000).toString();
         resetOtpBucket.set(cleanBossNum, { otp, expiresAt: Date.now() + 10 * 60 * 1000 });
 
@@ -635,11 +646,19 @@ const paymentUpload = multer({
     storage: multer.diskStorage({
         destination: (req, file, cb) => cb(null, PAYMENTS_DIR),
         filename: (req, file, cb) => {
-            const ext = path.extname(file.originalname) || '.png';
+            const ext = path.extname(file.originalname).toLowerCase() || '.png';
             const randomName = 'p_' + crypto.randomBytes(4).toString('hex') + ext;
             cb(null, randomName);
         }
     }),
+    fileFilter: (req, file, cb) => {
+        const allowedExts = /\.(jpg|jpeg|png|webp)$/i;
+        const allowedMimes = /^image\/(jpeg|jpg|png|webp)$/i;
+        if (allowedExts.test(file.originalname) && allowedMimes.test(file.mimetype)) {
+            return cb(null, true);
+        }
+        cb(new Error('Hanya file gambar (JPG, PNG, WEBP) yang diizinkan!'));
+    },
     limits: { fileSize: 10 * 1024 * 1024 }
 });
 
