@@ -511,7 +511,17 @@ ${knowledge}
                 await msg.reply(aiIntro);
 
                 // ── Kirim menu dari DB jika AI minta tampilkan node ───────────
-                if (showNode && typeof showNode === 'string' && showNode !== 'null') {
+                // Guard anti-spam: cek apakah show_node masuk akal untuk pesan ini
+                const msgLower = userMessage.toLowerCase();
+                const isProductQuery = /list|daftar|menu|produk|harga|beli|mau|pesan|ada |dong|berapa|info|promo/.test(msgLower);
+                const shouldShowMenu = showNode
+                    && typeof showNode === 'string'
+                    && showNode !== 'null'
+                    && showNode.trim() !== ''
+                    // Kalau show_node=root tapi pesan tidak ada kata tanya produk → skip
+                    && !(showNode.toLowerCase() === 'root' && !isProductQuery);
+
+                if (shouldShowMenu) {
                     await new Promise(r => setTimeout(r, 800)); // jeda kecil antar pesan
                     const menuTree = activeCfg && activeCfg.menuTree ? activeCfg.menuTree : null;
                     if (menuTree) {
@@ -519,9 +529,10 @@ ${knowledge}
                         if (showNode.toLowerCase() === 'root') {
                             targetNode = menuTree;
                         } else {
-                            // Cari node berdasarkan nama
                             const found = findNodeByName(menuTree, showNode);
-                            targetNode = found ? found.node : menuTree; // fallback ke root
+                            // Jika nama tidak ditemukan di DB, JANGAN fallback ke root
+                            // (mencegah spam menu saat AI salah tebak nama produk)
+                            targetNode = found ? found.node : null;
                         }
                         if (targetNode) {
                             const menuMsg = renderGroupMenuMessage(targetNode, activeCfg);
