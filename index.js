@@ -58,7 +58,7 @@ const ADMIN_PASSWORD = config.admin_password || 'bagas123';
 // Middleware Autentikasi Dasbor (Bypass portal upload bukti publik)
 function checkAuth(req, res, next) {
     const publicPaths = ['/login', '/api/login', '/upload-bukti', '/api/upload-bukti', '/favicon.ico'];
-    if (publicPaths.includes(req.path) || req.path.startsWith('/uploads/')) return next();
+    if (publicPaths.includes(req.path) || req.path.startsWith('/uploads/') || req.path.startsWith('/v/')) return next();
     let token = null;
     const cookies = req.headers.cookie;
     if (cookies) {
@@ -77,6 +77,89 @@ app.use(checkAuth);
 // ─── Auth & Public Upload Portal Routes ─────────────────────────────────────────
 app.get('/login', (req, res) => res.sendFile(path.join(__dirname, 'public', 'login.html')));
 app.get('/upload-bukti', (req, res) => res.sendFile(path.join(__dirname, 'public', 'upload-bukti.html')));
+
+// Route Preview Bukti Pembayaran dengan Open Graph Metadata (Agar WA Tampilkan Gambar Preview di Link Card)
+app.get('/v/:filename', (req, res) => {
+    const filename = req.params.filename;
+    const filePath = path.join(__dirname, 'public', 'uploads', 'payments', filename);
+    if (!fs.existsSync(filePath)) {
+        return res.status(404).send('Bukti pembayaran tidak ditemukan atau sudah kadaluarsa.');
+    }
+
+    const protocol = req.headers['x-forwarded-proto'] || req.protocol || 'http';
+    const host = req.headers.host || `localhost:${PORT}`;
+    const rawImageUrl = `${protocol}://${host}/uploads/payments/${filename}`;
+    const pageUrl = `${protocol}://${host}/v/${filename}`;
+
+    const html = `<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🧾 Bukti Pembayaran - Jajan Digital</title>
+
+    <!-- Open Graph Meta Tags untuk Pratinjau Gambar di WhatsApp -->
+    <meta property="og:title" content="🧾 Bukti Pembayaran - Jajan Digital" />
+    <meta property="og:description" content="Klik untuk melihat foto bukti transfer dalam ukuran penuh." />
+    <meta property="og:image" content="${rawImageUrl}" />
+    <meta property="og:image:secure_url" content="${rawImageUrl}" />
+    <meta property="og:image:type" content="image/png" />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="${pageUrl}" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:image" content="${rawImageUrl}" />
+
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: #0f172a;
+            color: white;
+            font-family: system-ui, -apple-system, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 92%;
+            text-align: center;
+            padding: 20px;
+        }
+        img {
+            max-width: 100%;
+            max-height: 82vh;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            border: 1px solid rgba(255,255,255,0.15);
+        }
+        .badge {
+            background: rgba(16, 185, 129, 0.2);
+            border: 1px solid rgba(16, 185, 129, 0.4);
+            color: #34d399;
+            padding: 8px 18px;
+            border-radius: 50px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+            display: inline-block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="badge">🧾 Bukti Pembayaran - Jajan Digital</div>
+        <br>
+        <a href="${rawImageUrl}" target="_blank">
+            <img src="${rawImageUrl}" alt="Bukti Pembayaran">
+        </a>
+    </div>
+</body>
+</html>`;
+
+    res.send(html);
+});
 
 app.post('/api/login', (req, res) => {
     const { username, password } = req.body;
@@ -130,7 +213,7 @@ const paymentUpload = multer({
     storage: multer.diskStorage({
         destination: (req, file, cb) => cb(null, PAYMENTS_DIR),
         filename: (req, file, cb) => {
-            const ext = path.extname(file.originalname) || '.jpg';
+            const ext = path.extname(file.originalname) || '.png';
             const randomName = 'pay_' + crypto.randomBytes(8).toString('hex') + ext;
             cb(null, randomName);
         }
@@ -181,12 +264,13 @@ app.post('/api/upload-bukti', (req, res, next) => {
     if (!req.file) return res.status(400).json({ success: false, error: 'File tidak ditemukan' });
     const protocol = req.headers['x-forwarded-proto'] || req.protocol || 'http';
     const host = req.headers.host || `localhost:${PORT}`;
-    const fileUrl = `/uploads/payments/${req.file.filename}`;
-    const fullUrl = `${protocol}://${host}${fileUrl}`;
+    const viewUrl = `/v/${req.file.filename}`;
+    const fullUrl = `${protocol}://${host}${viewUrl}`;
     
     console.log(`[Payment Upload] Bukti baru tersimpan: ${req.file.filename} -> ${fullUrl}`);
-    res.json({ success: true, url: fileUrl, fullUrl, filename: req.file.filename });
+    res.json({ success: true, url: viewUrl, fullUrl, filename: req.file.filename });
 });
+
 
 
 // Upload routes perlu multer langsung — dipasang sebelum mount router
