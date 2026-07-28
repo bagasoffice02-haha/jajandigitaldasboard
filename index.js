@@ -57,8 +57,8 @@ const ADMIN_PASSWORD = config.admin_password || 'bagas123';
 
 // Middleware Autentikasi Dasbor (Bypass portal upload bukti publik)
 function checkAuth(req, res, next) {
-    const publicPaths = ['/login', '/api/login', '/upload-bukti', '/api/upload-bukti', '/favicon.ico'];
-    if (publicPaths.includes(req.path) || req.path.startsWith('/uploads/') || req.path.startsWith('/v/')) return next();
+    const publicPaths = ['/login', '/api/login', '/upload-bukti', '/api/upload-bukti', '/qris', '/favicon.ico'];
+    if (publicPaths.includes(req.path) || req.path.startsWith('/uploads/') || req.path.startsWith('/v/') || req.path.startsWith('/qris')) return next();
     let token = null;
     const cookies = req.headers.cookie;
     if (cookies) {
@@ -78,8 +78,197 @@ app.use(checkAuth);
 app.get('/login', (req, res) => res.sendFile(path.join(__dirname, 'public', 'login.html')));
 app.get('/upload-bukti', (req, res) => res.sendFile(path.join(__dirname, 'public', 'upload-bukti.html')));
 
+// Route Public QRIS dengan Open Graph Metadata (Agar WA Tampilkan Gambar QRIS Preview di Link Card)
+app.get(['/qris', '/qris/:filename', '/v/qris'], (req, res) => {
+    let filename = req.params.filename || 'Qris.jpeg';
+    let rawImageUrl = '';
+
+    const mediaPath = path.join(__dirname, 'media', filename);
+    if (fs.existsSync(mediaPath)) {
+        rawImageUrl = `/media/${filename}`;
+    } else {
+        const fallbackPath = path.join(__dirname, 'media', 'Qris.jpeg');
+        if (fs.existsSync(fallbackPath)) {
+            rawImageUrl = `/media/Qris.jpeg`;
+        } else {
+            try {
+                const files = fs.readdirSync(path.join(__dirname, 'media'));
+                const imgFile = files.find(f => /\.(jpg|jpeg|png|webp)$/i.test(f));
+                if (imgFile) rawImageUrl = `/media/${imgFile}`;
+            } catch(_) {}
+        }
+    }
+
+    const protocol = req.headers['x-forwarded-proto'] || req.protocol || 'http';
+    const host = req.headers.host || `localhost:${PORT}`;
+    const fullImageUrl = rawImageUrl ? `${protocol}://${host}${rawImageUrl}` : `${protocol}://${host}/favicon.ico`;
+    const pageUrl = `${protocol}://${host}/qris`;
+
+    const html = `<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>💵 QRIS Pembayaran Resmi - Jajan Digital</title>
+
+    <!-- Open Graph Meta Tags untuk Preview Gambar QRIS di WhatsApp -->
+    <meta property="og:title" content="💵 QRIS Pembayaran Resmi - Jajan Digital" />
+    <meta property="og:description" content="Scan barcode QRIS ini untuk melakukan pembayaran dari M-Banking / E-Wallet apapun." />
+    <meta property="og:image" content="${fullImageUrl}" />
+    <meta property="og:image:secure_url" content="${fullImageUrl}" />
+    <meta property="og:image:type" content="image/jpeg" />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="${pageUrl}" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:image" content="${fullImageUrl}" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --card-bg: rgba(30, 41, 59, 0.75);
+            --border-color: rgba(255, 255, 255, 0.12);
+            --accent-gradient: linear-gradient(135deg, #10b981 0%, #06b6d4 100%);
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Outfit', sans-serif; }
+        body {
+            background-color: var(--bg-color);
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(16, 185, 129, 0.15) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(6, 182, 212, 0.15) 0px, transparent 50%);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 1.5rem 1rem;
+        }
+        .container {
+            width: 100%;
+            max-width: 440px;
+            background: var(--card-bg);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--border-color);
+            border-radius: 24px;
+            padding: 2rem 1.5rem;
+            text-align: center;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+        }
+        .badge {
+            display: inline-block;
+            padding: 6px 16px;
+            border-radius: 50px;
+            background: rgba(16, 185, 129, 0.15);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            color: #34d399;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+        }
+        .title {
+            font-size: 1.5rem;
+            font-weight: 800;
+            background: var(--accent-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.5rem;
+        }
+        .subtitle {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-bottom: 1.5rem;
+            line-height: 1.4;
+        }
+        .qris-box {
+            background: white;
+            padding: 1rem;
+            border-radius: 18px;
+            display: inline-block;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+        }
+        .qris-img {
+            max-width: 100%;
+            width: 280px;
+            height: auto;
+            display: block;
+            border-radius: 8px;
+        }
+        .instructions {
+            text-align: left;
+            background: rgba(15, 23, 42, 0.5);
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+            font-size: 0.85rem;
+            color: #cbd5e1;
+            line-height: 1.6;
+        }
+        .instructions ol { padding-left: 1.2rem; }
+        .instructions li { margin-bottom: 0.25rem; }
+        .btn-upload {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            width: 100%;
+            padding: 0.9rem 1.5rem;
+            border-radius: 14px;
+            background: var(--accent-gradient);
+            color: white;
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 0.95rem;
+            box-shadow: 0 8px 20px rgba(16, 185, 129, 0.3);
+            transition: all 0.3s ease;
+        }
+        .btn-upload:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 25px rgba(16, 185, 129, 0.4);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <span class="badge">🏪 Jajan Digital Official</span>
+        <h1 class="title">QRIS Pembayaran Resmi</h1>
+        <p class="subtitle">Scan menggunakan M-Banking atau E-Wallet (Gopay, OVO, Dana, ShopeePay, LinkAja, BCA, Mandiri, dll)</p>
+
+        <div class="qris-box">
+            <img src="${rawImageUrl}" alt="Barcode QRIS Pembayaran" class="qris-img">
+        </div>
+
+        <div class="instructions">
+            <strong>📌 Cara Melakukan Pembayaran:</strong>
+            <ol>
+                <li>Simpan / Screenshot barcode QRIS di atas.</li>
+                <li>Buka aplikasi m-Banking / e-Wallet Anda.</li>
+                <li>Pilih menu <strong>Scan / Bayar QRIS</strong> dan upload gambar QRIS.</li>
+                <li>Masukkan nominal sesuai total belanja Anda.</li>
+                <li>Setelah berhasil, klik tombol di bawah untuk unggah bukti bayar.</li>
+            </ol>
+        </div>
+
+        <a href="/upload-bukti" class="btn-upload">
+            <span>📸 Unggah Bukti Pembayaran</span>
+        </a>
+    </div>
+</body>
+</html>`;
+
+    res.send(html);
+});
+
 // Route Preview Bukti Pembayaran dengan Open Graph Metadata (Agar WA Tampilkan Gambar Preview di Link Card)
 app.get('/v/:filename', (req, res) => {
+
     const filename = req.params.filename;
     const filePath = path.join(__dirname, 'public', 'uploads', 'payments', filename);
     if (!fs.existsSync(filePath)) {
