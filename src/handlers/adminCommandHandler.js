@@ -236,17 +236,36 @@ async function handleAdminCommandMessage(msg, {
                 }
 
                 // Ekstrak detail pesanan dari teks kutipan
-                // Format: "pesan: Netflix 1 bulan" atau "beli: Spotify"
                 const lowerQuoted = quotedText.toLowerCase();
                 if (lowerQuoted.startsWith('pesan:') || lowerQuoted.startsWith('pesan ')) {
                     orderDetails = quotedText.substring(6).trim();
                 } else if (lowerQuoted.startsWith('beli:') || lowerQuoted.startsWith('beli ')) {
                     orderDetails = quotedText.substring(5).trim();
                 } else {
-                    // Ambil maksimal 100 karakter pertama sebagai ringkasan
                     orderDetails = quotedText.length > 100 ? quotedText.substring(0, 100) + '...' : quotedText;
                 }
             } catch (_) {}
+        } else {
+            // Jika tidak me-reply pesan, cek apakah ada mention atau nomor HP di pesan admin
+            try {
+                const mentions = await msg.getMentions();
+                if (mentions && mentions.length > 0) {
+                    const contact = mentions[0];
+                    targetId = (contact.id && contact.id._serialized) ? contact.id._serialized : String(contact.id);
+                    customerName = contact.pushname || contact.name || '';
+                    customerNumber = (contact.number || (contact.id && contact.id.user) || '').replace(/\D/g, '');
+                }
+            } catch (_) {}
+
+            if (!targetId) {
+                const phoneMatch = extraNote.match(/(08\d{8,12}|628\d{8,12})/);
+                if (phoneMatch) {
+                    let rawNum = phoneMatch[0];
+                    if (rawNum.startsWith('08')) rawNum = '628' + rawNum.substring(2);
+                    targetId = `${rawNum}@c.us`;
+                    customerNumber = rawNum;
+                }
+            }
         }
 
         // Nomor invoice otomatis: INV-YYYYMMDD-HHMMSS (zona waktu Jakarta)
@@ -264,6 +283,10 @@ async function handleAdminCommandMessage(msg, {
         const { config: botConfig } = require('../config/config');
         const storeName = (botConfig && botConfig.store_name) ? botConfig.store_name : 'Jajan Digital';
 
+        // Tampilan nama & tag pelanggan
+        const customerTag = customerNumber ? `@${customerNumber}` : (targetId ? `@${targetId.split('@')[0]}` : '');
+        const customerDisplay = customerName && customerTag ? `${customerName} (${customerTag})` : (customerTag || '(tidak diketahui)');
+
         let replyText;
 
         if (isDoneCmd) {
@@ -277,7 +300,7 @@ async function handleAdminCommandMessage(msg, {
 📅 *Tanggal* : ${tglStr}
 
 ━━━━━━━━━━━━━━━━━━━━━━
-👤 *Pelanggan* : ${targetId ? `@${targetId.split('@')[0]}` : '(tidak diketahui)'}
+👤 *Pelanggan* : ${customerDisplay}
 ━━━━━━━━━━━━━━━━━━━━━━
 ✅ *STATUS : LUNAS / SELESAI*
 ━━━━━━━━━━━━━━━━━━━━━━
@@ -295,7 +318,7 @@ Produk/akses akan segera dikirim. 🚀`;
 📅 *Update* : ${tglStr}
 
 ━━━━━━━━━━━━━━━━━━━━━━
-👤 *Pelanggan* : ${targetId ? `@${targetId.split('@')[0]}` : '(tidak diketahui)'}
+👤 *Pelanggan* : ${customerDisplay}
 ━━━━━━━━━━━━━━━━━━━━━━
 ⏳ *STATUS : SEDANG DIPROSES*
 ━━━━━━━━━━━━━━━━━━━━━━
