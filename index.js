@@ -73,7 +73,7 @@ const ADMIN_PASSWORD = config.admin_password || 'bagas123';
 // Middleware Autentikasi Dasbor (Bypass portal upload bukti publik)
 function checkAuth(req, res, next) {
     const publicPaths = ['/login', '/api/login', '/upload-bukti', '/api/upload-bukti', '/qris', '/favicon.ico'];
-    if (publicPaths.includes(req.path) || req.path.startsWith('/uploads/') || req.path.startsWith('/v/') || req.path.startsWith('/qris')) return next();
+    if (publicPaths.includes(req.path) || req.path.startsWith('/uploads/') || req.path.startsWith('/v/') || req.path.startsWith('/qris') || req.path.startsWith('/media/')) return next();
     let token = null;
     const cookies = req.headers.cookie;
     if (cookies) {
