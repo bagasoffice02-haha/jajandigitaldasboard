@@ -327,9 +327,8 @@ async function handleAdminCommandMessage(msg, {
         const { config: botConfig } = require('../config/config');
         const storeName = (botConfig && botConfig.store_name) ? botConfig.store_name : 'Jajan Digital';
 
-        // Tampilan nama & tag pelanggan
-        const customerTag = customerNumber ? `@${customerNumber}` : (targetId ? `@${targetId.split('@')[0]}` : '');
-        const customerDisplay = customerName && customerTag ? `${customerName} (${customerTag})` : (customerTag || '(tidak diketahui)');
+        // Tampilan tag murni pelanggan (tanpa tambahan nama kontak yang disimpan)
+        const customerDisplay = customerNumber ? `@${customerNumber}` : (targetId ? `@${targetId.split('@')[0]}` : '(tidak diketahui)');
 
         let replyText;
 
