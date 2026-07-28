@@ -520,10 +520,10 @@ async function renderPaymentPage(req, res, startFlipped = false) {
                 </div>
 
                 <div style="display:flex; flex-direction:column; gap:8px;">
-                    <button type="button" id="btnSendGroup" onclick="sendToWaGroup()" style="width:100%; padding:13px; font-size:0.92rem; font-weight:800; background:linear-gradient(135deg, #25D366 0%, #128C7E 100%); color:#ffffff; border-radius:10px; border:none; cursor:pointer; box-shadow:0 4px 18px rgba(37,211,102,0.45); letter-spacing:0.3px; display:flex; align-items:center; justify-content:center; gap:8px; -webkit-tap-highlight-color:transparent;">
+                    <a id="btnSendGroup" href="https://chat.whatsapp.com/GKppODkdFKc9YLkqLWQpkO?s=cl&p=a&ilr=4&amv=2" target="_blank" rel="noopener noreferrer" onclick="copyTemplateBeforeRedirect()" style="width:100%; padding:13px; font-size:0.92rem; font-weight:800; background:linear-gradient(135deg, #25D366 0%, #128C7E 100%); color:#ffffff; border-radius:10px; border:none; cursor:pointer; box-shadow:0 4px 18px rgba(37,211,102,0.45); letter-spacing:0.3px; display:flex; align-items:center; justify-content:center; gap:8px; text-decoration:none; box-sizing:border-box; -webkit-tap-highlight-color:transparent;">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
                         <span>Kirim ke Grup WhatsApp</span>
-                    </button>
+                    </a>
                     <button type="button" id="btnCopyResult" onclick="copyResultUrl()" style="width:100%; padding:10px; font-size:0.82rem; font-weight:700; background:rgba(255,255,255,0.08); color:#e2e8f0; border-radius:8px; border:1px solid rgba(255,255,255,0.15); cursor:pointer; -webkit-tap-highlight-color:transparent;">
                         Salin Link Bukti Saja
                     </button>
@@ -544,9 +544,7 @@ async function renderPaymentPage(req, res, startFlipped = false) {
     </div>
 
     <script>
-        const waGroupUrl = 'https://chat.whatsapp.com/GKppODkdFKc9YLkqLWQpkO?s=cl&p=a&ilr=4&amv=2';
-
-        function sendToWaGroup() {
+        function copyTemplateBeforeRedirect() {
             const linkInput = document.getElementById('resultLinkInput');
             const fullUrl = linkInput ? linkInput.value : '';
             const msgTemplate = 'Halo Admin, saya sudah melakukan pembayaran.\n\nBukti Transfer:\n' + fullUrl;
@@ -563,8 +561,6 @@ async function renderPaymentPage(req, res, startFlipped = false) {
                     document.body.removeChild(temp);
                 } catch(__) {}
             }
-
-            window.location.href = waGroupUrl;
         }
 
         function toggleFlip() {
