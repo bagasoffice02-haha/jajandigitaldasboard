@@ -308,15 +308,16 @@ ${extraNote ? `📝 _Catatan: ${extraNote}_\n\n` : ''}🙏 Mohon tunggu sebentar
             await msg.reply(replyText);
         }
 
-        // Fix 3: Update status order di DB berdasarkan nomor customer
+        // Update status order di DB berdasarkan nomor customer atau buat transaksi baru jika belum ada
         if (targetId) {
             try {
                 const db = getDb();
                 const customerPhone = targetId.split('@')[0].replace(/\D/g, '');
                 const newStatus = isDoneCmd ? 'DONE' : 'PROCESS';
-                // Update order PENDING/PROCESS terbaru dari customer ini
-                await db.run(
-                    `UPDATE orders SET status = ?, updated_at = CURRENT_TIMESTAMP
+                
+                // 1. Coba update order PENDING/PROCESS yang ada
+                const updateRes = await db.run(
+                    `UPDATE orders SET status = ?
                      WHERE id = (
                        SELECT id FROM orders
                        WHERE customer_number LIKE ?
@@ -326,9 +327,32 @@ ${extraNote ? `📝 _Catatan: ${extraNote}_\n\n` : ''}🙏 Mohon tunggu sebentar
                      )`,
                     newStatus, `%${customerPhone}%`
                 );
-                console.log(`[Order DB] Status order customer ${customerPhone} \u2192 ${newStatus}`);
+
+                // 2. Jika tidak ada order gantung yang di-update, OTOMATIS TAMBAHKAN TRANSAKSI BARU KE DASBOR!
+                if (!updateRes || updateRes.changes === 0) {
+                    const finalCustomerName = customerName || `@${customerPhone}`;
+                    const finalDetails = orderDetails || (isDoneCmd ? 'Transaksi Pembelian (Manual via Chat)' : 'Pesanan Dalam Proses');
+                    
+                    await db.run(
+                        `INSERT INTO orders (customer_number, customer_name, details, status, created_at)
+                         VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)`,
+                        [customerPhone, finalCustomerName, finalDetails, newStatus]
+                    );
+
+                    try {
+                        await db.run(
+                            `INSERT OR REPLACE INTO invoices (id, customer_number, customer_name, status, details, created_at)
+                             VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)`,
+                            [invoiceNo, customerPhone, finalCustomerName, newStatus, finalDetails]
+                        );
+                    } catch(_) {}
+
+                    console.log(`[Order DB] Transaksi BARU berhasil dibuat di Dasbor: ${invoiceNo} | ${finalCustomerName} | Status: ${newStatus}`);
+                } else {
+                    console.log(`[Order DB] Status order customer ${customerPhone} di-update \u2192 ${newStatus}`);
+                }
             } catch(dbErr) {
-                console.warn('[Order DB] Gagal update status order:', dbErr.message);
+                console.warn('[Order DB] Gagal update/insert transaksi:', dbErr.message);
             }
         }
 
