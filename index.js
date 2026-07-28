@@ -217,8 +217,25 @@ async function renderPaymentPage(req, res, startFlipped = false) {
             box-shadow: 0 15px 40px rgba(0, 0, 0, 0.6);
         }
 
+        .card-front {
+            z-index: 2;
+            pointer-events: auto;
+        }
+
         .card-back {
             transform: rotateY(180deg);
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        .card-3d.is-flipped .card-front {
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        .card-3d.is-flipped .card-back {
+            z-index: 2;
+            pointer-events: auto;
         }
 
         .header { text-align: center; margin-bottom: 2px; }
