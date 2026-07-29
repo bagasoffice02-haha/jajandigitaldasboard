@@ -569,6 +569,47 @@ async function renderPaymentPage(req, res, startFlipped = false) {
         </div>
     </div>
 
+    <!-- Modal Petunjuk Langkah Pembayaran (Wajib Dibaca dengan Cooldown 5 Detik) -->
+    <div id="noticeModal" style="display:flex; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(7,12,25,0.96); backdrop-filter:blur(15px); -webkit-backdrop-filter:blur(15px); z-index:10000; align-items:center; justify-content:center; padding:16px;">
+        <div style="background:rgba(15,23,42,0.95); border:1px solid rgba(56,189,248,0.35); border-radius:18px; padding:20px; max-width:400px; width:100%; box-shadow:0 20px 50px rgba(0,0,0,0.8); display:flex; flex-direction:column; gap:14px; animation:cardFadeIn 0.3s ease-out;">
+            
+            <div style="text-align:center; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:12px;">
+                <div style="font-size:0.75rem; font-weight:800; color:#38bdf8; letter-spacing:1px; text-transform:uppercase;">PANDUAN TRANSAKSI</div>
+                <h2 style="font-size:1.1rem; font-weight:700; color:#f8fafc; margin-top:3px;">Langkah Pembayaran &amp; Konfirmasi</h2>
+            </div>
+
+            <div style="display:flex; flex-direction:column; gap:10px; font-size:0.8rem; color:#cbd5e1; line-height:1.45;">
+                <div style="display:flex; gap:10px; align-items:flex-start; background:rgba(255,255,255,0.03); padding:10px; border-radius:10px; border:1px solid rgba(255,255,255,0.06);">
+                    <div style="background:#38bdf8; color:#0f172a; font-weight:800; min-width:24px; height:24px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:0.8rem; flex-shrink:0;">1</div>
+                    <div>Transfer ke <strong>QRIS (Bebas Admin)</strong> atau <strong>Bank / E-Wallet</strong>.</div>
+                </div>
+
+                <div style="display:flex; gap:10px; align-items:flex-start; background:rgba(255,255,255,0.03); padding:10px; border-radius:10px; border:1px solid rgba(255,255,255,0.06);">
+                    <div style="background:#38bdf8; color:#0f172a; font-weight:800; min-width:24px; height:24px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:0.8rem; flex-shrink:0;">2</div>
+                    <div>Unggah foto bukti transfer di web ini pada tombol <strong>"Sudah Bayar? Unggah Bukti"</strong>.</div>
+                </div>
+
+                <div style="display:flex; gap:10px; align-items:flex-start; background:rgba(255,255,255,0.03); padding:10px; border-radius:10px; border:1px solid rgba(255,255,255,0.06);">
+                    <div style="background:#38bdf8; color:#0f172a; font-weight:800; min-width:24px; height:24px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:0.8rem; flex-shrink:0;">3</div>
+                    <div>Setelah unggah berhasil, Anda mendapatkan <strong>Link Bukti Pembayaran</strong> dan pesan yang otomatis tersalin.</div>
+                </div>
+
+                <div style="display:flex; gap:10px; align-items:flex-start; background:rgba(255,255,255,0.03); padding:10px; border-radius:10px; border:1px solid rgba(255,255,255,0.06);">
+                    <div style="background:#38bdf8; color:#0f172a; font-weight:800; min-width:24px; height:24px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:0.8rem; flex-shrink:0;">4</div>
+                    <div>Klik tombol <strong>"Kirim ke Grup WhatsApp"</strong>, lalu <strong>Tempel (Paste) &amp; Kirim</strong> di chat grup.</div>
+                </div>
+            </div>
+
+            <div style="background:rgba(234,179,8,0.12); border:1px solid rgba(234,179,8,0.3); border-radius:10px; padding:9px 12px; font-size:0.72rem; color:#fef08a; text-align:center; line-height:1.4;">
+                Mohon pahami 4 langkah di atas sebelum masuk ke halaman pembayaran.
+            </div>
+
+            <button type="button" id="btnNoticeNext" disabled onclick="closeNoticeModal()" style="width:100%; padding:12px; font-size:0.88rem; font-weight:800; background:rgba(255,255,255,0.08); color:#94a3b8; border:1px solid rgba(255,255,255,0.15); border-radius:10px; cursor:not-allowed; transition:all 0.3s ease; -webkit-tap-highlight-color:transparent;">
+                Paham &amp; Lanjutkan (5 detik)
+            </button>
+        </div>
+    </div>
+
     <!-- Modal Lightbox Zoom QRIS -->
     <div id="zoomModal" onclick="closeZoomModal()" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.92); z-index:9999; flex-direction:column; align-items:center; justify-content:center; padding:15px; cursor:zoom-out;">
         <div style="position:absolute; top:20px; right:20px; color:white; font-size:22px; font-weight:bold; background:rgba(255,255,255,0.2); width:38px; height:38px; border-radius:50%; display:flex; align-items:center; justify-content:center;">✕</div>
@@ -577,6 +618,30 @@ async function renderPaymentPage(req, res, startFlipped = false) {
     </div>
 
     <script>
+        let noticeCountdown = 5;
+        const noticeBtn = document.getElementById('btnNoticeNext');
+        const noticeTimer = setInterval(() => {
+            noticeCountdown--;
+            if (noticeCountdown > 0) {
+                noticeBtn.textContent = 'Paham & Lanjutkan (' + noticeCountdown + ' detik)';
+            } else {
+                clearInterval(noticeTimer);
+                noticeBtn.disabled = false;
+                noticeBtn.textContent = 'Paham & Lanjutkan';
+                noticeBtn.style.background = 'linear-gradient(135deg, #0284c7 0%, #0d9488 100%)';
+                noticeBtn.style.color = '#ffffff';
+                noticeBtn.style.border = '1px solid rgba(255, 255, 255, 0.2)';
+                noticeBtn.style.cursor = 'pointer';
+                noticeBtn.style.boxShadow = '0 4px 18px rgba(2, 132, 199, 0.4)';
+            }
+        }, 1000);
+
+        function closeNoticeModal() {
+            if (noticeCountdown > 0) return;
+            const modal = document.getElementById('noticeModal');
+            if (modal) modal.style.display = 'none';
+        }
+
         function performCopyText(str) {
             if (!str) return;
             try {
