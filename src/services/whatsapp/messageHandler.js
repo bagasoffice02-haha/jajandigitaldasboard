@@ -204,9 +204,10 @@ async function handleIncomingMessage(msg) {
         const getDigits = (str) => str ? str.replace(/\D/g, '') : '';
         const botDigits = clientInstance && clientInstance.info ? getDigits(clientInstance.info.wid.user) : null;
         
-        const defaultNames = ['bot', 'ai'];
+        const defaultNames = ['bot', 'ai', 'admin', 'min', 'mimin', 'cs', 'sania'];
         const activeCfg = gConfigs[chatId] || {};
-        const customNames = activeCfg.aiNames ? activeCfg.aiNames.split(',').map(n => n.trim().toLowerCase()).filter(n => n) : defaultNames;
+        const customExtra = activeCfg.aiNames ? activeCfg.aiNames.split(',').map(n => n.trim().toLowerCase()).filter(n => n) : [];
+        const customNames = Array.from(new Set([...defaultNames, ...customExtra]));
         const escapedNames = customNames.map(n => n.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&'));
         const nameRegex = new RegExp(`(\\b(${escapedNames.join('|')})\\b)`, 'gi');
 
