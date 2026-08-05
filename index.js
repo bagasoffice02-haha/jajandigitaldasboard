@@ -452,7 +452,7 @@ async function renderReferralPage(req, res) {
         setInterval(fetchReferralData, 10000);
     </script>
 </body>
-</html>\`;
+</html>`;
 
     res.send(html);
 }
