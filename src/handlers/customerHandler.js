@@ -507,25 +507,35 @@ ${knowledge}
                 const response = await generateGroupAiResponse(userMessage, customerPrompt, chatId);
                 const rawReply = response.reply || '{}';
 
-                // ── Parse JSON dari AI ────────────────────────────────────────
+                // ── Parse JSON / Teks dari AI ─────────────────────────────────
                 let aiIntro   = null;
                 let showNode  = null;
-                try {
-                    // Ekstrak JSON dari respons (kadang AI tambah markdown ```json)
-                    const jsonMatch = rawReply.match(/\{[\s\S]*\}/);
+
+                if (rawReply) {
+                    let cleanRaw = rawReply.trim();
+                    cleanRaw = cleanRaw.replace(/```json/gi, '').replace(/```/g, '').trim();
+
+                    const jsonMatch = cleanRaw.match(/\{[\s\S]*\}/);
                     if (jsonMatch) {
-                        const parsed = JSON.parse(jsonMatch[0]);
-                        aiIntro  = parsed.reply   || null;
-                        showNode = parsed.show_node || null;
+                        try {
+                            const parsed = JSON.parse(jsonMatch[0]);
+                            aiIntro  = parsed.reply || parsed.message || parsed.answer || parsed.text || parsed.content || null;
+                            showNode = parsed.show_node || parsed.shownode || parsed.node || null;
+                            
+                            if (!aiIntro) {
+                                const textWithoutJson = cleanRaw.replace(jsonMatch[0], '').trim();
+                                if (textWithoutJson) aiIntro = textWithoutJson;
+                            }
+                        } catch(_) {}
                     }
-                } catch(_) {
-                    // Jika AI tidak patuh format JSON, gunakan raw sebagai intro
-                    aiIntro  = rawReply;
-                    showNode = null;
+
+                    if (!aiIntro) {
+                        aiIntro = cleanRaw;
+                    }
                 }
 
-                // Fallback intro jika kosong
-                if (!aiIntro || aiIntro.trim() === '') {
+                // Fallback intro hanya jika balasan AI benar-benar kosong
+                if (!aiIntro || aiIntro.trim() === '' || aiIntro.trim() === '{}') {
                     aiIntro = 'Ada yang bisa saya bantu, Kak? 😊';
                 }
 

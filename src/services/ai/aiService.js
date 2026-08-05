@@ -688,7 +688,7 @@ async function generateGroupAiResponse(userMessage, systemPrompt, chatId) {
     
     chatHistory.push({ role: 'user', content: userMessage });
     
-    const content = await callAiProvider(systemPrompt, chatHistory, false);
+    const content = await callAiProvider(systemPrompt, chatHistory, true);
     
     history.push({ role: 'user', content: userMessage });
     history.push({ role: 'assistant', content: content });
