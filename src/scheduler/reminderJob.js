@@ -304,7 +304,23 @@ async function checkGroupSchedules(clientOrGetClient, getStatus) {
 
                 if (schedTime && messageText && messageText.trim() !== '') {
                     const key = `${groupId}_${schedTime}_${messageText.substring(0, 15)}`;
-                    if (timeStr === schedTime && lastSentGroupMessageDate.get(key) !== dateStr) {
+                    const isNotSentToday = lastSentGroupMessageDate.get(key) !== dateStr;
+
+                    // Hitung selisih waktu menit dari jam target
+                    const timeParts = schedTime.split(':').map(Number);
+                    const sHour = timeParts[0] || 0;
+                    const sMin  = timeParts[1] || 0;
+                    
+                    const nowParts = timeStr.split(':').map(Number);
+                    const cHour = nowParts[0] || 0;
+                    const cMin  = nowParts[1] || 0;
+
+                    const schedTotalMin = sHour * 60 + sMin;
+                    const currTotalMin  = cHour * 60 + cMin;
+                    const diffMin       = currTotalMin - schedTotalMin;
+
+                    // Kirim jika waktu sudah pas atau lewat sampai 120 menit dan belum terkirim hari ini
+                    if (isNotSentToday && diffMin >= 0 && diffMin <= 120) {
                         if (activeDays.length === 0 || activeDays.includes(currentDayVal)) {
                             lastSentGroupMessageDate.set(key, dateStr);
                             try {
@@ -324,9 +340,9 @@ async function checkGroupSchedules(clientOrGetClient, getStatus) {
 }
 
 function startGroupScheduleScheduler(client, getStatus) {
-    console.log('[Scheduler] Memulai scheduler otomatisasi buka/tutup grup...');
+    console.log('[Scheduler] Memulai scheduler otomatisasi buka/tutup grup & pesan terjadwal...');
     setTimeout(() => checkGroupSchedules(client, getStatus), 5000);
-    setInterval(() => checkGroupSchedules(client, getStatus), 60000);
+    setInterval(() => checkGroupSchedules(client, getStatus), 15000);
 }
 
 function startDailyReportScheduler(client, io, getStatus) {

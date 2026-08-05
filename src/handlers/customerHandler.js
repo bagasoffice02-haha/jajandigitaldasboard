@@ -394,6 +394,14 @@ async function handleCustomerMessage(msg, {
                 groupAiCooldowns.set(chatId, now);
             }
             activeLocks.add(chatId);
+            // Safety Guard: Hapus lock otomatis dalam 45 detik jika AI hang/timeout tanpa respon
+            const lockAutoRelease = setTimeout(() => {
+                if (activeLocks.has(chatId)) {
+                    activeLocks.delete(chatId);
+                    console.warn(`[Lock Guard] Lock untuk grup ${chatId} dilepas otomatis setelah 45 detik timeout.`);
+                }
+            }, 45000);
+
             let typingInterval = null; // Fix 2: typing loop
             try {
                 // Fix 2: Loop typing indicator setiap 4 detik selama AI berpikir
@@ -574,7 +582,8 @@ ${knowledge}
                 console.error('Gagal menjalankan CS AI Fallback:', err.message);
                 await msg.reply('Maaf Kak, saat ini sistem CS sedang sibuk. Silakan coba beberapa saat lagi.');
             } finally {
-                // Stop typing loop & release lock
+                // Stop typing loop & release lock & clear safety timer
+                if (lockAutoRelease) clearTimeout(lockAutoRelease);
                 if (typingInterval) clearInterval(typingInterval);
                 activeLocks.delete(chatId);
             }

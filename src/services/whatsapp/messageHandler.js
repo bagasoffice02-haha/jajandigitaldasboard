@@ -52,6 +52,10 @@ setInterval(() => {
     for (const [id, ts] of groupCommandCooldowns) {
         if (now - ts > STALE_MS) groupCommandCooldowns.delete(id);
     }
+    // Bersihkan activeLocks yang berpotensi nyangkut
+    if (activeLocks.size > 0) {
+        activeLocks.clear();
+    }
     // Bersihkan sesi menu yang expired (>2 jam)
     for (const [key, session] of customerMenuStates) {
         if (now - (session.lastActive || 0) > 2 * 60 * 60 * 1000) customerMenuStates.delete(key);
