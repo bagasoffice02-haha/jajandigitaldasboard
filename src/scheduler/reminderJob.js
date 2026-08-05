@@ -12,6 +12,33 @@ let lastSentReportDate = '';
 let lastSentBackupDate = '';
 const groupOpenStates = new Map();
 const lastSentGroupMessageDate = new Map();
+
+async function isScheduleSentToday(key, dateStr) {
+    if (lastSentGroupMessageDate.get(key) === dateStr) return true;
+    try {
+        const db = getDb();
+        if (db) {
+            const dbKey = `sched_${dateStr}_${key}`;
+            const row = await db.get("SELECT value FROM key_value_store WHERE key = ?", dbKey);
+            if (row && row.value) {
+                lastSentGroupMessageDate.set(key, dateStr);
+                return true;
+            }
+        }
+    } catch (_) {}
+    return false;
+}
+
+async function markScheduleSentToday(key, dateStr) {
+    lastSentGroupMessageDate.set(key, dateStr);
+    try {
+        const db = getDb();
+        if (db) {
+            const dbKey = `sched_${dateStr}_${key}`;
+            await db.run("INSERT OR REPLACE INTO key_value_store (key, value) VALUES (?, ?)", dbKey, dateStr);
+        }
+    } catch (_) {}
+}
 function resolveClient(clientOrGetClient) {
     if (typeof clientOrGetClient === 'function') {
         return clientOrGetClient();
@@ -304,30 +331,32 @@ async function checkGroupSchedules(clientOrGetClient, getStatus) {
 
                 if (schedTime && messageText && messageText.trim() !== '') {
                     const key = `${groupId}_${schedTime}_${messageText.substring(0, 15)}`;
-                    const isNotSentToday = lastSentGroupMessageDate.get(key) !== dateStr;
+                    const alreadySent = await isScheduleSentToday(key, dateStr);
 
-                    // Hitung selisih waktu menit dari jam target
-                    const timeParts = schedTime.split(':').map(Number);
-                    const sHour = timeParts[0] || 0;
-                    const sMin  = timeParts[1] || 0;
-                    
-                    const nowParts = timeStr.split(':').map(Number);
-                    const cHour = nowParts[0] || 0;
-                    const cMin  = nowParts[1] || 0;
+                    if (!alreadySent) {
+                        // Hitung selisih waktu menit dari jam target
+                        const timeParts = schedTime.split(':').map(Number);
+                        const sHour = timeParts[0] || 0;
+                        const sMin  = timeParts[1] || 0;
+                        
+                        const nowParts = timeStr.split(':').map(Number);
+                        const cHour = nowParts[0] || 0;
+                        const cMin  = nowParts[1] || 0;
 
-                    const schedTotalMin = sHour * 60 + sMin;
-                    const currTotalMin  = cHour * 60 + cMin;
-                    const diffMin       = currTotalMin - schedTotalMin;
+                        const schedTotalMin = sHour * 60 + sMin;
+                        const currTotalMin  = cHour * 60 + cMin;
+                        const diffMin       = currTotalMin - schedTotalMin;
 
-                    // Kirim jika waktu sudah pas atau lewat sampai 120 menit dan belum terkirim hari ini
-                    if (isNotSentToday && diffMin >= 0 && diffMin <= 120) {
-                        if (activeDays.length === 0 || activeDays.includes(currentDayVal)) {
-                            lastSentGroupMessageDate.set(key, dateStr);
-                            try {
-                                console.log(`[Scheduler] Mengirim pesan terjadwal ke grup ${cfg.group_name || groupId}: "${messageText.substring(0, 30)}..."`);
-                                await client.sendMessage(groupId, messageText);
-                            } catch (err) {
-                                console.error(`[Scheduler] Gagal mengirim pesan terjadwal ke grup ${groupId}:`, err.message);
+                        // Kirim HANYA jika waktu pas (0 sampai 3 menit toleransi) dan belum pernah terkirim hari ini
+                        if (diffMin >= 0 && diffMin <= 3) {
+                            if (activeDays.length === 0 || activeDays.includes(currentDayVal)) {
+                                await markScheduleSentToday(key, dateStr);
+                                try {
+                                    console.log(`[Scheduler] Mengirim pesan terjadwal ke grup ${cfg.group_name || groupId}: "${messageText.substring(0, 30)}..."`);
+                                    await client.sendMessage(groupId, messageText);
+                                } catch (err) {
+                                    console.error(`[Scheduler] Gagal mengirim pesan terjadwal ke grup ${groupId}:`, err.message);
+                                }
                             }
                         }
                     }
