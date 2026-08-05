@@ -528,8 +528,20 @@ ${knowledge}
                     aiIntro = 'Ada yang bisa saya bantu, Kak? 😊';
                 }
 
+                // Helper untuk menjamin pesan SELALU terkirim ke dalam grup (bahkan jika pengirimnya akun Host/Boss)
+                const sendTargetReply = async (content) => {
+                    try {
+                        if (isGroup || (chatId && chatId.includes('@g.us'))) {
+                            return await clientInstance.sendMessage(chatId, content, { quotedMessageId: msg.id ? msg.id._serialized : undefined });
+                        }
+                        return await msg.reply(content);
+                    } catch (_) {
+                        return await clientInstance.sendMessage(chatId, content);
+                    }
+                };
+
                 // ── Kirim intro AI ────────────────────────────────────────────
-                await msg.reply(aiIntro);
+                await sendTargetReply(aiIntro);
 
                 // ── Kirim menu dari DB jika AI minta tampilkan node ───────────
                 // Guard anti-spam: cek apakah show_node masuk akal untuk pesan ini
@@ -557,7 +569,7 @@ ${knowledge}
                         }
                         if (targetNode) {
                             const menuMsg = renderGroupMenuMessage(targetNode, activeCfg);
-                            await msg.reply(menuMsg);
+                            await sendTargetReply(menuMsg);
 
                             // Kirim media jika ada di node produk
                             if (targetNode.type !== 'category' && targetNode.media && targetNode.media.trim()) {
@@ -569,7 +581,7 @@ ${knowledge}
                                         const { MessageMedia: MM } = require('whatsapp-web.js');
                                         const mediaObj = new MM(mimeType, fs.readFileSync(mediaPath).toString('base64'), path.basename(mediaPath));
                                         await new Promise(r => setTimeout(r, 500));
-                                        await msg.reply(mediaObj);
+                                        await sendTargetReply(mediaObj);
                                     } catch(_) {}
                                 }
                             }
@@ -580,7 +592,13 @@ ${knowledge}
                 if (ioInstance) ioInstance.emit('message_log', { chatId, body: aiIntro, type: 'outgoing', timestamp: Date.now() });
             } catch (err) {
                 console.error('Gagal menjalankan CS AI Fallback:', err.message);
-                await msg.reply('Maaf Kak, saat ini sistem CS sedang sibuk. Silakan coba beberapa saat lagi.');
+                try {
+                    if (isGroup || (chatId && chatId.includes('@g.us'))) {
+                        await clientInstance.sendMessage(chatId, 'Maaf Kak, saat ini sistem CS sedang sibuk. Silakan coba beberapa saat lagi.');
+                    } else {
+                        await msg.reply('Maaf Kak, saat ini sistem CS sedang sibuk. Silakan coba beberapa saat lagi.');
+                    }
+                } catch(_) {}
             } finally {
                 // Stop typing loop & release lock & clear safety timer
                 if (lockAutoRelease) clearTimeout(lockAutoRelease);
