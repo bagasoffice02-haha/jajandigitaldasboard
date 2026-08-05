@@ -1172,6 +1172,7 @@ const shopRouter      = require('./src/routes/shop');
 const hostAdminRouter = require('./src/routes/hostAdmin');
 const miscRouter      = require('./src/routes/misc');
 const configRouter    = require('./src/routes/configRoute');
+const referralRouter  = require('./src/routes/referral');
 
 // Public Payment Upload Route (dengan IP Rate Limiter: max 5 upload / 10 mnt)
 const uploadRateBucket = new Map();
@@ -1216,6 +1217,7 @@ app.use('/api/shop', shopRouter);
 app.use('/api/host-admin', hostAdminRouter);
 app.use('/api', miscRouter);
 app.use('/api', configRouter);
+app.use('/api', referralRouter);
 
 // ─── Socket.io ────────────────────────────────────────────────────────────────
 io.on('connection', (socket) => {
