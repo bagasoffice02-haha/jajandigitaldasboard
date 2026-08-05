@@ -127,6 +127,31 @@ async function initDatabase() {
             )
         `);
 
+        // Referral System Tables
+        await db.exec(`
+            CREATE TABLE IF NOT EXISTS referral_codes (
+                phone TEXT PRIMARY KEY,
+                user_name TEXT,
+                code TEXT UNIQUE NOT NULL,
+                total_invites INTEGER DEFAULT 0,
+                points INTEGER DEFAULT 0,
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+            )
+        `);
+
+        await db.exec(`
+            CREATE TABLE IF NOT EXISTS referral_logs (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                referrer_phone TEXT,
+                referrer_name TEXT,
+                referred_phone TEXT,
+                referred_name TEXT,
+                code_used TEXT,
+                group_id TEXT,
+                claimed_at DATETIME DEFAULT CURRENT_TIMESTAMP
+            )
+        `);
+
         // Check and add updated_at and other columns to shop_customers if they don't exist
         try {
             const tableInfo = await db.all("PRAGMA table_info(shop_customers)");

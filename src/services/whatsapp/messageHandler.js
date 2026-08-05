@@ -18,6 +18,7 @@ const { handleAdminCommandMessage } = require('../../handlers/adminCommandHandle
 const { handleMediaMessage } = require('../../handlers/mediaHandler');
 const { handleBossAiMessage, handleUnifiedAiDispatcher } = require('../../handlers/bossAiHandler');
 const { handleCustomerMessage } = require('../../handlers/customerHandler');
+const { handleReferralMessage } = require('../../handlers/referralHandler');
 
 let clientInstance = null;
 let ioInstance = null;
@@ -247,6 +248,12 @@ async function handleIncomingMessage(msg) {
         senderId, chatId, userMessage, textLower, isGroup, clientInstance, ioInstance
     });
     if (orderHandled) return;
+
+    // 2.5. REFERRAL EVENT & AFFILIATE SYSTEM (!myref, !ref, !topref)
+    const referralHandled = await handleReferralMessage(msg, {
+        chatId, senderId, userMessage, textLower, isGroup, clientInstance, ioInstance
+    });
+    if (referralHandled) return;
 
     // Cooldown untuk perintah grup (Mencegah spam perintah dari anggota grup biasa)
     if (isGroup && !isSenderHostAdmin) {
