@@ -14,6 +14,23 @@ function generateReferralCode(userName, phone) {
     return `${prefix}${cleanNum}`;
 }
 
+async function getReferralSettings() {
+    let pts = 10;
+    let bonusDesc = 'Voucher Bebas Admin / Diskon Khusus';
+    try {
+        const db = getDb();
+        if (db) {
+            const row = await db.get("SELECT value FROM key_value_store WHERE key = 'referral_settings'");
+            if (row && row.value) {
+                const parsed = JSON.parse(row.value);
+                if (parsed.points_per_invite) pts = parseInt(parsed.points_per_invite, 10) || 10;
+                if (parsed.bonus_desc) bonusDesc = parsed.bonus_desc;
+            }
+        }
+    } catch (_) {}
+    return { pointsPerInvite: pts, bonusDesc };
+}
+
 async function handleReferralMessage(msg, {
     chatId, senderId, userMessage, textLower, isGroup, clientInstance, ioInstance
 }) {
@@ -67,6 +84,7 @@ async function handleReferralMessage(msg, {
                 console.log('[Referral Handler] Invite code error:', err.message);
             }
 
+            const { pointsPerInvite } = await getReferralSettings();
             const shareLink = groupInviteLink || 'https://wa.jajandigital.web.id/referral';
 
             const replyMsg = 
@@ -87,7 +105,7 @@ _Salin & bagikan pesan di bawah ke Story WA / Teman Anda:_
 👉 Pas baru join, langsung ketik: *!ref ${existing.code}* untuk klaim voucher diskon!"
 
 ━━━━━━━━━━━━━━━━━━━━━━
-🏆 *Setiap 1 teman yang klaim kode Anda, Anda dapet +10 Poin Referral!* 🚀`;
+🏆 *Setiap 1 teman yang klaim kode Anda, Anda dapet +${pointsPerInvite} Poin Referral!* 🚀`;
 
             if (isGroup) {
                 await clientInstance.sendMessage(chatId, replyMsg, { quotedMessageId: msg.id._serialized });
@@ -148,9 +166,11 @@ _Salin & bagikan pesan di bawah ke Story WA / Teman Anda:_
                 referrer.phone, referrer.user_name, referredPhone, referredName, inputCode, chatId
             );
 
-            // Tambah 10 Poin ke pengundang
+            const { pointsPerInvite, bonusDesc } = await getReferralSettings();
+
+            // Tambah Poin ke pengundang sesuai pengaturan campaign
             const newInvites = (referrer.total_invites || 0) + 1;
-            const newPoints = (referrer.points || 0) + 10;
+            const newPoints = (referrer.points || 0) + pointsPerInvite;
 
             await db.run(
                 "UPDATE referral_codes SET total_invites = ?, points = ? WHERE phone = ?",
@@ -168,8 +188,8 @@ Selamat datang ${referredTag} di grup *Jajan Digital*! 🥳
 Terima kasih kepada ${referrerTag} yang telah mengundang member baru.
 
 🎁 *Reward Event:*
-➕ ${referrerTag} : *+10 Poin Referral* (Total: ${newPoints} Poin)
-🎁 ${referredTag} : *Voucher Bebas Admin / Diskon Khusus*
+➕ ${referrerTag} : *+${pointsPerInvite} Poin Referral* (Total: ${newPoints} Poin)
+🎁 ${referredTag} : *${bonusDesc || 'Voucher Bebas Admin / Diskon Khusus'}*
 
 ━━━━━━━━━━━━━━━━━━━━━━
 🔥 Ketik *!myref* untuk mendapatkan Kode Referral Anda sendiri!`;

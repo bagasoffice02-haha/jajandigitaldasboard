@@ -4857,8 +4857,49 @@ window.switchGroupSubTab = function(tabName) {
 // ─── Referral Dashboard Management Functions ──────────────────────────────────
 let allDashRefCodesData = [];
 
+window.loadReferralGlobalSettings = async function() {
+    try {
+        const res = await fetch('/api/referrals/settings');
+        const data = await res.json();
+        if (data.success && data.settings) {
+            const elPts = document.getElementById('ref-pts-per-invite');
+            const elDesc = document.getElementById('ref-bonus-desc');
+            if (elPts) elPts.value = data.settings.points_per_invite || 10;
+            if (elDesc) elDesc.value = data.settings.bonus_desc || 'Voucher Diskon & Bebas Biaya Admin';
+        }
+    } catch (err) {
+        console.error('[Load Referral Settings Error]:', err);
+    }
+};
+
+window.saveReferralSettings = async function() {
+    try {
+        const elPts = document.getElementById('ref-pts-per-invite');
+        const elDesc = document.getElementById('ref-bonus-desc');
+        const points_per_invite = elPts ? parseInt(elPts.value, 10) || 10 : 10;
+        const bonus_desc = elDesc ? elDesc.value.trim() : '';
+
+        const res = await fetch('/api/referrals/settings', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ points_per_invite, bonus_desc })
+        });
+
+        const data = await res.json();
+        if (data.success) {
+            alert(`✓ Pengaturan campaign berhasil disimpan!\n• Poin per undangan: +${points_per_invite} Poin`);
+        } else {
+            alert('❌ Error: ' + (data.error || 'Gagal menyimpan pengaturan.'));
+        }
+    } catch (err) {
+        alert('❌ Error koneksi server.');
+    }
+};
+
 window.loadReferralDashboardData = async function() {
     try {
+        loadReferralGlobalSettings();
+
         const [resCodes, resLogs] = await Promise.all([
             fetch('/api/referrals/codes'),
             fetch('/api/referrals/logs')

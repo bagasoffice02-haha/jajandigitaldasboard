@@ -2155,6 +2155,34 @@
             </div>
         </div>
 
+        <!-- KARTU PENGATURAN GLOBAL EVENT REFERRAL -->
+        <div class="card" style="margin-bottom: 20px; padding: 20px; border: 1px solid rgba(245, 158, 11, 0.3); background: rgba(245, 158, 11, 0.03);">
+            <h2 style="font-size: 1.05rem; font-weight: 700; margin: 0 0 15px 0; color: #f59e0b; display: flex; align-items: center; gap: 8px;">
+                <i data-lucide="sliders"></i> Pengaturan Campaign Referral (Poin Per Undangan &amp; Hadiah)
+            </h2>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 15px; align-items: flex-end;">
+                <div>
+                    <label for="ref-pts-per-invite" style="font-size: 0.8rem; font-weight: 600; color: var(--text-color); display: block; margin-bottom: 6px;">
+                        Jumlah Poin Diberikan Per Undangan Berhasil:
+                    </label>
+                    <input type="number" id="ref-pts-per-invite" value="10" min="1" max="1000" class="form-control" style="width: 100%; padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border-color); background: rgba(0,0,0,0.2); color: var(--text-color); font-size: 0.9rem; font-weight: 700;">
+                    <small style="font-size: 0.72rem; color: var(--text-secondary); display: block; margin-top: 4px;">Poin otomatis didapatkan pengundang tiap 1 member baru klaim kode.</small>
+                </div>
+                <div>
+                    <label for="ref-bonus-desc" style="font-size: 0.8rem; font-weight: 600; color: var(--text-color); display: block; margin-bottom: 6px;">
+                        Deskripsi Voucher / Bonus Anggota Baru:
+                    </label>
+                    <input type="text" id="ref-bonus-desc" value="Voucher Diskon &amp; Bebas Biaya Admin" class="form-control" style="width: 100%; padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border-color); background: rgba(0,0,0,0.2); color: var(--text-color); font-size: 0.85rem;">
+                    <small style="font-size: 0.72rem; color: var(--text-secondary); display: block; margin-top: 4px;">Pesan penjelas benefit untuk member baru saat klaim kode.</small>
+                </div>
+                <div>
+                    <button type="button" class="btn btn-primary" onclick="saveReferralSettings()" style="width: 100%; padding: 9px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; gap: 6px; background: #f59e0b; border-color: #d97706; color: #000;">
+                        <i data-lucide="save"></i> Simpan Pengaturan Campaign
+                    </button>
+                </div>
+            </div>
+        </div>
+
         <!-- RINGKASAN STATISTIK -->
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px;">
             <div class="card" style="padding: 15px; background: rgba(56, 189, 248, 0.08); border: 1px solid rgba(56, 189, 248, 0.25);">

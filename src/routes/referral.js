@@ -64,4 +64,45 @@ router.delete('/referrals/code/:phone', async (req, res) => {
     }
 });
 
+// GET: Ambil Pengaturan Global Event Referral (Poin Per Undangan & Voucher Promo)
+router.get('/referrals/settings', async (req, res) => {
+    try {
+        const db = getDb();
+        if (!db) return res.json({ success: true, settings: { points_per_invite: 10, bonus_desc: "Voucher Diskon & Bebas Biaya Admin" } });
+
+        const row = await db.get("SELECT value FROM key_value_store WHERE key = 'referral_settings'");
+        let settings = { points_per_invite: 10, bonus_desc: "Voucher Diskon & Bebas Biaya Admin" };
+        if (row && row.value) {
+            try { settings = { ...settings, ...JSON.parse(row.value) }; } catch (_) {}
+        }
+
+        res.json({ success: true, settings });
+    } catch (err) {
+        console.error('[API Referral Settings GET Error]:', err.message);
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// POST: Simpan Pengaturan Global Event Referral
+router.post('/referrals/settings', async (req, res) => {
+    try {
+        const { points_per_invite, bonus_desc } = req.body;
+        const pts = parseInt(points_per_invite, 10) || 10;
+        const desc = (bonus_desc || '').trim();
+
+        const db = getDb();
+        const payloadStr = JSON.stringify({ points_per_invite: pts, bonus_desc: desc });
+
+        await db.run(
+            "INSERT OR REPLACE INTO key_value_store (key, value) VALUES ('referral_settings', ?)",
+            payloadStr
+        );
+
+        res.json({ success: true, message: 'Pengaturan campaign referral berhasil disimpan.' });
+    } catch (err) {
+        console.error('[API Referral Settings POST Error]:', err.message);
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
 module.exports = router;
