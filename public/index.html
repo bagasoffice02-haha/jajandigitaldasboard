@@ -2057,6 +2057,93 @@
 
 
     <!-- ══════════════════════════════════════════
+         TAB 9 — REFERRAL & AFFILIATE MANAGER
+    ══════════════════════════════════════════ -->
+    <div id="tab-referral" class="tab-content hidden">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
+            <h1 style="font-size: 1.4rem; font-weight: 700; margin: 0; color: var(--text-color); display: flex; align-items: center; gap: 8px;">
+                <i data-lucide="gift" style="color: #38bdf8;"></i> Manajemen Referral &amp; Event Affiliate
+            </h1>
+            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                <a href="/referral" target="_blank" class="btn btn-primary btn-sm" style="display: inline-flex; align-items: center; gap: 6px; text-decoration: none;">
+                    <i data-lucide="external-link"></i> Buka Halaman Live Public (/referral)
+                </a>
+                <button type="button" class="btn btn-secondary btn-sm" onclick="loadReferralDashboardData()">
+                    <i data-lucide="refresh-cw"></i> Refresh Data
+                </button>
+            </div>
+        </div>
+
+        <!-- RINGKASAN STATISTIK -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px;">
+            <div class="card" style="padding: 15px; background: rgba(56, 189, 248, 0.08); border: 1px solid rgba(56, 189, 248, 0.25);">
+                <div style="font-size: 0.8rem; color: var(--text-secondary);">Total Peserta Affiliate</div>
+                <div id="dashRefTotalAffiliates" style="font-size: 1.6rem; font-weight: 800; color: #38bdf8; margin-top: 4px;">0</div>
+            </div>
+            <div class="card" style="padding: 15px; background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.25);">
+                <div style="font-size: 0.8rem; color: var(--text-secondary);">Total Member Diundang</div>
+                <div id="dashRefTotalInvites" style="font-size: 1.6rem; font-weight: 800; color: #10b981; margin-top: 4px;">0</div>
+            </div>
+            <div class="card" style="padding: 15px; background: rgba(245, 158, 11, 0.08); border: 1px solid rgba(245, 158, 11, 0.25);">
+                <div style="font-size: 0.8rem; color: var(--text-secondary);">Total Poin Terkumpul</div>
+                <div id="dashRefTotalPoints" style="font-size: 1.6rem; font-weight: 800; color: #f59e0b; margin-top: 4px;">0</div>
+            </div>
+        </div>
+
+        <!-- TABEL PESERTA KODE REFERRAL -->
+        <div class="card" style="margin-bottom: 20px; padding: 20px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;">
+                <h2 style="font-size: 1.05rem; font-weight: 700; margin: 0; display: flex; align-items: center; gap: 8px;">
+                    <i data-lucide="award"></i> Daftar Peserta &amp; Edit Poin
+                </h2>
+                <input type="text" id="ref-search-input" oninput="filterReferralDashboardTable()" placeholder="Cari nama, kode, nomor..." style="padding: 6px 12px; font-size: 0.8rem; border-radius: 8px; border: 1px solid var(--border-color); background: rgba(255,255,255,0.03); color: var(--text-color); width: 220px;">
+            </div>
+
+            <div style="overflow-x: auto;">
+                <table class="table" style="width: 100%; border-collapse: collapse; font-size: 0.85rem;">
+                    <thead>
+                        <tr style="border-bottom: 1px solid var(--border-color); text-align: left;">
+                            <th style="padding: 10px;">Nama Affiliate</th>
+                            <th style="padding: 10px;">Nomor WA</th>
+                            <th style="padding: 10px;">Kode Unik</th>
+                            <th style="padding: 10px;">Jumlah Undangan</th>
+                            <th style="padding: 10px;">Total Poin</th>
+                            <th style="padding: 10px; text-align: right;">Aksi Admin</th>
+                        </tr>
+                    </thead>
+                    <tbody id="dashRefTableBody">
+                        <tr><td colspan="6" style="text-align: center; padding: 20px; color: var(--text-secondary);">Memuat data peserta...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- TABEL RIWAYAT LOG KLAIM REFERRAL -->
+        <div class="card" style="padding: 20px;">
+            <h2 style="font-size: 1.05rem; font-weight: 700; margin-bottom: 15px; display: flex; align-items: center; gap: 8px;">
+                <i data-lucide="history"></i> Riwayat Log Klaim Referral (Terbaru)
+            </h2>
+            <div style="overflow-x: auto;">
+                <table class="table" style="width: 100%; border-collapse: collapse; font-size: 0.85rem;">
+                    <thead>
+                        <tr style="border-bottom: 1px solid var(--border-color); text-align: left;">
+                            <th style="padding: 10px;">Waktu</th>
+                            <th style="padding: 10px;">Pengundang</th>
+                            <th style="padding: 10px;">Member Baru</th>
+                            <th style="padding: 10px;">Kode Digunakan</th>
+                            <th style="padding: 10px;">ID Grup WA</th>
+                        </tr>
+                    </thead>
+                    <tbody id="dashRefLogsBody">
+                        <tr><td colspan="5" style="text-align: center; padding: 20px; color: var(--text-secondary);">Memuat log klaim...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- ══════════════════════════════════════════
          BOTTOM TAB BAR
     ══════════════════════════════════════════ -->
     <nav class="ios-tab-bar">
@@ -2083,6 +2170,10 @@
         <button id="btn-tab-shop" class="ios-tab-btn" onclick="switchTab('shop')" title="Toko">
             <i data-lucide="store"></i>
             <span>Toko</span>
+        </button>
+        <button id="btn-tab-referral" class="ios-tab-btn" onclick="switchTab('referral')" title="Referral">
+            <i data-lucide="gift"></i>
+            <span>Referral</span>
         </button>
 
         <button id="btn-tab-settings" class="ios-tab-btn" onclick="switchTab('settings')" title="Settings">

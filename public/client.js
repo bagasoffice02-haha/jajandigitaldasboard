@@ -181,6 +181,8 @@ window.switchTab = function(tabId) {
     } else if (tabId === 'settings') {
         // Auto-load konfigurasi Telegram setiap kali tab Settings dibuka
         setTimeout(() => { if (typeof loadTelegramConfig === 'function') loadTelegramConfig(); }, 150);
+    } else if (tabId === 'referral') {
+        loadReferralDashboardData();
     }
 };// Real-time Socket.io Connection Events
 socket.on('connect', () => {
@@ -4847,6 +4849,163 @@ window.switchGroupSubTab = function(tabName) {
     
     // Re-trigger Lucide icons render just in case
     if (window.lucide) lucide.createIcons();
+};
+
+// ─── Referral Dashboard Management Functions ──────────────────────────────────
+let allDashRefCodesData = [];
+
+window.loadReferralDashboardData = async function() {
+    try {
+        const [resCodes, resLogs] = await Promise.all([
+            fetch('/api/referrals/codes'),
+            fetch('/api/referrals/logs')
+        ]);
+        
+        const dataCodes = await resCodes.json();
+        const dataLogs = await resLogs.json();
+
+        if (dataCodes.success && Array.isArray(dataCodes.codes)) {
+            allDashRefCodesData = dataCodes.codes;
+            renderReferralDashboardCodes(allDashRefCodesData);
+        }
+
+        if (dataLogs.success && Array.isArray(dataLogs.logs)) {
+            renderReferralDashboardLogs(dataLogs.logs);
+        }
+
+        if (window.lucide) lucide.createIcons();
+    } catch (err) {
+        console.error('[Dashboard Referral Error]:', err);
+    }
+};
+
+function renderReferralDashboardCodes(codes) {
+    let totalInvites = 0;
+    let totalPoints = 0;
+    codes.forEach(c => {
+        totalInvites += (c.total_invites || 0);
+        totalPoints += (c.points || 0);
+    });
+
+    const elAff = document.getElementById('dashRefTotalAffiliates');
+    const elInv = document.getElementById('dashRefTotalInvites');
+    const elPts = document.getElementById('dashRefTotalPoints');
+
+    if (elAff) elAff.textContent = codes.length.toLocaleString('id-ID');
+    if (elInv) elInv.textContent = totalInvites.toLocaleString('id-ID');
+    if (elPts) elPts.textContent = totalPoints.toLocaleString('id-ID');
+
+    const tbody = document.getElementById('dashRefTableBody');
+    if (!tbody) return;
+
+    if (codes.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:20px; color:var(--text-secondary);">Belum ada peserta referral terdaftar.</td></tr>';
+        return;
+    }
+
+    let html = '';
+    codes.forEach((c) => {
+        html += `
+            <tr style="border-bottom: 1px solid var(--border-color);">
+                <td style="padding: 10px; font-weight: 600;">${c.user_name || 'Member'}</td>
+                <td style="padding: 10px; color: var(--text-secondary);">${c.phone}</td>
+                <td style="padding: 10px;"><span style="background: rgba(56, 189, 248, 0.15); color: #38bdf8; padding: 2px 8px; border-radius: 6px; font-weight: 800;">${c.code}</span></td>
+                <td style="padding: 10px; font-weight: 700; color: #10b981;">
+                    <input type="number" id="ref-inv-${c.phone}" value="${c.total_invites || 0}" style="width: 70px; padding: 4px; border-radius: 6px; border: 1px solid var(--border-color); background: rgba(255,255,255,0.05); color: var(--text-color);">
+                </td>
+                <td style="padding: 10px; font-weight: 700; color: #f59e0b;">
+                    <input type="number" id="ref-pts-${c.phone}" value="${c.points || 0}" style="width: 80px; padding: 4px; border-radius: 6px; border: 1px solid var(--border-color); background: rgba(255,255,255,0.05); color: var(--text-color);">
+                </td>
+                <td style="padding: 10px; text-align: right;">
+                    <button type="button" class="btn btn-primary btn-sm" onclick="saveReferralPoints('${c.phone}')" style="margin-right: 4px;">Simpan</button>
+                    <button type="button" class="btn btn-danger btn-sm" onclick="deleteReferralCode('${c.phone}')">Hapus</button>
+                </td>
+            </tr>
+        `;
+    });
+
+    tbody.innerHTML = html;
+}
+
+function renderReferralDashboardLogs(logs) {
+    const tbody = document.getElementById('dashRefLogsBody');
+    if (!tbody) return;
+
+    if (logs.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:20px; color:var(--text-secondary);">Belum ada riwayat klaim referral.</td></tr>';
+        return;
+    }
+
+    let html = '';
+    logs.forEach((l) => {
+        const dateFormatted = l.claimed_at ? new Date(l.claimed_at).toLocaleString('id-ID') : '-';
+        html += `
+            <tr style="border-bottom: 1px solid var(--border-color);">
+                <td style="padding: 10px; font-size: 0.8rem; color: var(--text-secondary);">${dateFormatted}</td>
+                <td style="padding: 10px; font-weight: 600;">${l.referrer_name || '-'} (${l.referrer_phone || '-'})</td>
+                <td style="padding: 10px; color: #10b981; font-weight: 600;">${l.referred_name || '-'} (${l.referred_phone || '-'})</td>
+                <td style="padding: 10px;"><span style="background: rgba(56, 189, 248, 0.15); color: #38bdf8; padding: 2px 6px; border-radius: 4px; font-weight: 700;">${l.code_used}</span></td>
+                <td style="padding: 10px; font-size: 0.8rem; color: var(--text-secondary);">${l.group_id}</td>
+            </tr>
+        `;
+    });
+
+    tbody.innerHTML = html;
+}
+
+window.filterReferralDashboardTable = function() {
+    const q = (document.getElementById('ref-search-input')?.value || '').toLowerCase().trim();
+    if (!q) {
+        renderReferralDashboardCodes(allDashRefCodesData);
+        return;
+    }
+    const filtered = allDashRefCodesData.filter(c =>
+        (c.user_name && c.user_name.toLowerCase().includes(q)) ||
+        (c.code && c.code.toLowerCase().includes(q)) ||
+        (c.phone && c.phone.includes(q))
+    );
+    renderReferralDashboardCodes(filtered);
+};
+
+window.saveReferralPoints = async function(phone) {
+    try {
+        const ptsInput = document.getElementById(`ref-pts-${phone}`);
+        const invInput = document.getElementById(`ref-inv-${phone}`);
+        
+        const points = ptsInput ? parseInt(ptsInput.value, 10) : 0;
+        const total_invites = invInput ? parseInt(invInput.value, 10) : 0;
+
+        const res = await fetch('/api/referrals/update-points', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ phone, points, total_invites })
+        });
+        const data = await res.json();
+        if (data.success) {
+            alert('✓ Poin referral berhasil diperbarui!');
+            loadReferralDashboardData();
+        } else {
+            alert('❌ Error: ' + (data.error || 'Gagal meng-update poin.'));
+        }
+    } catch (err) {
+        alert('❌ Error koneksi server.');
+    }
+};
+
+window.deleteReferralCode = async function(phone) {
+    if (!confirm('Apakah Anda yakin ingin menghapus kode referral ini?')) return;
+    try {
+        const res = await fetch(`/api/referrals/code/${phone}`, { method: 'DELETE' });
+        const data = await res.json();
+        if (data.success) {
+            alert('✓ Kode referral berhasil dihapus.');
+            loadReferralDashboardData();
+        } else {
+            alert('❌ Error: ' + (data.error || 'Gagal menghapus kode.'));
+        }
+    } catch (err) {
+        alert('❌ Error koneksi server.');
+    }
 };
 
 
