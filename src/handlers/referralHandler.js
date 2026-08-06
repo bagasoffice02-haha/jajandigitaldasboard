@@ -48,6 +48,18 @@ async function handleReferralMessage(msg, {
                 existing = { phone: senderPhone, user_name: senderName, code, total_invites: 0, points: 0 };
             }
 
+            let groupInviteLink = '';
+            if (isGroup && clientInstance && typeof clientInstance.getInviteCode === 'function') {
+                try {
+                    const inviteCode = await clientInstance.getInviteCode(chatId);
+                    if (inviteCode) {
+                        groupInviteLink = `https://chat.whatsapp.com/${inviteCode}`;
+                    }
+                } catch (_) {}
+            }
+
+            const shareLink = groupInviteLink || 'https://wa.jajandigital.web.id/referral';
+
             const replyMsg = 
 `🎁 *KARTU REFERRAL AFFILIATE ANDA* 🎁
 ━━━━━━━━━━━━━━━━━━━━━━
@@ -58,11 +70,15 @@ async function handleReferralMessage(msg, {
 🪙 *Total Poin* : ${existing.points} Poin
 
 ━━━━━━━━━━━━━━━━━━━━━━
-📢 *Cara Menggunakan:*
-Ajak teman Anda bergabung ke grup ini dan suruh ketik:
-👉 *!ref ${existing.code}*
+📢 *TEKS SIAP SEBAR / PROMOSI:*
+_Salin & bagikan pesan di bawah ke Story WA / Teman Anda:_
 
-Setiap teman yang klaim kode Anda, Anda akan mendapatkan *+10 Poin Referral*! 🚀`;
+"🔥 Yuk gabung ke grup WhatsApp *Jajan Digital* buat dapet promo aplikasi premium murah!
+🔗 *Link Grup:* ${shareLink}
+👉 Pas baru join, langsung ketik: *!ref ${existing.code}* untuk klaim voucher diskon!"
+
+━━━━━━━━━━━━━━━━━━━━━━
+🏆 *Setiap 1 teman yang klaim kode Anda, Anda dapet +10 Poin Referral!* 🚀`;
 
             if (isGroup) {
                 await clientInstance.sendMessage(chatId, replyMsg, { quotedMessageId: msg.id._serialized });
