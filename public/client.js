@@ -4876,6 +4876,8 @@ window.loadReferralDashboardData = async function() {
             renderReferralDashboardLogs(dataLogs.logs);
         }
 
+        loadGroupInviteLinksConfig();
+
         if (window.lucide) lucide.createIcons();
     } catch (err) {
         console.error('[Dashboard Referral Error]:', err);
@@ -5033,6 +5035,87 @@ window.copyPublicUrl = function(path) {
         });
     } else {
         prompt('Salin link berikut:', fullUrl);
+    }
+};
+
+// ─── Multi-Group Invite Links Management Functions ─────────────────────────
+window.loadGroupInviteLinksConfig = async function() {
+    const tbody = document.getElementById('dashRefGroupLinksBody');
+    if (!tbody) return;
+    try {
+        const res = await fetch('/api/groups');
+        const groups = await res.json();
+        if (!Array.isArray(groups) || groups.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:20px; color:var(--text-secondary);">Belum ada grup terdeteksi.</td></tr>';
+            return;
+        }
+
+        let html = '';
+        groups.forEach(g => {
+            const cfg = g.config || {};
+            const invLink = cfg.inviteLink || '';
+            const isEnabled = g.enabled !== false;
+            const statusBadge = isEnabled 
+                ? '<span style="background: rgba(16, 185, 129, 0.15); color: #10b981; padding: 2px 6px; border-radius: 4px; font-weight: 700; font-size: 0.75rem;">Aktif</span>'
+                : '<span style="background: rgba(239, 68, 68, 0.15); color: #ef4444; padding: 2px 6px; border-radius: 4px; font-weight: 700; font-size: 0.75rem;">Nonaktif</span>';
+
+            html += `
+                <tr style="border-bottom: 1px solid var(--border-color);">
+                    <td style="padding: 10px; font-weight: 600;">${g.name}</td>
+                    <td style="padding: 10px; font-size: 0.75rem; color: var(--text-secondary); font-family: monospace;">${g.id}</td>
+                    <td style="padding: 10px;">${statusBadge}</td>
+                    <td style="padding: 10px;">
+                        <input type="text" id="grp-inv-link-${g.id}" value="${invLink}" placeholder="Kosongkan untuk Auto-Detect Link WA" style="width: 100%; min-width: 250px; padding: 6px 10px; border-radius: 6px; border: 1px solid var(--border-color); background: rgba(255,255,255,0.05); color: var(--text-color); font-size: 0.8rem;">
+                    </td>
+                    <td style="padding: 10px; text-align: right;">
+                        <button type="button" class="btn btn-primary btn-sm" onclick="saveSingleGroupInviteLink('${g.id}')">Simpan Link</button>
+                    </td>
+                </tr>
+            `;
+        });
+
+        tbody.innerHTML = html;
+        if (window.lucide) lucide.createIcons();
+    } catch (err) {
+        console.error('[Load Group Links Error]:', err);
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:20px; color:var(--text-secondary);">Gagal memuat daftar grup.</td></tr>';
+    }
+};
+
+window.saveSingleGroupInviteLink = async function(groupId) {
+    try {
+        const inputEl = document.getElementById(`grp-inv-link-${groupId}`);
+        const inviteLink = inputEl ? inputEl.value.trim() : '';
+
+        // Ambil data grup yang sedang aktif dari API
+        const resGroups = await fetch('/api/groups');
+        const groups = await resGroups.json();
+        const currentGrp = groups.find(g => g.id === groupId);
+
+        const currentCfg = currentGrp ? (currentGrp.config || {}) : {};
+
+        const payload = {
+            ...currentCfg,
+            groupName: currentGrp ? currentGrp.name : '',
+            enabled: currentGrp ? currentGrp.enabled !== false : true,
+            inviteLink
+        };
+
+        const resSave = await fetch(`/api/groups/${groupId}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+
+        const dataSave = await resSave.json();
+        if (dataSave.success) {
+            alert('✓ Link undangan grup berhasil disimpan!');
+            loadGroupInviteLinksConfig();
+        } else {
+            alert('❌ Error: ' + (dataSave.error || 'Gagal menyimpan link grup.'));
+        }
+    } catch (err) {
+        alert('❌ Error koneksi server.');
     }
 };
 

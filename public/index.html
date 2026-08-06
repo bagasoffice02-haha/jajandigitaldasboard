@@ -2197,6 +2197,38 @@
                     </tbody>
                 </table>
             </div>
+        <!-- KARTU MANAGEMENT LINK UNDANGAN GRUP WA (MULTI-GRUP) -->
+        <div class="card" style="margin-bottom: 20px; padding: 20px; border: 1px solid rgba(56, 189, 248, 0.25); background: rgba(56, 189, 248, 0.02);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;">
+                <div>
+                    <h2 style="font-size: 1.05rem; font-weight: 700; margin: 0; color: #38bdf8; display: flex; align-items: center; gap: 8px;">
+                        <i data-lucide="link-2"></i> Kustomisasi Link Undangan WhatsApp (Multi-Grup)
+                    </h2>
+                    <p style="font-size: 0.78rem; color: var(--text-secondary); margin-top: 4px;">
+                        Atur link undangan grup WhatsApp yang otomatis dipakai saat member di masing-masing grup mengetik <b>!myref</b>.
+                    </p>
+                </div>
+                <button type="button" class="btn btn-secondary btn-sm" onclick="loadGroupInviteLinksConfig()">
+                    <i data-lucide="refresh-cw"></i> Muat Ulang Link Grup
+                </button>
+            </div>
+
+            <div style="overflow-x: auto;">
+                <table class="table" style="width: 100%; border-collapse: collapse; font-size: 0.85rem;">
+                    <thead>
+                        <tr style="border-bottom: 1px solid var(--border-color); text-align: left;">
+                            <th style="padding: 10px;">Nama Grup WhatsApp</th>
+                            <th style="padding: 10px;">ID Grup (JID)</th>
+                            <th style="padding: 10px;">Status Bot</th>
+                            <th style="padding: 10px;">Link Undangan WA Custom</th>
+                            <th style="padding: 10px; text-align: right;">Aksi Simpan</th>
+                        </tr>
+                    </thead>
+                    <tbody id="dashRefGroupLinksBody">
+                        <tr><td colspan="5" style="text-align: center; padding: 20px; color: var(--text-secondary);">Memuat daftar grup...</td></tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
 
         <!-- TABEL RIWAYAT LOG KLAIM REFERRAL -->
