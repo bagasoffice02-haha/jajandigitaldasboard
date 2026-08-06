@@ -54,13 +54,18 @@ async function handleReferralMessage(msg, {
                 const activeCfg = gConfigs[chatId] || {};
                 if (activeCfg && activeCfg.inviteLink && activeCfg.inviteLink.trim() !== '') {
                     groupInviteLink = activeCfg.inviteLink.trim();
-                } else if (isGroup && clientInstance && typeof clientInstance.getInviteCode === 'function') {
-                    const inviteCode = await clientInstance.getInviteCode(chatId);
-                    if (inviteCode) {
-                        groupInviteLink = `https://chat.whatsapp.com/${inviteCode}`;
+                } else if (isGroup && msg && typeof msg.getChat === 'function') {
+                    const chat = await msg.getChat();
+                    if (chat && typeof chat.getInviteCode === 'function') {
+                        const inviteCode = await chat.getInviteCode();
+                        if (inviteCode) {
+                            groupInviteLink = `https://chat.whatsapp.com/${inviteCode}`;
+                        }
                     }
                 }
-            } catch (_) {}
+            } catch (err) {
+                console.log('[Referral Handler] Invite code error:', err.message);
+            }
 
             const shareLink = groupInviteLink || 'https://wa.jajandigital.web.id/referral';
 
