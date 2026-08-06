@@ -49,14 +49,18 @@ async function handleReferralMessage(msg, {
             }
 
             let groupInviteLink = '';
-            if (isGroup && clientInstance && typeof clientInstance.getInviteCode === 'function') {
-                try {
+            try {
+                const { group_configs: gConfigs } = await getGroupConfigs();
+                const activeCfg = gConfigs[chatId] || {};
+                if (activeCfg && activeCfg.inviteLink && activeCfg.inviteLink.trim() !== '') {
+                    groupInviteLink = activeCfg.inviteLink.trim();
+                } else if (isGroup && clientInstance && typeof clientInstance.getInviteCode === 'function') {
                     const inviteCode = await clientInstance.getInviteCode(chatId);
                     if (inviteCode) {
                         groupInviteLink = `https://chat.whatsapp.com/${inviteCode}`;
                     }
-                } catch (_) {}
-            }
+                }
+            } catch (_) {}
 
             const shareLink = groupInviteLink || 'https://wa.jajandigital.web.id/referral';
 
