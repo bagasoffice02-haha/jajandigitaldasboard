@@ -5008,4 +5008,29 @@ window.deleteReferralCode = async function(phone) {
     }
 };
 
+// ─── Quick Links Directory Modal Functions ───────────────────────────────────
+window.openQuickLinksModal = function() {
+    const modal = document.getElementById('quick-links-modal');
+    if (modal) modal.classList.remove('hidden');
+    if (window.lucide) lucide.createIcons();
+};
+
+window.closeQuickLinksModal = function() {
+    const modal = document.getElementById('quick-links-modal');
+    if (modal) modal.classList.add('hidden');
+};
+
+window.copyPublicUrl = function(path) {
+    const fullUrl = window.location.origin + path;
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(fullUrl).then(() => {
+            alert('✓ Link berhasil disalin ke clipboard:\n' + fullUrl);
+        }).catch(() => {
+            prompt('Salin link berikut:', fullUrl);
+        });
+    } else {
+        prompt('Salin link berikut:', fullUrl);
+    }
+};
+
 

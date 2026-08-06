@@ -48,6 +48,9 @@
         </div>
 
         <div class="header-right">
+            <button type="button" class="btn btn-primary btn-sm" onclick="openQuickLinksModal()" style="display: inline-flex; align-items: center; gap: 6px; font-weight: 700; border-radius: 8px; margin-right: 8px;">
+                <i data-lucide="compass"></i> <span>Daftar Halaman Web</span>
+            </button>
             <button type="button" class="header-action-btn" onclick="logoutAdmin()" title="Keluar / Logout" style="color: #ff453a; margin-right: 6px;">
                 <i data-lucide="log-out"></i>
             </button>
@@ -2051,6 +2054,76 @@
                 <div id="quick-reply-presets-list" style="display: flex; flex-direction: column; gap: 10px; max-height: 350px; overflow-y: auto; padding-right: 5px;">
                     <div style="text-align: center; color: var(--text-secondary); font-size: 0.8rem; padding: 20px;">Memuat template pesan...</div>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL DAFTAR HALAMAN WEB / LINK QUICK ACCESS -->
+    <div id="quick-links-modal" class="modal-backdrop hidden" onclick="if(event.target===this) closeQuickLinksModal()" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.7); z-index: 99999; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(5px);">
+        <div class="card" style="max-width: 550px; width: 92vw; background: #0f172a; border: 1px solid rgba(56, 189, 248, 0.3); border-radius: 16px; padding: 20px; box-shadow: 0 20px 50px rgba(0,0,0,0.8);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">
+                <h3 style="display: flex; align-items: center; gap: 8px; font-size: 1.1rem; color: #38bdf8; margin: 0; font-weight: 800;">
+                    <i data-lucide="compass"></i> DIREKTORI HALAMAN WEB &amp; LINK PUBLIK
+                </h3>
+                <button type="button" onclick="closeQuickLinksModal()" style="background: none; border: none; color: #94a3b8; font-size: 1.5rem; cursor: pointer;">&times;</button>
+            </div>
+            
+            <div style="display: flex; flex-direction: column; gap: 12px; max-height: 70vh; overflow-y: auto;">
+                <p style="font-size: 0.82rem; color: #94a3b8; margin: 0;">
+                    Klik tombol <b>Buka</b> untuk membuka link atau <b>Salin</b> untuk menyalin URL ke clipboard:
+                </p>
+
+                <!-- Link 1: Upload Bukti Pembayaran -->
+                <div style="padding: 12px 14px; background: rgba(30, 41, 59, 0.7); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; display: flex; align-items: center; justify-content: space-between; gap: 10px;">
+                    <div>
+                        <div style="font-weight: 700; font-size: 0.9rem; color: #10b981;">💳 Upload Bukti Pembayaran (Konsumen)</div>
+                        <div style="font-size: 0.78rem; color: #94a3b8; margin-top: 2px;"><code>/q</code> atau <code>/qris</code> — Portal upload resi transfer pembeli</div>
+                    </div>
+                    <div style="display: flex; gap: 6px;">
+                        <button class="btn btn-secondary btn-sm" onclick="copyPublicUrl('/q')">Salin</button>
+                        <a href="/q" target="_blank" class="btn btn-primary btn-sm" style="text-decoration: none;">Buka</a>
+                    </div>
+                </div>
+
+                <!-- Link 2: Live Referral Leaderboard -->
+                <div style="padding: 12px 14px; background: rgba(30, 41, 59, 0.7); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; display: flex; align-items: center; justify-content: space-between; gap: 10px;">
+                    <div>
+                        <div style="font-weight: 700; font-size: 0.9rem; color: #38bdf8;">🏆 Papan Peringkat Live Referral</div>
+                        <div style="font-size: 0.78rem; color: #94a3b8; margin-top: 2px;"><code>/referral</code> atau <code>/leaderboard</code> — Skor &amp; poin affiliate</div>
+                    </div>
+                    <div style="display: flex; gap: 6px;">
+                        <button class="btn btn-secondary btn-sm" onclick="copyPublicUrl('/referral')">Salin</button>
+                        <a href="/referral" target="_blank" class="btn btn-primary btn-sm" style="text-decoration: none;">Buka</a>
+                    </div>
+                </div>
+
+                <!-- Link 3: Dasbor Utama Admin -->
+                <div style="padding: 12px 14px; background: rgba(30, 41, 59, 0.7); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; display: flex; align-items: center; justify-content: space-between; gap: 10px;">
+                    <div>
+                        <div style="font-weight: 700; font-size: 0.9rem; color: #f59e0b;">⚙️ Dasbor Web Utama Admin</div>
+                        <div style="font-size: 0.78rem; color: #94a3b8; margin-top: 2px;"><code>/</code> — Panel kontrol utama bot, monitor chat, &amp; settings</div>
+                    </div>
+                    <div style="display: flex; gap: 6px;">
+                        <button class="btn btn-secondary btn-sm" onclick="copyPublicUrl('/')">Salin</button>
+                        <a href="/" target="_blank" class="btn btn-primary btn-sm" style="text-decoration: none;">Buka</a>
+                    </div>
+                </div>
+
+                <!-- Link 4: File Pengetahuan AI -->
+                <div style="padding: 12px 14px; background: rgba(30, 41, 59, 0.7); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; display: flex; align-items: center; justify-content: space-between; gap: 10px;">
+                    <div>
+                        <div style="font-weight: 700; font-size: 0.9rem; color: #a855f7;">📚 Direktori File Pengetahuan AI</div>
+                        <div style="font-size: 0.78rem; color: #94a3b8; margin-top: 2px;"><code>/knowledge</code> — File instruksi CS &amp; database produk</div>
+                    </div>
+                    <div style="display: flex; gap: 6px;">
+                        <button class="btn btn-secondary btn-sm" onclick="copyPublicUrl('/knowledge')">Salin</button>
+                        <a href="/knowledge" target="_blank" class="btn btn-primary btn-sm" style="text-decoration: none;">Buka</a>
+                    </div>
+                </div>
+            </div>
+
+            <div style="text-align: right; margin-top: 15px; border-top: 1px solid var(--border-color); padding-top: 12px;">
+                <button type="button" class="btn btn-secondary btn-sm" onclick="closeQuickLinksModal()">Tutup</button>
             </div>
         </div>
     </div>
