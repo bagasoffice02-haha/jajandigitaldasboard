@@ -2346,6 +2346,9 @@ table td {
     .desktop-only {
         display: none !important;
     }
+    .header-nav-tabs {
+        display: none !important;
+    }
 }
 
 @media (min-width: 1024px) {
@@ -2372,16 +2375,72 @@ table td {
         position: sticky !important;
         top: 0;
         height: 72px;
-        padding: 0 40px !important;
+        padding: 0 24px !important;
         background: var(--bg) !important;
-        border-bottom: none !important;
+        border-bottom: 1px solid var(--border) !important;
         box-shadow: none !important;
         display: flex !important;
         align-items: center !important;
-        justify-content: flex-end !important; /* logo hidden, controls right aligned */
+        justify-content: space-between !important;
         backdrop-filter: none !important;
         -webkit-backdrop-filter: none !important;
         z-index: 900 !important;
+    }
+
+    /* Header Navigation Tabs Bar (Desktop & Tablet Top Menu) */
+    .header-nav-tabs {
+        display: flex !important;
+        align-items: center;
+        gap: 6px;
+        background: rgba(0, 0, 0, 0.05);
+        padding: 4px 6px;
+        border-radius: 12px;
+        border: 1px solid var(--border);
+        margin: 0 15px;
+    }
+
+    .theme-dark .header-nav-tabs,
+    .theme-midnight .header-nav-tabs,
+    .theme-sunset .header-nav-tabs {
+        background: rgba(255, 255, 255, 0.05);
+    }
+
+    .hdr-tab-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 14px;
+        border-radius: 8px;
+        border: none;
+        background: transparent;
+        color: var(--text-muted);
+        font-size: 0.82rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .hdr-tab-btn:hover {
+        color: var(--text);
+        background: rgba(0, 0, 0, 0.06);
+    }
+
+    .theme-dark .hdr-tab-btn:hover,
+    .theme-midnight .hdr-tab-btn:hover,
+    .theme-sunset .hdr-tab-btn:hover {
+        background: rgba(255, 255, 255, 0.1);
+    }
+
+    .hdr-tab-btn.active {
+        background: #007aff !important;
+        color: #ffffff !important;
+        font-weight: 700 !important;
+        box-shadow: 0 2px 8px rgba(0, 122, 255, 0.3) !important;
+    }
+
+    .hdr-tab-btn i {
+        width: 16px;
+        height: 16px;
     }
 
     /* Left Sidebar Navigation repositioned inside Grid layout */

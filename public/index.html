@@ -39,13 +39,35 @@
          HEADER
     ══════════════════════════════════════════ -->
     <header class="app-header">
-        <div class="logo-area mobile-only">
+        <div class="logo-area">
             <span class="logo-icon"><i data-lucide="bot"></i></span>
             <div class="logo-text">
                 <h1>WA Bot CS</h1>
-                <p>Asisten Manager Pribadi</p>
+                <p>Jajan Digital</p>
             </div>
         </div>
+
+        <!-- MENU NAVIGASI UTAMA ATAS (HEADER TABS) -->
+        <nav class="header-nav-tabs">
+            <button id="hdr-btn-tab-monitor" class="hdr-tab-btn active" onclick="switchTab('monitor')" title="Chats">
+                <i data-lucide="message-circle"></i> <span>Chats</span>
+            </button>
+            <button id="hdr-btn-tab-memory" class="hdr-tab-btn" onclick="switchTab('memory')" title="Memory">
+                <i data-lucide="database"></i> <span>Memory</span>
+            </button>
+            <button id="hdr-btn-tab-groups" class="hdr-tab-btn" onclick="switchTab('groups')" title="Groups">
+                <i data-lucide="users"></i> <span>Groups</span>
+            </button>
+            <button id="hdr-btn-tab-shop" class="hdr-tab-btn" onclick="switchTab('shop')" title="Toko">
+                <i data-lucide="store"></i> <span>Toko</span>
+            </button>
+            <button id="hdr-btn-tab-referral" class="hdr-tab-btn" onclick="switchTab('referral')" title="Referral">
+                <i data-lucide="gift"></i> <span>Referral</span>
+            </button>
+            <button id="hdr-btn-tab-settings" class="hdr-tab-btn" onclick="switchTab('settings')" title="Settings">
+                <i data-lucide="settings-2"></i> <span>Settings</span>
+            </button>
+        </nav>
 
         <div class="header-right">
             <button type="button" class="btn btn-primary btn-sm" onclick="openQuickLinksModal()" style="display: inline-flex; align-items: center; gap: 6px; font-weight: 700; border-radius: 8px; margin-right: 8px;">

@@ -145,7 +145,7 @@ window.switchTab = function(tabId) {
     // Hide all tab content
     document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
     // Remove active class from all tab buttons
-    document.querySelectorAll('.ios-tab-btn').forEach(el => el.classList.remove('active'));
+    document.querySelectorAll('.ios-tab-btn, .hdr-tab-btn').forEach(el => el.classList.remove('active'));
     
     // Show selected tab content
     const selectedTab = document.getElementById(`tab-${tabId}`);
@@ -160,6 +160,9 @@ window.switchTab = function(tabId) {
     }
     const selectedBtn = document.getElementById(`btn-tab-${buttonId}`);
     if (selectedBtn) selectedBtn.classList.add('active');
+
+    const selectedHdrBtn = document.getElementById(`hdr-btn-tab-${buttonId}`);
+    if (selectedHdrBtn) selectedHdrBtn.classList.add('active');
     
     // Specific triggers
     if (tabId === 'groups' || tabId === 'broadcast') {
