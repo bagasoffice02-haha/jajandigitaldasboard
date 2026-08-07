@@ -160,17 +160,17 @@ body {
     line-height: 1.6;
     min-height: 100vh;
     padding-bottom: var(--tab-bar-h);
-    display: flex;
-    justify-content: center;
-    overflow-x: hidden;
+    /* NOTE: do NOT add overflow-x:hidden here — it breaks position:fixed on Android Chrome */
     transition: background .3s, color .3s;
 }
 
 .app-container {
     width: 100%;
     max-width: 1280px;
+    margin: 0 auto;
     display: flex;
     flex-direction: column;
+    overflow-x: hidden;
 }
 
 /* ============================================================
@@ -2370,7 +2370,7 @@ table td {
 @media (min-width: 1024px) {
     body {
         padding-bottom: 0 !important;
-        overflow: hidden;
+        padding-left: 64px; /* room for fixed sidebar */
     }
 
     .app-container {
@@ -2378,11 +2378,11 @@ table td {
         max-width: 100% !important;
         height: 100vh;
         display: grid;
-        grid-template-columns: 64px 1fr;
+        grid-template-columns: 1fr;
         grid-template-rows: 60px 1fr;
         grid-template-areas:
-            "sidebar header"
-            "sidebar main";
+            "header"
+            "main";
     }
 
     /* Top Header repositioned inside Grid layout */
@@ -2469,7 +2469,6 @@ table td {
 
     /* Left Sidebar Navigation - compact icon-only sidebar */
     .ios-tab-bar {
-        grid-area: sidebar;
         position: fixed !important;
         top: 0;
         left: 0;

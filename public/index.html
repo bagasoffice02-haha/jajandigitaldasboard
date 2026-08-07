@@ -15,7 +15,7 @@
 
     <!-- Fonts & Icons -->
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=6">
+    <link rel="stylesheet" href="style.css?v=7">
 
     <!-- Socket.io & QR -->
     <script src="/socket.io/socket.io.js"></script>
@@ -2306,8 +2306,12 @@
     </div>
 
 
+</div>
+<!-- END .app-container -->
+
+
     <!-- ══════════════════════════════════════════
-         BOTTOM TAB BAR
+         BOTTOM TAB BAR (direct child of body — fixes position:fixed on Android)
     ══════════════════════════════════════════ -->
     <nav class="ios-tab-bar">
         <div class="sidebar-logo desktop-only">
@@ -2344,9 +2348,6 @@
             <span>Settings</span>
         </button>
     </nav>
-
-
-</div>
 
 <script src="client.js?v=5"></script>
 <script>
