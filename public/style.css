@@ -184,16 +184,19 @@ body {
     backdrop-filter: blur(24px) saturate(180%);
     -webkit-backdrop-filter: blur(24px) saturate(180%);
     border-bottom: 1px solid var(--border);
-    padding: 14px 24px;
+    padding: 0 20px;
+    height: 60px;
     position: sticky;
     top: 0;
     z-index: 900;
+    gap: 12px;
 }
 
 .logo-area {
     display: flex;
     align-items: center;
-    gap: 14px;
+    gap: 10px;
+    flex-shrink: 0;
 }
 
 .logo-icon {
@@ -267,7 +270,7 @@ body {
 }
 
 /* ============================================================
-   BOTTOM TAB BAR
+   BOTTOM TAB BAR (Mobile)
    ============================================================ */
 .ios-tab-bar {
     position: fixed;
@@ -281,9 +284,9 @@ body {
     border-top: 1px solid var(--border);
     display: flex;
     justify-content: space-around;
-    align-items: center;
+    align-items: stretch;
     z-index: 1000;
-    padding: 0 12px;
+    padding: 0;
     padding-bottom: env(safe-area-inset-bottom);
 }
 
@@ -294,20 +297,25 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 4px;
+    justify-content: center;
+    gap: 3px;
     flex: 1;
     height: 100%;
     cursor: pointer;
     font-size: 10px;
     font-weight: 600;
     letter-spacing: .2px;
-    transition: color .2s;
-    padding: 8px 0;
+    transition: color .15s, background .15s;
+    padding: 6px 2px;
+    border-radius: 0;
+    min-width: 0;
 }
 
-.ios-tab-btn i { width: 22px; height: 22px; stroke-width: 2; }
-.ios-tab-btn:hover { color: var(--text-muted); }
+.ios-tab-btn i { width: 22px; height: 22px; stroke-width: 2; flex-shrink: 0; }
+.ios-tab-btn span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 56px; }
+.ios-tab-btn:hover { color: var(--blue); background: var(--blue-soft); }
 .ios-tab-btn.active { color: var(--blue); }
+.ios-tab-btn.active i { stroke-width: 2.5; }
 
 /* ============================================================
    TAB CONTENT & LAYOUT
@@ -367,53 +375,61 @@ body {
 
     /* ── Header ── */
     .app-header {
-        padding: 12px 16px;
+        padding: 0 12px;
+        height: 56px;
     }
 
     .logo-icon {
-        width: 36px;
-        height: 36px;
-        border-radius: 10px;
+        width: 34px;
+        height: 34px;
+        border-radius: 9px;
     }
 
     .logo-text h1 {
-        font-size: 14px;
+        font-size: 13px;
     }
 
     .logo-text p {
         font-size: 10px;
     }
 
+    /* Hide "Daftar Halaman Web" text on mobile, show only icon */
+    .header-right .btn span {
+        display: none !important;
+    }
+
+    .header-right .btn {
+        padding: 6px 8px !important;
+        margin-right: 0 !important;
+    }
+
     .server-badge {
-        max-width: 120px;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-        font-size: 10px;
-        padding: 4px 10px;
+        display: none !important;
     }
 
-    /* ── Tab Bar ── */
+    /* ── Tab Bar Mobile ── */
     .ios-tab-bar {
-        height: 60px;
+        height: 62px;
         padding-bottom: env(safe-area-inset-bottom, 8px);
+        padding-top: 2px;
     }
 
-    :root { --tab-bar-h: 60px; }
+    :root { --tab-bar-h: 62px; }
 
     .ios-tab-btn {
         font-size: 9px;
         gap: 3px;
+        padding: 4px 2px;
     }
 
     .ios-tab-btn i {
-        width: 20px;
-        height: 20px;
+        width: 21px;
+        height: 21px;
     }
 
     /* ── Tab Content ── */
     .tab-content {
-        padding: 14px 14px;
+        padding: 14px 12px;
     }
 
     /* ── Grid → Single Column, Lega ── */
@@ -2362,8 +2378,8 @@ table td {
         max-width: 100% !important;
         height: 100vh;
         display: grid;
-        grid-template-columns: 80px 1fr;
-        grid-template-rows: 72px 1fr;
+        grid-template-columns: 64px 1fr;
+        grid-template-rows: 60px 1fr;
         grid-template-areas:
             "sidebar header"
             "sidebar main";
@@ -2374,83 +2390,91 @@ table td {
         grid-area: header;
         position: sticky !important;
         top: 0;
-        height: 72px;
-        padding: 0 24px !important;
+        height: 60px;
+        padding: 0 20px 0 20px !important;
         background: var(--bg) !important;
         border-bottom: 1px solid var(--border) !important;
         box-shadow: none !important;
         display: flex !important;
         align-items: center !important;
         justify-content: space-between !important;
+        gap: 12px !important;
         backdrop-filter: none !important;
         -webkit-backdrop-filter: none !important;
         z-index: 900 !important;
     }
 
-    /* Header Navigation Tabs Bar (Desktop & Tablet Top Menu) */
+    /* Logo area on desktop header */
+    .logo-area {
+        display: flex !important;
+        align-items: center;
+        gap: 8px;
+        flex-shrink: 0;
+    }
+
+    /* Header Navigation Tabs Bar - clean pill style */
     .header-nav-tabs {
         display: flex !important;
         align-items: center;
-        gap: 6px;
-        background: rgba(0, 0, 0, 0.05);
-        padding: 4px 6px;
-        border-radius: 12px;
-        border: 1px solid var(--border);
-        margin: 0 15px;
-    }
-
-    .theme-dark .header-nav-tabs,
-    .theme-midnight .header-nav-tabs,
-    .theme-sunset .header-nav-tabs {
-        background: rgba(255, 255, 255, 0.05);
+        gap: 2px;
+        flex: 1;
+        justify-content: center;
+        background: transparent;
+        padding: 0;
+        border-radius: 0;
+        border: none;
+        margin: 0 10px;
     }
 
     .hdr-tab-btn {
         display: inline-flex;
         align-items: center;
         gap: 6px;
-        padding: 6px 14px;
+        padding: 7px 14px;
         border-radius: 8px;
         border: none;
         background: transparent;
         color: var(--text-muted);
-        font-size: 0.82rem;
+        font-size: 0.8rem;
         font-weight: 600;
         cursor: pointer;
-        transition: all 0.2s ease;
+        transition: all 0.18s ease;
+        white-space: nowrap;
+        font-family: var(--font);
     }
 
     .hdr-tab-btn:hover {
         color: var(--text);
-        background: rgba(0, 0, 0, 0.06);
-    }
-
-    .theme-dark .hdr-tab-btn:hover,
-    .theme-midnight .hdr-tab-btn:hover,
-    .theme-sunset .hdr-tab-btn:hover {
-        background: rgba(255, 255, 255, 0.1);
+        background: var(--surface2);
     }
 
     .hdr-tab-btn.active {
-        background: #007aff !important;
-        color: #ffffff !important;
+        background: var(--blue) !important;
+        color: #fff !important;
         font-weight: 700 !important;
-        box-shadow: 0 2px 8px rgba(0, 122, 255, 0.3) !important;
+        box-shadow: 0 2px 10px rgba(59, 130, 246, 0.35) !important;
+    }
+
+    /* dark theme tabs hover fix */
+    .theme-dark .hdr-tab-btn:hover,
+    .theme-midnight .hdr-tab-btn:hover {
+        background: rgba(255,255,255,0.08);
     }
 
     .hdr-tab-btn i {
-        width: 16px;
-        height: 16px;
+        width: 15px;
+        height: 15px;
+        flex-shrink: 0;
     }
 
-    /* Left Sidebar Navigation repositioned inside Grid layout */
+    /* Left Sidebar Navigation - compact icon-only sidebar */
     .ios-tab-bar {
         grid-area: sidebar;
         position: fixed !important;
         top: 0;
         left: 0;
         bottom: 0;
-        width: 80px;
+        width: 64px;
         height: 100vh;
         background: var(--surface) !important;
         border-right: 1px solid var(--border) !important;
@@ -2460,10 +2484,11 @@ table td {
         flex-direction: column !important;
         justify-content: flex-start !important;
         align-items: center !important;
-        padding: 24px 8px !important;
-        gap: 8px !important;
+        padding: 16px 6px !important;
+        gap: 4px !important;
         z-index: 1000 !important;
         overflow-y: auto;
+        overflow-x: hidden;
     }
 
     /* Sidebar Logo branding style */
@@ -2471,9 +2496,9 @@ table td {
         display: flex !important;
         align-items: center;
         justify-content: center !important;
-        padding: 0 0 20px 0 !important;
-        border-bottom: none !important;
-        margin-bottom: 12px;
+        padding: 0 0 12px 0 !important;
+        border-bottom: 1px solid var(--border) !important;
+        margin-bottom: 8px;
         width: 100%;
     }
 
@@ -2506,20 +2531,21 @@ table td {
         align-items: center !important;
         justify-content: center !important;
         gap: 0 !important;
-        width: 48px !important;
-        height: 48px !important;
+        width: 44px !important;
+        height: 44px !important;
         padding: 0 !important;
-        border-radius: 12px !important;
+        border-radius: 10px !important;
         color: var(--text-muted) !important;
-        transition: var(--transition-smooth) !important;
+        transition: background 0.15s, color 0.15s !important;
         background: transparent !important;
         border: none !important;
         cursor: pointer !important;
+        min-width: unset !important;
     }
 
     .ios-tab-btn i {
-        width: 18px !important;
-        height: 18px !important;
+        width: 20px !important;
+        height: 20px !important;
         stroke-width: 2px !important;
     }
 
@@ -2529,22 +2555,22 @@ table td {
 
     .ios-tab-btn:hover {
         background: var(--surface2) !important;
-        color: var(--text) !important;
+        color: var(--blue) !important;
     }
 
     .ios-tab-btn.active {
-        background: var(--blue-gradient) !important;
+        background: var(--blue) !important;
         color: #ffffff !important;
         font-weight: 600 !important;
-        box-shadow: 0 6px 16px rgba(59, 130, 246, 0.2) !important;
+        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3) !important;
     }
 
     /* Tab contents area inside Grid layout */
     .tab-content {
         grid-area: main;
-        height: calc(100vh - 72px);
+        height: calc(100vh - 60px);
         overflow-y: auto;
-        padding: 32px 40px !important;
+        padding: 28px 36px !important;
         background: var(--bg);
     }
 
@@ -3136,38 +3162,39 @@ button:active,
 /* Prevent iOS Safari Auto-Zoom on Input Focus & Mobile Layout Optimization */
 @media (max-width: 768px) {
     input, select, textarea {
-        font-size: 16px !important; /* Prevents viewport zoom in iOS Safari */
+        font-size: 16px !important;
     }
     
     .app-header {
-        padding-top: max(12px, env(safe-area-inset-top));
+        padding-top: max(0px, env(safe-area-inset-top));
+        height: calc(56px + env(safe-area-inset-top, 0px));
     }
     
     .ios-tab-bar {
-        padding-bottom: max(10px, env(safe-area-inset-bottom));
-        height: calc(64px + env(safe-area-inset-bottom, 0px));
-        border-top: 1px solid rgba(255, 255, 255, 0.08);
-        box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.25);
+        padding-bottom: max(8px, env(safe-area-inset-bottom));
+        height: calc(62px + env(safe-area-inset-bottom, 0px));
+        box-shadow: 0 -1px 0 var(--border), 0 -8px 24px rgba(0, 0, 0, 0.08);
     }
     
     .ios-tab-btn {
         position: relative;
-        padding-top: 6px;
+        padding-top: 5px;
     }
     
+    /* Glowing dot indicator for active tab on mobile */
     .ios-tab-btn.active::after {
         content: '';
         position: absolute;
-        bottom: 6px;
+        bottom: 4px;
         width: 4px;
         height: 4px;
         background: var(--blue);
         border-radius: 50%;
-        box-shadow: 0 0 8px var(--blue), 0 0 12px var(--blue);
+        box-shadow: 0 0 6px var(--blue);
     }
     
     .tab-content {
-        padding-bottom: calc(var(--tab-bar-h) + env(safe-area-inset-bottom, 0px) + 20px);
+        padding-bottom: calc(var(--tab-bar-h) + env(safe-area-inset-bottom, 0px) + 16px);
     }
 }
 
