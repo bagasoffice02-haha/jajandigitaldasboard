@@ -3198,5 +3198,379 @@ button:active,
 }
 
 
+/* ============================================================
+   API HEALTH MONITOR — Premium Panel Styles
+   ============================================================ */
 
+/* ── Card Wrapper ─────────────────────────────────────────── */
+.api-health-card {
+    border-radius: var(--radius) !important;
+    overflow: hidden;
+    box-shadow: var(--shadow-md);
+    border: 1px solid var(--border) !important;
+}
 
+/* ── Header / Banner ──────────────────────────────────────── */
+.api-health-header {
+    background: linear-gradient(135deg, #1e3a5f 0%, #0f2346 40%, #1a1040 100%);
+    padding: 18px 18px 16px;
+    position: relative;
+    overflow: hidden;
+}
+.api-health-header::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at 80% 0%, rgba(59,130,246,0.18) 0%, transparent 65%),
+                radial-gradient(ellipse at 10% 100%, rgba(124,58,237,0.12) 0%, transparent 60%);
+    pointer-events: none;
+}
+.api-health-header::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(59,130,246,0.35), rgba(124,58,237,0.25), transparent);
+}
+
+/* ── Icon Wrap in Header ──────────────────────────────────── */
+.api-health-icon-wrap {
+    width: 32px; height: 32px;
+    border-radius: 9px;
+    background: rgba(59,130,246,0.25);
+    border: 1px solid rgba(59,130,246,0.4);
+    display: flex; align-items: center; justify-content: center;
+    color: #93c5fd;
+    flex-shrink: 0;
+    box-shadow: 0 0 12px rgba(59,130,246,0.2);
+}
+
+/* ── Check Button in Header ───────────────────────────────── */
+.api-check-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 14px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    border-radius: 8px;
+    border: 1px solid rgba(255,255,255,0.18);
+    background: rgba(255,255,255,0.1);
+    color: #fff;
+    cursor: pointer;
+    transition: background 0.18s, border-color 0.18s, transform 0.15s;
+    backdrop-filter: blur(6px);
+    white-space: nowrap;
+    flex-shrink: 0;
+    font-family: var(--font);
+    letter-spacing: 0.01em;
+}
+.api-check-btn:hover {
+    background: rgba(255,255,255,0.18);
+    border-color: rgba(255,255,255,0.3);
+    transform: translateY(-1px);
+}
+.api-check-btn:active {
+    transform: translateY(0);
+}
+.api-check-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* ── Stat Chips in Header ─────────────────────────────────── */
+.api-stat-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 10px;
+    border-radius: 99px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    border: 1px solid rgba(255,255,255,0.12);
+    font-family: var(--font);
+}
+.api-stat-chip.api-stat-ok    { background: rgba(16,185,129,0.15); color: #6ee7b7; border-color: rgba(16,185,129,0.3); }
+.api-stat-chip.api-stat-quota { background: rgba(245,158,11,0.15); color: #fcd34d; border-color: rgba(245,158,11,0.3); }
+.api-stat-chip.api-stat-error { background: rgba(239,68,68,0.15);  color: #fca5a5; border-color: rgba(239,68,68,0.3);  }
+.api-stat-chip.api-stat-total { background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.6); }
+
+/* Animated pulse dot inside stat chip */
+.api-stat-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    position: relative;
+}
+.api-stat-dot.ok    { background: #10b981; box-shadow: 0 0 0 0 rgba(16,185,129,0.7); animation: apiPulseGreen 2.5s infinite; }
+.api-stat-dot.quota { background: #f59e0b; box-shadow: 0 0 0 0 rgba(245,158,11,0.7);  animation: apiPulseYellow 2.5s infinite; }
+.api-stat-dot.error { background: #ef4444; box-shadow: 0 0 0 0 rgba(239,68,68,0.7);   animation: apiPulseRed 2.5s infinite; }
+
+@keyframes apiPulseGreen  { 0%,100%{ box-shadow:0 0 0 0 rgba(16,185,129,0.6); } 60%{ box-shadow:0 0 0 5px rgba(16,185,129,0); } }
+@keyframes apiPulseYellow { 0%,100%{ box-shadow:0 0 0 0 rgba(245,158,11,0.6); } 60%{ box-shadow:0 0 0 5px rgba(245,158,11,0); } }
+@keyframes apiPulseRed    { 0%,100%{ box-shadow:0 0 0 0 rgba(239,68,68,0.6);  } 60%{ box-shadow:0 0 0 5px rgba(239,68,68,0);  } }
+
+/* ── API Key Row ──────────────────────────────────────────── */
+.api-key-row {
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    overflow: hidden;
+    position: relative;
+    transition: box-shadow 0.2s, transform 0.2s;
+}
+.api-key-row:hover {
+    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    transform: translateY(-1px);
+}
+
+/* Left color accent bar */
+.api-row-accent {
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 3px;
+    border-radius: 12px 0 0 12px;
+}
+
+/* Row body */
+.api-row-body {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 11px 12px 11px 18px;
+    flex-wrap: wrap;
+}
+
+/* Left section */
+.api-row-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+    flex: 1;
+}
+
+/* Provider avatar / abbreviation badge */
+.api-provider-avatar {
+    width: 36px; height: 36px;
+    border-radius: 10px;
+    border: 1px solid;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.65rem;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    flex-shrink: 0;
+    font-family: var(--font);
+}
+
+/* Provider info */
+.api-row-info { min-width: 0; }
+
+.api-row-name-line {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    flex-wrap: wrap;
+    margin-bottom: 2px;
+}
+.api-provider-name {
+    font-size: 0.82rem;
+    font-weight: 800;
+    letter-spacing: -0.2px;
+}
+
+/* Pills */
+.api-index-pill {
+    display: inline-block;
+    padding: 1px 6px;
+    border-radius: 99px;
+    font-size: 0.64rem;
+    font-weight: 700;
+    background: var(--surface2);
+    color: var(--text-muted);
+    border: 1px solid var(--border);
+    font-family: var(--font);
+}
+.api-active-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    padding: 1px 7px;
+    border-radius: 99px;
+    font-size: 0.64rem;
+    font-weight: 700;
+    background: rgba(59,130,246,0.12);
+    color: #60a5fa;
+    border: 1px solid rgba(59,130,246,0.25);
+    font-family: var(--font);
+}
+
+.api-row-key-mask {
+    font-family: 'Courier New', monospace;
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    letter-spacing: 0.02em;
+    margin-bottom: 2px;
+}
+.api-row-model {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.69rem;
+    color: var(--text-soft);
+}
+.api-url-block {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    font-size: 0.67rem;
+    color: var(--text-soft);
+    margin-top: 2px;
+    word-break: break-all;
+    opacity: 0.75;
+}
+
+/* Right section */
+.api-row-right {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    flex-shrink: 0;
+}
+
+/* Latency chip */
+.api-latency-chip {
+    font-size: 0.67rem;
+    font-weight: 700;
+    font-family: 'Courier New', monospace;
+    padding: 2px 8px;
+    border-radius: 99px;
+    border: 1px solid;
+    background: transparent;
+    letter-spacing: 0.01em;
+}
+
+/* Status badge wrapper */
+.api-status-badge-wrap {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+/* Pulse dots on the row */
+.pulse-dot-ok, .pulse-dot-quota, .pulse-dot-error {
+    display: inline-block;
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+.pulse-dot-ok    { background: #10b981; animation: apiPulseGreen  2.5s infinite; }
+.pulse-dot-quota { background: #f59e0b; animation: apiPulseYellow 2.5s infinite; }
+.pulse-dot-error { background: #ef4444; animation: apiPulseRed    2.5s infinite; }
+
+/* Status text badge */
+.api-status-badge {
+    padding: 2px 9px;
+    border-radius: 99px;
+    font-size: 0.67rem;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    font-family: var(--font);
+}
+.api-badge-ok    { background: rgba(16,185,129,0.12); color: #10b981; border: 1px solid rgba(16,185,129,0.3); }
+.api-badge-quota { background: rgba(245,158,11,0.12); color: #f59e0b; border: 1px solid rgba(245,158,11,0.3); }
+.api-badge-error { background: rgba(239,68,68,0.12);  color: #ef4444; border: 1px solid rgba(239,68,68,0.3);  }
+
+/* ── Error / URL Blocks ───────────────────────────────────── */
+.api-error-block {
+    display: flex;
+    align-items: flex-start;
+    gap: 6px;
+    margin: 0 12px 10px 18px;
+    padding: 7px 10px;
+    border-radius: 8px;
+    font-size: 0.72rem;
+    line-height: 1.5;
+    word-break: break-all;
+    font-family: var(--font);
+}
+.api-error-block.error { background: rgba(239,68,68,0.07);  color: #ef4444; border: 1px solid rgba(239,68,68,0.15);  }
+.api-error-block.quota { background: rgba(245,158,11,0.07); color: #f59e0b; border: 1px solid rgba(245,158,11,0.15); }
+
+/* ── Skeleton Loading ─────────────────────────────────────── */
+.api-loading-skeleton {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+.api-skel-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    background: var(--surface2);
+}
+.api-skel-icon {
+    width: 36px; height: 36px;
+    border-radius: 10px;
+    background: var(--border);
+    flex-shrink: 0;
+    animation: skelShimmer 1.4s ease-in-out infinite;
+}
+.api-skel-lines { flex: 1; display: flex; flex-direction: column; gap: 6px; }
+.api-skel-line {
+    height: 10px;
+    border-radius: 5px;
+    background: var(--border);
+    animation: skelShimmer 1.4s ease-in-out infinite;
+}
+.api-skel-badge {
+    width: 56px; height: 22px;
+    border-radius: 99px;
+    background: var(--border);
+    flex-shrink: 0;
+    animation: skelShimmer 1.4s ease-in-out infinite;
+}
+.api-skel-line.w70 { width: 70%; }
+.api-skel-line.w55 { width: 55%; }
+.api-skel-line.w65 { width: 65%; }
+.api-skel-line.w45 { width: 45%; }
+.api-skel-line.w35 { width: 35%; }
+.api-skel-line.w40 { width: 40%; }
+
+@keyframes skelShimmer {
+    0%   { opacity: 1; }
+    50%  { opacity: 0.4; }
+    100% { opacity: 1; }
+}
+
+/* ── Empty State ──────────────────────────────────────────── */
+.api-empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 28px 12px;
+    gap: 10px;
+}
+.api-empty-icon-wrap {
+    width: 52px; height: 52px;
+    border-radius: 16px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-muted);
+    margin-bottom: 2px;
+}
+
+/* ── Light Theme Overrides ────────────────────────────────── */
+:root:not(.theme-dark):not(.theme-minimal-dark) .api-health-header {
+    background: linear-gradient(135deg, #1e3a5f 0%, #152a4a 50%, #1a1040 100%);
+}
