@@ -15,7 +15,7 @@
 
     <!-- Fonts & Icons -->
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=7">
+    <link rel="stylesheet" href="style.css?v=8">
 
     <!-- Socket.io & QR -->
     <script src="/socket.io/socket.io.js"></script>
@@ -1577,12 +1577,50 @@
                     </div>
                 </div>
 
+                </div>
+
             </div>
 
             <!-- KOLOM KANAN: Bot Telegram, Otomatisasi, Export, Tampilan -->
             <div style="display: flex; flex-direction: column; gap: 20px;">
 
-                <!-- 🤖 Kartu Pengaturan Bot Telegram -->
+                <!-- 🔍 Panel Status API Keys -->
+                <div class="card" id="api-status-card" style="margin: 0;">
+                    <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px; margin-bottom:4px;">
+                        <div>
+                            <h2 style="margin:0; display:flex; align-items:center; gap:8px;">
+                                <i data-lucide="activity" style="color:#3b82f6;"></i> Status API Keys
+                            </h2>
+                            <p class="card-subtitle" style="margin:4px 0 0;">Cek koneksi & kesehatan setiap API key yang dikonfigurasi</p>
+                        </div>
+                        <button id="btn-check-all-api" onclick="window.checkAllApiStatus()" class="btn btn-primary" style="display:inline-flex; align-items:center; gap:6px; padding:7px 14px; font-size:0.8rem; border-radius:8px; flex-shrink:0;">
+                            <i data-lucide="refresh-cw" style="width:13px;height:13px;"></i> Cek Semua
+                        </button>
+                    </div>
+
+                    <!-- Last checked info -->
+                    <div id="api-status-meta" style="font-size:0.72rem; color:var(--text-secondary); margin: 8px 0 12px; display:none;">
+                        <i data-lucide="clock" style="width:11px;height:11px;display:inline;vertical-align:middle;margin-right:3px;"></i>
+                        <span id="api-status-checked-at">—</span>
+                        <span style="margin-left:10px;" id="api-status-summary"></span>
+                    </div>
+
+                    <!-- Loading state -->
+                    <div id="api-status-loading" style="display:none; text-align:center; padding:20px 0; color:var(--text-secondary); font-size:0.82rem;">
+                        <div class="spinner" style="width:22px;height:22px;border:3px solid var(--border-color);border-top-color:#3b82f6;border-radius:50%;animation:spin 0.8s linear infinite;display:inline-block;margin-bottom:6px;"></div>
+                        <div>Sedang mengecek semua API key…</div>
+                    </div>
+
+                    <!-- Empty state -->
+                    <div id="api-status-empty" style="text-align:center; padding:24px 0; color:var(--text-secondary); font-size:0.82rem;">
+                        <i data-lucide="key-round" style="width:32px;height:32px;margin-bottom:8px;opacity:0.4;"></i>
+                        <div>Klik <strong>Cek Semua</strong> untuk memulai pengecekan API.</div>
+                    </div>
+
+                    <!-- Results list -->
+                    <div id="api-status-list" style="display:none; display:flex; flex-direction:column; gap:8px;"></div>
+                </div>
+
                 <div class="card" style="margin: 0;">
                     <h2><i data-lucide="send" style="color: #229ED9;"></i> Bot Telegram</h2>
                     <p class="card-subtitle">Konfigurasi bot Telegram yang terhubung dengan database & AI yang sama</p>
@@ -2498,6 +2536,160 @@
         // Re-trigger Lucide icons render just in case
         if (window.lucide) lucide.createIcons();
     };
+
+    // ═══════════════════════════════════════════════════════
+    // API Key Status Checker
+    // ═══════════════════════════════════════════════════════
+    const API_PROVIDER_LABELS = {
+        gemini: { label: 'Google Gemini', color: '#4285F4', bg: 'rgba(66,133,244,0.1)', icon: '✦' },
+        groq: { label: 'Groq', color: '#f55036', bg: 'rgba(245,80,54,0.1)', icon: '⚡' },
+        deepseek: { label: 'DeepSeek', color: '#1a73e8', bg: 'rgba(26,115,232,0.1)', icon: '🔵' },
+        qwen: { label: 'Alibaba Qwen', color: '#FF6A00', bg: 'rgba(255,106,0,0.1)', icon: '🟠' },
+        openrouter: { label: 'OpenRouter', color: '#9b59b6', bg: 'rgba(155,89,182,0.1)', icon: '🌐' },
+        local: { label: 'Local LM', color: '#27ae60', bg: 'rgba(39,174,96,0.1)', icon: '🖥️' },
+    };
+
+    window.checkAllApiStatus = async function() {
+        const btn = document.getElementById('btn-check-all-api');
+        const loading = document.getElementById('api-status-loading');
+        const empty = document.getElementById('api-status-empty');
+        const list = document.getElementById('api-status-list');
+        const meta = document.getElementById('api-status-meta');
+
+        // Show loading state
+        if (btn) { btn.disabled = true; btn.innerHTML = '<span class="spinner" style="width:13px;height:13px;border:2px solid rgba(255,255,255,0.3);border-top-color:#fff;border-radius:50%;animation:spin 0.8s linear infinite;display:inline-block;margin-right:4px;vertical-align:middle;"></span> Mengecek…'; }
+        if (loading) loading.style.display = 'block';
+        if (empty) empty.style.display = 'none';
+        if (list) { list.style.display = 'none'; list.innerHTML = ''; }
+        if (meta) meta.style.display = 'none';
+
+        try {
+            const resp = await fetch('/api/api-status');
+            const data = await resp.json();
+
+            if (!data.results || data.results.length === 0) {
+                if (loading) loading.style.display = 'none';
+                if (empty) {
+                    empty.style.display = 'block';
+                    empty.innerHTML = '<i data-lucide="key-round" style="width:32px;height:32px;margin-bottom:8px;opacity:0.4;display:block;margin-left:auto;margin-right:auto;"></i><div>Tidak ada API key yang terkonfigurasi. Silakan isi terlebih dahulu di bagian Konfigurasi Bot.</div>';
+                }
+                if (window.lucide) lucide.createIcons();
+                return;
+            }
+
+            // Render each key result
+            data.results.forEach(item => {
+                const p = API_PROVIDER_LABELS[item.provider] || { label: item.provider, color: '#888', bg: 'rgba(136,136,136,0.1)', icon: '?' };
+                const isActive = data.activeProvider === item.provider;
+
+                let statusBadge, statusBg;
+                if (item.status === 'ok') {
+                    statusBadge = `<span style="background:#16a34a;color:#fff;padding:2px 8px;border-radius:99px;font-size:0.68rem;font-weight:700;">✓ AKTIF</span>`;
+                    statusBg = 'rgba(22,163,74,0.06)';
+                } else if (item.status === 'quota') {
+                    statusBadge = `<span style="background:#d97706;color:#fff;padding:2px 8px;border-radius:99px;font-size:0.68rem;font-weight:700;">⚠ QUOTA</span>`;
+                    statusBg = 'rgba(217,119,6,0.06)';
+                } else {
+                    statusBadge = `<span style="background:#dc2626;color:#fff;padding:2px 8px;border-radius:99px;font-size:0.68rem;font-weight:700;">✕ ERROR</span>`;
+                    statusBg = 'rgba(220,38,38,0.06)';
+                }
+
+                const latencyChip = item.latency !== undefined
+                    ? `<span style="font-size:0.68rem;background:rgba(255,255,255,0.06);border:1px solid var(--border-color);padding:1px 7px;border-radius:99px;color:var(--text-secondary);">${item.latency}ms</span>`
+                    : '';
+
+                const activeBadge = isActive
+                    ? `<span style="background:#3b82f6;color:#fff;padding:1px 6px;border-radius:99px;font-size:0.65rem;font-weight:700;margin-left:4px;">AKTIF</span>`
+                    : '';
+
+                const keyIndexLabel = (item.provider === 'gemini' || item.provider === 'groq')
+                    ? `<span style="font-size:0.7rem;opacity:0.6;margin-left:2px;">#${item.index + 1}</span>` : '';
+
+                const errorHtml = (item.status !== 'ok' && item.error)
+                    ? `<div style="margin-top:5px;font-size:0.72rem;color:${item.status === 'quota' ? '#d97706' : '#dc2626'};background:${item.status === 'quota' ? 'rgba(217,119,6,0.08)' : 'rgba(220,38,38,0.08)'};padding:5px 8px;border-radius:6px;word-break:break-all;line-height:1.4;">${item.error}${item.errorCode ? ` <em style="opacity:0.7;">(${item.errorCode})</em>` : ''}</div>`
+                    : '';
+
+                const urlHtml = item.url
+                    ? `<div style="font-size:0.68rem;color:var(--text-secondary);margin-top:2px;word-break:break-all;opacity:0.7;">📍 ${item.url}</div>`
+                    : '';
+
+                const row = document.createElement('div');
+                row.style.cssText = `background:${statusBg};border:1px solid var(--border-color);border-radius:10px;padding:10px 12px;`;
+                row.innerHTML = `
+                    <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;">
+                        <div style="display:flex;align-items:center;gap:8px;min-width:0;">
+                            <span style="font-size:1.1rem;flex-shrink:0;">${p.icon}</span>
+                            <div style="min-width:0;">
+                                <div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap;">
+                                    <span style="font-size:0.82rem;font-weight:700;color:${p.color};">${p.label}</span>
+                                    ${keyIndexLabel}
+                                    ${activeBadge}
+                                </div>
+                                <div style="font-size:0.72rem;color:var(--text-secondary);font-family:monospace;margin-top:1px;">${item.keyMasked}</div>
+                                <div style="font-size:0.7rem;color:var(--text-secondary);margin-top:1px;">📦 ${item.model || '—'}</div>
+                                ${urlHtml}
+                            </div>
+                        </div>
+                        <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;">
+                            ${latencyChip}
+                            ${statusBadge}
+                        </div>
+                    </div>
+                    ${errorHtml}
+                `;
+                list.appendChild(row);
+            });
+
+            // Summary
+            const total = data.results.length;
+            const ok = data.results.filter(r => r.status === 'ok').length;
+            const quota = data.results.filter(r => r.status === 'quota').length;
+            const err = data.results.filter(r => r.status === 'error').length;
+
+            if (meta) {
+                meta.style.display = 'block';
+                document.getElementById('api-status-checked-at').textContent =
+                    'Dicek: ' + new Date(data.checkedAt).toLocaleString('id-ID');
+                document.getElementById('api-status-summary').innerHTML =
+                    `<span style="color:#16a34a;font-weight:600;">✓ ${ok} Aktif</span>` +
+                    (quota ? ` &nbsp;·&nbsp; <span style="color:#d97706;font-weight:600;">⚠ ${quota} Quota</span>` : '') +
+                    (err ? ` &nbsp;·&nbsp; <span style="color:#dc2626;font-weight:600;">✕ ${err} Error</span>` : '') +
+                    ` &nbsp;·&nbsp; ${total} total`;
+            }
+
+            if (loading) loading.style.display = 'none';
+            if (list) list.style.display = 'flex';
+
+            if (window.lucide) lucide.createIcons();
+
+        } catch (e) {
+            if (loading) loading.style.display = 'none';
+            if (empty) {
+                empty.style.display = 'block';
+                empty.innerHTML = `<i data-lucide="wifi-off" style="width:28px;height:28px;margin-bottom:8px;opacity:0.5;color:#dc2626;"></i><div style="color:#dc2626;">Gagal menghubungi server: ${e.message}</div>`;
+            }
+            if (window.lucide) lucide.createIcons();
+        } finally {
+            if (btn) { btn.disabled = false; btn.innerHTML = '<i data-lucide="refresh-cw" style="width:13px;height:13px;"></i> Cek Semua'; }
+            if (window.lucide) lucide.createIcons();
+        }
+    };
+
+    // Auto-run API check when settings tab is opened
+    const _origSwitchTab = window.switchTab;
+    window.switchTab = function(tabName) {
+        if (_origSwitchTab) _origSwitchTab(tabName);
+        if (tabName === 'settings') {
+            // Small delay to let the tab render first
+            setTimeout(() => {
+                const list = document.getElementById('api-status-list');
+                if (!list || list.innerHTML === '') {
+                    window.checkAllApiStatus();
+                }
+            }, 400);
+        }
+    };
+
 </script>
 </body>
 </html>
