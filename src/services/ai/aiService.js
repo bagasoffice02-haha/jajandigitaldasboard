@@ -169,6 +169,8 @@ async function callGeminiWithPool(systemPrompt, chatHistory, isJson = false) {
         try {
             console.log(`[Gemini Pool] Mencoba memanggil API menggunakan Key #${activeKey.index + 1} (${maskedKey})`);
             const result = await callGemini(systemPrompt, chatHistory, isJson, activeKey.key);
+            // Track usage (fire-and-forget)
+            try { require('http').request({ hostname:'localhost', port: config.port || 3000, path:'/api/keys/increment-usage', method:'POST', headers:{'Content-Type':'application/json'} }, ()=>{}).end(JSON.stringify({ provider:'gemini', index: activeKey.index })); } catch(_){}
             return result;
         } catch (err) {
             console.warn(`[Gemini Pool] Key #${activeKey.index + 1} gagal digunakan: ${err.message}`);
@@ -256,6 +258,8 @@ async function callGroqWithPool(systemPrompt, chatHistory, isJson = false) {
             console.log(`[Groq Pool] Mencoba memanggil API menggunakan Key #${index + 1} (${maskedKey})`);
             const result = await callOpenAiCompatible(url, activeKey, model, systemPrompt, chatHistory, isJson);
             currentGroqKeyIndex = index;
+            // Track usage (fire-and-forget)
+            try { require('http').request({ hostname:'localhost', port: config.port || 3000, path:'/api/keys/increment-usage', method:'POST', headers:{'Content-Type':'application/json'} }, ()=>{}).end(JSON.stringify({ provider:'groq', index })); } catch(_){}
             return result;
         } catch (err) {
             console.warn(`[Groq Pool] Key #${index + 1} gagal digunakan: ${err.message}`);

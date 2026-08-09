@@ -15,7 +15,7 @@
 
     <!-- Fonts & Icons -->
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=9">
+    <link rel="stylesheet" href="style.css?v=10">
 
     <!-- Socket.io & QR -->
     <script src="/socket.io/socket.io.js"></script>
@@ -63,6 +63,9 @@
             </button>
             <button id="hdr-btn-tab-referral" class="hdr-tab-btn" onclick="switchTab('referral')" title="Referral">
                 <i data-lucide="gift"></i> <span>Referral</span>
+            </button>
+            <button id="hdr-btn-tab-apikeys" class="hdr-tab-btn" onclick="switchTab('apikeys')" title="API Keys">
+                <i data-lucide="key-round"></i> <span>API Keys</span>
             </button>
             <button id="hdr-btn-tab-settings" class="hdr-tab-btn" onclick="switchTab('settings')" title="Settings">
                 <i data-lucide="settings-2"></i> <span>Settings</span>
@@ -2804,16 +2807,469 @@
     window.switchTab = function(tabName) {
         if (_origSwitchTab) _origSwitchTab(tabName);
         if (tabName === 'settings') {
-            // Small delay to let the tab render first
             setTimeout(() => {
                 const list = document.getElementById('api-status-list');
-                if (!list || list.innerHTML === '') {
-                    window.checkAllApiStatus();
-                }
+                if (!list || list.innerHTML === '') window.checkAllApiStatus();
             }, 400);
+        }
+        if (tabName === 'apikeys') {
+            setTimeout(() => window.loadApiKeys(), 200);
         }
     };
 
+    /* ═══════════════════════════════════════════════
+       API KEY MANAGER — JavaScript
+    ═══════════════════════════════════════════════ */
+    (function() {
+
+    // Provider metadata
+    const PROVIDERS = {
+        gemini:     { label: 'Google Gemini', abbr: 'GM', color: '#4285f4', bg: 'rgba(66,133,244,0.12)', border: 'rgba(66,133,244,0.3)',  defaultModel: 'gemini-2.5-flash',              pool: true },
+        groq:       { label: 'Groq',          abbr: 'GQ', color: '#f55036', bg: 'rgba(245,80,54,0.12)',  border: 'rgba(245,80,54,0.3)',   defaultModel: 'llama-3.3-70b-versatile',       pool: true },
+        deepseek:   { label: 'DeepSeek',      abbr: 'DS', color: '#2563eb', bg: 'rgba(37,99,235,0.12)',  border: 'rgba(37,99,235,0.3)',   defaultModel: 'deepseek-chat',                 pool: false },
+        qwen:       { label: 'Qwen / Alibaba',abbr: 'QW', color: '#f97316', bg: 'rgba(249,115,22,0.12)', border: 'rgba(249,115,22,0.3)',  defaultModel: 'qwen-plus',                     pool: false },
+        openrouter: { label: 'OpenRouter',    abbr: 'OR', color: '#7c3aed', bg: 'rgba(124,58,237,0.12)', border: 'rgba(124,58,237,0.3)',  defaultModel: 'meta-llama/llama-3.3-70b-instruct', pool: false },
+        local:      { label: 'LM Studio',     abbr: 'LM', color: '#10b981', bg: 'rgba(16,185,129,0.12)', border: 'rgba(16,185,129,0.3)',  defaultModel: 'local-model',                   pool: false },
+    };
+
+    let _allKeys = [];
+    let _activeFilter = 'all';
+    let _activeProvider = 'gemini';
+    let _deleteTarget = null;
+
+    // ── Time ago helper ──────────────────────────────
+    function timeAgo(iso) {
+        if (!iso) return 'Belum pernah';
+        const diff = Date.now() - new Date(iso).getTime();
+        const s = Math.floor(diff / 1000);
+        if (s < 60)   return 'Baru saja';
+        const m = Math.floor(s / 60);
+        if (m < 60)   return m + ' menit lalu';
+        const h = Math.floor(m / 60);
+        if (h < 24)   return h + ' jam lalu';
+        const d = Math.floor(h / 24);
+        if (d < 30)   return d + ' hari lalu';
+        const mo = Math.floor(d / 30);
+        return mo + ' bulan lalu';
+    }
+
+    function formatDate(iso) {
+        if (!iso) return '';
+        return new Date(iso).toLocaleString('id-ID', { day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' });
+    }
+
+    function fmtCount(n) {
+        if (!n) return '0';
+        if (n >= 1000000) return (n/1000000).toFixed(1) + 'jt';
+        if (n >= 1000) return (n/1000).toFixed(1) + 'rb';
+        return String(n);
+    }
+
+    // ── Load all keys from backend ───────────────────
+    window.loadApiKeys = async function() {
+        const list = document.getElementById('akm-key-list');
+        if (!list) return;
+        list.innerHTML = renderSkeleton();
+        try {
+            const r = await fetch('/api/keys');
+            const data = await r.json();
+            _allKeys = data.keys || [];
+            _activeProvider = data.activeProvider || 'gemini';
+            renderStats();
+            renderFilterTabs();
+            renderKeyList();
+        } catch(e) {
+            list.innerHTML = `<div class="akm-empty"><i data-lucide="wifi-off" style="width:36px;height:36px;opacity:.4"></i><p>Gagal memuat data: ${e.message}</p></div>`;
+            if (window.lucide) lucide.createIcons();
+        }
+    };
+
+    function renderSkeleton() {
+        return Array(3).fill(0).map((_,i) => `
+        <div class="akm-skel-row" style="animation-delay:${i*0.12}s">
+            <div class="akm-skel-avatar"></div>
+            <div class="akm-skel-lines">
+                <div class="akm-skel-line w60"></div>
+                <div class="akm-skel-line w45"></div>
+            </div>
+            <div class="akm-skel-badge"></div>
+        </div>`).join('');
+    }
+
+    function renderStats() {
+        const total = _allKeys.length;
+        // We don't have live status here — just show count per provider type
+        document.getElementById('akm-stat-total').textContent = total;
+        document.getElementById('akm-stat-pool').textContent  = _allKeys.filter(k => k.isPool).length;
+        document.getElementById('akm-stat-single').textContent = _allKeys.filter(k => !k.isPool).length;
+        const used = _allKeys.filter(k => k.usageCount > 0).length;
+        document.getElementById('akm-stat-used').textContent = used;
+    }
+
+    function renderFilterTabs() {
+        const container = document.getElementById('akm-filter-tabs');
+        if (!container) return;
+        const providers = ['all', ...new Set(_allKeys.map(k => k.provider))];
+        container.innerHTML = providers.map(p => {
+            const info = PROVIDERS[p] || { label: 'Semua', color: 'var(--blue)' };
+            const label = p === 'all' ? 'Semua' : info.label;
+            const count = p === 'all' ? _allKeys.length : _allKeys.filter(k => k.provider === p).length;
+            const active = _activeFilter === p ? 'active' : '';
+            return `<button class="akm-filter-tab ${active}" onclick="window.setAkmFilter('${p}')" style="--tab-color:${p==='all'?'var(--blue)':info.color}">
+                ${label} <span class="akm-filter-count">${count}</span>
+            </button>`;
+        }).join('');
+    }
+
+    window.setAkmFilter = function(provider) {
+        _activeFilter = provider;
+        renderFilterTabs();
+        renderKeyList();
+    };
+
+    function renderKeyList() {
+        const list = document.getElementById('akm-key-list');
+        if (!list) return;
+        const filtered = _activeFilter === 'all' ? _allKeys : _allKeys.filter(k => k.provider === _activeFilter);
+        if (filtered.length === 0) {
+            list.innerHTML = `<div class="akm-empty">
+                <div class="akm-empty-icon"><i data-lucide="key-round"></i></div>
+                <p style="font-weight:700;margin:0">Belum ada API key</p>
+                <p style="font-size:.8rem;opacity:.6;margin:0">Klik "+ Tambah API Key" untuk menambahkan key baru</p>
+            </div>`;
+            if (window.lucide) lucide.createIcons();
+            return;
+        }
+        list.innerHTML = filtered.map((key, idx) => renderKeyCard(key, idx)).join('');
+        if (window.lucide) lucide.createIcons();
+    }
+
+    function renderKeyCard(key, idx) {
+        const p = PROVIDERS[key.provider] || { label: key.provider, abbr: key.provider.slice(0,2).toUpperCase(), color:'#888', bg:'rgba(128,128,128,0.1)', border:'rgba(128,128,128,0.2)' };
+        const isActive = key.provider === _activeProvider && (key.index === 0 || key.isPool);
+        const usageText = key.usageCount > 0
+            ? `${fmtCount(key.usageCount)} request · Terakhir ${timeAgo(key.lastUsedAt)}`
+            : 'Belum pernah digunakan';
+        const addedText = key.addedAt ? `Ditambahkan ${timeAgo(key.addedAt)}` : 'Ditambahkan: tidak diketahui';
+        const addedFull = key.addedAt ? formatDate(key.addedAt) : '';
+        const labelBadge = key.label ? `<span class="akm-label-badge">${escHtml(key.label)}</span>` : '';
+        const activeBadge = isActive && key.provider === _activeProvider ? `<span class="akm-active-badge"><span class="akm-pulse-dot"></span>AKTIF</span>` : '';
+        const poolBadge = key.isPool ? `<span class="akm-pool-badge">#${key.index + 1} / ${key.poolTotal}</span>` : '<span class="akm-single-badge">Single</span>';
+        const urlRow = key.url ? `<div class="akm-url-row"><i data-lucide="globe" style="width:11px;height:11px"></i>${escHtml(key.url)}</div>` : '';
+
+        return `<div class="akm-key-card" id="akm-card-${key.provider}-${key.index}">
+            <div class="akm-card-accent" style="background:${p.color}"></div>
+            <div class="akm-card-body">
+                <div class="akm-card-left">
+                    <div class="akm-provider-avatar" style="background:${p.bg};color:${p.color};border-color:${p.border}">${p.abbr}</div>
+                    <div class="akm-card-info">
+                        <div class="akm-card-name-row">
+                            <span class="akm-provider-label" style="color:${p.color}">${p.label}</span>
+                            ${poolBadge}
+                            ${labelBadge}
+                            ${activeBadge}
+                        </div>
+                        <div class="akm-key-mask" title="${escHtml(key.key)}">${escHtml(key.keyMasked)}</div>
+                        <div class="akm-card-meta-row">
+                            <i data-lucide="cpu" style="width:11px;height:11px;opacity:.6"></i>
+                            <span>${escHtml(key.model || '-')}</span>
+                            ${urlRow}
+                        </div>
+                        <div class="akm-card-meta-row" title="${addedFull}">
+                            <i data-lucide="clock" style="width:11px;height:11px;opacity:.6"></i>
+                            <span>${addedText}</span>
+                        </div>
+                        <div class="akm-card-meta-row akm-usage-row">
+                            <i data-lucide="bar-chart-2" style="width:11px;height:11px;opacity:.6"></i>
+                            <span>${usageText}</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="akm-card-right">
+                    <button class="akm-action-btn akm-btn-edit" title="Edit Nama/Label" onclick="window.openEditLabel('${key.provider}', ${key.index}, '${escHtml(key.label)}')"><i data-lucide="pencil"></i></button>
+                    <button class="akm-action-btn akm-btn-delete" title="Hapus Key" onclick="window.openDeleteConfirm('${key.provider}', ${key.index}, '${escHtml(key.keyMasked)}', '${p.label}')"><i data-lucide="trash-2"></i></button>
+                </div>
+            </div>
+        </div>`;
+    }
+
+    function escHtml(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+    // ── Add Key Modal ────────────────────────────────
+    window.openAddKeyModal = function() {
+        document.getElementById('akm-modal-add').classList.remove('hidden');
+        document.getElementById('akm-add-key').value = '';
+        document.getElementById('akm-add-label').value = '';
+        document.getElementById('akm-add-model').value = '';
+        document.getElementById('akm-add-url').value = '';
+        document.getElementById('akm-test-result').innerHTML = '';
+        document.getElementById('akm-add-url-row').style.display = 'none';
+        const sel = document.getElementById('akm-add-provider');
+        if (sel) { sel.value = 'gemini'; updateAddModelPlaceholder(); }
+    };
+
+    window.closeAddKeyModal = function() {
+        document.getElementById('akm-modal-add').classList.add('hidden');
+    };
+
+    window.updateAddModelPlaceholder = function() {
+        const provider = document.getElementById('akm-add-provider').value;
+        const p = PROVIDERS[provider];
+        const modelInput = document.getElementById('akm-add-model');
+        if (p) modelInput.placeholder = p.defaultModel;
+        const urlRow = document.getElementById('akm-add-url-row');
+        urlRow.style.display = provider === 'local' ? 'block' : 'none';
+    };
+
+    window.testApiKeyBeforeAdd = async function() {
+        const provider = document.getElementById('akm-add-provider').value;
+        const key = document.getElementById('akm-add-key').value.trim();
+        const model = document.getElementById('akm-add-model').value.trim() || PROVIDERS[provider]?.defaultModel || '';
+        const url = document.getElementById('akm-add-url').value.trim();
+        const resEl = document.getElementById('akm-test-result');
+        if (!key) { resEl.innerHTML = '<span class="akm-test-error">Masukkan API Key terlebih dahulu</span>'; return; }
+        resEl.innerHTML = '<span class="akm-test-loading"><i data-lucide="loader"></i> Menguji koneksi…</span>';
+        if (window.lucide) lucide.createIcons();
+        try {
+            const r = await fetch('/api/test-api', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ provider, key, model, url }) });
+            const d = await r.json();
+            if (d.success) {
+                resEl.innerHTML = `<span class="akm-test-ok"><i data-lucide="check-circle-2"></i> Berhasil! Model: ${escHtml(d.model||'')} · ${d.latency}ms</span>`;
+            } else {
+                resEl.innerHTML = `<span class="akm-test-error"><i data-lucide="x-circle"></i> Gagal: ${escHtml(d.error||'Unknown error')}</span>`;
+            }
+            if (window.lucide) lucide.createIcons();
+        } catch(e) {
+            resEl.innerHTML = `<span class="akm-test-error">Error: ${e.message}</span>`;
+        }
+    };
+
+    window.saveNewApiKey = async function() {
+        const provider = document.getElementById('akm-add-provider').value;
+        const key = document.getElementById('akm-add-key').value.trim();
+        const model = document.getElementById('akm-add-model').value.trim();
+        const label = document.getElementById('akm-add-label').value.trim();
+        const url = document.getElementById('akm-add-url').value.trim();
+        const resEl = document.getElementById('akm-test-result');
+        if (!key) { resEl.innerHTML = '<span class="akm-test-error">API Key tidak boleh kosong</span>'; return; }
+        const btn = document.getElementById('akm-save-btn');
+        btn.disabled = true; btn.textContent = 'Menyimpan…';
+        try {
+            const r = await fetch('/api/keys', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ provider, key, model, label, url }) });
+            const d = await r.json();
+            if (d.success) {
+                closeAddKeyModal();
+                window.loadApiKeys();
+                window.showToast && window.showToast('API Key berhasil ditambahkan!', 'success');
+            } else {
+                resEl.innerHTML = `<span class="akm-test-error">${escHtml(d.error||'Gagal menyimpan')}</span>`;
+            }
+        } catch(e) {
+            resEl.innerHTML = `<span class="akm-test-error">Error: ${e.message}</span>`;
+        } finally {
+            btn.disabled = false; btn.textContent = 'Simpan Key';
+        }
+    };
+
+    // ── Delete Confirm Modal ─────────────────────────
+    window.openDeleteConfirm = function(provider, index, keyMasked, providerLabel) {
+        _deleteTarget = { provider, index };
+        document.getElementById('akm-del-key-label').textContent = keyMasked;
+        document.getElementById('akm-del-provider-label').textContent = providerLabel;
+        document.getElementById('akm-modal-delete').classList.remove('hidden');
+    };
+
+    window.closeDeleteModal = function() {
+        document.getElementById('akm-modal-delete').classList.add('hidden');
+        _deleteTarget = null;
+    };
+
+    window.confirmDeleteKey = async function() {
+        if (!_deleteTarget) return;
+        const { provider, index } = _deleteTarget;
+        const btn = document.getElementById('akm-del-confirm-btn');
+        btn.disabled = true; btn.textContent = 'Menghapus…';
+        try {
+            const r = await fetch(`/api/keys/${provider}/${index}`, { method:'DELETE' });
+            const d = await r.json();
+            if (d.success) {
+                closeDeleteModal();
+                window.loadApiKeys();
+                window.showToast && window.showToast('API Key berhasil dihapus', 'success');
+            } else {
+                alert('Gagal hapus: ' + (d.error||'Unknown'));
+            }
+        } catch(e) {
+            alert('Error: ' + e.message);
+        } finally {
+            btn.disabled = false; btn.textContent = 'Ya, Hapus';
+        }
+    };
+
+    // ── Edit Label Modal ─────────────────────────────
+    window.openEditLabel = function(provider, index, currentLabel) {
+        const newLabel = prompt('Masukkan nama/label untuk key ini:', currentLabel || '');
+        if (newLabel === null) return;
+        fetch(`/api/keys/${provider}/${index}`, {
+            method: 'PATCH',
+            headers: {'Content-Type':'application/json'},
+            body: JSON.stringify({ label: newLabel })
+        }).then(r => r.json()).then(d => {
+            if (d.success) { window.loadApiKeys(); window.showToast && window.showToast('Label berhasil diperbarui', 'success'); }
+            else alert('Gagal: ' + (d.error||'Unknown'));
+        });
+    };
+
+    // Close modals on overlay click
+    document.addEventListener('click', function(e) {
+        if (e.target.id === 'akm-modal-add')   window.closeAddKeyModal();
+        if (e.target.id === 'akm-modal-delete') window.closeDeleteModal();
+    });
+
+    })(); // end IIFE
+
 </script>
+
+<!-- ══════════════════════════════════════════
+     TAB — API KEY MANAGER
+     ══════════════════════════════════════════ -->
+<div id="tab-apikeys" class="tab-content hidden">
+    <div class="akm-page">
+
+        <!-- Header Banner -->
+        <div class="akm-header">
+            <div class="akm-header-inner">
+                <div class="akm-header-left">
+                    <div class="akm-header-icon"><i data-lucide="key-round"></i></div>
+                    <div>
+                        <h1 class="akm-header-title">API Key Manager</h1>
+                        <p class="akm-header-subtitle">Kelola semua API key provider AI Anda — tambah, hapus, dan pantau penggunaan</p>
+                    </div>
+                </div>
+                <button class="akm-reload-btn" onclick="window.loadApiKeys()" title="Refresh">
+                    <i data-lucide="refresh-cw"></i> Refresh
+                </button>
+            </div>
+
+            <!-- Stat Cards -->
+            <div class="akm-stat-row">
+                <div class="akm-stat-card">
+                    <div class="akm-stat-icon" style="background:rgba(59,130,246,0.15);color:#60a5fa"><i data-lucide="key-round"></i></div>
+                    <div><div id="akm-stat-total" class="akm-stat-num">–</div><div class="akm-stat-label">Total Key</div></div>
+                </div>
+                <div class="akm-stat-card">
+                    <div class="akm-stat-icon" style="background:rgba(16,185,129,0.15);color:#10b981"><i data-lucide="layers"></i></div>
+                    <div><div id="akm-stat-pool" class="akm-stat-num">–</div><div class="akm-stat-label">Key Pool</div></div>
+                </div>
+                <div class="akm-stat-card">
+                    <div class="akm-stat-icon" style="background:rgba(245,158,11,0.15);color:#f59e0b"><i data-lucide="link"></i></div>
+                    <div><div id="akm-stat-single" class="akm-stat-num">–</div><div class="akm-stat-label">Single Key</div></div>
+                </div>
+                <div class="akm-stat-card">
+                    <div class="akm-stat-icon" style="background:rgba(124,58,237,0.15);color:#a78bfa"><i data-lucide="bar-chart-2"></i></div>
+                    <div><div id="akm-stat-used" class="akm-stat-num">–</div><div class="akm-stat-label">Pernah Dipakai</div></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filter Tabs -->
+        <div class="akm-filter-row">
+            <div id="akm-filter-tabs" class="akm-filter-tabs">
+                <button class="akm-filter-tab active" onclick="window.setAkmFilter('all')" style="--tab-color:var(--blue)">Semua</button>
+            </div>
+            <button class="akm-add-btn" onclick="window.openAddKeyModal()">
+                <i data-lucide="plus"></i> Tambah API Key
+            </button>
+        </div>
+
+        <!-- Key List -->
+        <div id="akm-key-list" class="akm-key-list">
+            <div class="akm-empty">
+                <div class="akm-empty-icon"><i data-lucide="key-round"></i></div>
+                <p style="font-weight:700;margin:0">Memuat data…</p>
+            </div>
+        </div>
+
+    </div>
+</div><!-- /tab-apikeys -->
+
+<!-- MODAL: Tambah API Key -->
+<div id="akm-modal-add" class="akm-modal-overlay hidden" role="dialog" aria-modal="true">
+    <div class="akm-modal">
+        <div class="akm-modal-header">
+            <div class="akm-modal-icon"><i data-lucide="key-round"></i></div>
+            <div>
+                <h3 class="akm-modal-title">Tambah API Key</h3>
+                <p class="akm-modal-sub">Daftarkan API key provider AI baru</p>
+            </div>
+            <button class="akm-modal-close" onclick="window.closeAddKeyModal()"><i data-lucide="x"></i></button>
+        </div>
+        <div class="akm-modal-body">
+            <div class="akm-form-group">
+                <label class="akm-form-label">Provider <span class="akm-required">*</span></label>
+                <select id="akm-add-provider" class="akm-form-input" onchange="window.updateAddModelPlaceholder()">
+                    <option value="gemini">Google Gemini</option>
+                    <option value="groq">Groq</option>
+                    <option value="deepseek">DeepSeek</option>
+                    <option value="qwen">Qwen / Alibaba DashScope</option>
+                    <option value="openrouter">OpenRouter</option>
+                    <option value="local">LM Studio (Lokal)</option>
+                </select>
+            </div>
+            <div class="akm-form-group">
+                <label class="akm-form-label">API Key <span class="akm-required">*</span></label>
+                <textarea id="akm-add-key" class="akm-form-input akm-form-textarea" rows="3" placeholder="Masukkan API key di sini…" autocomplete="off" spellcheck="false"></textarea>
+                <p class="akm-form-hint">Untuk Gemini dan Groq, hanya masukkan 1 key per penambahan. Bisa tambah berkali-kali untuk membuat pool.</p>
+            </div>
+            <div class="akm-form-group">
+                <label class="akm-form-label">Model</label>
+                <input type="text" id="akm-add-model" class="akm-form-input" placeholder="gemini-2.5-flash">
+                <p class="akm-form-hint">Kosongkan untuk menggunakan model default.</p>
+            </div>
+            <div class="akm-form-group" id="akm-add-url-row" style="display:none">
+                <label class="akm-form-label">API URL (LM Studio)</label>
+                <input type="text" id="akm-add-url" class="akm-form-input" placeholder="http://localhost:1234/v1/chat/completions">
+            </div>
+            <div class="akm-form-group">
+                <label class="akm-form-label">Nama / Label <span class="akm-form-optional">(opsional)</span></label>
+                <input type="text" id="akm-add-label" class="akm-form-input" placeholder="Contoh: Key Utama, Backup Key…" maxlength="40">
+            </div>
+            <div id="akm-test-result" class="akm-test-result-area"></div>
+        </div>
+        <div class="akm-modal-footer">
+            <button class="akm-btn-secondary" onclick="window.testApiKeyBeforeAdd()"><i data-lucide="zap"></i> Test Koneksi</button>
+            <button id="akm-save-btn" class="akm-btn-primary" onclick="window.saveNewApiKey()"><i data-lucide="save"></i> Simpan Key</button>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL: Konfirmasi Hapus -->
+<div id="akm-modal-delete" class="akm-modal-overlay hidden" role="dialog" aria-modal="true">
+    <div class="akm-modal akm-modal-sm">
+        <div class="akm-modal-header">
+            <div class="akm-modal-icon akm-icon-danger"><i data-lucide="trash-2"></i></div>
+            <div>
+                <h3 class="akm-modal-title">Hapus API Key?</h3>
+                <p class="akm-modal-sub">Tindakan ini tidak dapat dibatalkan</p>
+            </div>
+            <button class="akm-modal-close" onclick="window.closeDeleteModal()"><i data-lucide="x"></i></button>
+        </div>
+        <div class="akm-modal-body">
+            <div class="akm-del-confirm-box">
+                <i data-lucide="alert-triangle" style="width:20px;height:20px;color:#f59e0b;flex-shrink:0"></i>
+                <div>
+                    <p style="margin:0;font-size:.85rem">Anda akan menghapus API key berikut:</p>
+                    <p style="margin:4px 0 0;font-family:monospace;font-size:.82rem;color:var(--text-muted)" id="akm-del-key-label"></p>
+                    <p style="margin:4px 0 0;font-size:.78rem;opacity:.7">Provider: <strong id="akm-del-provider-label"></strong></p>
+                </div>
+            </div>
+        </div>
+        <div class="akm-modal-footer">
+            <button class="akm-btn-secondary" onclick="window.closeDeleteModal()">Batal</button>
+            <button id="akm-del-confirm-btn" class="akm-btn-danger" onclick="window.confirmDeleteKey()"><i data-lucide="trash-2"></i> Ya, Hapus</button>
+        </div>
+    </div>
+</div>
+
 </body>
 </html>

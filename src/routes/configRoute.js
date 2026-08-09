@@ -414,4 +414,205 @@ router.get('/api-status', async (req, res) => {
     });
 });
 
+// ═══════════════════════════════════════════════════════════
+// API KEY MANAGER — CRUD Endpoints
+// ═══════════════════════════════════════════════════════════
+
+const PROVIDER_CONFIG_MAP = {
+    gemini:     { arrayField: 'gemini_api_keys',  modelField: 'model_name',       single: false },
+    groq:       { arrayField: 'groq_api_keys',    modelField: 'groq_model',        single: false },
+    deepseek:   { keyField:   'deepseek_api_key', modelField: 'deepseek_model',    single: true  },
+    qwen:       { keyField:   'qwen_api_key',     modelField: 'qwen_model',        single: true  },
+    openrouter: { keyField:   'openrouter_api_key', modelField: 'openrouter_model', single: true },
+    local:      { keyField:   'api_key',          modelField: 'model_name',        single: true, urlField: 'api_url' },
+};
+
+function getMetaKey(provider, index) {
+    return `${provider}_${index}`;
+}
+
+function ensureMetadata() {
+    if (!config.key_metadata) config.key_metadata = {};
+}
+
+// GET /api/keys — Daftar semua key dengan metadata
+router.get('/keys', (req, res) => {
+    ensureMetadata();
+    const keys = [];
+
+    Object.entries(PROVIDER_CONFIG_MAP).forEach(([provider, cfg]) => {
+        if (cfg.single) {
+            const keyVal = config[cfg.keyField];
+            if (keyVal && keyVal.trim() && !keyVal.includes('YOUR_LOCAL') && !keyVal.includes('TOKEN')) {
+                const mk = getMetaKey(provider, 0);
+                const meta = config.key_metadata[mk] || {};
+                keys.push({
+                    provider,
+                    index: 0,
+                    key: keyVal,
+                    keyMasked: keyVal.length > 10 ? keyVal.slice(0, 6) + '…' + keyVal.slice(-4) : '••••••',
+                    model: config[cfg.modelField] || '',
+                    url: cfg.urlField ? config[cfg.urlField] : undefined,
+                    label: meta.label || '',
+                    addedAt: meta.addedAt || null,
+                    usageCount: meta.usageCount || 0,
+                    lastUsedAt: meta.lastUsedAt || null,
+                    isPool: false,
+                });
+            }
+        } else {
+            const arr = config[cfg.arrayField] || [];
+            arr.forEach((keyVal, idx) => {
+                if (!keyVal || !keyVal.trim()) return;
+                const mk = getMetaKey(provider, idx);
+                const meta = config.key_metadata[mk] || {};
+                keys.push({
+                    provider,
+                    index: idx,
+                    key: keyVal,
+                    keyMasked: keyVal.length > 10 ? keyVal.slice(0, 6) + '…' + keyVal.slice(-4) : '••••••',
+                    model: config[cfg.modelField] || '',
+                    label: meta.label || '',
+                    addedAt: meta.addedAt || null,
+                    usageCount: meta.usageCount || 0,
+                    lastUsedAt: meta.lastUsedAt || null,
+                    isPool: true,
+                    poolTotal: arr.length,
+                });
+            });
+        }
+    });
+
+    res.json({ activeProvider: config.provider || 'gemini', keys });
+});
+
+// POST /api/keys — Tambah key baru
+router.post('/keys', async (req, res) => {
+    try {
+        const { provider, key, model, url, label } = req.body;
+        if (!provider || !key) return res.status(400).json({ error: 'Provider dan key wajib diisi' });
+
+        const cfg = PROVIDER_CONFIG_MAP[provider];
+        if (!cfg) return res.status(400).json({ error: 'Provider tidak dikenal' });
+
+        ensureMetadata();
+        let newIndex = 0;
+
+        if (cfg.single) {
+            config[cfg.keyField] = key.trim();
+            if (model) config[cfg.modelField] = model.trim();
+            if (url && cfg.urlField) config[cfg.urlField] = url.trim();
+            newIndex = 0;
+            // Reset metadata for single-key provider
+            delete config.key_metadata[getMetaKey(provider, 0)];
+        } else {
+            if (!Array.isArray(config[cfg.arrayField])) config[cfg.arrayField] = [];
+            // Cek duplikat
+            const trimmed = key.trim();
+            if (config[cfg.arrayField].includes(trimmed)) {
+                return res.status(409).json({ error: 'API key ini sudah ada' });
+            }
+            config[cfg.arrayField].push(trimmed);
+            newIndex = config[cfg.arrayField].length - 1;
+            if (model) config[cfg.modelField] = model.trim();
+        }
+
+        // Set metadata
+        config.key_metadata[getMetaKey(provider, newIndex)] = {
+            label: (label || '').trim(),
+            addedAt: new Date().toISOString(),
+            usageCount: 0,
+            lastUsedAt: null,
+        };
+
+        saveConfig(config);
+        res.json({ success: true, index: newIndex, provider });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// DELETE /api/keys/:provider/:index — Hapus key
+router.delete('/keys/:provider/:index', (req, res) => {
+    try {
+        const { provider, index } = req.params;
+        const idx = parseInt(index, 10);
+        if (isNaN(idx)) return res.status(400).json({ error: 'Index tidak valid' });
+
+        const cfg = PROVIDER_CONFIG_MAP[provider];
+        if (!cfg) return res.status(400).json({ error: 'Provider tidak dikenal' });
+
+        ensureMetadata();
+
+        if (cfg.single) {
+            config[cfg.keyField] = '';
+            delete config.key_metadata[getMetaKey(provider, 0)];
+        } else {
+            const arr = config[cfg.arrayField] || [];
+            if (idx < 0 || idx >= arr.length) return res.status(404).json({ error: 'Key tidak ditemukan' });
+
+            // Remove the key
+            arr.splice(idx, 1);
+            config[cfg.arrayField] = arr;
+
+            // Re-index metadata: shift down all indexes after deleted index
+            const newMeta = {};
+            Object.entries(config.key_metadata).forEach(([mk, v]) => {
+                const parts = mk.split('_');
+                const mProvider = parts.slice(0, -1).join('_');
+                const mIdx = parseInt(parts[parts.length - 1], 10);
+                if (mProvider === provider) {
+                    if (mIdx < idx) newMeta[mk] = v;
+                    else if (mIdx > idx) newMeta[getMetaKey(provider, mIdx - 1)] = v;
+                    // mIdx === idx is deleted
+                } else {
+                    newMeta[mk] = v;
+                }
+            });
+            config.key_metadata = newMeta;
+        }
+
+        saveConfig(config);
+        res.json({ success: true });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// PATCH /api/keys/:provider/:index — Update label/nickname
+router.patch('/keys/:provider/:index', (req, res) => {
+    try {
+        const { provider, index } = req.params;
+        const { label } = req.body;
+        const idx = parseInt(index, 10);
+        if (isNaN(idx)) return res.status(400).json({ error: 'Index tidak valid' });
+
+        ensureMetadata();
+        const mk = getMetaKey(provider, idx);
+        if (!config.key_metadata[mk]) config.key_metadata[mk] = { addedAt: new Date().toISOString(), usageCount: 0, lastUsedAt: null };
+        config.key_metadata[mk].label = (label || '').trim();
+        saveConfig(config);
+        res.json({ success: true });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// POST /api/keys/increment-usage — Dipanggil oleh aiService untuk tracking
+router.post('/keys/increment-usage', (req, res) => {
+    try {
+        const { provider, index } = req.body;
+        if (!provider) return res.status(400).json({ error: 'Provider wajib' });
+        ensureMetadata();
+        const mk = getMetaKey(provider, index || 0);
+        if (!config.key_metadata[mk]) config.key_metadata[mk] = { addedAt: null, usageCount: 0, lastUsedAt: null };
+        config.key_metadata[mk].usageCount = (config.key_metadata[mk].usageCount || 0) + 1;
+        config.key_metadata[mk].lastUsedAt = new Date().toISOString();
+        saveConfig(config);
+        res.json({ success: true });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
 module.exports = router;
