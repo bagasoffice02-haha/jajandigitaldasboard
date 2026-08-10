@@ -361,56 +361,62 @@ router.get('/api-status', async (req, res) => {
         }
     }
 
-    const jobs = [];
+    const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
-    // Gemini keys
+    // Gemini keys (sequential with 350ms delay to avoid Google rate-limit burst)
     const geminiKeys = (config.gemini_api_keys || []).filter(k => k && k.trim());
     const gModel = getGeminiModel();
-    geminiKeys.forEach((key, i) => {
-        jobs.push(testKey('gemini', key, gModel).then(r => results.push({
-            provider: 'gemini', index: i, keyMasked: maskKey(key), model: gModel, ...r
-        })));
-    });
+    for (let i = 0; i < geminiKeys.length; i++) {
+        if (i > 0) await delay(350);
+        const r = await testKey('gemini', geminiKeys[i], gModel);
+        results.push({
+            provider: 'gemini', index: i, keyMasked: maskKey(geminiKeys[i]), model: gModel, ...r
+        });
+    }
 
-
-    // Groq keys
+    // Groq keys (sequential with 200ms delay)
     const groqKeys = (config.groq_api_keys || []).filter(k => k && k.trim());
-    groqKeys.forEach((key, i) => {
-        jobs.push(testKey('groq', key, config.groq_model).then(r => results.push({
-            provider: 'groq', index: i, keyMasked: maskKey(key), model: config.groq_model || 'llama-3.3-70b-versatile', ...r
-        })));
-    });
+    for (let i = 0; i < groqKeys.length; i++) {
+        if (i > 0) await delay(200);
+        const r = await testKey('groq', groqKeys[i], config.groq_model);
+        results.push({
+            provider: 'groq', index: i, keyMasked: maskKey(groqKeys[i]), model: config.groq_model || 'llama-3.3-70b-versatile', ...r
+        });
+    }
+
+    const otherJobs = [];
 
     // DeepSeek
     if (config.deepseek_api_key && config.deepseek_api_key.trim()) {
-        jobs.push(testKey('deepseek', config.deepseek_api_key, config.deepseek_model).then(r => results.push({
+        otherJobs.push(testKey('deepseek', config.deepseek_api_key, config.deepseek_model).then(r => results.push({
             provider: 'deepseek', index: 0, keyMasked: maskKey(config.deepseek_api_key), model: config.deepseek_model || 'deepseek-chat', ...r
         })));
     }
 
     // Qwen
     if (config.qwen_api_key && config.qwen_api_key.trim()) {
-        jobs.push(testKey('qwen', config.qwen_api_key, config.qwen_model).then(r => results.push({
+        otherJobs.push(testKey('qwen', config.qwen_api_key, config.qwen_model).then(r => results.push({
             provider: 'qwen', index: 0, keyMasked: maskKey(config.qwen_api_key), model: config.qwen_model || 'qwen-plus', ...r
         })));
     }
 
     // OpenRouter
     if (config.openrouter_api_key && config.openrouter_api_key.trim()) {
-        jobs.push(testKey('openrouter', config.openrouter_api_key, config.openrouter_model).then(r => results.push({
+        otherJobs.push(testKey('openrouter', config.openrouter_api_key, config.openrouter_model).then(r => results.push({
             provider: 'openrouter', index: 0, keyMasked: maskKey(config.openrouter_api_key), model: config.openrouter_model || 'meta-llama/llama-3.3-70b-instruct', ...r
         })));
     }
 
     // Local LM
     if (config.api_url && config.api_url.trim() && !config.api_url.includes('YOUR_')) {
-        jobs.push(testKey('local', config.api_key, config.model_name, config.api_url).then(r => results.push({
+        otherJobs.push(testKey('local', config.api_key, config.model_name, config.api_url).then(r => results.push({
             provider: 'local', index: 0, keyMasked: maskKey(config.api_key), model: config.model_name || 'local-model',
             url: config.api_url, ...r
         })));
     }
 
-    await Promise.allSettled(jobs);
+    if (otherJobs.length > 0) await Promise.allSettled(otherJobs);
+
 
     // Sort by provider then index
     results.sort((a, b) => a.provider.localeCompare(b.provider) || a.index - b.index);
