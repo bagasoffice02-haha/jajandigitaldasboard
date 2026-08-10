@@ -15,7 +15,7 @@
 
     <!-- Fonts & Icons -->
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=15">
+    <link rel="stylesheet" href="style.css?v=16">
 
     <!-- Socket.io & QR -->
     <script src="/socket.io/socket.io.js"></script>
@@ -1345,106 +1345,29 @@
 
                         <!-- TAB 1: KONEKSI AI -->
                         <div id="global-sec-ai" class="global-settings-section" style="display: flex; flex-direction: column; gap: 12px;">
-                            <!-- Provider -->
-                            <div class="form-group">
-                                <label for="cfg-provider">Penyedia AI (AI Provider)</label>
-                                <select id="cfg-provider" onchange="toggleProviderFields()" style="width: 100%; padding: 6px 10px; font-size: 0.82rem; background: var(--bg-primary); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 6px; height: 32px;">
-                                    <option value="gemini">Google Gemini API</option>
-                                    <option value="local">LM Studio (Lokal)</option>
-                                    <option value="groq">Groq API</option>
-                                    <option value="deepseek">DeepSeek API</option>
-                                    <option value="qwen">Alibaba DashScope (Qwen)</option>
-                                    <option value="openrouter">OpenRouter (Llama/Qwen/dll)</option>
-                                </select>
-                            </div>
-
-                            <!-- Gemini -->
-                            <div id="group-gemini-settings">
-                                <div class="form-group">
-                                    <label for="cfg-gemini-api-keys">Stok Gemini API Keys (Satu Key Per Baris)</label>
-                                    <textarea id="cfg-gemini-api-keys" rows="4" placeholder="Masukkan Google Gemini API Keys Anda (satu per baris)…" class="form-control" style="width: 100%; padding: 8px; border-radius: 6px; font-size: 0.82rem; background: var(--bg-primary); color: var(--text-primary); border: 1px solid var(--border-color); font-family: monospace;"></textarea>
-                                    <small style="color: var(--text-secondary); font-size: 0.65rem; display: block; margin-top: 2px;">Bot akan rotasi otomatis (round-robin) jika ada key yang limit.</small>
+                            <div class="akm-auto-route-card" style="background: var(--surface2); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; display: flex; flex-direction: column; gap: 8px;">
+                                <div style="display: flex; align-items: center; gap: 8px; font-weight: 800; font-size: 0.85rem; color: var(--text-primary);">
+                                    <i data-lucide="cpu" style="width: 16px; height: 16px; color: var(--blue);"></i>
+                                    <span>Rotasi & Failover Otomatis (Smart System)</span>
                                 </div>
-                                <div class="form-group" style="margin-top:10px;">
-                                    <label for="cfg-gemini-model">Model Gemini</label>
-                                    <input type="text" id="cfg-gemini-model" placeholder="gemini-2.5-flash" class="form-control" style="width: 100%; padding: 6px 10px; font-size: 0.82rem; background: var(--bg-primary); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 6px; height: 32px;">
-                                    <small style="color: var(--text-secondary); font-size: 0.65rem; display: block; margin-top: 2px;">Rekomendasi: <code>gemini-2.5-flash</code> (cepat &amp; hemat)</small>
-                                </div>
-                            </div>
-
-                            <!-- LM Studio -->
-                            <div id="group-local-settings" class="hidden">
-                                <div class="form-group">
-                                    <label for="cfg-api-url">URL API Local Server</label>
-                                    <input type="text" id="cfg-api-url" placeholder="http://localhost:1234/v1/chat/completions" class="form-control" style="width: 100%; padding: 6px 10px; font-size: 0.82rem; background: var(--bg-primary); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 6px; height: 32px;">
-                                </div>
-                                <div class="form-group" style="margin-top:10px;">
-                                    <label for="cfg-model-name">Nama Model (Sesuai di LM Studio)</label>
-                                    <input type="text" id="cfg-model-name" placeholder="qwen3.5-9b" class="form-control" style="width: 100%; padding: 6px 10px; font-size: 0.82rem; background: var(--bg-primary); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 6px; height: 32px;">
-                                </div>
-                                <div class="form-group" style="margin-top:10px;">
-                                    <label for="cfg-api-key">API Key (Opsional)</label>
-                                    <input type="password" id="cfg-api-key" placeholder="Token autentikasi LM Studio…" class="form-control" style="width: 100%; padding: 6px 10px; font-size: 0.82rem; background: var(--bg-primary); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 6px; height: 32px;">
-                                </div>
-                            </div>
-
-                            <!-- Groq -->
-                            <div id="group-groq-settings" class="hidden">
-                                <div class="form-group">
-                                    <label for="cfg-groq-api-keys">Stok Groq API Keys (Satu Key Per Baris)</label>
-                                    <textarea id="cfg-groq-api-keys" rows="4" placeholder="Masukkan Groq API Keys Anda (satu per baris)&#10;gsk_xxxxx&#10;gsk_yyyyy&#10;gsk_zzzzz" class="form-control" style="width: 100%; padding: 8px; border-radius: 6px; font-size: 0.82rem; background: var(--bg-primary); color: var(--text-primary); border: 1px solid var(--border-color); font-family: monospace;"></textarea>
-                                    <small style="color: var(--text-secondary); font-size: 0.65rem; display: block; margin-top: 2px;">Bot akan rotasi otomatis (round-robin) jika ada key yang limit/error.</small>
-                                </div>
-                                <div class="form-group" style="margin-top:10px;">
-                                    <label for="cfg-groq-model">Model Groq</label>
-                                    <input type="text" id="cfg-groq-model" placeholder="llama-3.3-70b-versatile" class="form-control" style="width: 100%; padding: 6px 10px; font-size: 0.82rem; background: var(--bg-primary); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 6px; height: 32px;">
-                                    <small style="color: var(--text-secondary); font-size: 0.65rem; display: block; margin-top: 2px;">Contoh: <code>llama-3.3-70b-versatile</code></small>
-                                </div>
-                            </div>
-
-                            <!-- DeepSeek -->
-                            <div id="group-deepseek-settings" class="hidden">
-                                <div class="form-group">
-                                    <label for="cfg-deepseek-api-key">DeepSeek API Key</label>
-                                    <input type="password" id="cfg-deepseek-api-key" placeholder="sk-…" class="form-control" style="width: 100%; padding: 6px 10px; font-size: 0.82rem; background: var(--bg-primary); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 6px; height: 32px;">
-                                </div>
-                                <div class="form-group" style="margin-top:10px;">
-                                    <label for="cfg-deepseek-model">Model DeepSeek</label>
-                                    <input type="text" id="cfg-deepseek-model" placeholder="deepseek-chat" class="form-control" style="width: 100%; padding: 6px 10px; font-size: 0.82rem; background: var(--bg-primary); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 6px; height: 32px;">
-                                </div>
-                            </div>
-
-                            <!-- Qwen -->
-                            <div id="group-qwen-settings" class="hidden">
-                                <div class="form-group">
-                                    <label for="cfg-qwen-api-key">Alibaba DashScope (Qwen) API Key</label>
-                                    <input type="password" id="cfg-qwen-api-key" placeholder="sk-…" class="form-control" style="width: 100%; padding: 6px 10px; font-size: 0.82rem; background: var(--bg-primary); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 6px; height: 32px;">
-                                </div>
-                                <div class="form-group" style="margin-top:10px;">
-                                    <label for="cfg-qwen-model">Model Qwen</label>
-                                    <input type="text" id="cfg-qwen-model" placeholder="qwen-plus" class="form-control" style="width: 100%; padding: 6px 10px; font-size: 0.82rem; background: var(--bg-primary); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 6px; height: 32px;">
-                                </div>
-                            </div>
-
-                            <!-- OpenRouter -->
-                            <div id="group-openrouter-settings" class="hidden">
-                                <div class="form-group">
-                                    <label for="cfg-openrouter-api-key">OpenRouter API Key</label>
-                                    <input type="password" id="cfg-openrouter-api-key" placeholder="sk-or-…" class="form-control" style="width: 100%; padding: 6px 10px; font-size: 0.82rem; background: var(--bg-primary); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 6px; height: 32px;">
-                                </div>
-                                <div class="form-group" style="margin-top:10px;">
-                                    <label for="cfg-openrouter-model">Model OpenRouter</label>
-                                    <input type="text" id="cfg-openrouter-model" placeholder="meta-llama/llama-3.3-70b-instruct" class="form-control" style="width: 100%; padding: 6px 10px; font-size: 0.82rem; background: var(--bg-primary); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 6px; height: 32px;">
+                                <p style="margin: 0; font-size: 0.76rem; color: var(--text-muted); line-height: 1.5;">
+                                    Pemilihan AI dikelola otomatis oleh sistem secara fleksibel. Bot secara otomatis menggunakan API Key aktif dari pool dan berpindah (failover) ke provider lain jika ada key yang limit/error. Semua API Key dikelola terpusat di **API Key Manager**.
+                                </p>
+                                <div style="display: flex; gap: 8px; margin-top: 4px;">
+                                    <button type="button" class="btn btn-primary btn-sm" onclick="switchTab('apikeys')" style="display: inline-flex; align-items: center; gap: 6px; font-size: 0.76rem; font-weight: 700; border-radius: 8px;">
+                                        <i data-lucide="key-round"></i> <span>Kelola API Keys & Monitor</span>
+                                    </button>
                                 </div>
                             </div>
 
                             <!-- Shared Settings -->
-                            <div class="form-group">
+                            <div class="form-group" style="margin-top: 4px;">
                                 <label for="cfg-max-tokens">Batas Maksimal Token</label>
                                 <input type="number" id="cfg-max-tokens" min="100" max="4000" placeholder="1000" class="form-control" style="width: 100%; padding: 6px 10px; font-size: 0.82rem; background: var(--bg-primary); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 6px; height: 32px;">
                                 <small style="color: var(--text-secondary); font-size: 0.65rem; display: block; margin-top: 2px;">Token lebih banyak membantu model reasoning menyelesaikan jawaban panjang.</small>
                             </div>
                         </div>
+
 
                         <!-- TAB 2: FITUR & KEAKTIFAN -->
                         <div id="global-sec-features" class="global-settings-section hidden" style="display: flex; flex-direction: column; gap: 12px;">
@@ -3329,8 +3252,11 @@
                 </div>
             </div>
             <div class="akm-top-actions">
+                <button class="akm-scan-all-btn" id="akm-btn-check-live" onclick="window.runLiveHealthCheck(false)" title="Scan & Uji Koneksi Semua API Key Diagnostik">
+                    <i data-lucide="zap"></i> <span>Scan Semua API</span>
+                </button>
                 <button class="akm-add-btn" onclick="window.openAddKeyModal()">
-                    <i data-lucide="plus"></i> Tambah Key
+                    <i data-lucide="plus"></i> <span>Tambah Key</span>
                 </button>
                 <button class="akm-reload-btn" onclick="window.loadApiKeys()" title="Muat ulang">
                     <i data-lucide="refresh-cw"></i>
