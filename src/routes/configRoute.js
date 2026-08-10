@@ -298,13 +298,17 @@ router.post('/test-api', async (req, res) => {
         res.json(result);
     } catch (err) {
         const errInfo = parseApiError(err);
+        const errMsg = (errInfo.message || '').toLowerCase();
+        const isQuota = errInfo.code === 429 || errMsg.includes('quota') || errMsg.includes('rate limit') || errMsg.includes('exceeded') || errMsg.includes('resource_exhausted');
         res.json({
             success: false,
+            isQuota: isQuota,
             latency: Date.now() - startTime,
             errorCode: errInfo.code,
             error: errInfo.message
         });
     }
+
 });
 
 

@@ -15,7 +15,7 @@
 
     <!-- Fonts & Icons -->
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=19">
+    <link rel="stylesheet" href="style.css?v=20">
 
     <!-- Socket.io & QR -->
     <script src="/socket.io/socket.io.js"></script>
@@ -3038,9 +3038,15 @@
             const d = await r.json();
             if (d.success) {
                 resEl.innerHTML = `<span class="akm-test-ok"><i data-lucide="check-circle-2"></i> Berhasil! Model: ${escHtml(d.model||'')} · ${d.latency}ms</span>`;
+            } else if (d.isQuota) {
+                resEl.innerHTML = `<div class="akm-test-quota" style="background:rgba(245,158,11,0.12);border:1px solid rgba(245,158,11,0.3);color:#f59e0b;padding:8px 12px;border-radius:8px;font-size:0.75rem;line-height:1.4;">
+                    <div style="font-weight:800;display:flex;align-items:center;gap:5px;margin-bottom:3px;"><i data-lucide="alert-triangle"></i> Key Valid! Kuota Gratis limit temporer (HTTP 429)</div>
+                    API Key ini <strong>VALID (Sudah Benar)</strong>, namun kuota gratis dari Google sedang cooldown (limit sementara). <strong>Key ini TETAP BISA DISIMPAN</strong> ke stok pool untuk rotasi otomatis saat kuotanya reset!
+                </div>`;
             } else {
                 resEl.innerHTML = `<span class="akm-test-error"><i data-lucide="x-circle"></i> Gagal: ${escHtml(d.error||'Unknown error')}</span>`;
             }
+
             if (window.lucide) lucide.createIcons();
         } catch(e) {
             resEl.innerHTML = `<span class="akm-test-error">Error: ${e.message}</span>`;
