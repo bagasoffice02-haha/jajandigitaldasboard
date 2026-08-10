@@ -15,7 +15,7 @@
 
     <!-- Fonts & Icons -->
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=12">
+    <link rel="stylesheet" href="style.css?v=13">
 
     <!-- Socket.io & QR -->
     <script src="/socket.io/socket.io.js"></script>
@@ -3187,6 +3187,112 @@
         });
     };
 
+    // ── Real-Time Socket.io Listener for AI Activity ─────
+    let _realtimeLogs = [];
+    let _providerUsageCounts = { gemini:0, groq:0, deepseek:0, qwen:0, openrouter:0, local:0 };
+
+    function handleRealtimeAiActivity(data) {
+        if (!data) return;
+        const provider = data.provider || 'gemini';
+        const index = data.index || 0;
+        const keyId = `${provider}_${index}`;
+
+        // 1. Update live usage count in chart
+        _providerUsageCounts[provider] = (_providerUsageCounts[provider] || 0) + 1;
+        renderRealtimeChart();
+
+        // 2. Add to live log stream
+        const pLabel = (PROVIDERS[provider] ? PROVIDERS[provider].label : provider);
+        const timeStr = new Date(data.timestamp || Date.now()).toLocaleTimeString('id-ID', { hour:'2-digit', minute:'2-digit', second:'2-digit' });
+        const logItem = {
+            time: timeStr,
+            provider: pLabel,
+            index: index + 1,
+            model: data.model || '-',
+            latency: data.latency || 0,
+            status: data.status || 'ok',
+            error: data.error || null
+        };
+        _realtimeLogs.unshift(logItem);
+        if (_realtimeLogs.length > 8) _realtimeLogs.pop();
+        renderRealtimeLogs();
+
+        // 3. Update key card live on screen
+        const targetCard = document.getElementById(`akm-card-${provider}-${index}`);
+        if (targetCard) {
+            // Pulse animation
+            targetCard.classList.remove('akm-card-ping');
+            void targetCard.offsetWidth; // trigger reflow
+            targetCard.classList.add('akm-card-ping');
+
+            // Increment count on card
+            const keyObj = _allKeys.find(k => k.provider === provider && k.index === index);
+            if (keyObj) {
+                keyObj.usageCount = (keyObj.usageCount || 0) + 1;
+                keyObj.lastUsedAt = new Date().toISOString();
+            }
+        }
+
+        // 4. Update live status record
+        _liveStatuses[keyId] = {
+            provider,
+            index,
+            status: data.status || 'ok',
+            latency: data.latency || 0,
+            error: data.error || null,
+            model: data.model
+        };
+        renderStats();
+    }
+
+    function renderRealtimeChart() {
+        const container = document.getElementById('akm-chart-bars');
+        if (!container) return;
+        const totalReqs = Object.values(_providerUsageCounts).reduce((a,b) => a+b, 0) || 1;
+        
+        container.innerHTML = Object.entries(PROVIDERS).map(([pKey, pInfo]) => {
+            const count = _providerUsageCounts[pKey] || 0;
+            const pct = Math.round((count / totalReqs) * 100);
+            return `<div class="akm-chart-row">
+                <div class="akm-chart-label" style="color:${pInfo.color}">${pInfo.abbr}</div>
+                <div class="akm-chart-track">
+                    <div class="akm-chart-fill" style="width:${pct}%;background:${pInfo.color}"></div>
+                </div>
+                <div class="akm-chart-val">${count} req (${pct}%)</div>
+            </div>`;
+        }).join('');
+    }
+
+    function renderRealtimeLogs() {
+        const container = document.getElementById('akm-live-feed-list');
+        if (!container) return;
+        if (_realtimeLogs.length === 0) {
+            container.innerHTML = `<div class="akm-feed-empty"><i data-lucide="activity" style="width:16px;height:16px"></i> Menunggu respons AI real-time…</div>`;
+            if (window.lucide) lucide.createIcons();
+            return;
+        }
+
+        container.innerHTML = _realtimeLogs.map(l => {
+            const isOk = l.status === 'ok';
+            const badgeClass = isOk ? 'ok' : 'err';
+            const iconName = isOk ? 'check-circle-2' : 'x-circle';
+            return `<div class="akm-feed-item">
+                <span class="akm-feed-time">${l.time}</span>
+                <span class="akm-feed-prov">${l.provider} #${l.index}</span>
+                <span class="akm-feed-model">${l.model}</span>
+                <span class="akm-feed-badge ${badgeClass}"><i data-lucide="${iconName}"></i> ${isOk ? l.latency + 'ms' : 'ERROR'}</span>
+            </div>`;
+        }).join('');
+        if (window.lucide) lucide.createIcons();
+    }
+
+    // Attach Socket.io listener
+    if (typeof socket !== 'undefined') {
+        socket.on('ai_activity', function(data) {
+            handleRealtimeAiActivity(data);
+        });
+    }
+
     // Close modals on overlay click
     document.addEventListener('click', function(e) {
         if (e.target.id === 'akm-modal-add')   window.closeAddKeyModal();
@@ -3194,6 +3300,7 @@
     });
 
     })(); // end IIFE
+
 
 </script>
 

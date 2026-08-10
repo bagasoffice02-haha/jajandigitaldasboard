@@ -148,6 +148,20 @@ async function callGemini(systemPrompt, chatHistory, isJson = false, apiKey) {
     }
 }
 
+function emitAiActivity(data) {
+    if (ioInstance) {
+        ioInstance.emit('ai_activity', {
+            provider: data.provider,
+            index: data.index !== undefined ? data.index : 0,
+            model: data.model || '',
+            latency: data.latency || 0,
+            status: data.status || 'ok',
+            error: data.error || null,
+            timestamp: new Date().toISOString()
+        });
+    }
+}
+
 // Call Gemini with Key Pool Rotation
 async function callGeminiWithPool(systemPrompt, chatHistory, isJson = false) {
     const geminiInfo = getGeminiKey();
@@ -165,16 +179,20 @@ async function callGeminiWithPool(systemPrompt, chatHistory, isJson = false) {
     for (let i = 0; i < keys.length; i++) {
         const activeKey = getGeminiKey();
         const maskedKey = activeKey.key.substring(0, 6) + '...' + activeKey.key.substring(activeKey.key.length - 4);
+        const startTime = Date.now();
         
         try {
             console.log(`[Gemini Pool] Mencoba memanggil API menggunakan Key #${activeKey.index + 1} (${maskedKey})`);
             const result = await callGemini(systemPrompt, chatHistory, isJson, activeKey.key);
-            // Track usage (fire-and-forget)
+            const latency = Date.now() - startTime;
+            // Track usage
             try { require('http').request({ hostname:'localhost', port: config.port || 3000, path:'/api/keys/increment-usage', method:'POST', headers:{'Content-Type':'application/json'} }, ()=>{}).end(JSON.stringify({ provider:'gemini', index: activeKey.index })); } catch(_){}
+            emitAiActivity({ provider: 'gemini', index: activeKey.index, model: config.model_name || 'gemini-2.5-flash', latency, status: 'ok' });
             return result;
         } catch (err) {
             console.warn(`[Gemini Pool] Key #${activeKey.index + 1} gagal digunakan: ${err.message}`);
             lastError = err;
+            emitAiActivity({ provider: 'gemini', index: activeKey.index, model: config.model_name || 'gemini-2.5-flash', latency: Date.now() - startTime, status: 'error', error: err.message });
             rotateGeminiKey();
         }
     }
@@ -253,17 +271,21 @@ async function callGroqWithPool(systemPrompt, chatHistory, isJson = false) {
         const index = (currentGroqKeyIndex + i) % keys.length;
         const activeKey = keys[index];
         const maskedKey = activeKey.substring(0, 6) + '...' + activeKey.substring(activeKey.length - 4);
+        const startTime = Date.now();
         
         try {
             console.log(`[Groq Pool] Mencoba memanggil API menggunakan Key #${index + 1} (${maskedKey})`);
             const result = await callOpenAiCompatible(url, activeKey, model, systemPrompt, chatHistory, isJson);
             currentGroqKeyIndex = index;
-            // Track usage (fire-and-forget)
+            const latency = Date.now() - startTime;
+            // Track usage
             try { require('http').request({ hostname:'localhost', port: config.port || 3000, path:'/api/keys/increment-usage', method:'POST', headers:{'Content-Type':'application/json'} }, ()=>{}).end(JSON.stringify({ provider:'groq', index })); } catch(_){}
+            emitAiActivity({ provider: 'groq', index, model, latency, status: 'ok' });
             return result;
         } catch (err) {
             console.warn(`[Groq Pool] Key #${index + 1} gagal digunakan: ${err.message}`);
             lastError = err;
+            emitAiActivity({ provider: 'groq', index, model, latency: Date.now() - startTime, status: 'error', error: err.message });
             currentGroqKeyIndex = (index + 1) % keys.length;
         }
     }
@@ -323,29 +345,52 @@ async function callLMStudio(systemPrompt, chatHistory, isJson = false) {
 
 // Helper to call a single AI Provider directly
 async function callSingleProvider(providerName, systemPrompt, chatHistory, isJson) {
-    if (providerName === 'gemini') {
-        return await callGeminiWithPool(systemPrompt, chatHistory, isJson);
-    } else if (providerName === 'groq') {
-        return await callGroqWithPool(systemPrompt, chatHistory, isJson);
-    } else if (providerName === 'deepseek') {
-        const apiKey = config.deepseek_api_key;
-        const model = config.deepseek_model || 'deepseek-chat';
-        const url = 'https://api.deepseek.com/chat/completions';
-        return await callOpenAiCompatible(url, apiKey, model, systemPrompt, chatHistory, isJson);
-    } else if (providerName === 'qwen') {
-        const apiKey = config.qwen_api_key;
-        const model = config.qwen_model || 'qwen-plus';
-        const url = 'https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions';
-        return await callOpenAiCompatible(url, apiKey, model, systemPrompt, chatHistory, isJson);
-    } else if (providerName === 'openrouter') {
-        const apiKey = config.openrouter_api_key;
-        const model = config.openrouter_model || 'meta-llama/llama-3.3-70b-instruct';
-        const url = 'https://openrouter.ai/api/v1/chat/completions';
-        return await callOpenAiCompatible(url, apiKey, model, systemPrompt, chatHistory, isJson);
-    } else {
-        return await callLMStudio(systemPrompt, chatHistory, isJson);
+    const startTime = Date.now();
+    let result = null;
+    let errRes = null;
+    try {
+        if (providerName === 'gemini') {
+            return await callGeminiWithPool(systemPrompt, chatHistory, isJson);
+        } else if (providerName === 'groq') {
+            return await callGroqWithPool(systemPrompt, chatHistory, isJson);
+        } else if (providerName === 'deepseek') {
+            const apiKey = config.deepseek_api_key;
+            const model = config.deepseek_model || 'deepseek-chat';
+            const url = 'https://api.deepseek.com/chat/completions';
+            result = await callOpenAiCompatible(url, apiKey, model, systemPrompt, chatHistory, isJson);
+            try { require('http').request({ hostname:'localhost', port: config.port || 3000, path:'/api/keys/increment-usage', method:'POST', headers:{'Content-Type':'application/json'} }, ()=>{}).end(JSON.stringify({ provider:'deepseek', index:0 })); } catch(_){}
+            emitAiActivity({ provider: 'deepseek', index: 0, model, latency: Date.now() - startTime, status: 'ok' });
+            return result;
+        } else if (providerName === 'qwen') {
+            const apiKey = config.qwen_api_key;
+            const model = config.qwen_model || 'qwen-plus';
+            const url = 'https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions';
+            result = await callOpenAiCompatible(url, apiKey, model, systemPrompt, chatHistory, isJson);
+            try { require('http').request({ hostname:'localhost', port: config.port || 3000, path:'/api/keys/increment-usage', method:'POST', headers:{'Content-Type':'application/json'} }, ()=>{}).end(JSON.stringify({ provider:'qwen', index:0 })); } catch(_){}
+            emitAiActivity({ provider: 'qwen', index: 0, model, latency: Date.now() - startTime, status: 'ok' });
+            return result;
+        } else if (providerName === 'openrouter') {
+            const apiKey = config.openrouter_api_key;
+            const model = config.openrouter_model || 'meta-llama/llama-3.3-70b-instruct';
+            const url = 'https://openrouter.ai/api/v1/chat/completions';
+            result = await callOpenAiCompatible(url, apiKey, model, systemPrompt, chatHistory, isJson);
+            try { require('http').request({ hostname:'localhost', port: config.port || 3000, path:'/api/keys/increment-usage', method:'POST', headers:{'Content-Type':'application/json'} }, ()=>{}).end(JSON.stringify({ provider:'openrouter', index:0 })); } catch(_){}
+            emitAiActivity({ provider: 'openrouter', index: 0, model, latency: Date.now() - startTime, status: 'ok' });
+            return result;
+        } else {
+            result = await callLMStudio(systemPrompt, chatHistory, isJson);
+            try { require('http').request({ hostname:'localhost', port: config.port || 3000, path:'/api/keys/increment-usage', method:'POST', headers:{'Content-Type':'application/json'} }, ()=>{}).end(JSON.stringify({ provider:'local', index:0 })); } catch(_){}
+            emitAiActivity({ provider: 'local', index: 0, model: config.model_name || 'local-model', latency: Date.now() - startTime, status: 'ok' });
+            return result;
+        }
+    } catch(err) {
+        if (providerName !== 'gemini' && providerName !== 'groq') {
+            emitAiActivity({ provider: providerName, index: 0, latency: Date.now() - startTime, status: 'error', error: err.message });
+        }
+        throw err;
     }
 }
+
 
 // Global Ai Provider Dispatcher with Auto Provider Failover Rotation
 async function callAiProvider(systemPrompt, chatHistory, isJson = false) {
