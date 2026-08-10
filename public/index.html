@@ -15,7 +15,7 @@
 
     <!-- Fonts & Icons -->
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=14">
+    <link rel="stylesheet" href="style.css?v=15">
 
     <!-- Socket.io & QR -->
     <script src="/socket.io/socket.io.js"></script>
@@ -40,9 +40,6 @@
     ══════════════════════════════════════════ -->
     <header class="app-header">
         <div class="logo-area">
-            <button type="button" class="sidebar-toggle-trigger" onclick="window.toggleSidebar()" title="Buka / Tutup Slide Sidebar">
-                <i data-lucide="panel-left-open" id="sidebar-toggle-icon-top"></i>
-            </button>
             <span class="logo-icon"><i data-lucide="bot"></i></span>
             <div class="logo-text">
                 <h1>WA Bot CS</h1>
@@ -2381,26 +2378,23 @@
 
 
     <!-- ══════════════════════════════════════════
-         UNIFIED SLIDE-OUT LEFT SIDEBAR NAVIGATION
+         UNIFIED AUTO-EXPAND HOVER SIDEBAR
     ══════════════════════════════════════════ -->
     <aside class="app-sidebar" id="app-sidebar">
-        <!-- Sidebar Branding & Slide Toggle Header -->
+        <!-- Sidebar Branding -->
         <div class="sidebar-top">
             <div class="sidebar-logo">
                 <span class="logo-icon"><i data-lucide="bot"></i></span>
                 <div class="logo-text">
                     <h1>WA Bot CS</h1>
-                    <p>Dashboard Center</p>
+                    <p>Jajan Digital</p>
                 </div>
             </div>
-            <button type="button" class="sidebar-toggle-btn" onclick="window.toggleSidebar()" title="Buka / Tutup Slide Sidebar">
-                <i data-lucide="panel-left-close" id="sidebar-toggle-icon"></i>
-            </button>
         </div>
 
         <!-- Sidebar Navigation List -->
         <nav class="sidebar-nav">
-            <div class="sidebar-section-title">NAVIGASI UTAMA</div>
+            <div class="sidebar-section-title">UTAMA</div>
             <button id="btn-tab-monitor" class="sidebar-nav-btn ios-tab-btn active" onclick="switchTab('monitor')" title="Chats & Monitor Bot">
                 <i data-lucide="message-circle"></i>
                 <span>Chats</span>
@@ -2416,7 +2410,7 @@
                 <span>Grup WA</span>
             </button>
 
-            <div class="sidebar-section-title">MANAJEMEN TOKO</div>
+            <div class="sidebar-section-title">TOKO</div>
             <button id="btn-tab-shop" class="sidebar-nav-btn ios-tab-btn" onclick="switchTab('shop')" title="Host & Pelanggan">
                 <i data-lucide="store"></i>
                 <span>Toko</span>
@@ -2437,7 +2431,7 @@
                 <span>Referral</span>
             </button>
 
-            <div class="sidebar-section-title">SISTEM & BOT</div>
+            <div class="sidebar-section-title">BOT</div>
             <button id="btn-tab-apikeys" class="sidebar-nav-btn ios-tab-btn" onclick="switchTab('apikeys')" title="API Key Manager & Monitor">
                 <i data-lucide="key-round"></i>
                 <span>API Keys</span>
@@ -2448,39 +2442,13 @@
                 <span>Settings</span>
             </button>
         </nav>
-
-        <!-- Sidebar Footer Toggle -->
-        <div class="sidebar-footer">
-            <button type="button" class="sidebar-footer-toggle-btn" onclick="window.toggleSidebar()" title="Buka / Tutup Slide Bar">
-                <i data-lucide="panel-left-open"></i>
-                <span>Slide Sidebar</span>
-            </button>
-        </div>
     </aside>
+
 
 <script src="client.js?v=5"></script>
 <script>
     // Initialize Lucide Icons
     lucide.createIcons();
-
-    // Sidebar Slide Toggle Handler
-    window.toggleSidebar = function() {
-        const isExpanded = document.body.classList.toggle('sidebar-expanded');
-        localStorage.setItem('dashboard-sidebar-expanded', isExpanded ? 'true' : 'false');
-        
-        const iconTop = document.getElementById('sidebar-toggle-icon-top');
-        const iconSide = document.getElementById('sidebar-toggle-icon');
-        if (iconTop) iconTop.setAttribute('data-lucide', isExpanded ? 'panel-left-close' : 'panel-left-open');
-        if (iconSide) iconSide.setAttribute('data-lucide', isExpanded ? 'panel-left-close' : 'panel-left-open');
-        if (window.lucide) lucide.createIcons();
-    };
-
-    // Auto-restore sidebar state on page load
-    (function() {
-        if (localStorage.getItem('dashboard-sidebar-expanded') === 'true') {
-            document.body.classList.add('sidebar-expanded');
-        }
-    })();
 
     // Theme Card UI handler
     window.changeTheme = function(theme) {
