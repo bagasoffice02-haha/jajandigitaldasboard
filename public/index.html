@@ -15,7 +15,7 @@
 
     <!-- Fonts & Icons -->
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=17">
+    <link rel="stylesheet" href="style.css?v=18">
 
     <!-- Socket.io & QR -->
     <script src="/socket.io/socket.io.js"></script>
@@ -2844,8 +2844,13 @@
             _isTestingLive = false;
             if (btn) {
                 btn.disabled = false;
-                btn.innerHTML = `<i data-lucide="zap"></i> <span>Cek Live Status</span>`;
+                btn.innerHTML = `<i data-lucide="zap"></i> <span>Scan Semua API</span>`;
                 if (window.lucide) lucide.createIcons();
+            }
+            if (!silent && Object.keys(_liveStatuses).length > 0) {
+                const okCount = Object.values(_liveStatuses).filter(v => v.status === 'ok').length;
+                const errCount = Object.values(_liveStatuses).filter(v => v.status !== 'ok').length;
+                window.showToast && window.showToast(`Diagnosa Selesai: ${okCount} Online, ${errCount} Error/Quota`, okCount > 0 ? 'success' : 'warning');
             }
         }
     };
@@ -2869,9 +2874,13 @@
         const quotaCount = liveVals.filter(v => v.status === 'quota').length;
         const errCount = liveVals.filter(v => v.status === 'error').length;
 
-        document.getElementById('akm-stat-total').textContent = total;
-        document.getElementById('akm-stat-pool').textContent  = _allKeys.filter(k => k.isPool).length;
-        document.getElementById('akm-stat-active-provider').textContent = (_activeProvider || 'gemini').toUpperCase();
+        const setEl = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+        setEl('akm-stat-total', total);
+        setEl('akm-stat-pool', _allKeys.filter(k => k.isPool).length);
+        setEl('akm-stat-single', _allKeys.filter(k => !k.isPool).length);
+        setEl('akm-stat-used', _allKeys.filter(k => k.usageCount > 0).length);
+        setEl('akm-stat-active-provider', (_activeProvider || 'gemini').toUpperCase());
+
 
         const statusPill = document.getElementById('akm-stat-live-status');
         if (statusPill) {
