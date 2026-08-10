@@ -3797,6 +3797,102 @@ button:active,
     color: #60a5fa;
     border: 1px solid rgba(59,130,246,0.2);
 }
+.akm-btn-live-check {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 14px;
+    border-radius: 10px;
+    border: 1px solid rgba(16,185,129,0.35);
+    background: rgba(16,185,129,0.12);
+    color: #10b981;
+    font-size: 0.78rem;
+    font-weight: 800;
+    cursor: pointer;
+    transition: all 0.18s;
+    font-family: var(--font);
+    white-space: nowrap;
+}
+.akm-btn-live-check:hover {
+    background: rgba(16,185,129,0.2);
+    border-color: rgba(16,185,129,0.5);
+    transform: translateY(-1px);
+}
+.akm-btn-live-check svg { width: 14px; height: 14px; }
+.akm-btn-live-check.spin svg, .spin { animation: spin 1s linear infinite; }
+
+/* Active Key Card Highlighting */
+.akm-key-card.is-active-key {
+    border-color: rgba(16,185,129,0.35);
+    background: linear-gradient(90deg, rgba(16,185,129,0.03) 0%, var(--surface) 30%);
+}
+
+/* Health Badges */
+.akm-health-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 1px 7px;
+    border-radius: 99px;
+    font-size: 0.63rem;
+    font-weight: 800;
+    font-family: var(--font);
+}
+.akm-health-badge.ok {
+    background: rgba(16,185,129,0.12);
+    color: #10b981;
+    border: 1px solid rgba(16,185,129,0.25);
+}
+.akm-health-badge.quota {
+    background: rgba(245,158,11,0.12);
+    color: #f59e0b;
+    border: 1px solid rgba(245,158,11,0.25);
+}
+.akm-health-badge.error {
+    background: rgba(239,68,68,0.12);
+    color: #f87171;
+    border: 1px solid rgba(239,68,68,0.25);
+}
+.akm-health-badge.untested {
+    background: var(--surface2);
+    color: var(--text-muted);
+    border: 1px solid var(--border);
+}
+
+.akm-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    display: inline-block;
+}
+.akm-dot.ok { background: #10b981; box-shadow: 0 0 6px rgba(16,185,129,0.6); }
+.akm-dot.quota { background: #f59e0b; }
+.akm-dot.error { background: #ef4444; }
+.akm-dot.untested { background: var(--text-muted); opacity: 0.5; }
+
+/* Inline Card Error Alert */
+.akm-card-err-alert {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    border-radius: 7px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    margin: 4px 0 6px;
+    font-family: var(--font);
+}
+.akm-card-err-alert svg { width: 13px; height: 13px; flex-shrink: 0; }
+.akm-card-err-alert.quota {
+    background: rgba(245,158,11,0.1);
+    color: #f59e0b;
+    border: 1px solid rgba(245,158,11,0.25);
+}
+.akm-card-err-alert.error {
+    background: rgba(239,68,68,0.1);
+    color: #f87171;
+    border: 1px solid rgba(239,68,68,0.25);
+}
+
 .akm-single-badge {
     background: rgba(245,158,11,0.1);
     color: #f59e0b;

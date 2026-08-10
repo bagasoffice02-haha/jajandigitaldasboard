@@ -722,6 +722,10 @@ function appendToMemory(text) {
     }
 }
 
+function getCurrentGroqIndex() {
+    return currentGroqKeyIndex;
+}
+
 module.exports = {
     callAiProvider,
     extractReceiptDetails,
@@ -729,5 +733,6 @@ module.exports = {
     generateGroupAiResponse,
     appendToMemory,
     setSocketIo,
-    getCurrentTimeString
+    getCurrentTimeString,
+    getCurrentGroqIndex
 };

@@ -440,12 +440,28 @@ router.get('/keys', (req, res) => {
     ensureMetadata();
     const keys = [];
 
+    const { getGeminiKey } = require('../config/config');
+    let geminiActiveIdx = 0;
+    try {
+        const gk = getGeminiKey();
+        if (gk) geminiActiveIdx = gk.index;
+    } catch (_) {}
+
+    let groqActiveIdx = 0;
+    try {
+        const { getCurrentGroqIndex } = require('../services/ai/aiService');
+        if (getCurrentGroqIndex) groqActiveIdx = getCurrentGroqIndex();
+    } catch (_) {}
+
+    const activeProvider = config.provider || 'gemini';
+
     Object.entries(PROVIDER_CONFIG_MAP).forEach(([provider, cfg]) => {
         if (cfg.single) {
             const keyVal = config[cfg.keyField];
             if (keyVal && keyVal.trim() && !keyVal.includes('YOUR_LOCAL') && !keyVal.includes('TOKEN')) {
                 const mk = getMetaKey(provider, 0);
                 const meta = config.key_metadata[mk] || {};
+                const isCurrentlyActive = (provider === activeProvider);
                 keys.push({
                     provider,
                     index: 0,
@@ -458,14 +474,17 @@ router.get('/keys', (req, res) => {
                     usageCount: meta.usageCount || 0,
                     lastUsedAt: meta.lastUsedAt || null,
                     isPool: false,
+                    isCurrentlyActive,
                 });
             }
         } else {
             const arr = config[cfg.arrayField] || [];
+            const activeIdxForProvider = provider === 'gemini' ? geminiActiveIdx : (provider === 'groq' ? groqActiveIdx : 0);
             arr.forEach((keyVal, idx) => {
                 if (!keyVal || !keyVal.trim()) return;
                 const mk = getMetaKey(provider, idx);
                 const meta = config.key_metadata[mk] || {};
+                const isCurrentlyActive = (provider === activeProvider && idx === activeIdxForProvider);
                 keys.push({
                     provider,
                     index: idx,
@@ -478,12 +497,18 @@ router.get('/keys', (req, res) => {
                     lastUsedAt: meta.lastUsedAt || null,
                     isPool: true,
                     poolTotal: arr.length,
+                    isCurrentlyActive,
                 });
             });
         }
     });
 
-    res.json({ activeProvider: config.provider || 'gemini', keys });
+    res.json({
+        activeProvider,
+        geminiActiveIndex: geminiActiveIdx,
+        groqActiveIndex: groqActiveIdx,
+        keys
+    });
 });
 
 // POST /api/keys — Tambah key baru

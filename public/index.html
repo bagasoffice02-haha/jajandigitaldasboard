@@ -15,7 +15,7 @@
 
     <!-- Fonts & Icons -->
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=11">
+    <link rel="stylesheet" href="style.css?v=12">
 
     <!-- Socket.io & QR -->
     <script src="/socket.io/socket.io.js"></script>
@@ -2818,7 +2818,7 @@
     };
 
     /* ═══════════════════════════════════════════════
-       API KEY MANAGER — JavaScript
+       API KEY MANAGER & LIVE HEALTH MONITOR — JS
     ═══════════════════════════════════════════════ */
     (function() {
 
@@ -2836,6 +2836,8 @@
     let _activeFilter = 'all';
     let _activeProvider = 'gemini';
     let _deleteTarget = null;
+    let _liveStatuses = {}; // key: `${provider}_${index}` -> { status, latency, error, errorCode, model }
+    let _isTestingLive = false;
 
     // ── Time ago helper ──────────────────────────────
     function timeAgo(iso) {
@@ -2878,9 +2880,46 @@
             renderStats();
             renderFilterTabs();
             renderKeyList();
+            // Automatically run live health test in background
+            window.runLiveHealthCheck(true);
         } catch(e) {
             list.innerHTML = `<div class="akm-empty"><i data-lucide="wifi-off" style="width:36px;height:36px;opacity:.4"></i><p>Gagal memuat data: ${e.message}</p></div>`;
             if (window.lucide) lucide.createIcons();
+        }
+    };
+
+    // ── Live Health Check ────────────────────────────
+    window.runLiveHealthCheck = async function(silent = false) {
+        if (_isTestingLive) return;
+        _isTestingLive = true;
+        const btn = document.getElementById('akm-btn-check-live');
+        if (btn) {
+            btn.disabled = true;
+            btn.innerHTML = `<i data-lucide="loader" class="spin"></i> <span>Menguji Koneksi…</span>`;
+            if (window.lucide) lucide.createIcons();
+        }
+
+        try {
+            const r = await fetch('/api/api-status');
+            const data = await r.json();
+            if (data.results) {
+                data.results.forEach(res => {
+                    const keyId = `${res.provider}_${res.index}`;
+                    _liveStatuses[keyId] = res;
+                });
+            }
+            renderStats();
+            renderKeyList();
+        } catch(e) {
+            console.error('[AKM Live Check] Error:', e);
+            if (!silent) window.showToast && window.showToast('Gagal menguji koneksi API: ' + e.message, 'error');
+        } finally {
+            _isTestingLive = false;
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = `<i data-lucide="zap"></i> <span>Cek Live Status</span>`;
+                if (window.lucide) lucide.createIcons();
+            }
         }
     };
 
@@ -2898,11 +2937,25 @@
 
     function renderStats() {
         const total = _allKeys.length;
+        const liveVals = Object.values(_liveStatuses);
+        const okCount = liveVals.filter(v => v.status === 'ok').length;
+        const quotaCount = liveVals.filter(v => v.status === 'quota').length;
+        const errCount = liveVals.filter(v => v.status === 'error').length;
+
         document.getElementById('akm-stat-total').textContent = total;
         document.getElementById('akm-stat-pool').textContent  = _allKeys.filter(k => k.isPool).length;
-        document.getElementById('akm-stat-single').textContent = _allKeys.filter(k => !k.isPool).length;
-        const used = _allKeys.filter(k => k.usageCount > 0).length;
-        document.getElementById('akm-stat-used').textContent = used;
+        document.getElementById('akm-stat-active-provider').textContent = (_activeProvider || 'gemini').toUpperCase();
+
+        const statusPill = document.getElementById('akm-stat-live-status');
+        if (statusPill) {
+            if (liveVals.length === 0) {
+                statusPill.innerHTML = `Live: <strong>Belum dites</strong>`;
+            } else {
+                statusPill.innerHTML = `Live: <strong style="color:#10b981">${okCount} OK</strong>` +
+                    (quotaCount > 0 ? ` · <strong style="color:#f59e0b">${quotaCount} Quota</strong>` : '') +
+                    (errCount > 0 ? ` · <strong style="color:#ef4444">${errCount} Err</strong>` : '');
+            }
+        }
     }
 
     function renderFilterTabs() {
@@ -2934,7 +2987,7 @@
             list.innerHTML = `<div class="akm-empty">
                 <div class="akm-empty-icon"><i data-lucide="key-round"></i></div>
                 <p style="font-weight:700;margin:0">Belum ada API key</p>
-                <p style="font-size:.8rem;opacity:.6;margin:0">Klik "+ Tambah API Key" untuk menambahkan key baru</p>
+                <p style="font-size:.8rem;opacity:.6;margin:0">Klik "+ Tambah Key" untuk menambahkan key baru</p>
             </div>`;
             if (window.lucide) lucide.createIcons();
             return;
@@ -2945,16 +2998,35 @@
 
     function renderKeyCard(key, idx) {
         const p = PROVIDERS[key.provider] || { label: key.provider, abbr: key.provider.slice(0,2).toUpperCase(), color:'#888', bg:'rgba(128,128,128,0.1)', border:'rgba(128,128,128,0.2)' };
-        const isActive = key.provider === _activeProvider && (key.index === 0 || key.isPool);
-        const usageText = key.usageCount > 0
-            ? `${fmtCount(key.usageCount)} req · ${timeAgo(key.lastUsedAt)}`
-            : 'Belum dipakai';
+        const keyId = `${key.provider}_${key.index}`;
+        const live = _liveStatuses[keyId];
+
+        // Health Status Badge
+        let healthBadge = '';
+        let errAlert = '';
+        if (live) {
+            if (live.status === 'ok') {
+                healthBadge = `<span class="akm-health-badge ok" title="Koneksi lancar"><span class="akm-dot ok"></span>ONLINE ${live.latency}ms</span>`;
+            } else if (live.status === 'quota') {
+                healthBadge = `<span class="akm-health-badge quota" title="Batas kuota terlampaui"><span class="akm-dot quota"></span>QUOTA LIMIT (429)</span>`;
+                errAlert = `<div class="akm-card-err-alert quota"><i data-lucide="alert-circle"></i> Quota Limit HTTP 429 — Auto-rotation akan lewati key ini</div>`;
+            } else {
+                healthBadge = `<span class="akm-health-badge error" title="${escHtml(live.error||'Error')}"><span class="akm-dot error"></span>MATI / ERROR</span>`;
+                errAlert = `<div class="akm-card-err-alert error"><i data-lucide="x-circle"></i> Error: ${escHtml(live.error||'Gagal koneksi')}</div>`;
+            }
+        } else {
+            healthBadge = `<span class="akm-health-badge untested"><span class="akm-dot untested"></span>Belum Dites</span>`;
+        }
+
+        // Active Pool Key Indicator
+        const isActiveInPool = key.isCurrentlyActive;
+        const activeBadge = isActiveInPool ? `<span class="akm-active-badge"><span class="akm-pulse-dot"></span>SEDANG DIPAKAI</span>` : '';
+        const poolBadge = key.isPool ? `<span class="akm-pool-badge">Pool #${key.index + 1}</span>` : '<span class="akm-single-badge">Single</span>';
+        const usageText = key.usageCount > 0 ? `${fmtCount(key.usageCount)} req · ${timeAgo(key.lastUsedAt)}` : 'Belum dipakai';
         const addedText = key.addedAt ? timeAgo(key.addedAt) : 'Manual';
         const labelBadge = key.label ? `<span class="akm-label-badge">${escHtml(key.label)}</span>` : '';
-        const activeBadge = isActive ? `<span class="akm-active-badge"><span class="akm-pulse-dot"></span>AKTIF</span>` : '';
-        const poolBadge = key.isPool ? `<span class="akm-pool-badge">Pool #${key.index + 1}</span>` : '<span class="akm-single-badge">Single</span>';
 
-        return `<div class="akm-key-card" id="akm-card-${key.provider}-${key.index}">
+        return `<div class="akm-key-card ${isActiveInPool ? 'is-active-key' : ''}" id="akm-card-${key.provider}-${key.index}">
             <div class="akm-card-accent" style="background:${p.color}"></div>
             <div class="akm-card-body">
                 <div class="akm-card-left">
@@ -2964,12 +3036,14 @@
                             <span class="akm-provider-label" style="color:${p.color}">${p.label}</span>
                             <span class="akm-model-chip">${escHtml(key.model || '-')}</span>
                             ${poolBadge}
-                            ${labelBadge}
+                            ${healthBadge}
                             ${activeBadge}
+                            ${labelBadge}
                         </div>
                         <div class="akm-key-code-row">
                             <code class="akm-key-code" title="${escHtml(key.key)}">${escHtml(key.keyMasked)}</code>
                         </div>
+                        ${errAlert}
                         <div class="akm-card-sub-line">
                             <span><i data-lucide="clock" style="width:11px;height:11px"></i> ${addedText}</span>
                             <span class="akm-dot-sep">•</span>
@@ -3124,7 +3198,7 @@
 </script>
 
 <!-- ══════════════════════════════════════════
-     TAB — API KEY MANAGER
+     TAB — API KEY MANAGER & HEALTH MONITOR
      ══════════════════════════════════════════ -->
 <div id="tab-apikeys" class="tab-content hidden">
     <div class="akm-page">
