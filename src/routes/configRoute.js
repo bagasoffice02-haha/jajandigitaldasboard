@@ -425,7 +425,7 @@ router.get('/api-status', async (req, res) => {
 function getGeminiModel() {
     if (config.gemini_model && config.gemini_model.trim()) return config.gemini_model.trim();
     if (config.model_name && config.model_name.toLowerCase().startsWith('gemini')) return config.model_name.trim();
-    return 'gemini-2.5-flash';
+    return 'gemini-2.0-flash';
 }
 
 const PROVIDER_CONFIG_MAP = {

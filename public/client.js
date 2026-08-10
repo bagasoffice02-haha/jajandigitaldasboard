@@ -601,7 +601,7 @@ async function loadConfig() {
         }
         cfgGeminiApiKeys.value = keysList;
         
-        cfgGeminiModel.value = config.provider === 'gemini' ? (config.model_name || 'gemini-2.5-flash') : 'gemini-2.5-flash';
+        cfgGeminiModel.value = config.gemini_model || (config.model_name && config.model_name.startsWith('gemini') ? config.model_name : 'gemini-2.0-flash');
         
         cfgApiUrl.value = config.api_url || '';
         cfgModelName.value = config.provider === 'local' ? (config.model_name || 'qwen3.5-9b') : 'qwen3.5-9b';
@@ -710,9 +710,10 @@ window.saveConfigNow = async function() {
             .filter(k => k.length > 0);
             
         // Tentukan model name berdasarkan provider yang aktif
-        let activeModel = 'gemini-2.5-flash';
+        let activeModel = 'gemini-2.0-flash';
         if (provider === 'gemini') {
-            activeModel = cfgGeminiModel ? cfgGeminiModel.value.trim() : 'gemini-2.5-flash';
+            activeModel = cfgGeminiModel ? cfgGeminiModel.value.trim() : 'gemini-2.0-flash';
+
         } else if (provider === 'local') {
             activeModel = cfgModelName ? cfgModelName.value.trim() : '';
         } else if (provider === 'groq') {

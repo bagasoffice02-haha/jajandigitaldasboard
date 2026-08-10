@@ -48,7 +48,7 @@ async function getOrCreateContextCache(systemPrompt, apiKey) {
 function getGeminiModel() {
     if (config.gemini_model && config.gemini_model.trim()) return config.gemini_model.trim();
     if (config.model_name && config.model_name.toLowerCase().startsWith('gemini')) return config.model_name.trim();
-    return 'gemini-2.5-flash';
+    return 'gemini-2.0-flash';
 }
 
     const model = getGeminiModel();
@@ -94,16 +94,14 @@ function getGeminiModel() {
         console.warn(`[Gemini Cache Warning] Gagal membuat context cache (${errDetail}). Bot akan otomatis menggunakan request standar.`);
     }
 
-    return null;
-}
-
 function getGeminiModel() {
     if (config.gemini_model && config.gemini_model.trim()) return config.gemini_model.trim();
     if (config.model_name && config.model_name.toLowerCase().startsWith('gemini')) return config.model_name.trim();
-    return 'gemini-2.5-flash';
+    return 'gemini-2.0-flash';
 }
 
 // Call Gemini API using a specific key
+
 async function callGemini(systemPrompt, chatHistory, isJson = false, apiKey) {
     const model = getGeminiModel();
         
