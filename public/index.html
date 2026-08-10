@@ -15,7 +15,7 @@
 
     <!-- Fonts & Icons -->
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=13">
+    <link rel="stylesheet" href="style.css?v=14">
 
     <!-- Socket.io & QR -->
     <script src="/socket.io/socket.io.js"></script>
@@ -40,37 +40,15 @@
     ══════════════════════════════════════════ -->
     <header class="app-header">
         <div class="logo-area">
+            <button type="button" class="sidebar-toggle-trigger" onclick="window.toggleSidebar()" title="Buka / Tutup Slide Sidebar">
+                <i data-lucide="panel-left-open" id="sidebar-toggle-icon-top"></i>
+            </button>
             <span class="logo-icon"><i data-lucide="bot"></i></span>
             <div class="logo-text">
                 <h1>WA Bot CS</h1>
                 <p>Jajan Digital</p>
             </div>
         </div>
-
-        <!-- MENU NAVIGASI UTAMA ATAS (HEADER TABS) -->
-        <nav class="header-nav-tabs">
-            <button id="hdr-btn-tab-monitor" class="hdr-tab-btn active" onclick="switchTab('monitor')" title="Chats">
-                <i data-lucide="message-circle"></i> <span>Chats</span>
-            </button>
-            <button id="hdr-btn-tab-memory" class="hdr-tab-btn" onclick="switchTab('memory')" title="Memory">
-                <i data-lucide="database"></i> <span>Memory</span>
-            </button>
-            <button id="hdr-btn-tab-groups" class="hdr-tab-btn" onclick="switchTab('groups')" title="Groups">
-                <i data-lucide="users"></i> <span>Groups</span>
-            </button>
-            <button id="hdr-btn-tab-shop" class="hdr-tab-btn" onclick="switchTab('shop')" title="Toko">
-                <i data-lucide="store"></i> <span>Toko</span>
-            </button>
-            <button id="hdr-btn-tab-referral" class="hdr-tab-btn" onclick="switchTab('referral')" title="Referral">
-                <i data-lucide="gift"></i> <span>Referral</span>
-            </button>
-            <button id="hdr-btn-tab-apikeys" class="hdr-tab-btn" onclick="switchTab('apikeys')" title="API Keys">
-                <i data-lucide="key-round"></i> <span>API Keys</span>
-            </button>
-            <button id="hdr-btn-tab-settings" class="hdr-tab-btn" onclick="switchTab('settings')" title="Settings">
-                <i data-lucide="settings-2"></i> <span>Settings</span>
-            </button>
-        </nav>
 
         <div class="header-right">
             <button type="button" class="btn btn-primary btn-sm" onclick="openQuickLinksModal()" style="display: inline-flex; align-items: center; gap: 6px; font-weight: 700; border-radius: 8px; margin-right: 8px;">
@@ -2403,48 +2381,106 @@
 
 
     <!-- ══════════════════════════════════════════
-         BOTTOM TAB BAR (direct child of body — fixes position:fixed on Android)
+         UNIFIED SLIDE-OUT LEFT SIDEBAR NAVIGATION
     ══════════════════════════════════════════ -->
-    <nav class="ios-tab-bar">
-        <div class="sidebar-logo desktop-only">
-            <span class="logo-icon"><i data-lucide="bot"></i></span>
-            <div class="logo-text">
-                <h1>WA Bot CS</h1>
-                <p>Asisten Manager Pribadi</p>
+    <aside class="app-sidebar" id="app-sidebar">
+        <!-- Sidebar Branding & Slide Toggle Header -->
+        <div class="sidebar-top">
+            <div class="sidebar-logo">
+                <span class="logo-icon"><i data-lucide="bot"></i></span>
+                <div class="logo-text">
+                    <h1>WA Bot CS</h1>
+                    <p>Dashboard Center</p>
+                </div>
             </div>
+            <button type="button" class="sidebar-toggle-btn" onclick="window.toggleSidebar()" title="Buka / Tutup Slide Sidebar">
+                <i data-lucide="panel-left-close" id="sidebar-toggle-icon"></i>
+            </button>
         </div>
-        <button id="btn-tab-monitor" class="ios-tab-btn active" onclick="switchTab('monitor')" title="Chats">
-            <i data-lucide="message-circle"></i>
-            <span>Chats</span>
-        </button>
 
-        <button id="btn-tab-memory" class="ios-tab-btn" onclick="switchTab('memory')" title="Memory">
-            <i data-lucide="database"></i>
-            <span>Memory</span>
-        </button>
-        <button id="btn-tab-groups" class="ios-tab-btn" onclick="switchTab('groups')" title="Groups">
-            <i data-lucide="users"></i>
-            <span>Groups</span>
-        </button>
-        <button id="btn-tab-shop" class="ios-tab-btn" onclick="switchTab('shop')" title="Toko">
-            <i data-lucide="store"></i>
-            <span>Toko</span>
-        </button>
-        <button id="btn-tab-referral" class="ios-tab-btn" onclick="switchTab('referral')" title="Referral">
-            <i data-lucide="gift"></i>
-            <span>Referral</span>
-        </button>
+        <!-- Sidebar Navigation List -->
+        <nav class="sidebar-nav">
+            <div class="sidebar-section-title">NAVIGASI UTAMA</div>
+            <button id="btn-tab-monitor" class="sidebar-nav-btn ios-tab-btn active" onclick="switchTab('monitor')" title="Chats & Monitor Bot">
+                <i data-lucide="message-circle"></i>
+                <span>Chats</span>
+            </button>
 
-        <button id="btn-tab-settings" class="ios-tab-btn" onclick="switchTab('settings')" title="Settings">
-            <i data-lucide="settings-2"></i>
-            <span>Settings</span>
-        </button>
-    </nav>
+            <button id="btn-tab-memory" class="sidebar-nav-btn ios-tab-btn" onclick="switchTab('memory')" title="Memory & Knowledge AI">
+                <i data-lucide="database"></i>
+                <span>Memory AI</span>
+            </button>
+
+            <button id="btn-tab-groups" class="sidebar-nav-btn ios-tab-btn" onclick="switchTab('groups')" title="Kelola Grup WhatsApp">
+                <i data-lucide="users"></i>
+                <span>Grup WA</span>
+            </button>
+
+            <div class="sidebar-section-title">MANAJEMEN TOKO</div>
+            <button id="btn-tab-shop" class="sidebar-nav-btn ios-tab-btn" onclick="switchTab('shop')" title="Host & Pelanggan">
+                <i data-lucide="store"></i>
+                <span>Toko</span>
+            </button>
+
+            <button id="btn-tab-transactions" class="sidebar-nav-btn ios-tab-btn" onclick="switchTab('transactions')" title="Daftar Pesanan & Invoice">
+                <i data-lucide="receipt"></i>
+                <span>Pesanan</span>
+            </button>
+
+            <button id="btn-tab-premium" class="sidebar-nav-btn ios-tab-btn" onclick="switchTab('premium')" title="Stok & Masa Aktif Premium">
+                <i data-lucide="gem"></i>
+                <span>Premium</span>
+            </button>
+
+            <button id="btn-tab-referral" class="sidebar-nav-btn ios-tab-btn" onclick="switchTab('referral')" title="Program Referral">
+                <i data-lucide="gift"></i>
+                <span>Referral</span>
+            </button>
+
+            <div class="sidebar-section-title">SISTEM & BOT</div>
+            <button id="btn-tab-apikeys" class="sidebar-nav-btn ios-tab-btn" onclick="switchTab('apikeys')" title="API Key Manager & Monitor">
+                <i data-lucide="key-round"></i>
+                <span>API Keys</span>
+            </button>
+
+            <button id="btn-tab-settings" class="sidebar-nav-btn ios-tab-btn" onclick="switchTab('settings')" title="Pengaturan Bot">
+                <i data-lucide="settings-2"></i>
+                <span>Settings</span>
+            </button>
+        </nav>
+
+        <!-- Sidebar Footer Toggle -->
+        <div class="sidebar-footer">
+            <button type="button" class="sidebar-footer-toggle-btn" onclick="window.toggleSidebar()" title="Buka / Tutup Slide Bar">
+                <i data-lucide="panel-left-open"></i>
+                <span>Slide Sidebar</span>
+            </button>
+        </div>
+    </aside>
 
 <script src="client.js?v=5"></script>
 <script>
     // Initialize Lucide Icons
     lucide.createIcons();
+
+    // Sidebar Slide Toggle Handler
+    window.toggleSidebar = function() {
+        const isExpanded = document.body.classList.toggle('sidebar-expanded');
+        localStorage.setItem('dashboard-sidebar-expanded', isExpanded ? 'true' : 'false');
+        
+        const iconTop = document.getElementById('sidebar-toggle-icon-top');
+        const iconSide = document.getElementById('sidebar-toggle-icon');
+        if (iconTop) iconTop.setAttribute('data-lucide', isExpanded ? 'panel-left-close' : 'panel-left-open');
+        if (iconSide) iconSide.setAttribute('data-lucide', isExpanded ? 'panel-left-close' : 'panel-left-open');
+        if (window.lucide) lucide.createIcons();
+    };
+
+    // Auto-restore sidebar state on page load
+    (function() {
+        if (localStorage.getItem('dashboard-sidebar-expanded') === 'true') {
+            document.body.classList.add('sidebar-expanded');
+        }
+    })();
 
     // Theme Card UI handler
     window.changeTheme = function(theme) {

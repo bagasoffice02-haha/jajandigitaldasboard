@@ -145,18 +145,16 @@ window.switchTab = function(tabId) {
     // Hide all tab content
     document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
     // Remove active class from all tab buttons
-    document.querySelectorAll('.ios-tab-btn, .hdr-tab-btn').forEach(el => el.classList.remove('active'));
+    document.querySelectorAll('.ios-tab-btn, .hdr-tab-btn, .sidebar-nav-btn').forEach(el => el.classList.remove('active'));
     
     // Show selected tab content
     const selectedTab = document.getElementById(`tab-${tabId}`);
     if (selectedTab) selectedTab.classList.remove('hidden');
     
-    // Make corresponding tab button active (with merged tab support)
+    // Make corresponding tab button active
     let buttonId = tabId;
     if (tabId === 'features' || tabId === 'notes') {
         buttonId = 'memory';
-    } else if (tabId === 'transactions' || tabId === 'premium') {
-        buttonId = 'shop';
     }
     const selectedBtn = document.getElementById(`btn-tab-${buttonId}`);
     if (selectedBtn) selectedBtn.classList.add('active');
