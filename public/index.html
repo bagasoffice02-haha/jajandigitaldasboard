@@ -15,7 +15,7 @@
 
     <!-- Fonts & Icons -->
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=10">
+    <link rel="stylesheet" href="style.css?v=11">
 
     <!-- Socket.io & QR -->
     <script src="/socket.io/socket.io.js"></script>
@@ -2898,7 +2898,6 @@
 
     function renderStats() {
         const total = _allKeys.length;
-        // We don't have live status here — just show count per provider type
         document.getElementById('akm-stat-total').textContent = total;
         document.getElementById('akm-stat-pool').textContent  = _allKeys.filter(k => k.isPool).length;
         document.getElementById('akm-stat-single').textContent = _allKeys.filter(k => !k.isPool).length;
@@ -2912,7 +2911,7 @@
         const providers = ['all', ...new Set(_allKeys.map(k => k.provider))];
         container.innerHTML = providers.map(p => {
             const info = PROVIDERS[p] || { label: 'Semua', color: 'var(--blue)' };
-            const label = p === 'all' ? 'Semua' : info.label;
+            const label = p === 'all' ? 'Semua Provider' : info.label;
             const count = p === 'all' ? _allKeys.length : _allKeys.filter(k => k.provider === p).length;
             const active = _activeFilter === p ? 'active' : '';
             return `<button class="akm-filter-tab ${active}" onclick="window.setAkmFilter('${p}')" style="--tab-color:${p==='all'?'var(--blue)':info.color}">
@@ -2948,14 +2947,12 @@
         const p = PROVIDERS[key.provider] || { label: key.provider, abbr: key.provider.slice(0,2).toUpperCase(), color:'#888', bg:'rgba(128,128,128,0.1)', border:'rgba(128,128,128,0.2)' };
         const isActive = key.provider === _activeProvider && (key.index === 0 || key.isPool);
         const usageText = key.usageCount > 0
-            ? `${fmtCount(key.usageCount)} request · Terakhir ${timeAgo(key.lastUsedAt)}`
-            : 'Belum pernah digunakan';
-        const addedText = key.addedAt ? `Ditambahkan ${timeAgo(key.addedAt)}` : 'Ditambahkan: tidak diketahui';
-        const addedFull = key.addedAt ? formatDate(key.addedAt) : '';
+            ? `${fmtCount(key.usageCount)} req · ${timeAgo(key.lastUsedAt)}`
+            : 'Belum dipakai';
+        const addedText = key.addedAt ? timeAgo(key.addedAt) : 'Manual';
         const labelBadge = key.label ? `<span class="akm-label-badge">${escHtml(key.label)}</span>` : '';
-        const activeBadge = isActive && key.provider === _activeProvider ? `<span class="akm-active-badge"><span class="akm-pulse-dot"></span>AKTIF</span>` : '';
-        const poolBadge = key.isPool ? `<span class="akm-pool-badge">#${key.index + 1} / ${key.poolTotal}</span>` : '<span class="akm-single-badge">Single</span>';
-        const urlRow = key.url ? `<div class="akm-url-row"><i data-lucide="globe" style="width:11px;height:11px"></i>${escHtml(key.url)}</div>` : '';
+        const activeBadge = isActive ? `<span class="akm-active-badge"><span class="akm-pulse-dot"></span>AKTIF</span>` : '';
+        const poolBadge = key.isPool ? `<span class="akm-pool-badge">Pool #${key.index + 1}</span>` : '<span class="akm-single-badge">Single</span>';
 
         return `<div class="akm-key-card" id="akm-card-${key.provider}-${key.index}">
             <div class="akm-card-accent" style="background:${p.color}"></div>
@@ -2963,31 +2960,27 @@
                 <div class="akm-card-left">
                     <div class="akm-provider-avatar" style="background:${p.bg};color:${p.color};border-color:${p.border}">${p.abbr}</div>
                     <div class="akm-card-info">
-                        <div class="akm-card-name-row">
+                        <div class="akm-card-top-line">
                             <span class="akm-provider-label" style="color:${p.color}">${p.label}</span>
+                            <span class="akm-model-chip">${escHtml(key.model || '-')}</span>
                             ${poolBadge}
                             ${labelBadge}
                             ${activeBadge}
                         </div>
-                        <div class="akm-key-mask" title="${escHtml(key.key)}">${escHtml(key.keyMasked)}</div>
-                        <div class="akm-card-meta-row">
-                            <i data-lucide="cpu" style="width:11px;height:11px;opacity:.6"></i>
-                            <span>${escHtml(key.model || '-')}</span>
-                            ${urlRow}
+                        <div class="akm-key-code-row">
+                            <code class="akm-key-code" title="${escHtml(key.key)}">${escHtml(key.keyMasked)}</code>
                         </div>
-                        <div class="akm-card-meta-row" title="${addedFull}">
-                            <i data-lucide="clock" style="width:11px;height:11px;opacity:.6"></i>
-                            <span>${addedText}</span>
-                        </div>
-                        <div class="akm-card-meta-row akm-usage-row">
-                            <i data-lucide="bar-chart-2" style="width:11px;height:11px;opacity:.6"></i>
-                            <span>${usageText}</span>
+                        <div class="akm-card-sub-line">
+                            <span><i data-lucide="clock" style="width:11px;height:11px"></i> ${addedText}</span>
+                            <span class="akm-dot-sep">•</span>
+                            <span><i data-lucide="bar-chart-2" style="width:11px;height:11px"></i> ${usageText}</span>
+                            ${key.url ? `<span class="akm-dot-sep">•</span><span><i data-lucide="globe" style="width:11px;height:11px"></i> ${escHtml(key.url)}</span>` : ''}
                         </div>
                     </div>
                 </div>
                 <div class="akm-card-right">
-                    <button class="akm-action-btn akm-btn-edit" title="Edit Nama/Label" onclick="window.openEditLabel('${key.provider}', ${key.index}, '${escHtml(key.label)}')"><i data-lucide="pencil"></i></button>
-                    <button class="akm-action-btn akm-btn-delete" title="Hapus Key" onclick="window.openDeleteConfirm('${key.provider}', ${key.index}, '${escHtml(key.keyMasked)}', '${p.label}')"><i data-lucide="trash-2"></i></button>
+                    <button class="akm-action-btn akm-btn-edit" title="Edit Label" onclick="window.openEditLabel('${key.provider}', ${key.index}, '${escHtml(key.label)}')"><i data-lucide="pencil"></i> Edit</button>
+                    <button class="akm-action-btn akm-btn-delete" title="Hapus Key" onclick="window.openDeleteConfirm('${key.provider}', ${key.index}, '${escHtml(key.keyMasked)}', '${p.label}')"><i data-lucide="trash-2"></i> Hapus</button>
                 </div>
             </div>
         </div>`;
@@ -3136,50 +3129,35 @@
 <div id="tab-apikeys" class="tab-content hidden">
     <div class="akm-page">
 
-        <!-- Header Banner -->
-        <div class="akm-header">
-            <div class="akm-header-inner">
-                <div class="akm-header-left">
-                    <div class="akm-header-icon"><i data-lucide="key-round"></i></div>
-                    <div>
-                        <h1 class="akm-header-title">API Key Manager</h1>
-                        <p class="akm-header-subtitle">Kelola semua API key provider AI Anda — tambah, hapus, dan pantau penggunaan</p>
+        <!-- Streamlined Header Bar -->
+        <div class="akm-top-bar">
+            <div class="akm-top-title-group">
+                <div class="akm-header-icon"><i data-lucide="key-round"></i></div>
+                <div>
+                    <h1 class="akm-header-title">API Key Manager</h1>
+                    <div class="akm-pills-row">
+                        <span class="akm-stat-pill">Total: <strong id="akm-stat-total">0</strong></span>
+                        <span class="akm-stat-pill">Pool: <strong id="akm-stat-pool">0</strong></span>
+                        <span class="akm-stat-pill">Single: <strong id="akm-stat-single">0</strong></span>
+                        <span class="akm-stat-pill">Terpakai: <strong id="akm-stat-used">0</strong></span>
                     </div>
                 </div>
-                <button class="akm-reload-btn" onclick="window.loadApiKeys()" title="Refresh">
-                    <i data-lucide="refresh-cw"></i> Refresh
-                </button>
             </div>
-
-            <!-- Stat Cards -->
-            <div class="akm-stat-row">
-                <div class="akm-stat-card">
-                    <div class="akm-stat-icon" style="background:rgba(59,130,246,0.15);color:#60a5fa"><i data-lucide="key-round"></i></div>
-                    <div><div id="akm-stat-total" class="akm-stat-num">–</div><div class="akm-stat-label">Total Key</div></div>
-                </div>
-                <div class="akm-stat-card">
-                    <div class="akm-stat-icon" style="background:rgba(16,185,129,0.15);color:#10b981"><i data-lucide="layers"></i></div>
-                    <div><div id="akm-stat-pool" class="akm-stat-num">–</div><div class="akm-stat-label">Key Pool</div></div>
-                </div>
-                <div class="akm-stat-card">
-                    <div class="akm-stat-icon" style="background:rgba(245,158,11,0.15);color:#f59e0b"><i data-lucide="link"></i></div>
-                    <div><div id="akm-stat-single" class="akm-stat-num">–</div><div class="akm-stat-label">Single Key</div></div>
-                </div>
-                <div class="akm-stat-card">
-                    <div class="akm-stat-icon" style="background:rgba(124,58,237,0.15);color:#a78bfa"><i data-lucide="bar-chart-2"></i></div>
-                    <div><div id="akm-stat-used" class="akm-stat-num">–</div><div class="akm-stat-label">Pernah Dipakai</div></div>
-                </div>
+            <div class="akm-top-actions">
+                <button class="akm-add-btn" onclick="window.openAddKeyModal()">
+                    <i data-lucide="plus"></i> Tambah Key
+                </button>
+                <button class="akm-reload-btn" onclick="window.loadApiKeys()" title="Muat ulang">
+                    <i data-lucide="refresh-cw"></i>
+                </button>
             </div>
         </div>
 
         <!-- Filter Tabs -->
         <div class="akm-filter-row">
             <div id="akm-filter-tabs" class="akm-filter-tabs">
-                <button class="akm-filter-tab active" onclick="window.setAkmFilter('all')" style="--tab-color:var(--blue)">Semua</button>
+                <button class="akm-filter-tab active" onclick="window.setAkmFilter('all')" style="--tab-color:var(--blue)">Semua Provider</button>
             </div>
-            <button class="akm-add-btn" onclick="window.openAddKeyModal()">
-                <i data-lucide="plus"></i> Tambah API Key
-            </button>
         </div>
 
         <!-- Key List -->
