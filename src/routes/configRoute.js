@@ -156,9 +156,11 @@ router.post('/test-api', async (req, res) => {
     try {
         let result = {};
 
-        // ── GEMINI ─────────────────────────────────────────────
         if (provider === 'gemini') {
-            const modelName = model || 'gemini-2.0-flash';
+            let modelName = model;
+            if (!modelName || !modelName.toLowerCase().startsWith('gemini')) {
+                modelName = getGeminiModel();
+            }
             const testUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${key.trim()}`;
             const resp = await axios.post(testUrl, {
                 contents: [{ role: 'user', parts: [{ text: 'Hi' }] }],
@@ -359,11 +361,13 @@ router.get('/api-status', async (req, res) => {
 
     // Gemini keys
     const geminiKeys = (config.gemini_api_keys || []).filter(k => k && k.trim());
+    const gModel = getGeminiModel();
     geminiKeys.forEach((key, i) => {
-        jobs.push(testKey('gemini', key, config.model_name).then(r => results.push({
-            provider: 'gemini', index: i, keyMasked: maskKey(key), model: config.model_name || 'gemini-2.0-flash', ...r
+        jobs.push(testKey('gemini', key, gModel).then(r => results.push({
+            provider: 'gemini', index: i, keyMasked: maskKey(key), model: gModel, ...r
         })));
     });
+
 
     // Groq keys
     const groqKeys = (config.groq_api_keys || []).filter(k => k && k.trim());
@@ -418,14 +422,21 @@ router.get('/api-status', async (req, res) => {
 // API KEY MANAGER — CRUD Endpoints
 // ═══════════════════════════════════════════════════════════
 
+function getGeminiModel() {
+    if (config.gemini_model && config.gemini_model.trim()) return config.gemini_model.trim();
+    if (config.model_name && config.model_name.toLowerCase().startsWith('gemini')) return config.model_name.trim();
+    return 'gemini-2.5-flash';
+}
+
 const PROVIDER_CONFIG_MAP = {
-    gemini:     { arrayField: 'gemini_api_keys',  modelField: 'model_name',       single: false },
+    gemini:     { arrayField: 'gemini_api_keys',  modelField: 'gemini_model',      single: false },
     groq:       { arrayField: 'groq_api_keys',    modelField: 'groq_model',        single: false },
     deepseek:   { keyField:   'deepseek_api_key', modelField: 'deepseek_model',    single: true  },
     qwen:       { keyField:   'qwen_api_key',     modelField: 'qwen_model',        single: true  },
     openrouter: { keyField:   'openrouter_api_key', modelField: 'openrouter_model', single: true },
     local:      { keyField:   'api_key',          modelField: 'model_name',        single: true, urlField: 'api_url' },
 };
+
 
 function getMetaKey(provider, index) {
     return `${provider}_${index}`;
@@ -490,8 +501,9 @@ router.get('/keys', (req, res) => {
                     index: idx,
                     key: keyVal,
                     keyMasked: keyVal.length > 10 ? keyVal.slice(0, 6) + '…' + keyVal.slice(-4) : '••••••',
-                    model: config[cfg.modelField] || '',
+                    model: provider === 'gemini' ? getGeminiModel() : (config[cfg.modelField] || ''),
                     label: meta.label || '',
+
                     addedAt: meta.addedAt || null,
                     usageCount: meta.usageCount || 0,
                     lastUsedAt: meta.lastUsedAt || null,

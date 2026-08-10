@@ -45,10 +45,15 @@ async function getOrCreateContextCache(systemPrompt, apiKey) {
         }
     }
 
-    const model = config.model_name && config.model_name.startsWith('gemini') 
-        ? config.model_name 
-        : 'gemini-2.5-flash';
+function getGeminiModel() {
+    if (config.gemini_model && config.gemini_model.trim()) return config.gemini_model.trim();
+    if (config.model_name && config.model_name.toLowerCase().startsWith('gemini')) return config.model_name.trim();
+    return 'gemini-2.5-flash';
+}
+
+    const model = getGeminiModel();
     const cleanModel = model.startsWith('models/') ? model : `models/${model}`;
+
 
     const url = `https://generativelanguage.googleapis.com/v1beta/cachedContents?key=${apiKey}`;
     const payload = {
@@ -92,14 +97,18 @@ async function getOrCreateContextCache(systemPrompt, apiKey) {
     return null;
 }
 
+function getGeminiModel() {
+    if (config.gemini_model && config.gemini_model.trim()) return config.gemini_model.trim();
+    if (config.model_name && config.model_name.toLowerCase().startsWith('gemini')) return config.model_name.trim();
+    return 'gemini-2.5-flash';
+}
+
 // Call Gemini API using a specific key
 async function callGemini(systemPrompt, chatHistory, isJson = false, apiKey) {
-    const model = config.model_name && config.model_name.startsWith('gemini') 
-        ? config.model_name 
-        : 'gemini-2.5-flash';
+    const model = getGeminiModel();
         
     const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
-    
+
     const contents = chatHistory.map(msg => {
         const role = msg.role === 'assistant' || msg.role === 'model' ? 'model' : 'user';
         return {
@@ -107,45 +116,38 @@ async function callGemini(systemPrompt, chatHistory, isJson = false, apiKey) {
             parts: [{ text: msg.content }]
         };
     });
-    
-    // Cek ketersediaan/pembuatan Cache Context
-    const cacheName = await getOrCreateContextCache(systemPrompt, apiKey);
-    
-    const payload = { contents };
-    
-    if (cacheName) {
-        payload.cachedContent = cacheName;
-    } else if (systemPrompt) {
+
+    const payload = {
+        contents: contents,
+        generationConfig: {
+            temperature: 0.7,
+            maxOutputTokens: config.max_tokens || 1000
+        }
+    };
+
+    if (systemPrompt) {
         payload.systemInstruction = {
             parts: [{ text: systemPrompt }]
         };
     }
-    
-    payload.generationConfig = {
-        temperature: isJson ? 0.1 : 0.7,
-        maxOutputTokens: config.max_tokens || 1000
-    };
-    
+
     if (isJson) {
         payload.generationConfig.responseMimeType = "application/json";
     }
-    
-    try {
-        const response = await axios.post(url, payload, {
-            headers: { 'Content-Type': 'application/json' },
-            timeout: 30000
-        });
-        if (response.data && response.data.candidates && response.data.candidates[0].content) {
-            return response.data.candidates[0].content.parts[0].text.trim();
-        } else {
-            throw new Error('Respon tidak valid dari Gemini API.');
+
+    const response = await axios.post(url, payload, {
+        headers: { 'Content-Type': 'application/json' },
+        timeout: 30000
+    });
+
+    if (response.data && response.data.candidates && response.data.candidates.length > 0) {
+        const candidate = response.data.candidates[0];
+        if (candidate.content && candidate.content.parts && candidate.content.parts.length > 0) {
+            return candidate.content.parts[0].text;
         }
-    } catch (err) {
-        if (err.response) {
-            console.error('[Gemini API Error Response]:', JSON.stringify(err.response.data));
-        }
-        throw err;
     }
+
+    throw new Error('Respon tidak valid dari Gemini API');
 }
 
 function emitAiActivity(data) {
@@ -162,24 +164,25 @@ function emitAiActivity(data) {
     }
 }
 
-// Call Gemini with Key Pool Rotation
+// Call Gemini API with Key Pool Rotation & Retry
 async function callGeminiWithPool(systemPrompt, chatHistory, isJson = false) {
-    const geminiInfo = getGeminiKey();
-    if (!geminiInfo) {
-        throw new Error('Tidak ada API Key Gemini yang tersedia di dalam stok (pool).');
-    }
-    
     let keys = config.gemini_api_keys || [];
     if (keys.length === 0 && config.gemini_api_key) keys = [config.gemini_api_key];
     if (keys.length === 0 && config.api_key) keys = [config.api_key];
     keys = keys.filter(k => k && k.trim().length > 0);
-    
+
+    if (keys.length === 0) {
+        throw new Error('Tidak ada Gemini API Key yang dikonfigurasi.');
+    }
+
     let lastError = null;
-    
-    for (let i = 0; i < keys.length; i++) {
+    const attempts = keys.length;
+
+    for (let i = 0; i < attempts; i++) {
         const activeKey = getGeminiKey();
         const maskedKey = activeKey.key.substring(0, 6) + '...' + activeKey.key.substring(activeKey.key.length - 4);
         const startTime = Date.now();
+        const gModel = getGeminiModel();
         
         try {
             console.log(`[Gemini Pool] Mencoba memanggil API menggunakan Key #${activeKey.index + 1} (${maskedKey})`);
@@ -187,15 +190,16 @@ async function callGeminiWithPool(systemPrompt, chatHistory, isJson = false) {
             const latency = Date.now() - startTime;
             // Track usage
             try { require('http').request({ hostname:'localhost', port: config.port || 3000, path:'/api/keys/increment-usage', method:'POST', headers:{'Content-Type':'application/json'} }, ()=>{}).end(JSON.stringify({ provider:'gemini', index: activeKey.index })); } catch(_){}
-            emitAiActivity({ provider: 'gemini', index: activeKey.index, model: config.model_name || 'gemini-2.5-flash', latency, status: 'ok' });
+            emitAiActivity({ provider: 'gemini', index: activeKey.index, model: gModel, latency, status: 'ok' });
             return result;
         } catch (err) {
             console.warn(`[Gemini Pool] Key #${activeKey.index + 1} gagal digunakan: ${err.message}`);
             lastError = err;
-            emitAiActivity({ provider: 'gemini', index: activeKey.index, model: config.model_name || 'gemini-2.5-flash', latency: Date.now() - startTime, status: 'error', error: err.message });
+            emitAiActivity({ provider: 'gemini', index: activeKey.index, model: gModel, latency: Date.now() - startTime, status: 'error', error: err.message });
             rotateGeminiKey();
         }
     }
+
     
     throw new Error(`Seluruh API Key di stok gagal digunakan. Error terakhir: ${lastError ? lastError.message : 'Unknown'}`);
 }
