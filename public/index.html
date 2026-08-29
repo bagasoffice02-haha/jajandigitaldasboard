@@ -15,7 +15,7 @@
 
     <!-- Fonts & Icons -->
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=25">
+    <link rel="stylesheet" href="style.css?v=26">
 
     <!-- Socket.io & QR -->
     <script src="/socket.io/socket.io.js"></script>
@@ -46,18 +46,24 @@
                 <p>Jajan Digital</p>
             </div>
         </div>
-
+        <div class="header-center">
+            <div id="header-connection-indicator" class="header-status-pill disconnected">
+                <span class="header-dot"></span>
+                <span id="header-conn-label">Terputus</span>
+            </div>
+        </div>
         <div class="header-right">
-            <button type="button" class="btn btn-primary btn-sm" onclick="openQuickLinksModal()" style="display: inline-flex; align-items: center; gap: 6px; font-weight: 700; border-radius: 8px; margin-right: 8px;">
-                <i data-lucide="compass"></i> <span>Daftar Halaman Web</span>
-            </button>
-            <button type="button" class="header-action-btn" onclick="logoutAdmin()" title="Keluar / Logout" style="color: #ff453a; margin-right: 6px;">
-                <i data-lucide="log-out"></i>
+            <button type="button" class="btn btn-outline btn-sm hide-mobile" onclick="openQuickLinksModal()" title="Daftar Halaman Web">
+                <i data-lucide="compass"></i>
+                <span>Halaman Web</span>
             </button>
             <button type="button" class="header-action-btn" onclick="refreshQRCode(false)" title="Muat Ulang WhatsApp">
                 <i data-lucide="refresh-cw"></i>
             </button>
-            <span class="server-badge" id="badge-model-name">Loading…</span>
+            <button type="button" class="header-action-btn" onclick="logoutAdmin()" title="Keluar" style="color: var(--red);">
+                <i data-lucide="log-out"></i>
+            </button>
+            <span class="server-badge" id="badge-model-name" title="Model AI Aktif">—</span>
         </div>
     </header>
 
@@ -106,7 +112,21 @@
                     </div>
                 </div>
 
-
+                <!-- Quick Stats -->
+                <div class="quick-stats-row" id="monitor-quick-stats">
+                    <div class="quick-stat-card">
+                        <div class="quick-stat-value" id="stat-msg-count">—</div>
+                        <div class="quick-stat-label">Pesan</div>
+                    </div>
+                    <div class="quick-stat-card">
+                        <div class="quick-stat-value" id="stat-session-count">—</div>
+                        <div class="quick-stat-label">Sesi</div>
+                    </div>
+                    <div class="quick-stat-card">
+                        <div class="quick-stat-value" id="stat-uptime">—</div>
+                        <div class="quick-stat-label">Uptime</div>
+                    </div>
+                </div>
 
             </section>
 
@@ -2390,6 +2410,12 @@
                 <span>Settings</span>
             </button>
         </nav>
+        <div class="sidebar-bottom">
+            <button class="sidebar-nav-btn" onclick="logoutAdmin()" title="Keluar / Logout">
+                <i data-lucide="log-out"></i>
+                <span>Keluar</span>
+            </button>
+        </div>
     </aside>
 
 
@@ -2397,6 +2423,70 @@
 <script>
     // Initialize Lucide Icons
     lucide.createIcons();
+
+    // ── Header Status Pill Sync ──────────────────────────────
+    // Observer ringan yang memantau perubahan status-dot dan
+    // menyinkronkan header-connection-indicator tanpa mengubah client.js
+    (function headerStatusSync() {
+        const statusDotEl = document.getElementById('status-dot');
+        const headerPill  = document.getElementById('header-connection-indicator');
+        const headerLabel = document.getElementById('header-conn-label');
+        if (!statusDotEl || !headerPill) return;
+
+        const statusMap = {
+            connected:     { cls: 'connected',    label: 'Terhubung' },
+            disconnected:  { cls: 'disconnected',  label: 'Terputus'  },
+            initializing:  { cls: 'initializing',  label: 'Memuat...' },
+        };
+
+        function syncHeader() {
+            const dot = statusDotEl;
+            let state = 'disconnected';
+            if (dot.classList.contains('connected'))    state = 'connected';
+            if (dot.classList.contains('initializing')) state = 'initializing';
+            const s = statusMap[state];
+            headerPill.className = 'header-status-pill ' + s.cls;
+            if (headerLabel) headerLabel.textContent = s.label;
+        }
+
+        const obs = new MutationObserver(syncHeader);
+        obs.observe(statusDotEl, { attributes: true, attributeFilter: ['class'] });
+        syncHeader(); // initial sync
+    })();
+
+    // ── Quick Stats Counter (monitor message count) ──────────
+    (function initQuickStats() {
+        let msgCount = 0, sessionSet = new Set();
+        const startTime = Date.now();
+
+        function updateStats() {
+            const msgEl = document.getElementById('stat-msg-count');
+            const sesEl = document.getElementById('stat-session-count');
+            const uptEl = document.getElementById('stat-uptime');
+
+            if (msgEl) msgEl.textContent = msgCount > 999 ? (msgCount/1000).toFixed(1)+'k' : msgCount;
+            if (sesEl) sesEl.textContent = sessionSet.size || '—';
+            if (uptEl) {
+                const mins = Math.floor((Date.now() - startTime) / 60000);
+                uptEl.textContent = mins < 60 ? mins + 'm' : Math.floor(mins/60) + 'h';
+            }
+        }
+
+        // Listen to new messages added to chat container
+        const chatContainer = document.getElementById('chat-messages');
+        if (chatContainer) {
+            const chatObs = new MutationObserver(() => {
+                msgCount++;
+                updateStats();
+            });
+            chatObs.observe(chatContainer, { childList: true, subtree: true });
+        }
+
+        // Update uptime every minute
+        setInterval(updateStats, 60000);
+        updateStats();
+    })();
+
 
     // Theme Card UI handler
     window.changeTheme = function(theme) {
