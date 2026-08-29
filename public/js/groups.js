@@ -1,236 +1,265 @@
+// ==========================================
+// GROUPS & COMMUNITY MANAGER MODULE
+// ==========================================
+
+window.activeGroups = [];
+window.selectedGroupId = null;
+window.selectedGroupConfig = null;
+window.hostConfigActiveGroups = [];
+
+// Memuat daftar grup WhatsApp dari Server (WA Live + SQLite DB)
 window.loadGroupsList = async function() {
     const container = document.getElementById('groups-list-container');
     let resPending = true;
 
     if (container) {
         container.innerHTML = `
-            <div class="progress-bar-container" style="padding: 24px 16px; text-align: center; background: rgba(255,255,255,0.02); border-radius: 12px; border: 1px solid var(--border-color); margin: 10px 0;">
-                <div style="display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 12px;">
-                    <div style="display: inline-block; width: 14px; height: 14px; border: 2px solid rgba(10, 132, 255, 0.1); border-top-color: #0a84ff; border-radius: 50%; animation: spin 0.8s linear infinite;"></div>
-                    <p id="group-loading-text" style="font-size: 0.8rem; font-weight: 500; color: var(--text-color-muted); margin: 0;">Menginisialisasi pencarian grup...</p>
+            <div class="p-6 text-center bg-[#0b1120] border border-white/10 rounded-2xl">
+                <div class="flex items-center justify-center gap-3 mb-2">
+                    <div class="w-4 h-4 border-2 border-indigo-500/20 border-t-indigo-500 rounded-full animate-spin"></div>
+                    <p id="group-loading-text" class="text-xs text-slate-400 font-medium">Mengambil daftar grup WhatsApp...</p>
                 </div>
-                <div style="background: rgba(255,255,255,0.05); height: 8px; border-radius: 4px; overflow: hidden; border: 1px solid var(--border-color); position: relative;">
-                    <div id="group-loading-progress" style="width: 15%; height: 100%; background: linear-gradient(90deg, #0a84ff, #5856d6); transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 0 10px rgba(10, 132, 255, 0.4);"></div>
+                <div class="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden">
+                    <div id="group-loading-progress" class="bg-indigo-500 h-full w-[30%] transition-all duration-300"></div>
                 </div>
-                <span id="group-loading-percentage" style="display: block; font-size: 0.72rem; color: var(--text-color-muted); font-weight: 600; margin-top: 8px;">15%</span>
             </div>
         `;
-        
-        const textEl = document.getElementById('group-loading-text');
-        const progEl = document.getElementById('group-loading-progress');
-        const pctEl = document.getElementById('group-loading-percentage');
-        
-        const steps = [
-            { time: 800, pct: 40, text: "Menghubungkan ke obrolan WhatsApp..." },
-            { time: 1600, pct: 70, text: "Memilah obrolan bertipe Grup..." },
-            { time: 2500, pct: 90, text: "Menyinkronkan pengaturan database..." }
-        ];
-        
-        steps.forEach(s => {
-            setTimeout(() => {
-                if (resPending && textEl && progEl && pctEl) {
-                    textEl.innerText = s.text;
-                    progEl.style.width = `${s.pct}%`;
-                    pctEl.innerText = `${s.pct}%`;
-                }
-            }, s.time);
-        });
     }
 
     try {
         const res = await fetch('/api/groups');
         resPending = false;
         
-        const textEl = document.getElementById('group-loading-text');
-        const progEl = document.getElementById('group-loading-progress');
-        const pctEl = document.getElementById('group-loading-percentage');
+        if (!res.ok) throw new Error('Gagal mengambil daftar grup dari server');
         
-        if (textEl && progEl && pctEl) {
-            textEl.innerText = "Selesai! Memuat tampilan...";
-            progEl.style.width = '100%';
-            pctEl.innerText = '100%';
-            await new Promise(resolve => setTimeout(resolve, 300));
+        const data = await res.json();
+        window.activeGroups = Array.isArray(data) ? data : [];
+        window.hostConfigActiveGroups = window.activeGroups;
+
+        // Render card grup
+        window.renderGroupsListSidebar();
+        
+        // Update dropdown host config grup
+        window.updateHostGroupSelect();
+
+        // Jika ada grup dan belum ada yang dipilih, pilih grup pertama
+        if (window.activeGroups.length > 0 && !window.selectedGroupId) {
+            window.selectGroup(window.activeGroups[0].id);
         }
 
-        if (!res.ok) throw new Error('Gagal mengambil daftar grup');
-        
-        activeGroups = await res.json();
-        renderGroupsListSidebar();
-        
-        // Update select dropdown untuk modal salin konfig
-        updateCloneSourceDropdown();
-        updatePrivateChatSyncDropdown();
-        if (typeof updateBroadcastGroupDropdown === 'function') {
-            updateBroadcastGroupDropdown();
+        if (typeof window.updateCloneSourceDropdown === 'function') {
+            window.updateCloneSourceDropdown();
+        }
+        if (typeof window.updateBroadcastGroupDropdown === 'function') {
+            window.updateBroadcastGroupDropdown();
         }
     } catch (err) {
         resPending = false;
         console.error('Error loadGroupsList:', err);
-        const container = document.getElementById('groups-list-container');
         if (container) {
             container.innerHTML = `
-                <div style="padding: 20px 10px; text-align: center; color: #ff453a; background: rgba(255, 69, 58, 0.05); border: 1px solid rgba(255, 69, 58, 0.15); border-radius: 8px;">
-                    <i data-lucide="alert-triangle" style="width: 24px; height: 24px; color: #ff453a; margin-bottom: 8px; display: inline-block; vertical-align: middle;"></i>
-                    <p style="font-size: 0.8rem; font-weight: 600; margin: 4px 0 0 0;">Gagal Memuat Daftar Grup</p>
-                    <span style="font-size: 0.72rem; color: var(--text-color-muted); display: block; margin-top: 4px; margin-bottom: 12px;">Pastikan WhatsApp bot telah terhubung.</span>
-                    <button class="btn btn-secondary" onclick="loadGroupsList()" style="padding: 4px 10px; font-size: 0.75rem; border-radius: 6px; background: rgba(255,255,255,0.05); border: 1px solid var(--border-color); color: var(--text-primary); cursor: pointer;">Coba Lagi</button>
+                <div class="p-6 text-center bg-rose-500/10 border border-rose-500/20 rounded-2xl space-y-3">
+                    <div class="w-10 h-10 rounded-xl bg-rose-500/20 text-rose-400 flex items-center justify-center mx-auto">
+                        <i data-lucide="alert-triangle" class="w-5 h-5"></i>
+                    </div>
+                    <div>
+                        <h4 class="text-xs font-bold text-white">Gagal Memuat Daftar Grup</h4>
+                        <p class="text-[11px] text-slate-400 mt-0.5">${err.message || 'Pastikan server bot aktif.'}</p>
+                    </div>
+                    <div class="flex items-center justify-center gap-2">
+                        <button onclick="loadGroupsList()" class="px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white text-xs font-semibold">Coba Lagi</button>
+                        <button onclick="addNewGroupJidManual()" class="px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold">Tambah Manual</button>
+                    </div>
                 </div>
             `;
-            if (typeof lucide !== 'undefined') {
-                lucide.createIcons();
-            }
+            if (window.lucide) lucide.createIcons();
         }
     }
 };
 
-window.sendBroadcast = async function() {
-    let targetType = document.getElementById('broadcast-target-type').value;
-    let customNumbersVal = document.getElementById('broadcast-custom-numbers').value.trim();
-    const targetGroup = document.getElementById('broadcast-target-group').value;
-    const msgInput = document.getElementById('broadcast-msg');
-    const mediaInput = document.getElementById('broadcast-media');
-    const delayInput = document.getElementById('broadcast-delay');
-    
-    const message = msgInput.value.trim();
-    const media = mediaInput.value.trim();
-    const delay = parseInt(delayInput.value, 10) || 5;
-    
-    if (!message) {
-        alert('Tulis pesan broadcast terlebih dahulu!');
+// Render daftar grup ke dalam container kartu
+window.renderGroupsListSidebar = function() {
+    const container = document.getElementById('groups-list-container');
+    if (!container) return;
+
+    if (!window.activeGroups || window.activeGroups.length === 0) {
+        container.innerHTML = `
+            <div class="p-8 text-center bg-[#0b1120] border border-white/10 rounded-2xl space-y-3">
+                <i data-lucide="users" class="w-8 h-8 mx-auto text-slate-600"></i>
+                <p class="text-xs text-slate-400">Belum ada grup yang terdeteksi di database.</p>
+                <button onclick="addNewGroupJidManual()" class="px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold shadow-sm">
+                    Tambah ID JID Grup Manual
+                </button>
+            </div>
+        `;
+        if (window.lucide) lucide.createIcons();
         return;
     }
-    
-    if (targetType === 'group_members') {
-        if (!lastExtractedMembers || lastExtractedMembers.length === 0) {
-            alert('Silakan klik tombol "Ekstrak & Hitung Anggota" terlebih dahulu sebelum mengirim siaran!');
-            return;
-        }
-        // Ubah targetType menjadi custom_numbers dan gunakan nomor hasil ekstraksi
-        targetType = 'custom_numbers';
-        customNumbersVal = lastExtractedMembers.map(m => m.phone).join(',');
-    }
-    
-    let confirmMsg = 'Apakah Anda yakin ingin mengirim pesan siaran ini?';
-    if (targetType === 'groups') {
-        confirmMsg = 'Apakah Anda yakin ingin mengirim pesan siaran ini ke SELURUH grup WhatsApp aktif?';
-    } else if (targetType === 'custom_numbers') {
-        confirmMsg = 'Apakah Anda yakin ingin mengirim pesan siaran ini (PM) ke daftar nomor penerima?';
-    }
-    
-    if (!confirm(confirmMsg)) return;
-    
-    try {
-        const res = await fetch('/api/shop/broadcast', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
-                targetType, 
-                customNumbers: customNumbersVal, 
-                targetGroup, 
-                message, 
-                media, 
-                delay 
-            })
-        });
-        
-        if (res.ok) {
-            const result = await res.json();
-            
-            const terminal = document.getElementById('broadcast-terminal');
-            if (terminal) {
-                terminal.innerText = `[System] Mulai mengirim siaran massal ke ${result.count} tujuan...\n`;
-            }
-            
-            const container = document.getElementById('broadcast-progress-container');
-            const placeholder = document.getElementById('broadcast-progress-placeholder');
-            if (container && placeholder) {
-                container.classList.remove('hidden');
-                placeholder.classList.add('hidden');
-            }
-            
-            alert(`Siaran massal berhasil diproses! Memulai pengiriman ke ${result.count} tujuan.`);
-            msgInput.value = '';
-            mediaInput.value = '';
-            document.getElementById('broadcast-custom-numbers').value = '';
-        } else {
-            throw new Error(await res.text());
-        }
-    } catch (err) {
-        alert('Gagal mengirim siaran massal: ' + err.message);
-    }
+
+    container.innerHTML = '';
+    window.activeGroups.forEach(g => {
+        const isSelected = window.selectedGroupId === g.id;
+        const card = document.createElement('div');
+        card.className = `group-card p-4 rounded-xl border transition-all cursor-pointer ${
+            isSelected ? 'bg-indigo-600/10 border-indigo-500/50 shadow-sm' : 'bg-[#0b1120] border-white/10 hover:border-white/20'
+        }`;
+        card.onclick = () => window.selectGroup(g.id);
+
+        const cleanJid = (g.id || '').split('@')[0];
+        const isBotActive = g.enabled !== false;
+        const hasWelcome = g.config && g.config.welcomeMessage ? true : false;
+        const hasSchedule = g.config && g.config.autoCloseSchedule && g.config.autoCloseSchedule.enabled ? true : false;
+
+        card.innerHTML = `
+            <div class="flex items-start justify-between gap-3">
+                <div class="min-w-0 flex-1">
+                    <div class="flex items-center gap-2">
+                        <h4 class="font-bold text-xs text-white truncate">${g.name || g.id}</h4>
+                        ${isSelected ? '<span class="text-[10px] bg-indigo-500 text-white px-1.5 py-0.2 rounded font-bold">Dipilih</span>' : ''}
+                    </div>
+                    <p class="text-[11px] text-slate-400 font-mono mt-0.5">${cleanJid}</p>
+                </div>
+                <span class="text-[10px] font-bold px-2 py-0.5 rounded-md shrink-0 ${
+                    isBotActive ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-slate-800 text-slate-400'
+                }">
+                    ${isBotActive ? 'BOT AKTIF' : 'NONAKTIF'}
+                </span>
+            </div>
+
+            <div class="flex items-center gap-2 mt-3 pt-2 border-t border-white/5 text-[11px] text-slate-400">
+                <span class="flex items-center gap-1">
+                    <i data-lucide="message-square" class="w-3 h-3 text-slate-500"></i>
+                    ${hasWelcome ? '<span class="text-indigo-300">Welcome On</span>' : 'Welcome Off'}
+                </span>
+                <span>•</span>
+                <span class="flex items-center gap-1">
+                    <i data-lucide="clock" class="w-3 h-3 text-slate-500"></i>
+                    ${hasSchedule ? '<span class="text-amber-300">Jadwal Aktif</span>' : 'Jadwal Off'}
+                </span>
+            </div>
+        `;
+        container.appendChild(card);
+    });
+
+    if (window.lucide) lucide.createIcons();
 };
 
-window.stopBroadcast = async function() {
-    if (!confirm('Apakah Anda yakin ingin menghentikan pengiriman siaran massal yang sedang berjalan?')) return;
-    try {
-        const res = await fetch('/api/shop/broadcast/stop', { method: 'POST' });
-        if (res.ok) {
-            const result = await res.json();
-            alert(result.message || 'Siaran dihentikan.');
-        } else {
-            throw new Error(await res.text());
-        }
-    } catch (err) {
-        alert('Gagal menghentikan siaran: ' + err.message);
-    }
-};
-
-window.addNewGroupJidManual = async function() {
-    const jid = prompt('Masukkan ID JID Grup WA Baru secara manual:\n(Contoh: 12036310978236670@g.us)\n\nAnda bisa mendapatkan ID grup ini dengan mengetik ".id" di dalam grup WhatsApp Anda.');
-    if (!jid) return;
-    
-    const cleanJid = jid.trim();
-    if (!cleanJid.endsWith('@g.us')) {
-        alert('Format ID Grup salah. Harus diakhiri dengan @g.us');
-        return;
-    }
-    
-    try {
-        const checkRes = await fetch(`/api/group-config/${cleanJid}`);
-        if (!checkRes.ok) throw new Error('Gagal memeriksa konfigurasi grup.');
-        const existingConfig = await checkRes.json();
-        
-        const saveRes = await fetch(`/api/group-config/${cleanJid}`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(existingConfig)
-        });
-        
-        if (!saveRes.ok) throw new Error('Gagal menyimpan konfigurasi baru.');
-        
-        alert('Grup berhasil ditambahkan! Memuat ulang daftar...');
-        
-        // Reload main sidebar group list
-        if (window.loadGroupsList) {
-            await window.loadGroupsList();
-        }
-        
-        const groupsRes = await fetch('/api/groups');
-        if (groupsRes.ok) {
-            hostConfigActiveGroups = await groupsRes.json();
-            const groupSelect = document.getElementById('host-config-group-select');
-            if (groupSelect) {
-                groupSelect.innerHTML = '';
-                hostConfigActiveGroups.forEach(g => {
-                    const opt = document.createElement('option');
-                    opt.value = g.id;
-                    opt.textContent = g.name;
-                    groupSelect.appendChild(opt);
-                });
-                groupSelect.value = cleanJid;
-                window.onHostGroupSelectChange();
-            }
-        }
-    } catch (err) {
-        alert('Gagal menambahkan grup manual: ' + err.message);
-    }
-};
-
-window.saveHostScheduler = async function() {
+// Update dropdown pilihan grup pada konfigurasi operasional
+window.updateHostGroupSelect = function() {
     const select = document.getElementById('host-config-group-select');
     if (!select) return;
-    const gId = select.value;
-    if (!gId) return;
+
+    select.innerHTML = '<option value="">-- Pilih Grup WhatsApp --</option>';
+    window.activeGroups.forEach(g => {
+        const opt = document.createElement('option');
+        opt.value = g.id;
+        opt.textContent = `${g.name || g.id} (${g.id.split('@')[0]})`;
+        select.appendChild(opt);
+    });
+
+    if (window.selectedGroupId) {
+        select.value = window.selectedGroupId;
+    }
+
+    select.onchange = (e) => {
+        if (e.target.value) {
+            window.selectGroup(e.target.value);
+        }
+    };
+};
+
+// Memilih grup aktif untuk diedit konfigurasinya
+window.selectGroup = async function(groupId) {
+    if (!groupId) return;
+    window.selectedGroupId = groupId;
+    
+    // Update select dropdown value
+    const select = document.getElementById('host-config-group-select');
+    if (select && select.value !== groupId) {
+        select.value = groupId;
+    }
+
+    // Re-render highlight kartu
+    window.renderGroupsListSidebar();
+
+    try {
+        const res = await fetch(`/api/group-config/${groupId}`);
+        if (!res.ok) throw new Error('Gagal mengambil konfigurasi grup');
+        
+        const config = await res.json();
+        window.selectedGroupConfig = config;
+
+        // Isi form Welcome Message
+        const welcomeInput = document.getElementById('host-group-welcome-msg');
+        if (welcomeInput) {
+            welcomeInput.value = config.welcomeMessage || '';
+        }
+
+        // Isi form Schedule
+        const schedToggle = document.getElementById('host-scheduler-toggle');
+        const schedOpen = document.getElementById('host-scheduler-open');
+        const schedClose = document.getElementById('host-scheduler-close');
+
+        if (config.autoCloseSchedule) {
+            if (schedToggle) schedToggle.checked = !!config.autoCloseSchedule.enabled;
+            if (schedOpen && config.autoCloseSchedule.openTime) schedOpen.value = config.autoCloseSchedule.openTime;
+            if (schedClose && config.autoCloseSchedule.closeTime) schedClose.value = config.autoCloseSchedule.closeTime;
+        } else {
+            if (schedToggle) schedToggle.checked = false;
+        }
+
+        // Render Menu Tree jika ada di tab Shop/CRM
+        if (typeof window.renderMenuTreeVisual === 'function') {
+            window.renderMenuTreeVisual();
+        }
+    } catch (err) {
+        console.error('Error selectGroup:', err);
+    }
+};
+
+// Simpan Pesan Welcome Grup
+window.saveHostWelcomeMsg = async function() {
+    const select = document.getElementById('host-config-group-select');
+    const gId = select ? select.value : window.selectedGroupId;
+    if (!gId) {
+        alert('Pilih grup WhatsApp terlebih dahulu!');
+        return;
+    }
+
+    const msgVal = (document.getElementById('host-group-welcome-msg').value || '').trim();
+
+    try {
+        const res = await fetch('/api/host-admin/welcome-message', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ groupId: gId, welcomeMessage: msgVal })
+        });
+
+        if (res.ok) {
+            alert('Pesan sambutan selamat datang berhasil disimpan!');
+            // Update local memory
+            const grp = window.activeGroups.find(g => g.id === gId);
+            if (grp) {
+                grp.config = grp.config || {};
+                grp.config.welcomeMessage = msgVal;
+            }
+            window.renderGroupsListSidebar();
+        } else {
+            throw new Error(await res.text());
+        }
+    } catch(err) {
+        alert('Gagal menyimpan pesan welcome: ' + err.message);
+    }
+};
+
+// Simpan Jadwal Operasional Buka / Tutup Grup
+window.saveHostScheduler = async function() {
+    const select = document.getElementById('host-config-group-select');
+    const gId = select ? select.value : window.selectedGroupId;
+    if (!gId) {
+        alert('Pilih grup WhatsApp terlebih dahulu!');
+        return;
+    }
 
     const enabled = document.getElementById('host-scheduler-toggle').checked;
     const openTime = document.getElementById('host-scheduler-open').value;
@@ -244,14 +273,13 @@ window.saveHostScheduler = async function() {
         });
 
         if (res.ok) {
-            alert('Jadwal otomatis grup berhasil disimpan!');
-            // Refresh local state config
-            const group = hostConfigActiveGroups.find(g => g.id === gId);
-            if (group) {
-                const existingDays = (group.config && group.config.autoCloseSchedule && group.config.autoCloseSchedule.activeDays) || [1,2,3,4,5,6,7];
-                group.config = group.config || {};
-                group.config.autoCloseSchedule = { enabled, openTime, closeTime, activeDays: existingDays };
+            alert('Jadwal otomatis buka/tutup grup berhasil disimpan!');
+            const grp = window.activeGroups.find(g => g.id === gId);
+            if (grp) {
+                grp.config = grp.config || {};
+                grp.config.autoCloseSchedule = { enabled, openTime, closeTime };
             }
+            window.renderGroupsListSidebar();
         } else {
             throw new Error(await res.text());
         }
@@ -260,78 +288,100 @@ window.saveHostScheduler = async function() {
     }
 };
 
-window.saveHostWelcomeMsg = async function() {
-    const select = document.getElementById('host-config-group-select');
-    if (!select) return;
-    const gId = select.value;
-    if (!gId) return;
+// Tambah ID JID Grup Manual (Bila WhatsApp belum terkoneksi live)
+window.addNewGroupJidManual = async function() {
+    const jid = prompt('Masukkan ID JID Grup WhatsApp:\n(Contoh: 12036310978236670@g.us)\n\nTips: Ketik .id di dalam grup WhatsApp Anda untuk mengetahui JID ini.');
+    if (!jid) return;
 
-    const msgVal = document.getElementById('host-group-welcome-msg').value;
+    const cleanJid = jid.trim();
+    if (!cleanJid.endsWith('@g.us')) {
+        alert('Format ID Grup salah! Harus berakhiran @g.us');
+        return;
+    }
 
     try {
-        const res = await fetch('/api/host-admin/welcome-message', {
+        const checkRes = await fetch(`/api/group-config/${cleanJid}`);
+        let existingConfig = {};
+        if (checkRes.ok) {
+            existingConfig = await checkRes.json();
+        }
+
+        const saveRes = await fetch(`/api/group-config/${cleanJid}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ groupId: gId, welcomeMessage: msgVal })
+            body: JSON.stringify(existingConfig)
         });
 
+        if (!saveRes.ok) throw new Error('Gagal menyimpan ID grup ke database.');
+
+        alert('Grup berhasil didaftarkan! Memuat ulang...');
+        await window.loadGroupsList();
+        window.selectGroup(cleanJid);
+    } catch (err) {
+        alert('Gagal menambahkan grup manual: ' + err.message);
+    }
+};
+
+// Filter Pencarian Grup
+window.filterGroupsList = function() {
+    const input = document.getElementById('group-search-input');
+    if (!input) return;
+    const query = input.value.toLowerCase().trim();
+
+    const cards = document.querySelectorAll('#groups-list-container .group-card');
+    cards.forEach(card => {
+        const text = card.textContent.toLowerCase();
+        card.style.display = text.includes(query) ? 'block' : 'none';
+    });
+};
+
+// Broadcast Handler
+window.sendBroadcast = async function() {
+    const targetType = document.getElementById('broadcast-target-type') ? document.getElementById('broadcast-target-type').value : 'groups';
+    const customNumbersVal = document.getElementById('broadcast-custom-numbers') ? document.getElementById('broadcast-custom-numbers').value.trim() : '';
+    const targetGroup = document.getElementById('broadcast-target-group') ? document.getElementById('broadcast-target-group').value : '';
+    const msgInput = document.getElementById('broadcast-msg');
+    const message = msgInput ? msgInput.value.trim() : '';
+
+    if (!message) {
+        alert('Tulis pesan siaran massal terlebih dahulu!');
+        return;
+    }
+
+    if (!confirm('Apakah Anda yakin ingin mengirim pesan siaran ini?')) return;
+
+    try {
+        const res = await fetch('/api/shop/broadcast', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ targetType, customNumbers: customNumbersVal, targetGroup, message, delay: 5 })
+        });
         if (res.ok) {
-            alert('Pesan selamat datang berhasil disimpan!');
-            // Refresh local state
-            const group = hostConfigActiveGroups.find(g => g.id === gId);
-            if (group) {
-                group.config = group.config || {};
-                group.config.welcomeMessage = msgVal;
-            }
-            if (selectedGroupId === gId) {
-                if (selectedGroupConfig) {
-                    selectedGroupConfig.welcomeMessage = msgVal;
-                }
-                const mainWelcomeInput = document.getElementById('grp-welcome-message');
-                if (mainWelcomeInput) mainWelcomeInput.value = msgVal;
-            }
+            alert('Siaran massal berhasil diproses dan dikirim!');
+            if (msgInput) msgInput.value = '';
         } else {
             throw new Error(await res.text());
         }
     } catch(err) {
-        alert('Gagal menyimpan pesan selamat datang: ' + err.message);
+        alert('Gagal mengirim siaran: ' + err.message);
     }
 };
 
-window.saveHostGoodbyeMsg = async function() {
-    const select = document.getElementById('host-config-group-select');
-    if (!select) return;
-    const gId = select.value;
-    if (!gId) return;
-
-    const msgVal = document.getElementById('host-group-goodbye-msg').value;
-
+window.stopBroadcast = async function() {
     try {
-        const res = await fetch('/api/host-admin/goodbye-message', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ groupId: gId, goodbyeMessage: msgVal })
-        });
-
-        if (res.ok) {
-            alert('Pesan selamat tinggal berhasil disimpan!');
-            // Refresh local state
-            const group = hostConfigActiveGroups.find(g => g.id === gId);
-            if (group) {
-                group.config = group.config || {};
-                group.config.goodbyeMessage = msgVal;
-            }
-            if (selectedGroupId === gId) {
-                if (selectedGroupConfig) {
-                    selectedGroupConfig.goodbyeMessage = msgVal;
-                }
-                const mainGoodbyeInput = document.getElementById('grp-goodbye-message');
-                if (mainGoodbyeInput) mainGoodbyeInput.value = msgVal;
-            }
-        } else {
-            throw new Error(await res.text());
-        }
+        const res = await fetch('/api/shop/broadcast/stop', { method: 'POST' });
+        if (res.ok) alert('Pengiriman siaran dihentikan.');
     } catch(err) {
-        alert('Gagal menyimpan pesan selamat tinggal: ' + err.message);
+        alert('Gagal menghentikan siaran: ' + err.message);
     }
 };
+
+// Initialize listeners saat DOM selesai dimuat
+document.addEventListener('DOMContentLoaded', () => {
+    // Muat data grup saat awal
+    setTimeout(() => {
+        if (window.loadGroupsList) {
+            window.loadGroupsList();
+        }
+    }, 400);
+});
