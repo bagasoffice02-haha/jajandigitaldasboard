@@ -15,7 +15,7 @@
 
     <!-- Fonts & Icons -->
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=23">
+    <link rel="stylesheet" href="style.css?v=25">
 
     <!-- Socket.io & QR -->
     <script src="/socket.io/socket.io.js"></script>
@@ -118,9 +118,9 @@
                 </div>
                 
                 <!-- Search & Type Filter Bar for Chat Logs -->
-                <div style="display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; padding: 0 4px;">
-                    <input type="text" id="log-search-input" placeholder="Cari pesan / nomor..." style="flex: 1; padding: 6px 10px; font-size: 0.8rem; border-radius: 6px; border: 1px solid var(--border-color); background: rgba(255,255,255,0.03); color: var(--text-color);">
-                    <select id="log-severity-filter" style="padding: 6px 10px; font-size: 0.8rem; border-radius: 6px; border: 1px solid var(--border-color); background: rgba(255,255,255,0.05); color: var(--text-color); cursor: pointer;">
+                <div class="monitor-filter-bar">
+                    <input type="text" id="log-search-input" class="monitor-search-input" placeholder="Cari pesan / nomor...">
+                    <select id="log-severity-filter" class="monitor-filter-select">
                         <option value="ALL">Semua Tipe</option>
                         <option value="INCOMING">Pesan Masuk</option>
                         <option value="OUTGOING">Balasan Bot</option>
@@ -2299,6 +2299,31 @@
 </div>
 <!-- END .app-container -->
 
+    <!-- ══════════════════════════════════════════
+         MOBILE BOTTOM TAB BAR (≤960px)
+    ══════════════════════════════════════════ -->
+    <nav class="ios-tab-bar" id="mobile-tab-bar">
+        <button class="ios-tab-btn active" id="mob-tab-monitor" onclick="switchTab('monitor')">
+            <i data-lucide="message-circle"></i>
+            <span>Chats</span>
+        </button>
+        <button class="ios-tab-btn" id="mob-tab-memory" onclick="switchTab('memory')">
+            <i data-lucide="database"></i>
+            <span>Memory</span>
+        </button>
+        <button class="ios-tab-btn" id="mob-tab-groups" onclick="switchTab('groups')">
+            <i data-lucide="users"></i>
+            <span>Grup</span>
+        </button>
+        <button class="ios-tab-btn" id="mob-tab-apikeys" onclick="switchTab('apikeys')">
+            <i data-lucide="key-round"></i>
+            <span>API</span>
+        </button>
+        <button class="ios-tab-btn" id="mob-tab-settings" onclick="switchTab('settings')">
+            <i data-lucide="settings-2"></i>
+            <span>Settings</span>
+        </button>
+    </nav>
 
     <!-- ══════════════════════════════════════════
          UNIFIED AUTO-EXPAND HOVER SIDEBAR
