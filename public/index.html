@@ -1,9 +1,9 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>WA Bot Dashboard — Asisten Manager Pribadi</title>
+    <title>WA Bot Dashboard â€” Asisten Manager Pribadi</title>
     <meta name="description" content="Dashboard kontrol WhatsApp Bot AI Asisten Manager Pribadi. Monitor pesan, kelola memori, dan atur konfigurasi bot Anda.">
     
     <!-- Native Mobile App & PWA Meta Tags -->
@@ -35,9 +35,9 @@
 <body>
 <div class="app-container">
 
-    <!-- ══════════════════════════════════════════
+    <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
          HEADER
-    ══════════════════════════════════════════ -->
+    â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
     <header class="app-header">
         <div class="logo-area">
             <span class="logo-icon"><i data-lucide="bot"></i></span>
@@ -63,13 +63,13 @@
             <button type="button" class="header-action-btn" onclick="logoutAdmin()" title="Keluar" style="color: var(--red);">
                 <i data-lucide="log-out"></i>
             </button>
-            <span class="server-badge" id="badge-model-name" title="Model AI Aktif">—</span>
+            <span class="server-badge" id="badge-model-name" title="Model AI Aktif">â€”</span>
         </div>
     </header>
 
-    <!-- ══════════════════════════════════════════
-         TAB 1 — MONITOR
-    ══════════════════════════════════════════ -->
+    <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+         TAB 1 â€” MONITOR
+    â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
     <div id="tab-monitor" class="tab-content">
         <main class="dashboard-grid">
 
@@ -88,10 +88,10 @@
 
                     <!-- QR Code -->
                     <div id="qr-container" class="qr-container hidden">
-                        <p class="qr-instruction">Pindai QR ini lewat WhatsApp → Perangkat Tertaut</p>
+                        <p class="qr-instruction">Pindai QR ini lewat WhatsApp â†’ Perangkat Tertaut</p>
                         <div id="qr-code-placeholder" class="qr-placeholder">
                             <span class="loader"></span>
-                            <p>Memuat QR Code…</p>
+                            <p>Memuat QR Codeâ€¦</p>
                         </div>
                         <div class="qr-actions">
                             <button type="button" class="btn btn-primary btn-sm" onclick="refreshQRCode(false)">
@@ -105,7 +105,7 @@
 
                     <!-- Sesi Aktif -->
                     <div id="active-session-info" class="session-info hidden">
-                        <p class="session-success-msg">✓ Bot terhubung & siap membalas pesan</p>
+                        <p class="session-success-msg">âœ“ Bot terhubung & siap membalas pesan</p>
                         <button type="button" class="btn btn-danger btn-sm" style="margin-top:10px;" onclick="refreshQRCode(true)">
                             Tautkan Ulang / Logout
                         </button>
@@ -115,26 +115,26 @@
                 <!-- Quick Stats -->
                 <div class="quick-stats-row" id="monitor-quick-stats">
                     <div class="quick-stat-card">
-                        <div class="quick-stat-value" id="stat-msg-count">—</div>
+                        <div class="quick-stat-value" id="stat-msg-count">â€”</div>
                         <div class="quick-stat-label">Pesan</div>
                     </div>
                     <div class="quick-stat-card">
-                        <div class="quick-stat-value" id="stat-session-count">—</div>
+                        <div class="quick-stat-value" id="stat-session-count">â€”</div>
                         <div class="quick-stat-label">Sesi</div>
                     </div>
                     <div class="quick-stat-card">
-                        <div class="quick-stat-value" id="stat-uptime">—</div>
+                        <div class="quick-stat-value" id="stat-uptime">â€”</div>
                         <div class="quick-stat-label">Uptime</div>
                     </div>
                 </div>
 
             </section>
 
-            <!-- PANEL KANAN — LIVE MONITOR -->
+            <!-- PANEL KANAN â€” LIVE MONITOR -->
             <section class="panel panel-right card monitor-card">
                 <div class="monitor-header">
                     <h2><i data-lucide="message-circle"></i> Monitor Obrolan Langsung</h2>
-                    <span class="badge pulse-badge">● Live</span>
+                    <span class="badge pulse-badge">â— Live</span>
                 </div>
                 
                 <!-- Search & Type Filter Bar for Chat Logs -->
@@ -159,9 +159,9 @@
         </main>
     </div>
 
-    <!-- ══════════════════════════════════════════
-         TAB 2 — MEMORY
-    ══════════════════════════════════════════ -->
+    <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+         TAB 2 â€” MEMORY
+    â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
     <div id="tab-memory" class="tab-content hidden">
         <div class="sub-tab-nav" style="display: flex; gap: 8px; margin: 15px 20px 0 20px; background: rgba(255,255,255,0.02); padding: 4px; border-radius: 8px; border: 1px solid var(--border-color); width: fit-content;">
             <button class="btn btn-secondary combined-sub-btn active" data-tab="memory" onclick="switchTabWithSub('memory')">Aturan &amp; Dokumen</button>
@@ -176,10 +176,10 @@
                 <!-- Panduan & Aturan Bot (Memori) -->
                 <div class="card memory-card">
                     <h2><i data-lucide="scroll-text"></i> Panduan & Aturan Bot</h2>
-                    <p class="card-subtitle">Aturan & karakter bot toko yang bisa diatur oleh Host Admin — bisa diubah via chat WhatsApp dengan perintah <code>#akubosmu [aturan]</code></p>
+                    <p class="card-subtitle">Aturan & karakter bot toko yang bisa diatur oleh Host Admin â€” bisa diubah via chat WhatsApp dengan perintah <code>#akubosmu [aturan]</code></p>
 
                     <div class="form-group">
-                        <textarea id="cfg-ai-memory" rows="6" placeholder="Panduan bot masih kosong. Tulis di sini karakter, cara bicara, atau aturan bot toko Anda…"></textarea>
+                        <textarea id="cfg-ai-memory" rows="6" placeholder="Panduan bot masih kosong. Tulis di sini karakter, cara bicara, atau aturan bot toko Andaâ€¦"></textarea>
                         <small>Disimpan di <code>00_memori_otomatis.txt</code>. Host Admin bisa mengubah ini lewat WhatsApp dengan mengetik <code>#akubosmu [isi aturan]</code>.</small>
                     </div>
 
@@ -202,9 +202,9 @@
                         </label>
                         <input type="file" id="knowledge-upload" style="display:none;">
                     </div>
-                    <p class="card-subtitle">Dokumen info produk, FAQ, katalog, atau SOP toko — dijadikan konteks bot saat menjawab pelanggan (Format bebas)</p>
+                    <p class="card-subtitle">Dokumen info produk, FAQ, katalog, atau SOP toko â€” dijadikan konteks bot saat menjawab pelanggan (Format bebas)</p>
                     <div id="knowledge-list" class="file-list">
-                        <div class="file-item-placeholder">Memuat berkas…</div>
+                        <div class="file-item-placeholder">Memuat berkasâ€¦</div>
                     </div>
                 </div>
 
@@ -231,7 +231,7 @@
                     </div>
 
                     <div id="media-list" class="file-list">
-                        <div class="file-item-placeholder">Memuat berkas…</div>
+                        <div class="file-item-placeholder">Memuat berkasâ€¦</div>
                     </div>
                 </div>
             </section>
@@ -240,9 +240,9 @@
         </main>
     </div>
 
-    <!-- ══════════════════════════════════════════
-         TAB 4 — GROUPS
-    ══════════════════════════════════════════ -->
+    <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+         TAB 4 â€” GROUPS
+    â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
     <div id="tab-groups" class="tab-content hidden">
         <main class="dashboard-grid groups-grid">
             
@@ -290,7 +290,7 @@
                 <!-- TAB CONTENT 1: PENGATURAN BOT & AI (3-Card Layout) -->
                 <div id="grp-tab-content-settings" class="grp-settings-col">
                     
-                    <!-- CARD 1: ⚙/🧠 Konfigurasi Utama & AI -->
+                    <!-- CARD 1: âš™/ðŸ§  Konfigurasi Utama & AI -->
                     <div class="grp-settings-card">
                         <h4><i data-lucide="cpu" style="width:16px;height:16px;color:var(--blue);"></i> Konfigurasi Utama &amp; AI</h4>
                         
@@ -358,16 +358,16 @@
                         <div style="display: flex; gap: 10px;">
                             <div class="form-group" style="flex: 1;">
                                 <label for="grp-category-emoji" style="font-size: 0.75rem;">Emoji Kategori</label>
-                                <input type="text" id="grp-category-emoji" placeholder="📁" class="form-control" style="width: 100%; padding: 6px; border-radius: 6px; text-align: center; font-size: 0.82rem;">
+                                <input type="text" id="grp-category-emoji" placeholder="ðŸ“" class="form-control" style="width: 100%; padding: 6px; border-radius: 6px; text-align: center; font-size: 0.82rem;">
                             </div>
                             <div class="form-group" style="flex: 1;">
                                 <label for="grp-content-emoji" style="font-size: 0.75rem;">Emoji Konten</label>
-                                <input type="text" id="grp-content-emoji" placeholder="📄" class="form-control" style="width: 100%; padding: 6px; border-radius: 6px; text-align: center; font-size: 0.82rem;">
+                                <input type="text" id="grp-content-emoji" placeholder="ðŸ“„" class="form-control" style="width: 100%; padding: 6px; border-radius: 6px; text-align: center; font-size: 0.82rem;">
                             </div>
                         </div>
                     </div>
 
-                    <!-- CARD 2: 💬 Pesan & Notifikasi Otomatis -->
+                    <!-- CARD 2: ðŸ’¬ Pesan & Notifikasi Otomatis -->
                     <div class="grp-settings-card">
                         <h4><i data-lucide="message-square" style="width:16px;height:16px;color:var(--green);"></i> Pesan &amp; Notifikasi Otomatis</h4>
                         
@@ -414,13 +414,13 @@
 
                         <div class="form-group" style="margin-bottom: 12px;">
                             <label for="grp-open-text" style="font-size: 0.8rem; font-weight: 600;">Pesan Pengumuman Toko Dibuka (Group Opened Message)</label>
-                            <textarea id="grp-open-text" placeholder="Default: 🔓 *Pemberitahuan:* Toko telah dibuka kembali. Grup dibuka untuk umum!" rows="3" class="form-control" style="width: 100%; padding: 8px; border-radius: 6px; font-size: 0.82rem; resize: vertical; min-height: 80px; height: 80px;"></textarea>
+                            <textarea id="grp-open-text" placeholder="Default: ðŸ”“ *Pemberitahuan:* Toko telah dibuka kembali. Grup dibuka untuk umum!" rows="3" class="form-control" style="width: 100%; padding: 8px; border-radius: 6px; font-size: 0.82rem; resize: vertical; min-height: 80px; height: 80px;"></textarea>
                             <small style="color: var(--text-secondary); font-size: 0.72rem; display: block; margin-top: 4px;">Pesan yang dikirim saat toko dibuka kembali (manual maupun terjadwal).</small>
                         </div>
 
                         <div class="form-group" style="margin-bottom: 12px;">
                             <label for="grp-close-text" style="font-size: 0.8rem; font-weight: 600;">Pesan Pengumuman Toko Ditutup (Group Closed Message)</label>
-                            <textarea id="grp-close-text" placeholder="Default: 🔒 *Pemberitahuan:* Toko telah ditutup. Hanya Admin yang dapat mengirim pesan." rows="3" class="form-control" style="width: 100%; padding: 8px; border-radius: 6px; font-size: 0.82rem; resize: vertical; min-height: 80px; height: 80px;"></textarea>
+                            <textarea id="grp-close-text" placeholder="Default: ðŸ”’ *Pemberitahuan:* Toko telah ditutup. Hanya Admin yang dapat mengirim pesan." rows="3" class="form-control" style="width: 100%; padding: 8px; border-radius: 6px; font-size: 0.82rem; resize: vertical; min-height: 80px; height: 80px;"></textarea>
                             <small style="color: var(--text-secondary); font-size: 0.72rem; display: block; margin-top: 4px;">Pesan yang dikirim saat toko ditutup (manual maupun terjadwal).</small>
                         </div>
 
@@ -436,7 +436,7 @@
                         </div>
                     </div>
 
-                    <!-- CARD 3: ⏱️ Penjadwalan & Aksi Grup -->
+                    <!-- CARD 3: â±ï¸ Penjadwalan & Aksi Grup -->
                     <div class="grp-settings-card" style="justify-content: space-between;">
                         <div>
                             <h4><i data-lucide="clock" style="width:16px;height:16px;color:var(--orange);"></i> Penjadwalan &amp; Aksi</h4>
@@ -478,7 +478,7 @@
                             <!-- Penjadwalan Mengirim Pesan (Scheduled Message) -->
                             <div style="border: 1px solid var(--border-color); border-radius: 8px; padding: 12px; margin-bottom: 15px; background: rgba(0,0,0,0.15);">
                                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                                    <span style="font-weight: bold; font-size: 0.8rem;">⏰ Kirim Pesan Terjadwal Otomatis</span>
+                                    <span style="font-weight: bold; font-size: 0.8rem;">â° Kirim Pesan Terjadwal Otomatis</span>
                                     <button class="btn btn-secondary" type="button" onclick="window.addNewSchedMsgRow()" style="padding: 4px 10px; font-size: 0.72rem; min-height: auto; border-radius: 6px; cursor: pointer; display: inline-flex; align-items: center; gap: 4px;">
                                         <i data-lucide="plus" style="width: 12px; height: 12px;"></i> Tambah
                                     </button>
@@ -549,7 +549,7 @@
                                     </div>
 
                                     <div class="form-group" style="margin-bottom: 2px;">
-                                        <label for="node-aliases" style="font-size: 0.75rem; font-weight: 600;">Kata Kunci Alternatif (Aliases) — Pisahkan dengan koma</label>
+                                        <label for="node-aliases" style="font-size: 0.75rem; font-weight: 600;">Kata Kunci Alternatif (Aliases) â€” Pisahkan dengan koma</label>
                                         <input type="text" id="node-aliases" class="form-control" placeholder="kopi, espresso, latte" style="width: 100%; padding: 6px; font-size: 0.82rem; border-radius: 6px;">
                                     </div>
 
@@ -571,8 +571,8 @@
                                     <div class="form-group">
                                         <label for="node-type" style="font-size: 0.75rem; font-weight: 600;">Tipe Menu</label>
                                         <select id="node-type" onchange="toggleNodeFields()" style="width: 100%; padding: 6px; font-size: 0.82rem; border-radius: 6px; border: 1px solid var(--border-color); background: var(--bg-primary); color: var(--text-primary);">
-                                            <option value="category">📁 Kategori (Milik sub-menu)</option>
-                                            <option value="content">📄 Konten (Teks / Media Akhir)</option>
+                                            <option value="category">ðŸ“ Kategori (Milik sub-menu)</option>
+                                            <option value="content">ðŸ“„ Konten (Teks / Media Akhir)</option>
                                         </select>
                                     </div>
 
@@ -593,15 +593,15 @@
                                         <label for="node-status" style="font-size: 0.75rem; font-weight: 600;">Status Konten (Stok/Ketersediaan)</label>
                                         <select id="node-status" class="form-control" style="width: 100%; padding: 6px; font-size: 0.82rem; background: var(--bg-primary); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 6px;">
                                             <option value="">(Tanpa Status)</option>
-                                            <option value="Tersedia">🟢 Tersedia</option>
-                                            <option value="Habis">🔴 Habis</option>
-                                            <option value="Pre-order">🟡 Pre-order</option>
+                                            <option value="Tersedia">ðŸŸ¢ Tersedia</option>
+                                            <option value="Habis">ðŸ”´ Habis</option>
+                                            <option value="Pre-order">ðŸŸ¡ Pre-order</option>
                                         </select>
                                     </div>
 
                                     <div class="form-group" style="padding: 2px 0;">
                                         <label class="switch-container">
-                                            <span style="font-size: 0.78rem; font-weight: 600; color: #ffd60a;">🔥 Promo Spesial</span>
+                                            <span style="font-size: 0.78rem; font-weight: 600; color: #ffd60a;">ðŸ”¥ Promo Spesial</span>
                                             <input type="checkbox" id="node-promo">
                                         </label>
                                     </div>
@@ -630,9 +630,9 @@
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
                             <span style="font-size: 0.85rem; font-weight: 600; color: var(--text-secondary);">
                                 <i data-lucide="zap" style="width:13px;height:13px;display:inline-block;vertical-align:middle;"></i>
-                                Edit instan — klik langsung untuk ubah status/promo
+                                Edit instan â€” klik langsung untuk ubah status/promo
                             </span>
-                            <input type="text" id="qe-search" placeholder="🔍 Cari produk..." oninput="renderQuickEditList()" class="form-control" style="width: 180px; padding: 4px 10px; font-size: 0.8rem; height: 30px; border-radius: 6px;">
+                            <input type="text" id="qe-search" placeholder="ðŸ” Cari produk..." oninput="renderQuickEditList()" class="form-control" style="width: 180px; padding: 4px 10px; font-size: 0.8rem; height: 30px; border-radius: 6px;">
                         </div>
                         <div id="quick-edit-list" style="overflow-y: auto; flex: 1; display: flex; flex-direction: column; gap: 6px;">
                             <!-- dirender dinamis -->
@@ -669,9 +669,9 @@
         </div>
     </div>
 
-    <!-- ══════════════════════════════════════════
-         TAB 5 — TOKO
-    ══════════════════════════════════════════ -->
+    <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+         TAB 5 â€” TOKO
+    â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
     <div id="tab-shop" class="tab-content hidden">
         <div class="sub-tab-nav" style="display: flex; gap: 8px; margin: 15px 20px 0 20px; background: rgba(255,255,255,0.02); padding: 4px; border-radius: 8px; border: 1px solid var(--border-color); width: fit-content; flex-wrap: wrap;">
             <button class="btn btn-secondary combined-sub-btn active" data-tab="shop" onclick="switchTabWithSub('shop')">Host &amp; Pelanggan</button>
@@ -741,7 +741,7 @@
             <div>
                 <p style="margin: 0; font-size: 0.8rem; color: var(--text-secondary);">Nomor WhatsApp:</p>
                 <h4 id="host-config-number" style="margin: 2px 0 0 0; font-size: 1.1rem; color: var(--text-primary); font-weight: 700;"></h4>
-                <p style="margin: 4px 0 0 0; font-size: 0.75rem; color: #30d158; font-weight: 500;">🟢 Status: Tersemat (Pinned Chat) - Terverifikasi</p>
+                <p style="margin: 4px 0 0 0; font-size: 0.75rem; color: #30d158; font-weight: 500;">ðŸŸ¢ Status: Tersemat (Pinned Chat) - Terverifikasi</p>
             </div>
 
             <!-- Bagian 1: Aksi Cepat Toko / Grup -->
@@ -955,12 +955,12 @@
     </div>
 
 
-    <!-- ══════════════════════════════════════════
-         TAB 5 — PEMESANAN (ORDERS)
-    ══════════════════════════════════════════ -->
-    <!-- ══════════════════════════════════════════
-         TAB 5 & 6 — TRANSAKSI (PEMESANAN & INVOICE)
-    ══════════════════════════════════════════ -->
+    <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+         TAB 5 â€” PEMESANAN (ORDERS)
+    â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
+    <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+         TAB 5 & 6 â€” TRANSAKSI (PEMESANAN & INVOICE)
+    â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
     <div id="tab-transactions" class="tab-content hidden">
         <div class="sub-tab-nav" style="display: flex; gap: 8px; margin: 15px 20px 0 20px; background: rgba(255,255,255,0.02); padding: 4px; border-radius: 8px; border: 1px solid var(--border-color); width: fit-content; flex-wrap: wrap;">
             <button class="btn btn-secondary combined-sub-btn" data-tab="shop" onclick="switchTabWithSub('shop')">Host &amp; Pelanggan</button>
@@ -1173,9 +1173,9 @@
         </main>
     </div>
 
-    <!-- ══════════════════════════════════════════
-         TAB 6 — FITUR BOT (HELP & GUIDE)
-    ══════════════════════════════════════════ -->
+    <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+         TAB 6 â€” FITUR BOT (HELP & GUIDE)
+    â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
     <div id="tab-features" class="tab-content hidden">
         <div class="sub-tab-nav" style="display: flex; gap: 8px; margin: 15px 20px 0 20px; background: rgba(255,255,255,0.02); padding: 4px; border-radius: 8px; border: 1px solid var(--border-color); width: fit-content;">
             <button class="btn btn-secondary combined-sub-btn" data-tab="memory" onclick="switchTabWithSub('memory')">Aturan &amp; Dokumen</button>
@@ -1268,9 +1268,9 @@
         </main>
     </div>
 
-    <!-- ══════════════════════════════════════════
-         TAB 7 — CATATAN LOKAL (WORD MINI)
-    ══════════════════════════════════════════ -->
+    <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+         TAB 7 â€” CATATAN LOKAL (WORD MINI)
+    â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
     <div id="tab-notes" class="tab-content hidden">
         <div class="sub-tab-nav" style="display: flex; gap: 8px; margin: 15px 20px 0 20px; background: rgba(255,255,255,0.02); padding: 4px; border-radius: 8px; border: 1px solid var(--border-color); width: fit-content;">
             <button class="btn btn-secondary combined-sub-btn" data-tab="memory" onclick="switchTabWithSub('memory')">Aturan &amp; Dokumen</button>
@@ -1335,16 +1335,16 @@
         </main>
     </div>
 
-    <!-- ══════════════════════════════════════════
-         TAB 3 — SETTINGS
-    ══════════════════════════════════════════ -->
+    <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+         TAB 3 â€” SETTINGS
+    â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
     <div id="tab-settings" class="tab-content hidden">
         <main class="dashboard-grid settings-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
 
             <!-- KOLOM KIRI: Konfigurasi Utama & Restore Backup -->
             <div style="display: flex; flex-direction: column; gap: 20px;">
                 
-                <!-- 🧠 Konfigurasi Utama -->
+                <!-- ðŸ§  Konfigurasi Utama -->
                 <section class="panel card form-card" style="margin: 0;">
                     <h2><i data-lucide="sliders-horizontal"></i> Konfigurasi Bot</h2>
                     <p class="card-subtitle">Sesuaikan penyedia AI dan parameter asisten Anda</p>
@@ -1416,7 +1416,7 @@
                             <div class="form-group" style="margin-top: 8px;">
                                 <label for="cfg-boss-lid" style="font-size: 0.78rem; font-weight: 600;">WhatsApp LID Bos <span style="color: var(--accent-color); font-size: 0.7rem;">(Khusus WA Baru)</span></label>
                                 <input type="text" id="cfg-boss-lid" placeholder="Contoh: 32449065132068" class="form-control" style="width: 100%; padding: 6px 10px; font-size: 0.82rem; background: var(--bg-primary); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 6px; height: 32px;">
-                                <small style="color: var(--text-secondary); font-size: 0.65rem; display: block; margin-top: 2px;">🔑 Isi dengan angka LID dari log bot (misal: <code>32449065132068</code>). Lihat di PM2 logs baris "Author: xxxxx@lid".</small>
+                                <small style="color: var(--text-secondary); font-size: 0.65rem; display: block; margin-top: 2px;">ðŸ”‘ Isi dengan angka LID dari log bot (misal: <code>32449065132068</code>). Lihat di PM2 logs baris "Author: xxxxx@lid".</small>
                             </div>
                         </div>
 
@@ -1424,7 +1424,7 @@
                         <div id="global-sec-prompt" class="global-settings-section hidden" style="display: flex; flex-direction: column; gap: 10px; flex: 1;">
                             <div class="form-group" style="display: flex; flex-direction: column; flex: 1; min-height: 280px;">
                                 <label for="cfg-system-prompt" style="font-size: 0.78rem; font-weight: 600; display: block; margin-bottom: 4px;">Template Prompt Sistem (Kepribadian Asisten)</label>
-                                <textarea id="cfg-system-prompt" rows="12" placeholder="Tuliskan kepribadian dan panduan bot di sini…" class="form-control" style="width: 100%; padding: 8px; font-size: 0.82rem; resize: vertical; flex: 1; min-height: 260px; height: 320px; font-family: monospace; background: var(--bg-primary); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 6px;"></textarea>
+                                <textarea id="cfg-system-prompt" rows="12" placeholder="Tuliskan kepribadian dan panduan bot di siniâ€¦" class="form-control" style="width: 100%; padding: 8px; font-size: 0.82rem; resize: vertical; flex: 1; min-height: 260px; height: 320px; font-family: monospace; background: var(--bg-primary); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 6px;"></textarea>
                                 <small style="color: var(--text-secondary); font-size: 0.65rem; display: block; margin-top: 2px;">Wajib menyertakan <code>{KNOWLEDGE_BASE_CONTENT}</code> di bagian akhir.</small>
                             </div>
                         </div>
@@ -1436,7 +1436,7 @@
                     </form>
                 </section>
 
-                <!-- 📤 Import / Restore Backup -->
+                <!-- ðŸ“¤ Import / Restore Backup -->
                 <div class="card" style="margin: 0;">
                     <h2><i data-lucide="upload-cloud"></i> Import / Restore Backup</h2>
                     <p class="card-subtitle">Upload file backup (.zip) untuk memulihkan data ke server ini</p>
@@ -1450,7 +1450,7 @@
                              ondrop="handleImportDrop(event)">
                             <i data-lucide="file-archive" style="width:40px; height:40px; color: var(--accent-color, #25d366); margin-bottom:10px;"></i>
                             <p style="font-weight:600; margin-bottom:4px;">Klik atau seret file backup di sini</p>
-                            <p style="font-size:12px; color: var(--text-secondary, #888);">Format: .zip — Maks 500 MB</p>
+                            <p style="font-size:12px; color: var(--text-secondary, #888);">Format: .zip â€” Maks 500 MB</p>
                             <input type="file" id="import-file-input" accept=".zip" style="display:none" onchange="handleImportFileSelect(this)">
                         </div>
 
@@ -1493,7 +1493,7 @@
 
                         <!-- Warning -->
                         <div style="background: rgba(231,76,60,0.08); border-left: 3px solid #e74c3c; border-radius:8px; padding:10px 12px; font-size:12px; color: #c0392b;">
-                            ⚠️ <strong>Perhatian:</strong> File yang ada (config, database, knowledge) akan <strong>ditimpa</strong> oleh isi backup. Pastikan Bos mengupload file backup yang benar.
+                            âš ï¸ <strong>Perhatian:</strong> File yang ada (config, database, knowledge) akan <strong>ditimpa</strong> oleh isi backup. Pastikan Bos mengupload file backup yang benar.
                         </div>
                     </div>
                 </div>
@@ -1505,7 +1505,7 @@
             <!-- KOLOM KANAN: Bot Telegram, Otomatisasi, Export, Tampilan -->
             <div style="display: flex; flex-direction: column; gap: 20px;">
 
-                <!-- 🔍 Panel Status API Keys — Premium Design -->
+                <!-- ðŸ” Panel Status API Keys â€” Premium Design -->
                 <div class="card api-health-card" id="api-status-card" style="margin:0; padding:0; overflow:hidden; border:none; background:transparent;">
 
                     <!-- === HEADER BANNER === -->
@@ -1573,7 +1573,7 @@
                                 <div class="api-skel-row"><div class="api-skel-icon"></div><div class="api-skel-lines"><div class="api-skel-line w55"></div><div class="api-skel-line w35"></div></div><div class="api-skel-badge"></div></div>
                                 <div class="api-skel-row"><div class="api-skel-icon"></div><div class="api-skel-lines"><div class="api-skel-line w65"></div><div class="api-skel-line w40"></div></div><div class="api-skel-badge"></div></div>
                             </div>
-                            <p style="text-align:center;font-size:0.76rem;color:var(--text-muted);margin-top:12px;">Menghubungi semua provider AI…</p>
+                            <p style="text-align:center;font-size:0.76rem;color:var(--text-muted);margin-top:12px;">Menghubungi semua provider AIâ€¦</p>
                         </div>
 
                         <!-- Empty State -->
@@ -1676,7 +1676,7 @@
                 </div>
 
 
-                <!-- 📦 Export & Migrasi Data -->
+                <!-- ðŸ“¦ Export & Migrasi Data -->
                 <div class="card" style="margin: 0;">
                     <h2><i data-lucide="package-open"></i> Export &amp; Migrasi Data</h2>
                     <p class="card-subtitle">Download semua data bot dalam satu file ZIP untuk dipindahkan ke server lain</p>
@@ -1698,23 +1698,23 @@
                         </div>
                         
                         <details style="font-size:13px; color: var(--text-secondary, #666); margin-top: 8px;">
-                            <summary style="cursor:pointer; font-weight:600; margin-bottom:8px;">📦 Apa saja isi file backup?</summary>
+                            <summary style="cursor:pointer; font-weight:600; margin-bottom:8px;">ðŸ“¦ Apa saja isi file backup?</summary>
                             <ul style="margin: 8px 0 0 16px; line-height:2;">
-                                <li><code>config.json</code> — API keys, pengaturan bot</li>
-                                <li><code>database.sqlite</code> — Order, transaksi, memori</li>
-                                <li><code>presets.json</code> — Template pesan</li>
-                                <li><code>knowledge/</code> — File AI &amp; info toko</li>
-                                <li><code>media/</code> — Foto QRIS &amp; media lain</li>
-                                <li><code>README_RESTORE.txt</code> — Panduan restore</li>
+                                <li><code>config.json</code> â€” API keys, pengaturan bot</li>
+                                <li><code>database.sqlite</code> â€” Order, transaksi, memori</li>
+                                <li><code>presets.json</code> â€” Template pesan</li>
+                                <li><code>knowledge/</code> â€” File AI &amp; info toko</li>
+                                <li><code>media/</code> â€” Foto QRIS &amp; media lain</li>
+                                <li><code>README_RESTORE.txt</code> â€” Panduan restore</li>
                             </ul>
                         </details>
                     </div>
                 </div>
 
-                <!-- 🎨 Tampilan & Tema -->
+                <!-- ðŸŽ¨ Tampilan & Tema -->
                 <div class="card" style="margin: 0;">
                     <h2><i data-lucide="palette"></i> Tampilan &amp; Tema</h2>
-                    <p class="card-subtitle">Pilih tema yang paling nyaman untuk Anda — perubahan langsung diterapkan</p>
+                    <p class="card-subtitle">Pilih tema yang paling nyaman untuk Anda â€” perubahan langsung diterapkan</p>
 
                     <div class="theme-grid" id="theme-grid" style="margin-top: 15px;">
                         <!-- Light (default) -->
@@ -1790,9 +1790,9 @@
         </main>
     </div>
 
-    <!-- ══════════════════════════════════════════
-         TAB 8 — PREMIUM MANAGER
-    ══════════════════════════════════════════ -->
+    <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+         TAB 8 â€” PREMIUM MANAGER
+    â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
     <div id="tab-premium" class="tab-content hidden">
         <div class="sub-tab-nav" style="display: flex; gap: 8px; margin: 15px 0 15px 0; background: rgba(255,255,255,0.02); padding: 4px; border-radius: 8px; border: 1px solid var(--border-color); width: fit-content; flex-wrap: wrap;">
             <button class="btn btn-secondary combined-sub-btn" data-tab="shop" onclick="switchTabWithSub('shop')">Host &amp; Pelanggan</button>
@@ -1920,9 +1920,9 @@
             </div>
         </main>
 
-        <!-- ══════════════════════════════════════════
+        <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
              MODALS SECTION (POPUP FLOATING NOTES)
-        ══════════════════════════════════════════ -->
+        â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
 
         <!-- Modal Kelola APK -->
         <div id="modal-premium-apk" class="premium-modal hidden-modal" onclick="closePremiumModalOnOverlay(event, 'apk')">
@@ -2116,8 +2116,8 @@
                 <!-- Link 1: Upload Bukti Pembayaran -->
                 <div style="padding: 12px 14px; background: rgba(30, 41, 59, 0.7); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; display: flex; align-items: center; justify-content: space-between; gap: 10px;">
                     <div>
-                        <div style="font-weight: 700; font-size: 0.9rem; color: #10b981;">💳 Upload Bukti Pembayaran (Konsumen)</div>
-                        <div style="font-size: 0.78rem; color: #94a3b8; margin-top: 2px;"><code>/q</code> atau <code>/qris</code> — Portal upload resi transfer pembeli</div>
+                        <div style="font-weight: 700; font-size: 0.9rem; color: #10b981;">ðŸ’³ Upload Bukti Pembayaran (Konsumen)</div>
+                        <div style="font-size: 0.78rem; color: #94a3b8; margin-top: 2px;"><code>/q</code> atau <code>/qris</code> â€” Portal upload resi transfer pembeli</div>
                     </div>
                     <div style="display: flex; gap: 6px;">
                         <button class="btn btn-secondary btn-sm" onclick="copyPublicUrl('/q')">Salin</button>
@@ -2128,8 +2128,8 @@
                 <!-- Link 2: Live Referral Leaderboard -->
                 <div style="padding: 12px 14px; background: rgba(30, 41, 59, 0.7); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; display: flex; align-items: center; justify-content: space-between; gap: 10px;">
                     <div>
-                        <div style="font-weight: 700; font-size: 0.9rem; color: #38bdf8;">🏆 Papan Peringkat Live Referral</div>
-                        <div style="font-size: 0.78rem; color: #94a3b8; margin-top: 2px;"><code>/referral</code> atau <code>/leaderboard</code> — Skor &amp; poin affiliate</div>
+                        <div style="font-weight: 700; font-size: 0.9rem; color: #38bdf8;">ðŸ† Papan Peringkat Live Referral</div>
+                        <div style="font-size: 0.78rem; color: #94a3b8; margin-top: 2px;"><code>/referral</code> atau <code>/leaderboard</code> â€” Skor &amp; poin affiliate</div>
                     </div>
                     <div style="display: flex; gap: 6px;">
                         <button class="btn btn-secondary btn-sm" onclick="copyPublicUrl('/referral')">Salin</button>
@@ -2140,8 +2140,8 @@
                 <!-- Link 3: Dasbor Utama Admin -->
                 <div style="padding: 12px 14px; background: rgba(30, 41, 59, 0.7); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; display: flex; align-items: center; justify-content: space-between; gap: 10px;">
                     <div>
-                        <div style="font-weight: 700; font-size: 0.9rem; color: #f59e0b;">⚙️ Dasbor Web Utama Admin</div>
-                        <div style="font-size: 0.78rem; color: #94a3b8; margin-top: 2px;"><code>/</code> — Panel kontrol utama bot, monitor chat, &amp; settings</div>
+                        <div style="font-weight: 700; font-size: 0.9rem; color: #f59e0b;">âš™ï¸ Dasbor Web Utama Admin</div>
+                        <div style="font-size: 0.78rem; color: #94a3b8; margin-top: 2px;"><code>/</code> â€” Panel kontrol utama bot, monitor chat, &amp; settings</div>
                     </div>
                     <div style="display: flex; gap: 6px;">
                         <button class="btn btn-secondary btn-sm" onclick="copyPublicUrl('/')">Salin</button>
@@ -2152,8 +2152,8 @@
                 <!-- Link 4: File Pengetahuan AI -->
                 <div style="padding: 12px 14px; background: rgba(30, 41, 59, 0.7); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; display: flex; align-items: center; justify-content: space-between; gap: 10px;">
                     <div>
-                        <div style="font-weight: 700; font-size: 0.9rem; color: #a855f7;">📚 Direktori File Pengetahuan AI</div>
-                        <div style="font-size: 0.78rem; color: #94a3b8; margin-top: 2px;"><code>/knowledge</code> — File instruksi CS &amp; database produk</div>
+                        <div style="font-weight: 700; font-size: 0.9rem; color: #a855f7;">ðŸ“š Direktori File Pengetahuan AI</div>
+                        <div style="font-size: 0.78rem; color: #94a3b8; margin-top: 2px;"><code>/knowledge</code> â€” File instruksi CS &amp; database produk</div>
                     </div>
                     <div style="display: flex; gap: 6px;">
                         <button class="btn btn-secondary btn-sm" onclick="copyPublicUrl('/knowledge')">Salin</button>
@@ -2169,9 +2169,9 @@
     </div>
 
 
-    <!-- ══════════════════════════════════════════
-         TAB 9 — REFERRAL & AFFILIATE MANAGER
-    ══════════════════════════════════════════ -->
+    <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+         TAB 9 â€” REFERRAL & AFFILIATE MANAGER
+    â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
     <div id="tab-referral" class="tab-content hidden">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
             <h1 style="font-size: 1.4rem; font-weight: 700; margin: 0; color: var(--text-color); display: flex; align-items: center; gap: 8px;">
@@ -2319,9 +2319,9 @@
 </div>
 <!-- END .app-container -->
 
-    <!-- ══════════════════════════════════════════
-         MOBILE BOTTOM TAB BAR (≤960px)
-    ══════════════════════════════════════════ -->
+    <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+         MOBILE BOTTOM TAB BAR (â‰¤960px)
+    â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
     <nav class="ios-tab-bar" id="mobile-tab-bar">
         <button class="ios-tab-btn active" id="mob-tab-monitor" onclick="switchTab('monitor')">
             <i data-lucide="message-circle"></i>
@@ -2345,9 +2345,9 @@
         </button>
     </nav>
 
-    <!-- ══════════════════════════════════════════
+    <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
          UNIFIED AUTO-EXPAND HOVER SIDEBAR
-    ══════════════════════════════════════════ -->
+    â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
     <aside class="app-sidebar" id="app-sidebar">
         <!-- Sidebar Branding -->
         <div class="sidebar-top">
@@ -2417,949 +2417,6 @@
             </button>
         </div>
     </aside>
-
-
-<script src="client.js?v=5"></script>
-<script>
-    // Initialize Lucide Icons
-    lucide.createIcons();
-
-    // ── Header Status Pill Sync ──────────────────────────────
-    // Observer ringan yang memantau perubahan status-dot dan
-    // menyinkronkan header-connection-indicator tanpa mengubah client.js
-    (function headerStatusSync() {
-        const statusDotEl = document.getElementById('status-dot');
-        const headerPill  = document.getElementById('header-connection-indicator');
-        const headerLabel = document.getElementById('header-conn-label');
-        if (!statusDotEl || !headerPill) return;
-
-        const statusMap = {
-            connected:     { cls: 'connected',    label: 'Terhubung' },
-            disconnected:  { cls: 'disconnected',  label: 'Terputus'  },
-            initializing:  { cls: 'initializing',  label: 'Memuat...' },
-        };
-
-        function syncHeader() {
-            const dot = statusDotEl;
-            let state = 'disconnected';
-            if (dot.classList.contains('connected'))    state = 'connected';
-            if (dot.classList.contains('initializing')) state = 'initializing';
-            const s = statusMap[state];
-            headerPill.className = 'header-status-pill ' + s.cls;
-            if (headerLabel) headerLabel.textContent = s.label;
-        }
-
-        const obs = new MutationObserver(syncHeader);
-        obs.observe(statusDotEl, { attributes: true, attributeFilter: ['class'] });
-        syncHeader(); // initial sync
-    })();
-
-    // ── Quick Stats Counter (monitor message count) ──────────
-    (function initQuickStats() {
-        let msgCount = 0, sessionSet = new Set();
-        const startTime = Date.now();
-
-        function updateStats() {
-            const msgEl = document.getElementById('stat-msg-count');
-            const sesEl = document.getElementById('stat-session-count');
-            const uptEl = document.getElementById('stat-uptime');
-
-            if (msgEl) msgEl.textContent = msgCount > 999 ? (msgCount/1000).toFixed(1)+'k' : msgCount;
-            if (sesEl) sesEl.textContent = sessionSet.size || '—';
-            if (uptEl) {
-                const mins = Math.floor((Date.now() - startTime) / 60000);
-                uptEl.textContent = mins < 60 ? mins + 'm' : Math.floor(mins/60) + 'h';
-            }
-        }
-
-        // Listen to new messages added to chat container
-        const chatContainer = document.getElementById('chat-messages');
-        if (chatContainer) {
-            const chatObs = new MutationObserver(() => {
-                msgCount++;
-                updateStats();
-            });
-            chatObs.observe(chatContainer, { childList: true, subtree: true });
-        }
-
-        // Update uptime every minute
-        setInterval(updateStats, 60000);
-        updateStats();
-    })();
-
-
-    // Theme Card UI handler
-    window.changeTheme = function(theme) {
-        // Remove active class from all cards
-        document.querySelectorAll('.theme-card').forEach(c => c.classList.remove('active'));
-
-        // Add active to clicked card
-        const card = document.getElementById('tc-' + theme);
-        if (card) card.classList.add('active');
-
-        // Apply theme to HTML element
-        const allThemes = ['dark', 'minimal-dark', 'minimal-light',
-                           'ios-dark', 'ios-light']; // include legacy
-        document.documentElement.className = '';
-        if (theme !== 'light' && theme !== 'ios-dark') {
-            // Map legacy values
-            const mapped = (theme === 'ios-light') ? 'minimal-light' : theme;
-            document.documentElement.classList.add('theme-' + mapped);
-        }
-
-        // Persist
-        localStorage.setItem('dashboard-theme', theme);
-
-        // Keep hidden select in sync
-        const sel = document.getElementById('cfg-theme-selector');
-        if (sel) sel.value = theme;
-    };
-
-    window.changeThemeFromSelect = function() {
-        const sel = document.getElementById('cfg-theme-selector');
-        if (sel) changeTheme(sel.value);
-    };
-
-    // Sync active card on page load
-    (function syncThemeCard() {
-        const saved = localStorage.getItem('dashboard-theme') || 'light';
-        const card = document.getElementById('tc-' + saved);
-        document.querySelectorAll('.theme-card').forEach(c => c.classList.remove('active'));
-        if (card) card.classList.add('active');
-    })();
-
-    // Sub-tab toggling handler for full-width single card layouts
-    window.switchSubTab = function(parentTab, subTab) {
-        if (parentTab === 'transactions') {
-            const ordersPanel = document.getElementById('panel-orders-container');
-            const invoicesPanel = document.getElementById('panel-invoices-container');
-            const ordersBtn = document.getElementById('sub-tab-orders-btn');
-            const invoicesBtn = document.getElementById('sub-tab-invoices-btn');
-            
-            if (subTab === 'orders') {
-                ordersPanel.style.display = 'flex';
-                invoicesPanel.style.display = 'none';
-                ordersBtn.classList.add('active');
-                invoicesBtn.classList.remove('active');
-            } else {
-                ordersPanel.style.display = 'none';
-                invoicesPanel.style.display = 'flex';
-                ordersBtn.classList.remove('active');
-                invoicesBtn.classList.add('active');
-            }
-        } else if (parentTab === 'premium') {
-            const stockPanel = document.getElementById('panel-premium-stock-container');
-            const salesPanel = document.getElementById('panel-premium-sales-container');
-            const stockBtn = document.getElementById('sub-tab-premium-stock-btn');
-            const salesBtn = document.getElementById('sub-tab-premium-sales-btn');
-            
-            if (subTab === 'stock') {
-                stockPanel.style.display = 'flex';
-                salesPanel.style.display = 'none';
-                stockBtn.classList.add('active');
-                salesBtn.classList.remove('active');
-            } else {
-                stockPanel.style.display = 'none';
-                salesPanel.style.display = 'flex';
-                stockBtn.classList.remove('active');
-                salesBtn.classList.add('active');
-            }
-        }
-    };
-
-    window.switchTabWithSub = function(tabId, subTabId) {
-        switchTab(tabId);
-        if (subTabId) {
-            if (tabId === 'transactions') {
-                switchSubTab('transactions', subTabId);
-            } else if (tabId === 'premium') {
-                switchSubTab('premium', subTabId);
-            }
-        }
-        
-        // Sync active state of combined sub-tab buttons
-        document.querySelectorAll('.combined-sub-btn').forEach(btn => {
-            const tTab = btn.getAttribute('data-tab');
-            const tSub = btn.getAttribute('data-sub');
-            if (tTab === tabId && (!tSub || tSub === subTabId)) {
-                btn.classList.add('active');
-            } else {
-                btn.classList.remove('active');
-            }
-        });
-    };
-
-    window.switchNodeEditorTab = function(tabName) {
-        // Switch active states on tab buttons
-        document.querySelectorAll('.node-tab-btn').forEach(btn => btn.classList.remove('active'));
-        
-        const btnMap = {
-            'message': 0,
-            'media': 1,
-            'status': 2
-        };
-        const btns = document.querySelectorAll('.node-tab-btn');
-        if (btns && btns[btnMap[tabName]]) {
-            btns[btnMap[tabName]].classList.add('active');
-        }
-        
-        // Switch active states on sections
-        document.querySelectorAll('.node-editor-section').forEach(sec => sec.classList.add('hidden'));
-        document.getElementById(`node-sec-${tabName}`)?.classList.remove('hidden');
-        
-        // Re-trigger Lucide icons render just in case
-        if (window.lucide) lucide.createIcons();
-    };
-
-    window.switchGlobalSettingsTab = function(tabName) {
-        // Switch active states on tab buttons
-        document.querySelectorAll('.global-tab-btn').forEach(btn => btn.classList.remove('active'));
-        
-        const btnMap = {
-            'ai': 0,
-            'features': 1,
-            'prompt': 2
-        };
-        const btns = document.querySelectorAll('.global-tab-btn');
-        if (btns && btns[btnMap[tabName]]) {
-            btns[btnMap[tabName]].classList.add('active');
-        }
-        
-        // Switch active states on sections
-        document.querySelectorAll('.global-settings-section').forEach(sec => sec.classList.add('hidden'));
-        document.getElementById(`global-sec-${tabName}`)?.classList.remove('hidden');
-        
-        // Re-trigger Lucide icons render just in case
-        if (window.lucide) lucide.createIcons();
-    };
-
-    // ═══════════════════════════════════════════════════════
-    // API Key Status Checker — Premium Version
-    // ═══════════════════════════════════════════════════════
-    const API_PROVIDER_META = {
-        gemini:     { label: 'Google Gemini',   accent: '#4285F4', bg: 'rgba(66,133,244,0.08)',   borderOk: 'rgba(66,133,244,0.25)',   abbr: 'GM' },
-        groq:       { label: 'Groq',            accent: '#f55036', bg: 'rgba(245,80,54,0.08)',    borderOk: 'rgba(245,80,54,0.25)',    abbr: 'GQ' },
-        deepseek:   { label: 'DeepSeek',        accent: '#1e88e5', bg: 'rgba(30,136,229,0.08)',   borderOk: 'rgba(30,136,229,0.25)',   abbr: 'DS' },
-        qwen:       { label: 'Alibaba Qwen',    accent: '#FF6A00', bg: 'rgba(255,106,0,0.08)',    borderOk: 'rgba(255,106,0,0.25)',    abbr: 'QW' },
-        openrouter: { label: 'OpenRouter',      accent: '#7c3aed', bg: 'rgba(124,58,237,0.08)',   borderOk: 'rgba(124,58,237,0.25)',   abbr: 'OR' },
-        local:      { label: 'Local LM Studio', accent: '#059669', bg: 'rgba(5,150,105,0.08)',    borderOk: 'rgba(5,150,105,0.25)',    abbr: 'LM' },
-    };
-
-    function _latencyClass(ms) {
-        if (ms === undefined || ms === null) return { color: '#888', label: '—' };
-        if (ms < 800)  return { color: '#10b981', label: ms + 'ms' };
-        if (ms < 2000) return { color: '#f59e0b', label: ms + 'ms' };
-        return { color: '#ef4444', label: ms + 'ms' };
-    }
-
-    window.checkAllApiStatus = async function() {
-        const btn      = document.getElementById('btn-check-all-api');
-        const loading  = document.getElementById('api-status-loading');
-        const empty    = document.getElementById('api-status-empty');
-        const list     = document.getElementById('api-status-list');
-        const meta     = document.getElementById('api-status-meta');
-        const statsBar = document.getElementById('api-status-stats-bar');
-
-        // ── Show Loading ───────────────────────────────────────
-        if (btn) {
-            btn.disabled = true;
-            btn.innerHTML = `<span style="display:inline-block;width:13px;height:13px;border:2px solid rgba(255,255,255,0.3);border-top-color:#fff;border-radius:50%;animation:spin 0.7s linear infinite;vertical-align:middle;margin-right:5px;"></span><span>Mengecek…</span>`;
-        }
-        if (loading)  { loading.style.display  = 'block'; }
-        if (empty)    { empty.style.display    = 'none';  }
-        if (list)     { list.style.display     = 'none'; list.innerHTML = ''; }
-        if (meta)     { meta.style.display     = 'none'; }
-        if (statsBar) { statsBar.style.display = 'none'; }
-
-        try {
-            const resp = await fetch('/api/api-status');
-            const data = await resp.json();
-            if (loading) loading.style.display = 'none';
-
-            if (!data.results || data.results.length === 0) {
-                if (empty) {
-                    empty.style.display = 'block';
-                    empty.querySelector('.api-empty-icon-wrap').innerHTML = '<i data-lucide="key-round" style="width:24px;height:24px;"></i>';
-                    empty.querySelector('[style*="font-weight:700"]').textContent = 'Tidak ada API key terkonfigurasi';
-                    empty.querySelector('[style*="font-size:0.75rem"]').textContent = 'Silakan isi API key terlebih dahulu di bagian Konfigurasi Bot → Koneksi AI.';
-                }
-                if (window.lucide) lucide.createIcons();
-                return;
-            }
-
-            // ── Count Stats ───────────────────────────────────
-            const total = data.results.length;
-            const nOk    = data.results.filter(r => r.status === 'ok').length;
-            const nQuota = data.results.filter(r => r.status === 'quota').length;
-            const nErr   = data.results.filter(r => r.status === 'error').length;
-            const pct    = total > 0 ? Math.round((nOk / total) * 100) : 0;
-
-            // ── Update Stat Chips ─────────────────────────────
-            const setEl = (id, val) => { const el = document.getElementById(id); if(el) el.textContent = val; };
-            const showEl = (id, show) => { const el = document.getElementById(id); if(el) el.style.display = show ? 'flex' : 'none'; };
-            setEl('stat-ok-count',    nOk);
-            setEl('stat-quota-count', nQuota);
-            setEl('stat-error-count', nErr);
-            setEl('stat-total-count', total);
-            showEl('stat-ok',    true);
-            showEl('stat-quota', nQuota > 0);
-            showEl('stat-error', nErr > 0);
-
-            // ── Progress Bar ──────────────────────────────────
-            const progressBar = document.getElementById('api-health-progress-bar');
-            const pctEl = document.getElementById('api-health-pct');
-            if (progressBar) {
-                const barColor = pct === 100 ? 'linear-gradient(90deg,#10b981,#34d399)' :
-                                 pct >= 50   ? 'linear-gradient(90deg,#f59e0b,#fbbf24)' :
-                                              'linear-gradient(90deg,#ef4444,#f87171)';
-                progressBar.style.background = barColor;
-                setTimeout(() => { progressBar.style.width = pct + '%'; }, 100);
-            }
-            if (pctEl) pctEl.textContent = pct + '%';
-
-            // Show stats bar
-            if (statsBar) statsBar.style.display = 'block';
-
-            // ── Meta Timestamp ────────────────────────────────
-            if (meta) {
-                meta.style.display = 'flex';
-                const checkedEl = document.getElementById('api-status-checked-at');
-                if (checkedEl) checkedEl.textContent = 'Terakhir dicek: ' + new Date(data.checkedAt).toLocaleString('id-ID', { hour:'2-digit', minute:'2-digit', second:'2-digit', day:'2-digit', month:'short' });
-            }
-
-            // ── Render Rows with Stagger Animation ────────────
-            data.results.forEach((item, idx) => {
-                const p = API_PROVIDER_META[item.provider] || { label: item.provider, accent: '#888', bg: 'rgba(136,136,136,0.08)', borderOk: 'rgba(136,136,136,0.2)', abbr: '??' };
-                const isActive = data.activeProvider === item.provider;
-
-                // Status config
-                const STATUS_CFG = {
-                    ok:    { dotClass: 'pulse-dot-ok',    badgeClass: 'api-badge-ok',    label: 'AKTIF',  borderColor: p.borderOk },
-                    quota: { dotClass: 'pulse-dot-quota', badgeClass: 'api-badge-quota', label: 'QUOTA',  borderColor: 'rgba(245,158,11,0.3)' },
-                    error: { dotClass: 'pulse-dot-error', badgeClass: 'api-badge-error', label: 'ERROR',  borderColor: 'rgba(239,68,68,0.3)' },
-                };
-                const sc = STATUS_CFG[item.status] || STATUS_CFG.error;
-
-                const lat = _latencyClass(item.latency);
-                const isPool = item.provider === 'gemini' || item.provider === 'groq';
-
-                const activePill = isActive
-                    ? `<span class="api-active-pill">● Provider Aktif</span>`
-                    : '';
-
-                const indexPill = isPool
-                    ? `<span class="api-index-pill">Key #${item.index + 1}</span>`
-                    : '';
-
-                const latencyHtml = item.latency !== undefined
-                    ? `<span class="api-latency-chip" style="color:${lat.color};border-color:${lat.color}33;">${lat.label}</span>`
-                    : '';
-
-                const errorBlock = (item.status !== 'ok' && item.error)
-                    ? `<div class="api-error-block ${item.status === 'quota' ? 'quota' : 'error'}">
-                          <i data-lucide="${item.status === 'quota' ? 'alert-triangle' : 'x-circle'}" style="width:12px;height:12px;flex-shrink:0;"></i>
-                          <span>${item.error}${item.errorCode ? ` <em>(${item.errorCode})</em>` : ''}</span>
-                       </div>`
-                    : '';
-
-                const urlBlock = item.url
-                    ? `<div class="api-url-block"><i data-lucide="link-2" style="width:10px;height:10px;"></i> ${item.url}</div>`
-                    : '';
-
-                const row = document.createElement('div');
-                row.className = 'api-key-row';
-                row.style.cssText = `opacity:0;transform:translateY(8px);transition:opacity 0.25s ease ${idx * 55}ms,transform 0.25s ease ${idx * 55}ms;border-color:${sc.borderColor};background:${item.status === 'ok' ? p.bg : item.status === 'quota' ? 'rgba(245,158,11,0.05)' : 'rgba(239,68,68,0.05)'};`;
-                row.innerHTML = `
-                    <!-- Color accent bar -->
-                    <div class="api-row-accent" style="background:${p.accent};"></div>
-
-                    <!-- Main content -->
-                    <div class="api-row-body">
-                        <!-- Left: Icon + Info -->
-                        <div class="api-row-left">
-                            <div class="api-provider-avatar" style="background:${p.accent}1a;color:${p.accent};border-color:${p.accent}33;">
-                                ${p.abbr}
-                            </div>
-                            <div class="api-row-info">
-                                <div class="api-row-name-line">
-                                    <span class="api-provider-name" style="color:${p.accent};">${p.label}</span>
-                                    ${indexPill}
-                                    ${activePill}
-                                </div>
-                                <div class="api-row-key-mask">${item.keyMasked}</div>
-                                <div class="api-row-model">
-                                    <i data-lucide="cpu" style="width:10px;height:10px;opacity:0.5;"></i>
-                                    ${item.model || '—'}
-                                </div>
-                                ${urlBlock}
-                            </div>
-                        </div>
-
-                        <!-- Right: Status + Latency -->
-                        <div class="api-row-right">
-                            ${latencyHtml}
-                            <div class="api-status-badge-wrap">
-                                <span class="${sc.dotClass}"></span>
-                                <span class="api-status-badge ${sc.badgeClass}">${sc.label}</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    ${errorBlock}
-                `;
-                list.appendChild(row);
-
-                // Trigger stagger animation
-                requestAnimationFrame(() => {
-                    setTimeout(() => {
-                        row.style.opacity = '1';
-                        row.style.transform = 'translateY(0)';
-                    }, idx * 55 + 20);
-                });
-            });
-
-            if (list) list.style.display = 'flex';
-            if (window.lucide) lucide.createIcons();
-
-        } catch (e) {
-            if (loading) loading.style.display = 'none';
-            if (empty) {
-                empty.style.display = 'block';
-                empty.innerHTML = `
-                    <div class="api-empty-state">
-                        <div class="api-empty-icon-wrap" style="background:var(--red-soft);color:var(--red);">
-                            <i data-lucide="wifi-off" style="width:24px;height:24px;"></i>
-                        </div>
-                        <div style="font-weight:700;font-size:0.88rem;margin-bottom:4px;color:var(--red);">Koneksi ke server gagal</div>
-                        <div style="font-size:0.75rem;color:var(--text-muted);">${e.message}</div>
-                    </div>`;
-                if (window.lucide) lucide.createIcons();
-            }
-        } finally {
-            if (btn) {
-                btn.disabled = false;
-                btn.innerHTML = `<i data-lucide="refresh-cw" style="width:13px;height:13px;"></i><span>Cek Semua</span>`;
-                if (window.lucide) lucide.createIcons();
-            }
-        }
-    };
-
-    // Auto-run API check when settings tab is opened
-    const _origSwitchTab = window.switchTab;
-    window.switchTab = function(tabName) {
-        if (_origSwitchTab) _origSwitchTab(tabName);
-        if (tabName === 'settings') {
-            setTimeout(() => {
-                const list = document.getElementById('api-status-list');
-                if (!list || list.innerHTML === '') window.checkAllApiStatus();
-            }, 400);
-        }
-        if (tabName === 'apikeys') {
-            setTimeout(() => window.loadApiKeys(), 200);
-        }
-    };
-
-    /* ═══════════════════════════════════════════════
-       API KEY MANAGER & LIVE HEALTH MONITOR — JS
-    ═══════════════════════════════════════════════ */
-    (function() {
-
-    // Provider metadata
-    const PROVIDERS = {
-        gemini:     { label: 'Google Gemini', abbr: 'GM', color: '#4285f4', bg: 'rgba(66,133,244,0.12)', border: 'rgba(66,133,244,0.3)',  defaultModel: 'gemini-2.0-flash',              pool: true },
-        groq:       { label: 'Groq',          abbr: 'GQ', color: '#f55036', bg: 'rgba(245,80,54,0.12)',  border: 'rgba(245,80,54,0.3)',   defaultModel: 'llama-3.3-70b-versatile',       pool: true },
-        deepseek:   { label: 'DeepSeek',      abbr: 'DS', color: '#2563eb', bg: 'rgba(37,99,235,0.12)',  border: 'rgba(37,99,235,0.3)',   defaultModel: 'deepseek-chat',                 pool: false },
-        qwen:       { label: 'Qwen / Alibaba',abbr: 'QW', color: '#f97316', bg: 'rgba(249,115,22,0.12)', border: 'rgba(249,115,22,0.3)',  defaultModel: 'qwen-plus',                     pool: false },
-        openrouter: { label: 'OpenRouter',    abbr: 'OR', color: '#7c3aed', bg: 'rgba(124,58,237,0.12)', border: 'rgba(124,58,237,0.3)',  defaultModel: 'meta-llama/llama-3.3-70b-instruct', pool: false },
-        local:      { label: 'LM Studio',     abbr: 'LM', color: '#10b981', bg: 'rgba(16,185,129,0.12)', border: 'rgba(16,185,129,0.3)',  defaultModel: 'local-model',                   pool: false },
-    };
-
-    let _allKeys = [];
-    let _activeFilter = 'all';
-    let _activeProvider = 'gemini';
-    let _deleteTarget = null;
-    let _liveStatuses = {}; // key: `${provider}_${index}` -> { status, latency, error, errorCode, model }
-    let _isTestingLive = false;
-
-    // ── Time ago helper ──────────────────────────────
-    function timeAgo(iso) {
-        if (!iso) return 'Belum pernah';
-        const diff = Date.now() - new Date(iso).getTime();
-        const s = Math.floor(diff / 1000);
-        if (s < 60)   return 'Baru saja';
-        const m = Math.floor(s / 60);
-        if (m < 60)   return m + ' menit lalu';
-        const h = Math.floor(m / 60);
-        if (h < 24)   return h + ' jam lalu';
-        const d = Math.floor(h / 24);
-        if (d < 30)   return d + ' hari lalu';
-        const mo = Math.floor(d / 30);
-        return mo + ' bulan lalu';
-    }
-
-    function formatDate(iso) {
-        if (!iso) return '';
-        return new Date(iso).toLocaleString('id-ID', { day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' });
-    }
-
-    function fmtCount(n) {
-        if (!n) return '0';
-        if (n >= 1000000) return (n/1000000).toFixed(1) + 'jt';
-        if (n >= 1000) return (n/1000).toFixed(1) + 'rb';
-        return String(n);
-    }
-
-    // ── Load all keys from backend ───────────────────
-    window.loadApiKeys = async function() {
-        const list = document.getElementById('akm-key-list');
-        if (!list) return;
-        list.innerHTML = renderSkeleton();
-        try {
-            const r = await fetch('/api/keys');
-            const data = await r.json();
-            _allKeys = data.keys || [];
-            _activeProvider = data.activeProvider || 'gemini';
-            renderStats();
-            renderFilterTabs();
-            renderKeyList();
-            // Automatically run live health test in background
-            window.runLiveHealthCheck(true);
-        } catch(e) {
-            list.innerHTML = `<div class="akm-empty"><i data-lucide="wifi-off" style="width:36px;height:36px;opacity:.4"></i><p>Gagal memuat data: ${e.message}</p></div>`;
-            if (window.lucide) lucide.createIcons();
-        }
-    };
-
-    // ── Live Health Check ────────────────────────────
-    window.runLiveHealthCheck = async function(silent = false) {
-        if (_isTestingLive) return;
-        _isTestingLive = true;
-        const btn = document.getElementById('akm-btn-check-live');
-        if (btn) {
-            btn.disabled = true;
-            btn.innerHTML = `<i data-lucide="loader" class="spin"></i> <span>Menguji Koneksi…</span>`;
-            if (window.lucide) lucide.createIcons();
-        }
-
-        try {
-            const r = await fetch('/api/api-status');
-            const data = await r.json();
-            if (data.results) {
-                data.results.forEach(res => {
-                    const keyId = `${res.provider}_${res.index}`;
-                    _liveStatuses[keyId] = res;
-                });
-            }
-            renderStats();
-            renderKeyList();
-        } catch(e) {
-            console.error('[AKM Live Check] Error:', e);
-            if (!silent) window.showToast && window.showToast('Gagal menguji koneksi API: ' + e.message, 'error');
-        } finally {
-            _isTestingLive = false;
-            if (btn) {
-                btn.disabled = false;
-                btn.innerHTML = `<i data-lucide="zap"></i> <span>Scan Semua API</span>`;
-                if (window.lucide) lucide.createIcons();
-            }
-            if (!silent && Object.keys(_liveStatuses).length > 0) {
-                const okCount = Object.values(_liveStatuses).filter(v => v.status === 'ok').length;
-                const errCount = Object.values(_liveStatuses).filter(v => v.status !== 'ok').length;
-                window.showToast && window.showToast(`Diagnosa Selesai: ${okCount} Online, ${errCount} Error/Quota`, okCount > 0 ? 'success' : 'warning');
-            }
-        }
-    };
-
-    function renderSkeleton() {
-        return Array(3).fill(0).map((_,i) => `
-        <div class="akm-skel-row" style="animation-delay:${i*0.12}s">
-            <div class="akm-skel-avatar"></div>
-            <div class="akm-skel-lines">
-                <div class="akm-skel-line w60"></div>
-                <div class="akm-skel-line w45"></div>
-            </div>
-            <div class="akm-skel-badge"></div>
-        </div>`).join('');
-    }
-
-    function renderStats() {
-        const total = _allKeys.length;
-        const liveVals = Object.values(_liveStatuses);
-        const okCount = liveVals.filter(v => v.status === 'ok').length;
-        const quotaCount = liveVals.filter(v => v.status === 'quota').length;
-        const errCount = liveVals.filter(v => v.status === 'error').length;
-
-        const setEl = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
-        setEl('akm-stat-total', total);
-        setEl('akm-stat-pool', _allKeys.filter(k => k.isPool).length);
-        setEl('akm-stat-single', _allKeys.filter(k => !k.isPool).length);
-        setEl('akm-stat-used', _allKeys.filter(k => k.usageCount > 0).length);
-        setEl('akm-stat-active-provider', (_activeProvider || 'gemini').toUpperCase());
-
-
-        const statusPill = document.getElementById('akm-stat-live-status');
-        if (statusPill) {
-            if (liveVals.length === 0) {
-                statusPill.innerHTML = `Live: <strong>Belum dites</strong>`;
-            } else {
-                statusPill.innerHTML = `Live: <strong style="color:#10b981">${okCount} OK</strong>` +
-                    (quotaCount > 0 ? ` · <strong style="color:#f59e0b">${quotaCount} Quota</strong>` : '') +
-                    (errCount > 0 ? ` · <strong style="color:#ef4444">${errCount} Err</strong>` : '');
-            }
-        }
-    }
-
-    function renderFilterTabs() {
-        const container = document.getElementById('akm-filter-tabs');
-        if (!container) return;
-        const providers = ['all', ...new Set(_allKeys.map(k => k.provider))];
-        container.innerHTML = providers.map(p => {
-            const info = PROVIDERS[p] || { label: 'Semua', color: 'var(--blue)' };
-            const label = p === 'all' ? 'Semua Provider' : info.label;
-            const count = p === 'all' ? _allKeys.length : _allKeys.filter(k => k.provider === p).length;
-            const active = _activeFilter === p ? 'active' : '';
-            return `<button class="akm-filter-tab ${active}" onclick="window.setAkmFilter('${p}')" style="--tab-color:${p==='all'?'var(--blue)':info.color}">
-                ${label} <span class="akm-filter-count">${count}</span>
-            </button>`;
-        }).join('');
-    }
-
-    window.setAkmFilter = function(provider) {
-        _activeFilter = provider;
-        renderFilterTabs();
-        renderKeyList();
-    };
-
-    function renderKeyList() {
-        const list = document.getElementById('akm-key-list');
-        if (!list) return;
-        const filtered = _activeFilter === 'all' ? _allKeys : _allKeys.filter(k => k.provider === _activeFilter);
-        if (filtered.length === 0) {
-            list.innerHTML = `<div class="akm-empty">
-                <div class="akm-empty-icon"><i data-lucide="key-round"></i></div>
-                <p style="font-weight:700;margin:0">Belum ada API key</p>
-                <p style="font-size:.8rem;opacity:.6;margin:0">Klik "+ Tambah Key" untuk menambahkan key baru</p>
-            </div>`;
-            if (window.lucide) lucide.createIcons();
-            return;
-        }
-        list.innerHTML = filtered.map((key, idx) => renderKeyCard(key, idx)).join('');
-        if (window.lucide) lucide.createIcons();
-    }
-
-    function renderKeyCard(key, idx) {
-        const p = PROVIDERS[key.provider] || { label: key.provider, abbr: key.provider.slice(0,2).toUpperCase(), color:'#888', bg:'rgba(128,128,128,0.1)', border:'rgba(128,128,128,0.2)' };
-        const keyId = `${key.provider}_${key.index}`;
-        const live = _liveStatuses[keyId];
-
-        // Health Status Badge
-        let healthBadge = '';
-        let errAlert = '';
-        if (live) {
-            if (live.status === 'ok') {
-                healthBadge = `<span class="akm-health-badge ok" title="Koneksi lancar"><span class="akm-dot ok"></span>ONLINE ${live.latency}ms</span>`;
-            } else if (live.status === 'quota') {
-                healthBadge = `<span class="akm-health-badge quota" title="Batas kuota terlampaui"><span class="akm-dot quota"></span>QUOTA LIMIT (429)</span>`;
-                errAlert = `<div class="akm-card-err-alert quota"><i data-lucide="alert-circle"></i> Quota Limit HTTP 429 — Auto-rotation akan lewati key ini</div>`;
-            } else {
-                healthBadge = `<span class="akm-health-badge error" title="${escHtml(live.error||'Error')}"><span class="akm-dot error"></span>MATI / ERROR</span>`;
-                errAlert = `<div class="akm-card-err-alert error"><i data-lucide="x-circle"></i> Error: ${escHtml(live.error||'Gagal koneksi')}</div>`;
-            }
-        } else {
-            healthBadge = `<span class="akm-health-badge untested"><span class="akm-dot untested"></span>Belum Dites</span>`;
-        }
-
-        // Active Pool Key Indicator
-        const isActiveInPool = key.isCurrentlyActive;
-        const activeBadge = isActiveInPool ? `<span class="akm-active-badge"><span class="akm-pulse-dot"></span>SEDANG DIPAKAI</span>` : '';
-        const poolBadge = key.isPool ? `<span class="akm-pool-badge">Pool #${key.index + 1}</span>` : '<span class="akm-single-badge">Single</span>';
-        const usageText = key.usageCount > 0 ? `${fmtCount(key.usageCount)} req · ${timeAgo(key.lastUsedAt)}` : 'Belum dipakai';
-        const addedText = key.addedAt ? timeAgo(key.addedAt) : 'Manual';
-        const labelBadge = key.label ? `<span class="akm-label-badge">${escHtml(key.label)}</span>` : '';
-
-        return `<div class="akm-key-card ${isActiveInPool ? 'is-active-key' : ''}" id="akm-card-${key.provider}-${key.index}">
-            <div class="akm-card-accent" style="background:${p.color}"></div>
-            <div class="akm-card-body">
-                <div class="akm-card-left">
-                    <div class="akm-provider-avatar" style="background:${p.bg};color:${p.color};border-color:${p.border}">${p.abbr}</div>
-                    <div class="akm-card-info">
-                        <div class="akm-card-top-line">
-                            <span class="akm-provider-label" style="color:${p.color}">${p.label}</span>
-                            <span class="akm-model-chip">${escHtml(key.model || '-')}</span>
-                            ${poolBadge}
-                            ${healthBadge}
-                            ${activeBadge}
-                            ${labelBadge}
-                        </div>
-                        <div class="akm-key-code-row">
-                            <code class="akm-key-code" title="${escHtml(key.key)}">${escHtml(key.keyMasked)}</code>
-                        </div>
-                        ${errAlert}
-                        <div class="akm-card-sub-line">
-                            <span><i data-lucide="clock" style="width:11px;height:11px"></i> ${addedText}</span>
-                            <span class="akm-dot-sep">•</span>
-                            <span><i data-lucide="bar-chart-2" style="width:11px;height:11px"></i> ${usageText}</span>
-                            ${key.url ? `<span class="akm-dot-sep">•</span><span><i data-lucide="globe" style="width:11px;height:11px"></i> ${escHtml(key.url)}</span>` : ''}
-                        </div>
-                    </div>
-                </div>
-                <div class="akm-card-right">
-                    <button class="akm-action-btn akm-btn-edit" title="Edit Label" onclick="window.openEditLabel('${key.provider}', ${key.index}, '${escHtml(key.label)}')"><i data-lucide="pencil"></i> Edit</button>
-                    <button class="akm-action-btn akm-btn-delete" title="Hapus Key" onclick="window.openDeleteConfirm('${key.provider}', ${key.index}, '${escHtml(key.keyMasked)}', '${p.label}')"><i data-lucide="trash-2"></i> Hapus</button>
-                </div>
-            </div>
-        </div>`;
-    }
-
-    function escHtml(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
-
-    // ── Add Key Modal ────────────────────────────────
-    window.openAddKeyModal = function() {
-        document.getElementById('akm-modal-add').classList.remove('hidden');
-        document.getElementById('akm-add-key').value = '';
-        document.getElementById('akm-add-label').value = '';
-        document.getElementById('akm-add-model').value = '';
-        document.getElementById('akm-add-url').value = '';
-        document.getElementById('akm-test-result').innerHTML = '';
-        document.getElementById('akm-add-url-row').style.display = 'none';
-        const sel = document.getElementById('akm-add-provider');
-        if (sel) { sel.value = 'gemini'; updateAddModelPlaceholder(); }
-    };
-
-    window.closeAddKeyModal = function() {
-        document.getElementById('akm-modal-add').classList.add('hidden');
-    };
-
-    window.updateAddModelPlaceholder = function() {
-        const provider = document.getElementById('akm-add-provider').value;
-        const p = PROVIDERS[provider];
-        const modelInput = document.getElementById('akm-add-model');
-        if (p) modelInput.placeholder = p.defaultModel;
-        const urlRow = document.getElementById('akm-add-url-row');
-        urlRow.style.display = provider === 'local' ? 'block' : 'none';
-    };
-
-    window.testApiKeyBeforeAdd = async function() {
-        const provider = document.getElementById('akm-add-provider').value;
-        const key = document.getElementById('akm-add-key').value.trim();
-        const model = document.getElementById('akm-add-model').value.trim() || PROVIDERS[provider]?.defaultModel || '';
-        const url = document.getElementById('akm-add-url').value.trim();
-        const resEl = document.getElementById('akm-test-result');
-        if (!key) { resEl.innerHTML = '<span class="akm-test-error">Masukkan API Key terlebih dahulu</span>'; return; }
-        resEl.innerHTML = '<span class="akm-test-loading"><i data-lucide="loader"></i> Menguji koneksi…</span>';
-        if (window.lucide) lucide.createIcons();
-        try {
-            const r = await fetch('/api/test-api', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ provider, key, model, url }) });
-            const d = await r.json();
-            if (d.success) {
-                resEl.innerHTML = `<span class="akm-test-ok"><i data-lucide="check-circle-2"></i> Berhasil! Model: ${escHtml(d.model||'')} · ${d.latency}ms</span>`;
-            } else if (d.isQuota) {
-                resEl.innerHTML = `<div class="akm-test-quota" style="background:rgba(245,158,11,0.12);border:1px solid rgba(245,158,11,0.3);color:#f59e0b;padding:8px 12px;border-radius:8px;font-size:0.75rem;line-height:1.4;">
-                    <div style="font-weight:800;display:flex;align-items:center;gap:5px;margin-bottom:3px;"><i data-lucide="alert-triangle"></i> Key Valid! Kuota Gratis limit temporer (HTTP 429)</div>
-                    API Key ini <strong>VALID (Sudah Benar)</strong>, namun kuota gratis dari Google sedang cooldown (limit sementara). <strong>Key ini TETAP BISA DISIMPAN</strong> ke stok pool untuk rotasi otomatis saat kuotanya reset!
-                </div>`;
-            } else {
-                resEl.innerHTML = `<span class="akm-test-error"><i data-lucide="x-circle"></i> Gagal: ${escHtml(d.error||'Unknown error')}</span>`;
-            }
-
-            if (window.lucide) lucide.createIcons();
-        } catch(e) {
-            resEl.innerHTML = `<span class="akm-test-error">Error: ${e.message}</span>`;
-        }
-    };
-
-    window.saveNewApiKey = async function() {
-        const provider = document.getElementById('akm-add-provider').value;
-        const key = document.getElementById('akm-add-key').value.trim();
-        const model = document.getElementById('akm-add-model').value.trim();
-        const label = document.getElementById('akm-add-label').value.trim();
-        const url = document.getElementById('akm-add-url').value.trim();
-        const resEl = document.getElementById('akm-test-result');
-        if (!key) { resEl.innerHTML = '<span class="akm-test-error">API Key tidak boleh kosong</span>'; return; }
-        const btn = document.getElementById('akm-save-btn');
-        btn.disabled = true; btn.textContent = 'Menyimpan…';
-        try {
-            const r = await fetch('/api/keys', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ provider, key, model, label, url }) });
-            const d = await r.json();
-            if (d.success) {
-                closeAddKeyModal();
-                window.loadApiKeys();
-                window.showToast && window.showToast('API Key berhasil ditambahkan!', 'success');
-            } else {
-                resEl.innerHTML = `<span class="akm-test-error">${escHtml(d.error||'Gagal menyimpan')}</span>`;
-            }
-        } catch(e) {
-            resEl.innerHTML = `<span class="akm-test-error">Error: ${e.message}</span>`;
-        } finally {
-            btn.disabled = false; btn.textContent = 'Simpan Key';
-        }
-    };
-
-    // ── Delete Confirm Modal ─────────────────────────
-    window.openDeleteConfirm = function(provider, index, keyMasked, providerLabel) {
-        _deleteTarget = { provider, index };
-        document.getElementById('akm-del-key-label').textContent = keyMasked;
-        document.getElementById('akm-del-provider-label').textContent = providerLabel;
-        document.getElementById('akm-modal-delete').classList.remove('hidden');
-    };
-
-    window.closeDeleteModal = function() {
-        document.getElementById('akm-modal-delete').classList.add('hidden');
-        _deleteTarget = null;
-    };
-
-    window.confirmDeleteKey = async function() {
-        if (!_deleteTarget) return;
-        const { provider, index } = _deleteTarget;
-        const btn = document.getElementById('akm-del-confirm-btn');
-        btn.disabled = true; btn.textContent = 'Menghapus…';
-        try {
-            const r = await fetch(`/api/keys/${provider}/${index}`, { method:'DELETE' });
-            const d = await r.json();
-            if (d.success) {
-                closeDeleteModal();
-                window.loadApiKeys();
-                window.showToast && window.showToast('API Key berhasil dihapus', 'success');
-            } else {
-                alert('Gagal hapus: ' + (d.error||'Unknown'));
-            }
-        } catch(e) {
-            alert('Error: ' + e.message);
-        } finally {
-            btn.disabled = false; btn.textContent = 'Ya, Hapus';
-        }
-    };
-
-    // ── Edit Label Modal ─────────────────────────────
-    window.openEditLabel = function(provider, index, currentLabel) {
-        const newLabel = prompt('Masukkan nama/label untuk key ini:', currentLabel || '');
-        if (newLabel === null) return;
-        fetch(`/api/keys/${provider}/${index}`, {
-            method: 'PATCH',
-            headers: {'Content-Type':'application/json'},
-            body: JSON.stringify({ label: newLabel })
-        }).then(r => r.json()).then(d => {
-            if (d.success) { window.loadApiKeys(); window.showToast && window.showToast('Label berhasil diperbarui', 'success'); }
-            else alert('Gagal: ' + (d.error||'Unknown'));
-        });
-    };
-
-    // ── Real-Time Socket.io Listener for AI Activity ─────
-    let _realtimeLogs = [];
-    let _providerUsageCounts = { gemini:0, groq:0, deepseek:0, qwen:0, openrouter:0, local:0 };
-
-    function handleRealtimeAiActivity(data) {
-        if (!data) return;
-        const provider = data.provider || 'gemini';
-        const index = data.index || 0;
-        const keyId = `${provider}_${index}`;
-
-        // 1. Update live usage count in chart
-        _providerUsageCounts[provider] = (_providerUsageCounts[provider] || 0) + 1;
-        renderRealtimeChart();
-
-        // 2. Add to live log stream
-        const pLabel = (PROVIDERS[provider] ? PROVIDERS[provider].label : provider);
-        const timeStr = new Date(data.timestamp || Date.now()).toLocaleTimeString('id-ID', { hour:'2-digit', minute:'2-digit', second:'2-digit' });
-        const logItem = {
-            time: timeStr,
-            provider: pLabel,
-            index: index + 1,
-            model: data.model || '-',
-            latency: data.latency || 0,
-            status: data.status || 'ok',
-            error: data.error || null
-        };
-        _realtimeLogs.unshift(logItem);
-        if (_realtimeLogs.length > 8) _realtimeLogs.pop();
-        renderRealtimeLogs();
-
-        // 3. Update key card live on screen
-        const targetCard = document.getElementById(`akm-card-${provider}-${index}`);
-        if (targetCard) {
-            // Pulse animation
-            targetCard.classList.remove('akm-card-ping');
-            void targetCard.offsetWidth; // trigger reflow
-            targetCard.classList.add('akm-card-ping');
-
-            // Increment count on card
-            const keyObj = _allKeys.find(k => k.provider === provider && k.index === index);
-            if (keyObj) {
-                keyObj.usageCount = (keyObj.usageCount || 0) + 1;
-                keyObj.lastUsedAt = new Date().toISOString();
-            }
-        }
-
-        // 4. Update live status record
-        _liveStatuses[keyId] = {
-            provider,
-            index,
-            status: data.status || 'ok',
-            latency: data.latency || 0,
-            error: data.error || null,
-            model: data.model
-        };
-        renderStats();
-    }
-
-    function renderRealtimeChart() {
-        const container = document.getElementById('akm-chart-bars');
-        if (!container) return;
-        const totalReqs = Object.values(_providerUsageCounts).reduce((a,b) => a+b, 0) || 1;
-        
-        container.innerHTML = Object.entries(PROVIDERS).map(([pKey, pInfo]) => {
-            const count = _providerUsageCounts[pKey] || 0;
-            const pct = Math.round((count / totalReqs) * 100);
-            return `<div class="akm-chart-row">
-                <div class="akm-chart-label" style="color:${pInfo.color}">${pInfo.abbr}</div>
-                <div class="akm-chart-track">
-                    <div class="akm-chart-fill" style="width:${pct}%;background:${pInfo.color}"></div>
-                </div>
-                <div class="akm-chart-val">${count} req (${pct}%)</div>
-            </div>`;
-        }).join('');
-    }
-
-    function renderRealtimeLogs() {
-        const container = document.getElementById('akm-live-feed-list');
-        if (!container) return;
-        if (_realtimeLogs.length === 0) {
-            container.innerHTML = `<div class="akm-feed-empty"><i data-lucide="activity" style="width:16px;height:16px"></i> Menunggu respons AI real-time…</div>`;
-            if (window.lucide) lucide.createIcons();
-            return;
-        }
-
-        container.innerHTML = _realtimeLogs.map(l => {
-            const isOk = l.status === 'ok';
-            const badgeClass = isOk ? 'ok' : 'err';
-            const iconName = isOk ? 'check-circle-2' : 'x-circle';
-            return `<div class="akm-feed-item">
-                <span class="akm-feed-time">${l.time}</span>
-                <span class="akm-feed-prov">${l.provider} #${l.index}</span>
-                <span class="akm-feed-model">${l.model}</span>
-                <span class="akm-feed-badge ${badgeClass}"><i data-lucide="${iconName}"></i> ${isOk ? l.latency + 'ms' : 'ERROR'}</span>
-            </div>`;
-        }).join('');
-        if (window.lucide) lucide.createIcons();
-    }
-
-    // Attach Socket.io listener
-    if (typeof socket !== 'undefined') {
-        socket.on('ai_activity', function(data) {
-            handleRealtimeAiActivity(data);
-        });
-    }
-
-    // Close modals on overlay click
-    document.addEventListener('click', function(e) {
-        if (e.target.id === 'akm-modal-add')   window.closeAddKeyModal();
-        if (e.target.id === 'akm-modal-delete') window.closeDeleteModal();
-    });
-
-    })(); // end IIFE
-
-
-</script>
 
 <!-- ══════════════════════════════════════════
      TAB — API KEY MANAGER & HEALTH MONITOR
@@ -3462,7 +2519,7 @@
     </div>
 </div>
 
-<!-- MODAL: Konfirmasi Hapus -->
+<!-- MODAL: Konfirmasi Hapus API Key -->
 <div id="akm-modal-delete" class="akm-modal-overlay hidden" role="dialog" aria-modal="true">
     <div class="akm-modal akm-modal-sm">
         <div class="akm-modal-header">
@@ -3489,6 +2546,25 @@
         </div>
     </div>
 </div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     MODULAR JAVASCRIPT LIBRARIES & APPLICATION SCRIPTS
+     ═══════════════════════════════════════════════════════════════════════════ -->
+<script src="https://unpkg.com/lucide@latest"></script>
+<script src="/socket.io/socket.io.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
+
+<!-- Modular App Scripts -->
+<script src="js/core.js?v=26"></script>
+<script src="js/monitor.js?v=26"></script>
+<script src="js/memory.js?v=26"></script>
+<script src="js/groups.js?v=26"></script>
+<script src="js/shop.js?v=26"></script>
+<script src="js/transactions.js?v=26"></script>
+<script src="js/premium.js?v=26"></script>
+<script src="js/referral.js?v=26"></script>
+<script src="js/apikeys.js?v=26"></script>
+<script src="js/settings.js?v=26"></script>
 
 </body>
 </html>

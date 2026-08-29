@@ -191,29 +191,6 @@ async function initDatabase() {
             )
         `);
 
-        // 1. Migrate from database.json if it exists (first time migration)
-        if (fs.existsSync(DATABASE_FILE)) {
-            try {
-                console.log('[DB] database.json ditemukan. Memigrasikan data ke key_value_store...');
-                const raw = fs.readFileSync(DATABASE_FILE, 'utf-8');
-                const legacyData = JSON.parse(raw);
-
-                // Save log_history to key_value_store
-                await db.run('INSERT OR REPLACE INTO key_value_store (key, value) VALUES (?, ?)', 'log_history', JSON.stringify(legacyData.log_history || { finance: [], agenda: [] }));
-
-                // Save other legacy fields to key_value_store temporarily
-                await db.run('INSERT OR REPLACE INTO key_value_store (key, value) VALUES (?, ?)', 'group_configs', JSON.stringify(legacyData.group_configs || { group_configs: {} }));
-                await db.run('INSERT OR REPLACE INTO key_value_store (key, value) VALUES (?, ?)', 'chat_sessions', JSON.stringify(legacyData.chat_sessions || {}));
-                await db.run('INSERT OR REPLACE INTO key_value_store (key, value) VALUES (?, ?)', 'shop_data', JSON.stringify(legacyData.shop_data || { host_admins: [], customers: [] }));
-                await db.run('INSERT OR REPLACE INTO key_value_store (key, value) VALUES (?, ?)', 'reminders', JSON.stringify(legacyData.reminders || []));
-
-                fs.renameSync(DATABASE_FILE, DATABASE_FILE + '.bak');
-                console.log('[DB] database.json berhasil diimpor ke key_value_store.');
-            } catch (e) {
-                console.error('[DB] Gagal memigrasikan database.json:', e.message);
-            }
-        }
-
         // 2. Perform table-specific migrations from key_value_store if the tables are empty
         
         // A. Migrate group_configs
