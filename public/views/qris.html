@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Portal Pembayaran QRIS Resmi — Jajan Digital</title>
+    <title>QRIS Pembayaran — Jajan Digital</title>
 
     <!-- Open Graph Meta Tags -->
     <meta property="og:site_name" content="Jajan Digital" />
-    <meta property="og:title" content="Pembayaran QRIS & Transfer — Jajan Digital" />
-    <meta property="og:description" content="Scan QRIS resmi atau unggah bukti transfer pembayaran Anda dengan aman, cepat, dan terverifikasi otomatis." />
+    <meta property="og:title" content="QRIS Pembayaran — Jajan Digital" />
+    <meta property="og:description" content="Scan QRIS resmi pembayaran Jajan Digital." />
     <meta property="og:image" content="${fullImageUrl}" />
     <meta property="og:image:secure_url" content="${fullImageUrl}" />
     <meta property="og:image:type" content="${mimeType}" />
@@ -28,7 +28,6 @@
                 extend: {
                     colors: {
                         brand: {
-                            50: '#eef2ff',
                             500: '#6366f1',
                             600: '#4f46e5',
                             700: '#4338ca'
@@ -49,17 +48,15 @@
         :root, [data-theme="dark"] {
             --bg-main: #0a0e17;
             --bg-surface: #111827;
-            --bg-subtle: #1c263c;
-            --bg-card: #151d30;
+            --bg-subtle: #161f33;
+            --bg-card: #131c2e;
             --bg-input: #0a0e17;
             --border-color: rgba(255, 255, 255, 0.08);
             --border-hover: rgba(255, 255, 255, 0.18);
-            --border-focus: rgba(99, 102, 241, 0.6);
             --text-primary: #f8fafc;
             --text-secondary: #94a3b8;
             --text-muted: #64748b;
             --brand-primary: #6366f1;
-            --brand-hover: #4f46e5;
             --card-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.25);
         }
         [data-theme="light"] {
@@ -70,12 +67,10 @@
             --bg-input: #ffffff;
             --border-color: #e2e8f0;
             --border-hover: #cbd5e1;
-            --border-focus: rgba(79, 70, 229, 0.6);
             --text-primary: #0f172a;
             --text-secondary: #334155;
             --text-muted: #64748b;
             --brand-primary: #4f46e5;
-            --brand-hover: #4338ca;
             --card-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.06);
         }
         * {
@@ -98,11 +93,10 @@
             border: 1px solid var(--border-color);
             border-radius: 16px;
             box-shadow: var(--card-shadow);
-            transition: all 0.2s ease;
         }
         .portal-tab-btn {
             padding: 8px 14px;
-            font-size: 0.78rem;
+            font-size: 0.8rem;
             font-weight: 700;
             border-radius: 10px;
             color: var(--text-muted);
@@ -114,24 +108,15 @@
             color: var(--text-primary);
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
         }
-        
-        /* 3D Holographic Tilt Card */
+
+        /* 3D QR Card */
         .qris-3d-wrapper {
             perspective: 800px;
         }
         .qris-3d-card {
             transform-style: preserve-3d;
-            transition: transform 0.12s ease-out, box-shadow 0.2s ease;
+            transition: transform 0.12s ease-out;
             position: relative;
-        }
-        .qris-glare {
-            position: absolute;
-            inset: 0;
-            border-radius: 1rem;
-            background: radial-gradient(circle at 50% 50%, rgba(255,255,255,0.25), transparent 70%);
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.2s ease;
         }
 
         /* Laser Scanner Beam */
@@ -148,32 +133,29 @@
             border-radius: 9999px;
         }
         @keyframes laserSweep {
-            0%, 100% { top: 8%; opacity: 0.2; }
+            0%, 100% { top: 8%; opacity: 0.15; }
             50% { top: 90%; opacity: 1; }
         }
 
-        /* Interactive Nominal Chips */
-        .nominal-chip {
-            padding: 5px 10px;
-            border-radius: 8px;
-            font-size: 0.72rem;
-            font-weight: 600;
-            font-family: 'JetBrains Mono', monospace;
-            background-color: var(--bg-subtle);
+        /* Interactive Physics Ball Container */
+        .toy-canvas-container {
+            position: relative;
+            width: 100%;
+            height: 120px;
+            border-radius: 14px;
+            background: var(--bg-subtle);
             border: 1px solid var(--border-color);
-            color: var(--text-secondary);
-            cursor: pointer;
-            transition: all 0.15s ease;
+            overflow: hidden;
+            touch-action: none;
         }
-        .nominal-chip:hover {
-            color: var(--text-primary);
-            border-color: var(--brand-primary);
-            transform: translateY(-1px);
+        #toy-ball-canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+            cursor: grab;
         }
-        .nominal-chip.active {
-            background-color: var(--brand-primary) !important;
-            border-color: var(--brand-primary) !important;
-            color: #ffffff !important;
+        #toy-ball-canvas:active {
+            cursor: grabbing;
         }
 
         /* Canvas Confetti */
@@ -225,7 +207,7 @@
     <!-- Toast Notification Element -->
     <div id="portal-toast">
         <i data-lucide="check-circle" class="w-4 h-4 text-emerald-400"></i>
-        <span id="portal-toast-text">Tautan disalin</span>
+        <span id="portal-toast-text">Berhasil</span>
     </div>
 
     <!-- Main Container -->
@@ -239,7 +221,7 @@
                 </div>
                 <div>
                     <h1 class="text-sm font-bold text-[var(--text-primary)] leading-tight">Jajan Digital</h1>
-                    <p class="text-[10px] text-[var(--text-muted)] font-medium">Portal Pembayaran Resmi & Verifikasi</p>
+                    <p class="text-[10px] text-[var(--text-muted)] font-medium">QRIS Resmi</p>
                 </div>
             </div>
 
@@ -249,15 +231,6 @@
                 </button>
             </div>
         </header>
-
-        <!-- Trust Verified Badge -->
-        <div class="flex items-center justify-between px-3.5 py-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-xs">
-            <div class="flex items-center gap-2 text-emerald-400 font-semibold text-[11px]">
-                <i data-lucide="shield-check" class="w-4 h-4 shrink-0"></i>
-                <span>Merchant Resmi Terverifikasi</span>
-            </div>
-            <span class="text-[10px] text-emerald-400 font-mono-num font-bold">QRIS Standar BI & ASPI</span>
-        </div>
 
         <!-- Dual Tab Switcher -->
         <div class="p-1 bg-[var(--bg-subtle)] border border-[var(--border-color)] rounded-xl flex items-center gap-1">
@@ -276,13 +249,10 @@
              ═══════════════════════════════════════════════════════════ -->
         <main id="portal-view-qris" class="portal-card p-4 sm:p-5 space-y-4">
             
-            <!-- 3D Interactive Holographic QRIS Card Frame -->
+            <!-- 3D QRIS Card Frame -->
             <div class="qris-3d-wrapper text-center space-y-3">
-                <div id="qris-interactive-card" class="qris-3d-card relative bg-white p-3.5 rounded-2xl border border-[var(--border-color)] shadow-md max-w-[290px] w-full mx-auto select-none overflow-hidden" onclick="triggerCardPulse()">
+                <div id="qris-interactive-card" class="qris-3d-card relative bg-white p-3.5 rounded-2xl border border-[var(--border-color)] shadow-md max-w-[285px] w-full mx-auto select-none overflow-hidden">
                     
-                    <!-- Glare Effect -->
-                    <div id="qris-glare-effect" class="qris-glare"></div>
-
                     <!-- Laser Scanner Beam -->
                     <div class="qris-laser-beam"></div>
 
@@ -302,20 +272,14 @@
 
                     <div class="mt-2 text-center">
                         <span class="text-[11px] font-extrabold text-slate-800 tracking-wide uppercase">JAJAN DIGITAL STORE</span>
-                        <p class="text-[9px] text-slate-500">Mendukung BCA, Mandiri, BRI, BNI, Dana, OVO, Gopay, ShopeePay</p>
                     </div>
                 </div>
 
-                <!-- Interactive Hint & Action Buttons -->
-                <div class="flex items-center justify-between text-[11px] text-[var(--text-muted)] px-1">
-                    <span class="flex items-center gap-1"><i data-lucide="sparkles" class="w-3 h-3 text-amber-400"></i> Gerakkan kartu untuk efek 3D</span>
-                    <span class="text-[10px] text-emerald-400 font-bold">● Laser Scanner Aktif</span>
-                </div>
-
+                <!-- Action Buttons -->
                 <div class="flex items-center justify-center gap-2 pt-0.5">
                     <a href="${rawImageUrl}" download="QRIS_JajanDigital.jpeg" class="px-3 py-1.5 rounded-xl bg-[var(--bg-subtle)] border border-[var(--border-color)] text-xs font-semibold text-[var(--text-primary)] hover:border-indigo-500/50 flex items-center gap-1.5 shadow-sm transition-all">
                         <i data-lucide="download" class="w-3.5 h-3.5 text-indigo-400"></i>
-                        <span>Unduh QRIS</span>
+                        <span>Unduh</span>
                     </a>
                     <button onclick="openZoomModal()" class="px-3 py-1.5 rounded-xl bg-[var(--bg-subtle)] border border-[var(--border-color)] text-xs font-semibold text-[var(--text-primary)] hover:border-indigo-500/50 flex items-center gap-1.5 shadow-sm transition-all">
                         <i data-lucide="maximize-2" class="w-3.5 h-3.5 text-sky-400"></i>
@@ -324,51 +288,15 @@
                 </div>
             </div>
 
-            <!-- Interactive Quick Amount Calculator & Helper -->
-            <div class="p-3.5 rounded-xl bg-[var(--bg-subtle)] border border-[var(--border-color)] space-y-2.5">
-                <div class="flex items-center justify-between">
-                    <span class="text-[11px] font-bold uppercase tracking-wider text-[var(--text-muted)] flex items-center gap-1.5">
-                        <i data-lucide="calculator" class="w-3.5 h-3.5 text-indigo-400"></i>
-                        <span>Kalkulator Nominal Cepat</span>
-                    </span>
-                    <span class="text-[10px] text-emerald-400 font-mono-num font-bold">1-Klik Salin</span>
-                </div>
-
-                <!-- Quick Nominal Pills -->
-                <div class="flex items-center gap-1.5 flex-wrap">
-                    <button type="button" onclick="setQuickNominal(15000)" class="nominal-chip">15rb</button>
-                    <button type="button" onclick="setQuickNominal(25000)" class="nominal-chip">25rb</button>
-                    <button type="button" onclick="setQuickNominal(35000)" class="nominal-chip">35rb</button>
-                    <button type="button" onclick="setQuickNominal(50000)" class="nominal-chip">50rb</button>
-                    <button type="button" onclick="setQuickNominal(100000)" class="nominal-chip">100rb</button>
-                </div>
-
-                <!-- Output Display & Copy -->
-                <div class="p-2.5 rounded-lg bg-[var(--bg-card)] border border-[var(--border-color)] flex items-center justify-between gap-2">
-                    <div>
-                        <span class="text-[9px] text-[var(--text-muted)] block">Nominal Pembayaran:</span>
-                        <span id="nominal-display" class="font-mono-num font-bold text-sm text-emerald-400">Rp 0</span>
-                    </div>
-                    <button onclick="copyCurrentNominal()" class="px-3 py-1 rounded-lg bg-indigo-600/20 text-indigo-300 text-xs font-semibold hover:bg-indigo-600/30 flex items-center gap-1">
-                        <i data-lucide="copy" class="w-3 h-3"></i>
-                        <span>Salin Angka</span>
-                    </button>
-                </div>
-            </div>
-
-            <!-- Transaction Stats Counter -->
-            <div class="p-3 rounded-xl bg-[var(--bg-subtle)] border border-[var(--border-color)] flex items-center justify-between text-xs font-mono-num">
-                <span class="text-[var(--text-muted)] flex items-center gap-1.5">
-                    <i data-lucide="zap" class="w-3.5 h-3.5 text-amber-400"></i>
-                    <span>Verifikasi Sistem</span>
-                </span>
-                <span class="text-emerald-400 font-bold">${formattedTxCount} Transaksi Sukses</span>
+            <!-- Interactive Physics Energy Ball (Playable Toy) -->
+            <div class="toy-canvas-container">
+                <canvas id="toy-ball-canvas"></canvas>
             </div>
 
             <!-- CTA to Upload -->
-            <div class="pt-2 border-t border-[var(--border-color)]">
+            <div class="pt-1 border-t border-[var(--border-color)]">
                 <button onclick="switchPortalTab('upload')" class="w-full py-2.5 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold shadow flex items-center justify-center gap-2 transition-all">
-                    <span>Sudah Bayar? Unggah Bukti Sekarang</span>
+                    <span>Sudah Bayar? Unggah Bukti</span>
                     <i data-lucide="arrow-right" class="w-4 h-4"></i>
                 </button>
             </div>
@@ -383,7 +311,6 @@
                     <i data-lucide="upload" class="w-4 h-4 text-emerald-400"></i>
                     Kirim Bukti Pembayaran
                 </h2>
-                <p class="text-[11px] text-[var(--text-muted)] mt-0.5">Unggah foto struk/screenshot transfer Anda untuk diverifikasi otomatis oleh bot & admin</p>
             </div>
 
             <!-- Upload Drop Area -->
@@ -393,8 +320,8 @@
                     <div class="w-10 h-10 rounded-full bg-indigo-500/10 text-indigo-400 flex items-center justify-center mx-auto">
                         <i data-lucide="image-plus" class="w-5 h-5"></i>
                     </div>
-                    <p class="text-xs font-semibold text-[var(--text-primary)]">Pilih atau Ambil Foto Bukti Transfer</p>
-                    <p class="text-[10px] text-[var(--text-muted)]">Mendukung format JPG, PNG, WEBP (Maksimal 10MB)</p>
+                    <p class="text-xs font-semibold text-[var(--text-primary)]">Pilih Foto Bukti Transfer</p>
+                    <p class="text-[10px] text-[var(--text-muted)]">JPG, PNG, WEBP (Maks 10MB)</p>
                 </div>
                 <!-- Thumbnail Preview Container -->
                 <div id="upload-preview-container" class="hidden space-y-2">
@@ -407,11 +334,11 @@
             <div class="space-y-3 text-xs">
                 <div>
                     <label class="block font-semibold mb-1 text-[var(--text-secondary)]">Nomor WhatsApp Pelanggan</label>
-                    <input type="text" id="cust-phone-input" placeholder="Contoh: 081234567890" class="w-full px-3 py-2 rounded-xl bg-[var(--bg-input)] border border-[var(--border-color)] text-[var(--text-primary)] font-mono-num text-xs outline-none focus:border-indigo-500 transition-colors">
+                    <input type="text" id="cust-phone-input" placeholder="081234567890" class="w-full px-3 py-2 rounded-xl bg-[var(--bg-input)] border border-[var(--border-color)] text-[var(--text-primary)] font-mono-num text-xs outline-none focus:border-indigo-500 transition-colors">
                 </div>
                 <div>
-                    <label class="block font-semibold mb-1 text-[var(--text-secondary)]">Catatan / Produk yang Dipesan</label>
-                    <input type="text" id="cust-note-input" placeholder="Contoh: Akun CapCut 1 Bulan" class="w-full px-3 py-2 rounded-xl bg-[var(--bg-input)] border border-[var(--border-color)] text-[var(--text-primary)] text-xs outline-none focus:border-indigo-500 transition-colors">
+                    <label class="block font-semibold mb-1 text-[var(--text-secondary)]">Catatan Pesanan</label>
+                    <input type="text" id="cust-note-input" placeholder="Contoh: CapCut 1 Bulan" class="w-full px-3 py-2 rounded-xl bg-[var(--bg-input)] border border-[var(--border-color)] text-[var(--text-primary)] text-xs outline-none focus:border-indigo-500 transition-colors">
                 </div>
             </div>
 
@@ -426,7 +353,7 @@
                 <div id="upload-success-box" class="hidden p-3.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-xs space-y-2">
                     <div class="flex items-center gap-2 text-emerald-400 font-bold">
                         <i data-lucide="check-circle-2" class="w-4 h-4"></i>
-                        <span>Bukti Pembayaran Berhasil Diunggah!</span>
+                        <span>Bukti Berhasil Diunggah</span>
                     </div>
                     <div class="p-2 rounded-lg bg-[var(--bg-surface)] border border-[var(--border-color)] flex items-center justify-between gap-2">
                         <input type="text" id="proof-link-input" readonly class="bg-transparent font-mono-num text-[11px] text-indigo-400 w-full outline-none">
@@ -436,15 +363,15 @@
                     </div>
                     <a id="wa-confirm-btn" href="#" target="_blank" class="w-full py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold flex items-center justify-center gap-1.5 shadow-sm">
                         <i data-lucide="message-circle" class="w-3.5 h-3.5"></i>
-                        <span>Konfirmasi ke Admin via WhatsApp</span>
+                        <span>Konfirmasi via WhatsApp</span>
                     </a>
                 </div>
             </div>
         </main>
 
         <!-- Footer -->
-        <footer class="text-center text-[10px] text-[var(--text-muted)] pt-2 space-y-1">
-            <p>© 2026 Jajan Digital. Aman, Cepat, dan Terpercaya.</p>
+        <footer class="text-center text-[10px] text-[var(--text-muted)] pt-2">
+            <p>© 2026 Jajan Digital</p>
         </footer>
 
     </div>
@@ -462,7 +389,6 @@
     <!-- Script Logic -->
     <script>
         let selectedFile = null;
-        let currentNominal = 0;
 
         function showToast(text) {
             const toast = document.getElementById('portal-toast');
@@ -474,75 +400,196 @@
             }
         }
 
-        // ─── 1. INTERACTIVE 3D HOLOGRAPHIC TILT ─────────────────
-        const card = document.getElementById('qris-interactive-card');
-        const glare = document.getElementById('qris-glare-effect');
+        // ─── 1. INTERACTIVE PHYSICS BOUNCING BALL (TOY) ─────────
+        (function initPhysicsToy() {
+            const canvas = document.getElementById('toy-ball-canvas');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
 
-        if (card) {
-            function handleMove(e) {
-                const rect = card.getBoundingClientRect();
+            function resize() {
+                const rect = canvas.getBoundingClientRect();
+                canvas.width = rect.width * (window.devicePixelRatio || 1);
+                canvas.height = rect.height * (window.devicePixelRatio || 1);
+            }
+            window.addEventListener('resize', resize);
+            resize();
+
+            const colors = [
+                { main: '#6366f1', glow: 'rgba(99, 102, 241, 0.45)' },
+                { main: '#10b981', glow: 'rgba(16, 185, 129, 0.45)' },
+                { main: '#38bdf8', glow: 'rgba(56, 189, 248, 0.45)' },
+                { main: '#f59e0b', glow: 'rgba(245, 158, 11, 0.45)' },
+                { main: '#ec4899', glow: 'rgba(236, 72, 153, 0.45)' }
+            ];
+            let colorIdx = 0;
+
+            const ball = {
+                x: 60,
+                y: 50,
+                radius: 18,
+                vx: 3,
+                vy: 0,
+                isDragging: false,
+                lastX: 60,
+                lastY: 50,
+                scaleX: 1,
+                scaleY: 1
+            };
+
+            const ripples = [];
+
+            function getPointerPos(e) {
+                const rect = canvas.getBoundingClientRect();
+                const dpr = window.devicePixelRatio || 1;
                 const clientX = e.touches ? e.touches[0].clientX : e.clientX;
                 const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+                return {
+                    x: (clientX - rect.left) * dpr,
+                    y: (clientY - rect.top) * dpr
+                };
+            }
 
-                const x = clientX - rect.left;
-                const y = clientY - rect.top;
-                const centerX = rect.width / 2;
-                const centerY = rect.height / 2;
+            function onPointerDown(e) {
+                const pos = getPointerPos(e);
+                const dx = pos.x - ball.x;
+                const dy = pos.y - ball.y;
+                const dist = Math.hypot(dx, dy);
 
-                const rotateX = ((y - centerY) / centerY) * -12;
-                const rotateY = ((x - centerX) / centerX) * 12;
-
-                card.style.transform = `rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale(1.02)`;
-                if (glare) {
-                    glare.style.opacity = '1';
-                    glare.style.background = `radial-gradient(circle at ${(x / rect.width) * 100}% ${(y / rect.height) * 100}%, rgba(255,255,255,0.35), transparent 60%)`;
+                if (dist < ball.radius * 2.5) {
+                    ball.isDragging = true;
+                    ball.vx = 0;
+                    ball.vy = 0;
+                    ball.lastX = pos.x;
+                    ball.lastY = pos.y;
+                    colorIdx = (colorIdx + 1) % colors.length;
+                    ripples.push({ x: ball.x, y: ball.y, r: 10, alpha: 0.8, color: colors[colorIdx].main });
                 }
             }
 
-            function handleLeave() {
-                card.style.transform = 'rotateX(0deg) rotateY(0deg) scale(1)';
-                if (glare) glare.style.opacity = '0';
+            function onPointerMove(e) {
+                if (!ball.isDragging) return;
+                const pos = getPointerPos(e);
+                ball.vx = (pos.x - ball.lastX) * 0.4;
+                ball.vy = (pos.y - ball.lastY) * 0.4;
+                ball.x = pos.x;
+                ball.y = pos.y;
+                ball.lastX = pos.x;
+                ball.lastY = pos.y;
             }
 
-            card.addEventListener('mousemove', handleMove);
-            card.addEventListener('mouseleave', handleLeave);
-            card.addEventListener('touchmove', handleMove, { passive: true });
-            card.addEventListener('touchend', handleLeave);
-        }
-
-        function triggerCardPulse() {
-            if (card) {
-                card.style.transform = 'scale(0.96)';
-                setTimeout(() => card.style.transform = 'scale(1.03)', 100);
-                setTimeout(() => card.style.transform = 'scale(1)', 200);
+            function onPointerUp() {
+                if (ball.isDragging) {
+                    ball.isDragging = false;
+                    ripples.push({ x: ball.x, y: ball.y, r: 15, alpha: 1, color: colors[colorIdx].main });
+                }
             }
-            showToast('Scan QRIS dengan aplikasi m-Banking atau E-Wallet');
-        }
 
-        // ─── 2. QUICK AMOUNT CALCULATOR ────────────────────────
-        function setQuickNominal(amount) {
-            currentNominal = amount;
-            const disp = document.getElementById('nominal-display');
-            if (disp) disp.textContent = 'Rp ' + amount.toLocaleString('id-ID');
+            canvas.addEventListener('mousedown', onPointerDown);
+            window.addEventListener('mousemove', onPointerMove);
+            window.addEventListener('mouseup', onPointerUp);
 
-            document.querySelectorAll('.nominal-chip').forEach(btn => {
-                const btnVal = parseInt(btn.textContent.replace(/\D/g, ''), 10) * 1000;
-                btn.classList.toggle('active', btnVal === amount);
-            });
-            showToast(`Nominal dipilih: Rp ${amount.toLocaleString('id-ID')}`);
-        }
+            canvas.addEventListener('touchstart', onPointerDown, { passive: true });
+            window.addEventListener('touchmove', onPointerMove, { passive: true });
+            window.addEventListener('touchend', onPointerUp);
 
-        function copyCurrentNominal() {
-            if (!currentNominal) {
-                showToast('Pilih salah satu nominal terlebih dahulu');
-                return;
+            const trail = [];
+
+            function loop() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+                // Update physics
+                if (!ball.isDragging) {
+                    ball.vy += 0.35; // gravity
+                    ball.vx *= 0.99; // air resistance
+                    ball.x += ball.vx;
+                    ball.y += ball.vy;
+
+                    // Bounds bounce
+                    const dpr = window.devicePixelRatio || 1;
+                    const r = ball.radius * dpr;
+
+                    // Floor
+                    if (ball.y + r > canvas.height) {
+                        ball.y = canvas.height - r;
+                        ball.vy = -ball.vy * 0.76;
+                        ball.vx *= 0.96; // ground friction
+                        if (Math.abs(ball.vy) > 1.5) {
+                            ripples.push({ x: ball.x, y: canvas.height - 2, r: 5, alpha: 0.5, color: colors[colorIdx].main });
+                        }
+                    }
+                    // Ceiling
+                    if (ball.y - r < 0) {
+                        ball.y = r;
+                        ball.vy = -ball.vy * 0.76;
+                    }
+                    // Left wall
+                    if (ball.x - r < 0) {
+                        ball.x = r;
+                        ball.vx = -ball.vx * 0.8;
+                    }
+                    // Right wall
+                    if (ball.x + r > canvas.width) {
+                        ball.x = canvas.width - r;
+                        ball.vx = -ball.vx * 0.8;
+                    }
+                }
+
+                // Trail
+                trail.push({ x: ball.x, y: ball.y, alpha: 0.5 });
+                if (trail.length > 8) trail.shift();
+
+                trail.forEach((t, i) => {
+                    t.alpha *= 0.85;
+                    ctx.beginPath();
+                    ctx.arc(t.x, t.y, (ball.radius * 0.7) * (i / trail.length), 0, Math.PI * 2);
+                    ctx.fillStyle = colors[colorIdx].glow;
+                    ctx.globalAlpha = t.alpha;
+                    ctx.fill();
+                    ctx.globalAlpha = 1;
+                });
+
+                // Ripples
+                for (let i = ripples.length - 1; i >= 0; i--) {
+                    const rip = ripples[i];
+                    rip.r += 2.5;
+                    rip.alpha -= 0.03;
+                    if (rip.alpha <= 0) {
+                        ripples.splice(i, 1);
+                    } else {
+                        ctx.beginPath();
+                        ctx.arc(rip.x, rip.y, rip.r, 0, Math.PI * 2);
+                        ctx.strokeStyle = rip.color;
+                        ctx.globalAlpha = rip.alpha;
+                        ctx.lineWidth = 2;
+                        ctx.stroke();
+                        ctx.globalAlpha = 1;
+                    }
+                }
+
+                // Draw Glowing Ball
+                const dpr = window.devicePixelRatio || 1;
+                const r = ball.radius * dpr;
+
+                const grad = ctx.createRadialGradient(ball.x - r * 0.3, ball.y - r * 0.3, r * 0.1, ball.x, ball.y, r);
+                grad.addColorStop(0, '#ffffff');
+                grad.addColorStop(0.3, colors[colorIdx].main);
+                grad.addColorStop(1, colors[colorIdx].main);
+
+                // Outer Glow
+                ctx.shadowColor = colors[colorIdx].main;
+                ctx.shadowBlur = 18;
+                ctx.beginPath();
+                ctx.arc(ball.x, ball.y, r, 0, Math.PI * 2);
+                ctx.fillStyle = grad;
+                ctx.fill();
+                ctx.shadowBlur = 0; // Reset
+
+                requestAnimationFrame(loop);
             }
-            navigator.clipboard.writeText(String(currentNominal)).then(() => {
-                showToast(`Angka transfer ${currentNominal} disalin!`);
-            });
-        }
+            loop();
+        })();
 
-        // ─── 3. LIGHTWEIGHT CELEBRATION CONFETTI ───────────────
+        // ─── 2. LIGHTWEIGHT CELEBRATION CONFETTI ───────────────
         function launchCelebrationConfetti() {
             const canvas = document.getElementById('confetti-canvas');
             if (!canvas) return;
@@ -575,7 +622,7 @@
                 particles.forEach(p => {
                     p.x += p.vx;
                     p.y += p.vy;
-                    p.vy += 0.3; // gravity
+                    p.vy += 0.3;
                     p.rotation += p.vr;
                     p.alpha -= 0.015;
 
@@ -601,7 +648,7 @@
             render();
         }
 
-        // ─── 4. THEME & TABS LOGIC ─────────────────────────────
+        // ─── 3. THEME & TABS LOGIC ─────────────────────────────
         function initTheme() {
             const saved = localStorage.getItem('portal_theme') || 'dark';
             setTheme(saved);
@@ -675,7 +722,7 @@
 
         async function submitPaymentProof() {
             if (!selectedFile) {
-                showToast('Pilih foto bukti transfer terlebih dahulu!');
+                showToast('Pilih foto bukti transfer terlebih dahulu');
                 return;
             }
 
@@ -712,7 +759,7 @@
                     if (waBtn) waBtn.href = `https://wa.me/?text=${waMsg}`;
 
                     btn.classList.add('hidden');
-                    showToast('Bukti transfer berhasil diunggah!');
+                    showToast('Bukti transfer berhasil diunggah');
                     launchCelebrationConfetti();
                 } else {
                     showToast('Gagal: ' + (data.error || 'Terjadi kesalahan'));
@@ -730,7 +777,7 @@
             const inp = document.getElementById('proof-link-input');
             if (!inp || !inp.value) return;
             navigator.clipboard.writeText(inp.value).then(() => {
-                showToast('Tautan bukti transfer disalin!');
+                showToast('Tautan disalin');
             });
         }
 
