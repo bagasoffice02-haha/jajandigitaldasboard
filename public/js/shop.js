@@ -9,7 +9,7 @@ window.selectedNodeId = 'root';
 window.loadHostAdmins = async function() {
     const list = document.getElementById('shop-admins-list');
     if (!list) return;
-    list.innerHTML = '<p class="text-center text-slate-500 text-xs py-4">Memuat daftar admin...</p>';
+    list.innerHTML = '<p class="text-center text-[var(--text-muted)] text-xs py-4">Memuat daftar admin...</p>';
 
     try {
         const resDb = await fetch('/api/shop/admins');
@@ -20,8 +20,8 @@ window.loadHostAdmins = async function() {
 
         if (!dbAdmins || dbAdmins.length === 0) {
             list.innerHTML = `
-                <div class="p-4 text-center bg-[#0b1120] border border-white/10 rounded-xl">
-                    <p class="text-xs text-slate-400">Belum ada Host Admin terdaftar.</p>
+                <div class="p-4 text-center bg-[#0b1120] border border-[var(--border-color)] rounded-xl">
+                    <p class="text-xs text-[var(--text-muted)]">Belum ada Host Admin terdaftar.</p>
                 </div>
             `;
             return;
@@ -33,15 +33,15 @@ window.loadHostAdmins = async function() {
             const name = typeof admin === 'string' ? 'Host Admin' : (admin.name || 'Host Admin');
             
             const card = document.createElement('div');
-            card.className = 'p-3 rounded-xl bg-[#0b1120] border border-white/10 flex items-center justify-between gap-3';
+            card.className = 'p-3 rounded-xl bg-[#0b1120] border border-[var(--border-color)] flex items-center justify-between gap-3';
             card.innerHTML = `
                 <div class="flex items-center gap-3 min-w-0">
                     <div class="w-8 h-8 rounded-lg bg-sky-500/10 text-sky-400 flex items-center justify-center shrink-0">
                         <i data-lucide="shield-check" class="w-4 h-4"></i>
                     </div>
                     <div class="min-w-0">
-                        <h4 class="text-xs font-bold text-white truncate">${name}</h4>
-                        <p class="text-[11px] text-slate-400 font-mono">+${cleanPhone}</p>
+                        <h4 class="text-xs font-bold text-[var(--text-primary)] truncate">${name}</h4>
+                        <p class="text-[11px] text-[var(--text-muted)] font-mono">+${cleanPhone}</p>
                     </div>
                 </div>
                 <button onclick="window.removeHostAdminDirect('${cleanPhone}@c.us')" class="p-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/20 text-xs transition-all" title="Hapus Admin">
@@ -81,7 +81,7 @@ window.removeHostAdminDirect = async function(phoneJid) {
 window.loadCustomersList = async function() {
     const list = document.getElementById('shop-customers-list');
     if (!list) return;
-    list.innerHTML = '<p class="text-center text-slate-500 text-xs py-4">Memuat data kontak...</p>';
+    list.innerHTML = '<p class="text-center text-[var(--text-muted)] text-xs py-4">Memuat data kontak...</p>';
 
     try {
         const res = await fetch('/api/shop/customers');
@@ -91,32 +91,32 @@ window.loadCustomersList = async function() {
         list.innerHTML = '';
         
         if (!activeCustomers || activeCustomers.length === 0) {
-            list.innerHTML = '<p class="text-center text-slate-500 text-xs py-6">Belum ada pelanggan terdeteksi.</p>';
+            list.innerHTML = '<p class="text-center text-[var(--text-muted)] text-xs py-6">Belum ada pelanggan terdeteksi.</p>';
             return;
         }
         
         activeCustomers.forEach((cust, idx) => {
             const cleanPhone = (cust.phone || '').replace(/\D/g, '');
             const card = document.createElement('div');
-            card.className = 'customer-item-card p-3 rounded-xl bg-[#0b1120] border border-white/10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3';
+            card.className = 'customer-item-card p-3 rounded-xl bg-[#0b1120] border border-[var(--border-color)] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3';
             
             card.innerHTML = `
                 <div class="min-w-0 flex-1 space-y-1">
                     <div class="flex items-center gap-2">
-                        <input type="text" id="cust-name-${idx}" value="${cust.name || 'Pelanggan'}" class="bg-transparent border-b border-white/10 hover:border-indigo-500 text-xs font-semibold text-white focus:outline-none px-1 py-0.5" placeholder="Nama">
+                        <input type="text" id="cust-name-${idx}" value="${cust.name || 'Pelanggan'}" class="bg-transparent border-b border-[var(--border-color)] hover:border-indigo-500 text-xs font-semibold text-[var(--text-primary)] focus:outline-none px-1 py-0.5" placeholder="Nama">
                         <a href="https://wa.me/${cleanPhone}" target="_blank" class="text-[11px] text-emerald-400 font-mono flex items-center gap-1 hover:underline">
                             +${cleanPhone}
                             <i data-lucide="external-link" class="w-2.5 h-2.5"></i>
                         </a>
                     </div>
                     <div class="grid grid-cols-2 gap-2 text-[11px]">
-                        <input type="text" id="cust-notes-${idx}" value="${cust.notes || ''}" placeholder="Catatan / Alamat..." class="bg-[#090d16] border border-white/10 rounded-lg px-2 py-1 text-slate-300 focus:outline-none focus:border-indigo-500">
-                        <input type="text" id="cust-labels-${idx}" value="${(cust.labels || []).join ? (cust.labels || []).join(', ') : (cust.labels || '')}" placeholder="Tag (VIP, Reseller)" class="bg-[#090d16] border border-white/10 rounded-lg px-2 py-1 text-slate-300 focus:outline-none focus:border-indigo-500">
+                        <input type="text" id="cust-notes-${idx}" value="${cust.notes || ''}" placeholder="Catatan / Alamat..." class="bg-[#090d16] border border-[var(--border-color)] rounded-lg px-2 py-1 text-[var(--text-secondary)] focus:outline-none focus:border-indigo-500">
+                        <input type="text" id="cust-labels-${idx}" value="${(cust.labels || []).join ? (cust.labels || []).join(', ') : (cust.labels || '')}" placeholder="Tag (VIP, Reseller)" class="bg-[#090d16] border border-[var(--border-color)] rounded-lg px-2 py-1 text-[var(--text-secondary)] focus:outline-none focus:border-indigo-500">
                     </div>
                 </div>
 
                 <div class="flex items-center gap-2 shrink-0 self-end sm:self-center">
-                    <button onclick="saveCustomerInfo(${idx})" class="px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold shadow-sm">
+                    <button onclick="saveCustomerInfo(${idx})" class="px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-[var(--text-primary)] text-xs font-semibold shadow-sm">
                         Simpan
                     </button>
                 </div>
@@ -208,9 +208,9 @@ window.renderMenuTreeVisual = async function() {
     
     if (!window.selectedGroupConfig || !window.selectedGroupConfig.menuTree) {
         container.innerHTML = `
-            <div class="p-6 text-center bg-[#0b1120] border border-white/10 rounded-2xl">
+            <div class="p-6 text-center bg-[#0b1120] border border-[var(--border-color)] rounded-2xl">
                 <i data-lucide="git-fork" class="w-8 h-8 mx-auto text-slate-600 mb-2"></i>
-                <p class="text-xs text-slate-400">Pilih grup pada tab <strong>Manajemen Grup</strong> untuk melihat struktur menu pohon.</p>
+                <p class="text-xs text-[var(--text-muted)]">Pilih grup pada tab <strong>Manajemen Grup</strong> untuk melihat struktur menu pohon.</p>
             </div>
         `;
         if (window.lucide) lucide.createIcons();
@@ -262,17 +262,17 @@ function createNodeHTML(node, depth) {
 
     header.innerHTML = `
         <i data-lucide="${iconName}" class="w-3.5 h-3.5 ${iconColor} shrink-0"></i>
-        <span class="font-medium flex-1 truncate text-xs ${isSelected ? 'text-white font-bold' : 'text-slate-200'}">${node.name || 'Menu'}</span>
+        <span class="font-medium flex-1 truncate text-xs ${isSelected ? 'text-[var(--text-primary)] font-bold' : 'text-[var(--text-primary)]'}">${node.name || 'Menu'}</span>
         ${promoBadge}
         ${statusBadge}
-        ${isCategory && node.children ? `<span class="text-[10px] text-slate-400 bg-white/5 px-1.5 py-0.5 rounded">${node.children.length} item</span>` : ''}
+        ${isCategory && node.children ? `<span class="text-[10px] text-[var(--text-muted)] bg-[var(--bg-subtle)] px-1.5 py-0.5 rounded">${node.children.length} item</span>` : ''}
     `;
     
     div.appendChild(header);
     
     if (isCategory && node.children && node.children.length > 0) {
         const childContainer = document.createElement('div');
-        childContainer.className = 'border-l border-white/10 pl-2 ml-2';
+        childContainer.className = 'border-l border-[var(--border-color)] pl-2 ml-2';
         node.children.forEach(child => {
             const childEl = createNodeHTML(child, depth + 1);
             childContainer.appendChild(childEl);

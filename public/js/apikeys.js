@@ -75,7 +75,7 @@
             list.innerHTML = `
                 <div class="col-span-full enterprise-card text-center py-8 space-y-2">
                     <i data-lucide="wifi-off" class="w-8 h-8 mx-auto text-rose-400"></i>
-                    <p class="font-bold text-xs text-white">Gagal Memuat API Key</p>
+                    <p class="font-bold text-xs text-[var(--text-primary)]">Gagal Memuat API Key</p>
                     <p class="text-[11px] text-[var(--text-muted)]">${e.message}</p>
                     <button onclick="loadApiKeys()" class="enterprise-btn enterprise-btn-secondary text-xs mt-2">Coba Lagi</button>
                 </div>
@@ -112,7 +112,7 @@
                     </div>
                     <div class="shrink-0">
                         <span class="w-4 h-4 rounded-full border flex items-center justify-center ${isActive ? 'bg-indigo-600 border-indigo-600' : 'border-[var(--border-color)]'}">
-                            ${isActive ? '<i data-lucide="check" class="w-2.5 h-2.5 text-white"></i>' : ''}
+                            ${isActive ? '<i data-lucide="check" class="w-2.5 h-2.5 text-[var(--text-primary)]"></i>' : ''}
                         </span>
                     </div>
                 </div>
@@ -275,7 +275,7 @@
                     <!-- Code Block -->
                     <div class="mt-3 p-2 rounded-lg bg-[var(--bg-input)] border border-[var(--border-color)] flex items-center justify-between gap-2">
                         <code class="font-mono-num text-xs text-indigo-300 truncate">${escHtml(key.keyMasked || key.key || '••••••••')}</code>
-                        <button onclick="window.copyKeyToClipboard('${escHtml(key.key)}')" class="p-1 rounded text-[var(--text-muted)] hover:text-white" title="Salin API Key">
+                        <button onclick="window.copyKeyToClipboard('${escHtml(key.key)}')" class="p-1 rounded text-[var(--text-muted)] hover:text-[var(--text-primary)]" title="Salin API Key">
                             <i data-lucide="copy" class="w-3.5 h-3.5"></i>
                         </button>
                     </div>
@@ -294,7 +294,7 @@
                         <span>Uji Key</span>
                     </button>
                     <div class="flex items-center gap-1">
-                        <button onclick="window.openEditLabel('${key.provider}', ${key.index}, '${escHtml(key.label || '')}')" class="p-1.5 rounded-lg bg-[var(--bg-subtle)] text-[var(--text-secondary)] hover:text-white border border-[var(--border-color)]" title="Edit Label">
+                        <button onclick="window.openEditLabel('${key.provider}', ${key.index}, '${escHtml(key.label || '')}')" class="p-1.5 rounded-lg bg-[var(--bg-subtle)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] border border-[var(--border-color)]" title="Edit Label">
                             <i data-lucide="pencil" class="w-3 h-3"></i>
                         </button>
                         <button onclick="window.openDeleteConfirm('${key.provider}', ${key.index}, '${escHtml(key.keyMasked || '')}', '${p.label}')" class="p-1.5 rounded-lg bg-rose-500/10 text-rose-400 hover:bg-rose-500/20 border border-rose-500/20" title="Hapus Key">

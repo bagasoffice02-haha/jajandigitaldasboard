@@ -219,21 +219,21 @@ window.appendMessageLog = function(msg) {
     const bubble = document.createElement('div');
     bubble.className = `flex items-start gap-2.5 message-log-item ${isOutgoing ? 'flex-row-reverse' : ''}`;
     
-    const avatarBg = isOutgoing ? 'bg-indigo-600 text-white' : 'bg-sky-500/20 text-sky-300';
-    const bubbleBg = isOutgoing ? 'bg-indigo-600/20 border-indigo-500/30 text-indigo-100' : 'bg-[#0b1120] border-white/10 text-slate-200';
+    const avatarBg = isOutgoing ? 'bg-indigo-600 text-white' : 'bg-sky-500/20 text-sky-400';
+    const bubbleBg = isOutgoing ? 'bg-indigo-500/10 border-indigo-500/30 text-[var(--text-primary)]' : 'bg-[var(--bg-subtle)] border-[var(--border-color)] text-[var(--text-primary)]';
 
     bubble.innerHTML = `
         <div class="w-7 h-7 rounded-lg ${avatarBg} flex items-center justify-center shrink-0 text-xs font-bold shadow-sm">
             ${isOutgoing ? 'AI' : 'U'}
         </div>
         <div class="max-w-[78%] rounded-2xl p-3 border text-xs ${bubbleBg} shadow-sm space-y-1">
-            <div class="flex items-center justify-between gap-3 text-[10px] text-slate-400 font-mono">
+            <div class="flex items-center justify-between gap-3 text-[10px] text-[var(--text-muted)] font-mono">
                 <span>+${cleanChatId}</span>
                 <span>${timeStr}</span>
             </div>
             <p class="whitespace-pre-wrap leading-relaxed">${escapeHtml(msg.body)}</p>
             ${msg.fileSent ? `
-                <div class="inline-flex items-center gap-1.5 px-2 py-1 rounded bg-white/5 border border-white/10 text-[10px] text-indigo-300 mt-1">
+                <div class="inline-flex items-center gap-1.5 px-2 py-1 rounded bg-[var(--bg-subtle)] border border-[var(--border-color)] text-[10px] text-indigo-400 mt-1">
                     <i data-lucide="paperclip" class="w-3 h-3"></i>
                     <span>Berkas: ${escapeHtml(msg.fileSent)}</span>
                 </div>

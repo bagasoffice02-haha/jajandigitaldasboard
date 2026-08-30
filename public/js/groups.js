@@ -14,10 +14,10 @@ window.loadGroupsList = async function() {
 
     if (container) {
         container.innerHTML = `
-            <div class="p-6 text-center bg-[#0b1120] border border-white/10 rounded-2xl">
+            <div class="p-6 text-center bg-[#0b1120] border border-[var(--border-color)] rounded-2xl">
                 <div class="flex items-center justify-center gap-3 mb-2">
                     <div class="w-4 h-4 border-2 border-indigo-500/20 border-t-indigo-500 rounded-full animate-spin"></div>
-                    <p id="group-loading-text" class="text-xs text-slate-400 font-medium">Mengambil daftar grup WhatsApp...</p>
+                    <p id="group-loading-text" class="text-xs text-[var(--text-muted)] font-medium">Mengambil daftar grup WhatsApp...</p>
                 </div>
                 <div class="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden">
                     <div id="group-loading-progress" class="bg-indigo-500 h-full w-[30%] transition-all duration-300"></div>
@@ -63,12 +63,12 @@ window.loadGroupsList = async function() {
                         <i data-lucide="alert-triangle" class="w-5 h-5"></i>
                     </div>
                     <div>
-                        <h4 class="text-xs font-bold text-white">Gagal Memuat Daftar Grup</h4>
-                        <p class="text-[11px] text-slate-400 mt-0.5">${err.message || 'Pastikan server bot aktif.'}</p>
+                        <h4 class="text-xs font-bold text-[var(--text-primary)]">Gagal Memuat Daftar Grup</h4>
+                        <p class="text-[11px] text-[var(--text-muted)] mt-0.5">${err.message || 'Pastikan server bot aktif.'}</p>
                     </div>
                     <div class="flex items-center justify-center gap-2">
-                        <button onclick="loadGroupsList()" class="px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white text-xs font-semibold">Coba Lagi</button>
-                        <button onclick="addNewGroupJidManual()" class="px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold">Tambah Manual</button>
+                        <button onclick="loadGroupsList()" class="px-3 py-1.5 rounded-lg bg-[var(--bg-subtle)] hover:bg-white/20 text-[var(--text-primary)] text-xs font-semibold">Coba Lagi</button>
+                        <button onclick="addNewGroupJidManual()" class="px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-[var(--text-primary)] text-xs font-semibold">Tambah Manual</button>
                     </div>
                 </div>
             `;
@@ -84,10 +84,10 @@ window.renderGroupsListSidebar = function() {
 
     if (!window.activeGroups || window.activeGroups.length === 0) {
         container.innerHTML = `
-            <div class="p-8 text-center bg-[#0b1120] border border-white/10 rounded-2xl space-y-3">
+            <div class="p-8 text-center bg-[#0b1120] border border-[var(--border-color)] rounded-2xl space-y-3">
                 <i data-lucide="users" class="w-8 h-8 mx-auto text-slate-600"></i>
-                <p class="text-xs text-slate-400">Belum ada grup yang terdeteksi di database.</p>
-                <button onclick="addNewGroupJidManual()" class="px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold shadow-sm">
+                <p class="text-xs text-[var(--text-muted)]">Belum ada grup yang terdeteksi di database.</p>
+                <button onclick="addNewGroupJidManual()" class="px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-[var(--text-primary)] text-xs font-semibold shadow-sm">
                     Tambah ID JID Grup Manual
                 </button>
             </div>
@@ -101,7 +101,7 @@ window.renderGroupsListSidebar = function() {
         const isSelected = window.selectedGroupId === g.id;
         const card = document.createElement('div');
         card.className = `group-card p-4 rounded-xl border transition-all cursor-pointer ${
-            isSelected ? 'bg-indigo-600/10 border-indigo-500/50 shadow-sm' : 'bg-[#0b1120] border-white/10 hover:border-white/20'
+            isSelected ? 'bg-indigo-600/10 border-indigo-500/50 shadow-sm' : 'bg-[#0b1120] border-[var(--border-color)] hover:border-white/20'
         }`;
         card.onclick = () => window.selectGroup(g.id);
 
@@ -114,26 +114,26 @@ window.renderGroupsListSidebar = function() {
             <div class="flex items-start justify-between gap-3">
                 <div class="min-w-0 flex-1">
                     <div class="flex items-center gap-2">
-                        <h4 class="font-bold text-xs text-white truncate">${g.name || g.id}</h4>
-                        ${isSelected ? '<span class="text-[10px] bg-indigo-500 text-white px-1.5 py-0.2 rounded font-bold">Dipilih</span>' : ''}
+                        <h4 class="font-bold text-xs text-[var(--text-primary)] truncate">${g.name || g.id}</h4>
+                        ${isSelected ? '<span class="text-[10px] bg-indigo-500 text-[var(--text-primary)] px-1.5 py-0.2 rounded font-bold">Dipilih</span>' : ''}
                     </div>
-                    <p class="text-[11px] text-slate-400 font-mono mt-0.5">${cleanJid}</p>
+                    <p class="text-[11px] text-[var(--text-muted)] font-mono mt-0.5">${cleanJid}</p>
                 </div>
                 <span class="text-[10px] font-bold px-2 py-0.5 rounded-md shrink-0 ${
-                    isBotActive ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-slate-800 text-slate-400'
+                    isBotActive ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-slate-800 text-[var(--text-muted)]'
                 }">
                     ${isBotActive ? 'BOT AKTIF' : 'NONAKTIF'}
                 </span>
             </div>
 
-            <div class="flex items-center gap-2 mt-3 pt-2 border-t border-white/5 text-[11px] text-slate-400">
+            <div class="flex items-center gap-2 mt-3 pt-2 border-t border-white/5 text-[11px] text-[var(--text-muted)]">
                 <span class="flex items-center gap-1">
-                    <i data-lucide="message-square" class="w-3 h-3 text-slate-500"></i>
+                    <i data-lucide="message-square" class="w-3 h-3 text-[var(--text-muted)]"></i>
                     ${hasWelcome ? '<span class="text-indigo-300">Welcome On</span>' : 'Welcome Off'}
                 </span>
                 <span>•</span>
                 <span class="flex items-center gap-1">
-                    <i data-lucide="clock" class="w-3 h-3 text-slate-500"></i>
+                    <i data-lucide="clock" class="w-3 h-3 text-[var(--text-muted)]"></i>
                     ${hasSchedule ? '<span class="text-amber-300">Jadwal Aktif</span>' : 'Jadwal Off'}
                 </span>
             </div>

@@ -97,8 +97,8 @@ function renderPremiumAccounts() {
     const mobileCards = document.getElementById('premium-accounts-mobile-cards');
 
     if (!premiumAccounts || premiumAccounts.length === 0) {
-        if (tbody) tbody.innerHTML = '<tr><td colspan="5" class="py-8 text-center text-xs text-slate-500">Belum ada stok akun premium.</td></tr>';
-        if (mobileCards) mobileCards.innerHTML = '<div class="py-8 text-center text-xs text-slate-500">Belum ada stok akun premium.</div>';
+        if (tbody) tbody.innerHTML = '<tr><td colspan="5" class="py-8 text-center text-xs text-[var(--text-muted)]">Belum ada stok akun premium.</td></tr>';
+        if (mobileCards) mobileCards.innerHTML = '<div class="py-8 text-center text-xs text-[var(--text-muted)]">Belum ada stok akun premium.</div>';
         return;
     }
 
@@ -111,10 +111,10 @@ function renderPremiumAccounts() {
 
             return `
                 <tr>
-                    <td class="font-bold text-xs text-white">${escapeHtml(acc.product_name || 'APK')}</td>
+                    <td class="font-bold text-xs text-[var(--text-primary)]">${escapeHtml(acc.product_name || 'APK')}</td>
                     <td>
-                        <div class="font-semibold text-xs text-white font-mono-num">${escapeHtml(acc.email)}</div>
-                        <div class="text-[11px] text-slate-400 font-mono-num">Pass: ${escapeHtml(acc.password)}</div>
+                        <div class="font-semibold text-xs text-[var(--text-primary)] font-mono-num">${escapeHtml(acc.email)}</div>
+                        <div class="text-[11px] text-[var(--text-muted)] font-mono-num">Pass: ${escapeHtml(acc.password)}</div>
                     </td>
                     <td class="font-mono-num text-xs">${acc.active_users || 0} / ${acc.max_users}</td>
                     <td>${statusBadge}</td>
@@ -137,15 +137,15 @@ function renderPremiumAccounts() {
             return `
                 <div class="mobile-entity-card">
                     <div class="mobile-entity-header">
-                        <span class="font-bold text-xs text-white">${escapeHtml(acc.product_name || 'APK')}</span>
+                        <span class="font-bold text-xs text-[var(--text-primary)]">${escapeHtml(acc.product_name || 'APK')}</span>
                         ${statusBadge}
                     </div>
                     <div class="space-y-1">
                         <div class="text-xs font-mono-num text-indigo-300">${escapeHtml(acc.email)}</div>
-                        <div class="text-[11px] font-mono-num text-slate-400">Pass: ${escapeHtml(acc.password)}</div>
+                        <div class="text-[11px] font-mono-num text-[var(--text-muted)]">Pass: ${escapeHtml(acc.password)}</div>
                     </div>
                     <div class="mobile-entity-actions">
-                        <span class="text-[11px] text-slate-400 mr-auto">Slot: ${acc.active_users || 0}/${acc.max_users}</span>
+                        <span class="text-[11px] text-[var(--text-muted)] mr-auto">Slot: ${acc.active_users || 0}/${acc.max_users}</span>
                         <button onclick="deletePremiumAccount(${acc.id})" class="p-1.5 rounded-lg bg-rose-500/10 text-rose-400 border border-rose-500/20">
                             <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
                         </button>
@@ -163,8 +163,8 @@ function renderPremiumSales() {
     const mobileCards = document.getElementById('premium-sales-mobile-cards');
 
     if (!premiumSales || premiumSales.length === 0) {
-        if (tbody) tbody.innerHTML = '<tr><td colspan="6" class="py-8 text-center text-xs text-slate-500">Belum ada riwayat penjualan.</td></tr>';
-        if (mobileCards) mobileCards.innerHTML = '<div class="py-8 text-center text-xs text-slate-500">Belum ada riwayat penjualan.</div>';
+        if (tbody) tbody.innerHTML = '<tr><td colspan="6" class="py-8 text-center text-xs text-[var(--text-muted)]">Belum ada riwayat penjualan.</td></tr>';
+        if (mobileCards) mobileCards.innerHTML = '<div class="py-8 text-center text-xs text-[var(--text-muted)]">Belum ada riwayat penjualan.</div>';
         return;
     }
 
@@ -189,21 +189,21 @@ function renderPremiumSales() {
             return `
                 <tr>
                     <td>
-                        <div class="font-bold text-xs text-white">${escapeHtml(sale.product_name || 'APK')}</div>
-                        <div class="text-[11px] text-slate-400 font-mono-num truncate max-w-[140px]">${escapeHtml(sale.account_email || '')}</div>
+                        <div class="font-bold text-xs text-[var(--text-primary)]">${escapeHtml(sale.product_name || 'APK')}</div>
+                        <div class="text-[11px] text-[var(--text-muted)] font-mono-num truncate max-w-[140px]">${escapeHtml(sale.account_email || '')}</div>
                     </td>
                     <td>
-                        <div class="font-semibold text-xs text-white">${escapeHtml(sale.buyer_name)}</div>
+                        <div class="font-semibold text-xs text-[var(--text-primary)]">${escapeHtml(sale.buyer_name)}</div>
                         <a href="https://wa.me/${cleanPhone}" target="_blank" class="text-[11px] text-emerald-400 font-mono-num hover:underline">+${cleanPhone}</a>
                     </td>
                     <td class="text-xs">${escapeHtml(sale.profile_name || '-')}</td>
                     <td>
                         <div>${daysBadge}</div>
-                        <div class="text-[10px] text-slate-400 mt-0.5">s/d ${sale.end_date || '-'}</div>
+                        <div class="text-[10px] text-[var(--text-muted)] mt-0.5">s/d ${sale.end_date || '-'}</div>
                     </td>
                     <td>
                         <div>${payBadge}</div>
-                        <div class="font-mono-num font-bold text-xs text-white mt-0.5">${formatRupiah(sale.price)}</div>
+                        <div class="font-mono-num font-bold text-xs text-[var(--text-primary)] mt-0.5">${formatRupiah(sale.price)}</div>
                     </td>
                     <td class="text-right">
                         <div class="flex items-center justify-end gap-1.5">
@@ -227,19 +227,19 @@ function renderPremiumSales() {
             return `
                 <div class="mobile-entity-card">
                     <div class="mobile-entity-header">
-                        <span class="font-bold text-xs text-white">${escapeHtml(sale.product_name || 'APK')} - ${escapeHtml(sale.profile_name || 'Slot')}</span>
+                        <span class="font-bold text-xs text-[var(--text-primary)]">${escapeHtml(sale.product_name || 'APK')} - ${escapeHtml(sale.profile_name || 'Slot')}</span>
                         <span class="font-mono-num font-bold text-xs text-emerald-400">${formatRupiah(sale.price)}</span>
                     </div>
-                    <div class="text-xs text-slate-300">
+                    <div class="text-xs text-[var(--text-secondary)]">
                         <span>${escapeHtml(sale.buyer_name)} (+${cleanPhone})</span>
-                        <div class="text-[11px] text-slate-400 mt-0.5">Berakhir: ${sale.end_date || '-'}</div>
+                        <div class="text-[11px] text-[var(--text-muted)] mt-0.5">Berakhir: ${sale.end_date || '-'}</div>
                     </div>
                     <div class="mobile-entity-actions">
-                        <a href="https://wa.me/${cleanPhone}" target="_blank" class="px-2.5 py-1 rounded-lg bg-white/5 border border-white/10 text-[11px] text-slate-300 flex items-center gap-1">
+                        <a href="https://wa.me/${cleanPhone}" target="_blank" class="px-2.5 py-1 rounded-lg bg-[var(--bg-subtle)] border border-[var(--border-color)] text-[11px] text-[var(--text-secondary)] flex items-center gap-1">
                             <i data-lucide="message-circle" class="w-3 h-3 text-emerald-400"></i>
                             <span>Chat</span>
                         </a>
-                        <button onclick="sendPremiumReminder(${sale.id}, this)" class="px-2.5 py-1 rounded-lg bg-emerald-600 text-white text-[11px] font-semibold flex items-center gap-1">
+                        <button onclick="sendPremiumReminder(${sale.id}, this)" class="px-2.5 py-1 rounded-lg bg-emerald-600 text-[var(--text-primary)] text-[11px] font-semibold flex items-center gap-1">
                             <i data-lucide="bell" class="w-3 h-3"></i>
                             <span>Ingatkan</span>
                         </button>

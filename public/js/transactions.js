@@ -23,8 +23,8 @@ window.loadOrders = async function() {
     const tableBody = document.getElementById('orders-table-body');
     const mobileCards = document.getElementById('orders-mobile-cards');
     
-    if (tableBody) tableBody.innerHTML = '<tr><td colspan="7" class="py-6 text-center text-xs text-slate-500">Memuat pesanan...</td></tr>';
-    if (mobileCards) mobileCards.innerHTML = '<div class="p-6 text-center text-xs text-slate-500">Memuat pesanan...</div>';
+    if (tableBody) tableBody.innerHTML = '<tr><td colspan="7" class="py-6 text-center text-xs text-[var(--text-muted)]">Memuat pesanan...</td></tr>';
+    if (mobileCards) mobileCards.innerHTML = '<div class="p-6 text-center text-xs text-[var(--text-muted)]">Memuat pesanan...</div>';
 
     try {
         const res = await fetch('/api/orders');
@@ -48,8 +48,8 @@ window.renderOrders = function() {
         : allOrders.filter(o => (o.status || 'PENDING').toUpperCase() === currentOrderFilter);
 
     if (!filtered || filtered.length === 0) {
-        const emptyMsg = '<div class="py-8 text-center text-xs text-slate-500">Tidak ada pesanan ditemukan.</div>';
-        if (tableBody) tableBody.innerHTML = '<tr><td colspan="7" class="py-8 text-center text-xs text-slate-500">Tidak ada pesanan ditemukan.</td></tr>';
+        const emptyMsg = '<div class="py-8 text-center text-xs text-[var(--text-muted)]">Tidak ada pesanan ditemukan.</div>';
+        if (tableBody) tableBody.innerHTML = '<tr><td colspan="7" class="py-8 text-center text-xs text-[var(--text-muted)]">Tidak ada pesanan ditemukan.</td></tr>';
         if (mobileCards) mobileCards.innerHTML = emptyMsg;
         return;
     }
@@ -67,16 +67,16 @@ window.renderOrders = function() {
             return `
                 <tr>
                     <td class="font-mono-num font-bold text-xs">#${order.id}</td>
-                    <td class="text-slate-400 text-[11px] whitespace-nowrap">${timeStr}</td>
+                    <td class="text-[var(--text-muted)] text-[11px] whitespace-nowrap">${timeStr}</td>
                     <td>
-                        <div class="font-semibold text-xs text-white">${escapeHtml(order.customer_name || 'Customer')}</div>
+                        <div class="font-semibold text-xs text-[var(--text-primary)]">${escapeHtml(order.customer_name || 'Customer')}</div>
                         <a href="https://wa.me/${cleanPhone}" target="_blank" class="text-[11px] text-emerald-400 font-mono-num hover:underline flex items-center gap-1">
                             +${cleanPhone}
                             <i data-lucide="external-link" class="w-2.5 h-2.5"></i>
                         </a>
                     </td>
                     <td class="font-semibold text-xs">${escapeHtml(order.product_name || order.item_name || 'Produk')}</td>
-                    <td class="text-right font-mono-num font-bold text-xs text-white">${formatRupiah(order.amount || order.price)}</td>
+                    <td class="text-right font-mono-num font-bold text-xs text-[var(--text-primary)]">${formatRupiah(order.amount || order.price)}</td>
                     <td>${statusBadge}</td>
                     <td class="text-right">
                         <div class="flex items-center justify-end gap-1.5">
@@ -112,15 +112,15 @@ window.renderOrders = function() {
                     <div class="mobile-entity-header">
                         <div class="flex items-center gap-2">
                             <span class="font-mono-num font-bold text-xs text-indigo-400">#${order.id}</span>
-                            <span class="text-[10px] text-slate-400">${timeStr}</span>
+                            <span class="text-[10px] text-[var(--text-muted)]">${timeStr}</span>
                         </div>
                         ${statusBadge}
                     </div>
                     
                     <div class="flex items-start justify-between gap-2">
                         <div>
-                            <h4 class="text-xs font-bold text-white">${escapeHtml(order.product_name || order.item_name || 'Produk')}</h4>
-                            <p class="text-[11px] text-slate-300 mt-0.5">${escapeHtml(order.customer_name || 'Customer')} (+${cleanPhone})</p>
+                            <h4 class="text-xs font-bold text-[var(--text-primary)]">${escapeHtml(order.product_name || order.item_name || 'Produk')}</h4>
+                            <p class="text-[11px] text-[var(--text-secondary)] mt-0.5">${escapeHtml(order.customer_name || 'Customer')} (+${cleanPhone})</p>
                         </div>
                         <div class="text-right">
                             <span class="font-mono-num font-bold text-sm text-emerald-400">${formatRupiah(order.amount || order.price)}</span>
@@ -128,12 +128,12 @@ window.renderOrders = function() {
                     </div>
 
                     <div class="mobile-entity-actions">
-                        <a href="https://wa.me/${cleanPhone}" target="_blank" class="px-2.5 py-1 rounded-lg bg-white/5 border border-white/10 text-[11px] text-slate-300 flex items-center gap-1">
+                        <a href="https://wa.me/${cleanPhone}" target="_blank" class="px-2.5 py-1 rounded-lg bg-[var(--bg-subtle)] border border-[var(--border-color)] text-[11px] text-[var(--text-secondary)] flex items-center gap-1">
                             <i data-lucide="message-circle" class="w-3 h-3 text-emerald-400"></i>
                             <span>Chat</span>
                         </a>
                         ${order.status !== 'PAID' ? `
-                            <button onclick="updateOrderStatus(${order.id}, 'PAID')" class="px-3 py-1 rounded-lg bg-emerald-600 text-white text-[11px] font-semibold shadow-sm">
+                            <button onclick="updateOrderStatus(${order.id}, 'PAID')" class="px-3 py-1 rounded-lg bg-emerald-600 text-[var(--text-primary)] text-[11px] font-semibold shadow-sm">
                                 Tandai Lunas
                             </button>
                         ` : ''}
@@ -177,8 +177,8 @@ window.loadInvoices = async function() {
     const tableBody = document.getElementById('invoices-table-body');
     const mobileCards = document.getElementById('invoices-mobile-cards');
     
-    if (tableBody) tableBody.innerHTML = '<tr><td colspan="7" class="py-6 text-center text-xs text-slate-500">Memuat invoice...</td></tr>';
-    if (mobileCards) mobileCards.innerHTML = '<div class="p-6 text-center text-xs text-slate-500">Memuat invoice...</div>';
+    if (tableBody) tableBody.innerHTML = '<tr><td colspan="7" class="py-6 text-center text-xs text-[var(--text-muted)]">Memuat invoice...</td></tr>';
+    if (mobileCards) mobileCards.innerHTML = '<div class="p-6 text-center text-xs text-[var(--text-muted)]">Memuat invoice...</div>';
 
     try {
         const res = await fetch('/api/invoices');
@@ -202,8 +202,8 @@ window.renderInvoices = function() {
         : allInvoices.filter(i => (i.status || 'UNPAID').toUpperCase() === currentInvoiceFilter);
 
     if (!filtered || filtered.length === 0) {
-        const emptyMsg = '<div class="py-8 text-center text-xs text-slate-500">Tidak ada invoice ditemukan.</div>';
-        if (tableBody) tableBody.innerHTML = '<tr><td colspan="7" class="py-8 text-center text-xs text-slate-500">Tidak ada invoice ditemukan.</td></tr>';
+        const emptyMsg = '<div class="py-8 text-center text-xs text-[var(--text-muted)]">Tidak ada invoice ditemukan.</div>';
+        if (tableBody) tableBody.innerHTML = '<tr><td colspan="7" class="py-8 text-center text-xs text-[var(--text-muted)]">Tidak ada invoice ditemukan.</td></tr>';
         if (mobileCards) mobileCards.innerHTML = emptyMsg;
         return;
     }
@@ -221,13 +221,13 @@ window.renderInvoices = function() {
             return `
                 <tr>
                     <td class="font-mono-num font-bold text-xs">INV-${inv.id}</td>
-                    <td class="text-slate-400 text-[11px] whitespace-nowrap">${timeStr}</td>
+                    <td class="text-[var(--text-muted)] text-[11px] whitespace-nowrap">${timeStr}</td>
                     <td>
-                        <div class="font-semibold text-xs text-white">${escapeHtml(inv.customer_name || 'Customer')}</div>
-                        <span class="text-[11px] text-slate-400 font-mono-num">+${cleanPhone}</span>
+                        <div class="font-semibold text-xs text-[var(--text-primary)]">${escapeHtml(inv.customer_name || 'Customer')}</div>
+                        <span class="text-[11px] text-[var(--text-muted)] font-mono-num">+${cleanPhone}</span>
                     </td>
                     <td class="text-xs">${escapeHtml(inv.description || 'Tagihan Pembelian')}</td>
-                    <td class="text-right font-mono-num font-bold text-xs text-white">${formatRupiah(inv.amount)}</td>
+                    <td class="text-right font-mono-num font-bold text-xs text-[var(--text-primary)]">${formatRupiah(inv.amount)}</td>
                     <td>${statusBadge}</td>
                     <td class="text-right">
                         <div class="flex items-center justify-end gap-1.5">
@@ -258,16 +258,16 @@ window.renderInvoices = function() {
                     </div>
                     <div class="flex items-start justify-between gap-2">
                         <div>
-                            <h4 class="text-xs font-bold text-white">${escapeHtml(inv.description || 'Tagihan')}</h4>
-                            <p class="text-[11px] text-slate-400 mt-0.5">${escapeHtml(inv.customer_name || 'Customer')} (+${cleanPhone})</p>
+                            <h4 class="text-xs font-bold text-[var(--text-primary)]">${escapeHtml(inv.description || 'Tagihan')}</h4>
+                            <p class="text-[11px] text-[var(--text-muted)] mt-0.5">${escapeHtml(inv.customer_name || 'Customer')} (+${cleanPhone})</p>
                         </div>
                         <div class="text-right">
-                            <span class="font-mono-num font-bold text-sm text-white">${formatRupiah(inv.amount)}</span>
+                            <span class="font-mono-num font-bold text-sm text-[var(--text-primary)]">${formatRupiah(inv.amount)}</span>
                         </div>
                     </div>
                     ${inv.status !== 'PAID' ? `
                         <div class="mobile-entity-actions">
-                            <button onclick="updateInvoiceStatus(${inv.id}, 'PAID')" class="px-3 py-1 rounded-lg bg-emerald-600 text-white text-[11px] font-semibold">
+                            <button onclick="updateInvoiceStatus(${inv.id}, 'PAID')" class="px-3 py-1 rounded-lg bg-emerald-600 text-[var(--text-primary)] text-[11px] font-semibold">
                                 Set Lunas
                             </button>
                         </div>

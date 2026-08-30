@@ -97,8 +97,8 @@ function renderReferralDashboardCodes(codes) {
     const mobileCards = document.getElementById('dashRefMobileCards');
 
     if (codes.length === 0) {
-        if (tbody) tbody.innerHTML = '<tr><td colspan="6" class="py-8 text-center text-xs text-slate-500">Belum ada peserta referral terdaftar.</td></tr>';
-        if (mobileCards) mobileCards.innerHTML = '<div class="py-8 text-center text-xs text-slate-500">Belum ada peserta referral terdaftar.</div>';
+        if (tbody) tbody.innerHTML = '<tr><td colspan="6" class="py-8 text-center text-xs text-[var(--text-muted)]">Belum ada peserta referral terdaftar.</td></tr>';
+        if (mobileCards) mobileCards.innerHTML = '<div class="py-8 text-center text-xs text-[var(--text-muted)]">Belum ada peserta referral terdaftar.</div>';
         return;
     }
 
@@ -108,10 +108,10 @@ function renderReferralDashboardCodes(codes) {
             const cleanPhone = (item.user_phone || '').replace(/\D/g, '');
             return `
                 <tr>
-                    <td class="font-bold text-xs text-white">${escapeHtml(item.user_name || 'Member')}</td>
+                    <td class="font-bold text-xs text-[var(--text-primary)]">${escapeHtml(item.user_name || 'Member')}</td>
                     <td class="font-mono-num text-xs text-emerald-400">+${cleanPhone}</td>
                     <td>
-                        <code class="font-mono-num font-bold text-xs text-indigo-400 bg-white/5 px-2 py-0.5 rounded border border-white/10">${escapeHtml(item.code)}</code>
+                        <code class="font-mono-num font-bold text-xs text-indigo-400 bg-[var(--bg-subtle)] px-2 py-0.5 rounded border border-[var(--border-color)]">${escapeHtml(item.code)}</code>
                     </td>
                     <td class="font-mono-num text-xs">${item.total_invites || 0} orang</td>
                     <td>
@@ -140,17 +140,17 @@ function renderReferralDashboardCodes(codes) {
                 <div class="mobile-entity-card">
                     <div class="mobile-entity-header">
                         <div>
-                            <h4 class="font-bold text-xs text-white">${escapeHtml(item.user_name || 'Member')}</h4>
+                            <h4 class="font-bold text-xs text-[var(--text-primary)]">${escapeHtml(item.user_name || 'Member')}</h4>
                             <span class="font-mono-num text-[11px] text-emerald-400">+${cleanPhone}</span>
                         </div>
-                        <code class="font-mono-num font-bold text-xs text-indigo-400 bg-white/5 px-2 py-0.5 rounded border border-white/10">${escapeHtml(item.code)}</code>
+                        <code class="font-mono-num font-bold text-xs text-indigo-400 bg-[var(--bg-subtle)] px-2 py-0.5 rounded border border-[var(--border-color)]">${escapeHtml(item.code)}</code>
                     </div>
-                    <div class="flex items-center justify-between text-xs text-slate-300 pt-1">
+                    <div class="flex items-center justify-between text-xs text-[var(--text-secondary)] pt-1">
                         <span>Undangan: <strong>${item.total_invites || 0}</strong></span>
                         <span class="font-bold text-amber-400">${item.points || 0} Poin</span>
                     </div>
                     <div class="mobile-entity-actions">
-                        <button onclick="window.openManualRewardModal('${item.user_phone}', '${escapeHtml(item.user_name || 'Member')}', ${item.points || 0})" class="px-3 py-1 rounded-lg bg-indigo-600 text-white text-[11px] font-semibold">
+                        <button onclick="window.openManualRewardModal('${item.user_phone}', '${escapeHtml(item.user_name || 'Member')}', ${item.points || 0})" class="px-3 py-1 rounded-lg bg-indigo-600 text-[var(--text-primary)] text-[11px] font-semibold">
                             Atur Poin
                         </button>
                         <button onclick="window.deleteReferralCodeDirect('${item.code}')" class="p-1 rounded-lg bg-rose-500/10 text-rose-400 border border-rose-500/20">
@@ -170,7 +170,7 @@ function renderReferralDashboardLogs(logs) {
     if (!tbody) return;
 
     if (logs.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="5" class="py-6 text-center text-xs text-slate-500">Belum ada riwayat klaim undangan.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="5" class="py-6 text-center text-xs text-[var(--text-muted)]">Belum ada riwayat klaim undangan.</td></tr>';
         return;
     }
 
@@ -182,13 +182,13 @@ function renderReferralDashboardLogs(logs) {
 
         return `
             <tr>
-                <td class="text-slate-400 text-[11px] font-mono-num whitespace-nowrap">${timeStr}</td>
-                <td class="text-xs font-semibold text-white">+${referrerPhone}</td>
-                <td class="text-xs text-slate-300">+${refereePhone}</td>
+                <td class="text-[var(--text-muted)] text-[11px] font-mono-num whitespace-nowrap">${timeStr}</td>
+                <td class="text-xs font-semibold text-[var(--text-primary)]">+${referrerPhone}</td>
+                <td class="text-xs text-[var(--text-secondary)]">+${refereePhone}</td>
                 <td>
                     <code class="font-mono-num text-[11px] text-indigo-400">${escapeHtml(l.referral_code)}</code>
                 </td>
-                <td class="text-slate-400 text-[11px] font-mono-num">${cleanGid}</td>
+                <td class="text-[var(--text-muted)] text-[11px] font-mono-num">${cleanGid}</td>
             </tr>
         `;
     }).join('');
@@ -260,17 +260,17 @@ window.loadGroupInviteLinksConfig = async function() {
             if (!container) return;
             const keys = Object.keys(data.links);
             if (keys.length === 0) {
-                container.innerHTML = '<p class="text-xs text-slate-500">Belum ada tautan undangan grup terkonfigurasi.</p>';
+                container.innerHTML = '<p class="text-xs text-[var(--text-muted)]">Belum ada tautan undangan grup terkonfigurasi.</p>';
                 return;
             }
             container.innerHTML = keys.map(gid => {
                 const link = data.links[gid];
                 const cleanGid = gid.split('@')[0];
                 return `
-                    <div class="p-3 rounded-xl bg-[#0b1120] border border-white/10 flex items-center justify-between gap-3 text-xs">
+                    <div class="p-3 rounded-xl bg-[var(--bg-subtle)] border border-[var(--border-color)] flex items-center justify-between gap-3 text-xs">
                         <div>
-                            <span class="font-bold text-white">Grup: ${cleanGid}</span>
-                            <p class="text-[11px] text-slate-400 font-mono-num truncate max-w-xs">${escapeHtml(link)}</p>
+                            <span class="font-bold text-[var(--text-primary)]">Grup: ${cleanGid}</span>
+                            <p class="text-[11px] text-[var(--text-muted)] font-mono-num truncate max-w-xs">${escapeHtml(link)}</p>
                         </div>
                         <a href="${link}" target="_blank" class="px-2.5 py-1 rounded-lg bg-indigo-600/20 text-indigo-300 text-[11px] font-semibold hover:bg-indigo-600/30">Buka</a>
                     </div>

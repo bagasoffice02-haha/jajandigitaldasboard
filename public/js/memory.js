@@ -38,10 +38,10 @@ window.loadFiles = async function() {
                     <div class="w-7 h-7 rounded-lg bg-indigo-500/10 text-indigo-400 flex items-center justify-center shrink-0">
                         <i data-lucide="file-text" class="w-3.5 h-3.5"></i>
                     </div>
-                    <span class="font-medium truncate max-w-[200px] text-white" title="${escapeHtml(fileName)}">${escapeHtml(fileName)}</span>
+                    <span class="font-medium truncate max-w-[200px] text-[var(--text-primary)]" title="${escapeHtml(fileName)}">${escapeHtml(fileName)}</span>
                 </div>
                 <div class="flex items-center gap-1.5 shrink-0">
-                    <a href="${fileUrl}" target="_blank" class="px-2 py-1 rounded-lg bg-white/5 hover:bg-white/10 text-slate-300 text-[11px] font-semibold border border-[var(--border-color)]">
+                    <a href="${fileUrl}" target="_blank" class="px-2 py-1 rounded-lg bg-[var(--bg-subtle)] hover:bg-[var(--bg-subtle)] text-[var(--text-secondary)] text-[11px] font-semibold border border-[var(--border-color)]">
                         Buka
                     </a>
                     <button onclick="deleteFile('knowledge', '${escapeHtml(fileName)}')" class="p-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/20">
