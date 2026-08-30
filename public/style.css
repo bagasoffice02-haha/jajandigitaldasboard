@@ -670,3 +670,36 @@ body {
     color: var(--text-primary);
     border-color: var(--border-hover);
 }
+
+.akm-filter-tab {
+    padding: 5px 12px;
+    border-radius: 8px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    background: var(--bg-subtle);
+    border: 1px solid var(--border-color);
+    color: var(--text-secondary);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    white-space: nowrap;
+}
+.akm-filter-tab:hover {
+    color: var(--text-primary);
+    border-color: var(--border-hover);
+}
+.akm-filter-tab.active {
+    background-color: var(--brand-primary) !important;
+    border-color: var(--brand-primary) !important;
+    color: #ffffff !important;
+}
+.akm-filter-count {
+    font-size: 0.65rem;
+    padding: 1px 5px;
+    border-radius: 9999px;
+    background: rgba(255, 255, 255, 0.15);
+    color: inherit;
+}
+

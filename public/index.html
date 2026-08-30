@@ -776,13 +776,15 @@
 
             <!-- ─── TAB 10: API KEY MANAGER (AKM) ──────────────────────── -->
             <div id="tab-apikeys" class="tab-content hidden space-y-5">
+                <!-- Top Summary & Actions -->
                 <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 enterprise-card">
                     <div>
                         <h2 class="text-sm font-bold flex items-center gap-2">
                             <i data-lucide="key-round" class="w-4 h-4 text-indigo-400"></i>
                             API Key Manager & Health Diagnostic
                         </h2>
-                        <div class="flex flex-wrap items-center gap-2 mt-2">
+                        <p class="text-xs text-[var(--text-muted)] mt-0.5">Kelola kunci API provider, rotasi pool, dan uji latensi respons real-time</p>
+                        <div class="flex flex-wrap items-center gap-2 mt-2.5">
                             <span class="badge-chip badge-slate">Total: <strong id="akm-stat-total" class="font-mono-num">0</strong></span>
                             <span class="badge-chip badge-blue">Pool: <strong id="akm-stat-pool" class="font-mono-num">0</strong></span>
                             <span class="badge-chip badge-emerald">Single: <strong id="akm-stat-single" class="font-mono-num">0</strong></span>
@@ -797,15 +799,35 @@
                         </button>
                         <button onclick="openAddKeyModal()" class="flex-1 sm:flex-none enterprise-btn enterprise-btn-primary text-xs">
                             <i data-lucide="plus" class="w-3.5 h-3.5"></i>
-                            <span>Tambah Key</span>
+                            <span>Tambah Key Baru</span>
                         </button>
                     </div>
                 </div>
 
-                <div id="akm-filter-tabs" class="flex items-center gap-2 overflow-x-auto pb-1">
-                    <button class="akm-filter-tab active" onclick="setAkmFilter('all')">Semua Provider</button>
+                <!-- Primary AI Engine Selector Card -->
+                <div class="enterprise-card space-y-3">
+                    <div class="flex items-center justify-between pb-2 border-b border-[var(--border-color)]">
+                        <div>
+                            <h3 class="font-bold text-xs uppercase tracking-wider flex items-center gap-2">
+                                <i data-lucide="cpu" class="w-4 h-4 text-purple-400"></i>
+                                Pilih Engine AI Utama Bot
+                            </h3>
+                            <p class="text-[11px] text-[var(--text-muted)]">Klik provider untuk mengalihkan mesin kecerdasan buatan utama yang aktif merespons chat</p>
+                        </div>
+                    </div>
+                    <div id="akm-engine-selector-container" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2.5">
+                        <!-- Populated dynamically by apikeys.js -->
+                    </div>
                 </div>
 
+                <!-- Filter Tabs Bar -->
+                <div class="flex items-center justify-between gap-3 overflow-x-auto pb-1">
+                    <div id="akm-filter-tabs" class="flex items-center gap-2">
+                        <button class="akm-filter-tab active" onclick="setAkmFilter('all')">Semua Provider</button>
+                    </div>
+                </div>
+
+                <!-- Cards Grid -->
                 <div id="akm-key-list" class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div class="col-span-full text-center py-8 text-xs text-[var(--text-muted)]">Memuat daftar API Key...</div>
                 </div>
