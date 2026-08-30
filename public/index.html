@@ -1,263 +1,269 @@
 <!DOCTYPE html>
-<html lang="id" class="dark">
+<html lang="id" data-theme="dark">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Jajan Digital — Asisten Virtual & Dasbor Otomasi</title>
-    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Jajan Digital — Asisten Virtual & Operasional Enterprise</title>
     
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
-            darkMode: "class",
+            darkMode: ['class', '[data-theme="dark"]'],
             theme: {
                 extend: {
                     colors: {
                         brand: {
-                            50: "#eef2ff",
-                            100: "#e0e7ff",
-                            400: "#818cf8",
-                            500: "#6366f1",
-                            600: "#4f46e5",
-                            700: "#4338ca",
+                            50: '#eef2ff',
+                            500: '#6366f1',
+                            600: '#4f46e5',
+                            700: '#4338ca'
                         }
-                    },
-                    fontFamily: {
-                        sans: ["Plus Jakarta Sans", "sans-serif"],
-                        mono: ["JetBrains Mono", "monospace"],
                     }
                 }
             }
         }
     </script>
-    
-    <link rel="stylesheet" href="style.css?v=28">
+
+    <!-- Custom Enterprise CSS -->
+    <link rel="stylesheet" href="style.css?v=32">
 </head>
-<body class="bg-[#090d16] text-slate-100 min-h-screen flex antialiased selection:bg-indigo-500/30 selection:text-indigo-300">
+<body class="min-h-screen bg-[var(--bg-main)] text-[var(--text-primary)] antialiased">
 
-    <!-- DESKTOP SIDEBAR -->
-    <aside class="hidden md:flex flex-col w-64 border-r border-white/10 bg-[#0c1222] shrink-0 sticky top-0 h-screen z-30 justify-between">
-        <div class="flex flex-col h-full overflow-y-auto">
-            <!-- Brand Header -->
-            <div class="h-16 flex items-center gap-3 px-6 border-b border-white/10 shrink-0">
-                <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-indigo-600 to-sky-400 flex items-center justify-center shadow-lg shadow-indigo-500/20">
-                    <i data-lucide="bot" class="w-5 h-5 text-white"></i>
-                </div>
-                <div>
-                    <h1 class="font-bold text-sm leading-tight text-white tracking-wide">JAJAN DIGITAL</h1>
-                    <p class="text-[11px] text-slate-400 font-medium">Asisten & Otomasi CS</p>
-                </div>
+    <!-- ══════════════════════════════════════════════════════════════
+         1. MOBILE TOP APP-BAR (< 1024px)
+         ══════════════════════════════════════════════════════════════ -->
+    <header class="mobile-app-bar lg:hidden">
+        <div class="flex items-center gap-2.5">
+            <div class="w-8 h-8 rounded-xl bg-indigo-600 text-white flex items-center justify-center font-extrabold text-sm shadow-sm">
+                JD
             </div>
-
-            <!-- Navigation Links -->
-            <nav class="p-3 space-y-6 flex-1">
-                <!-- Group: UTAMA -->
-                <div>
-                    <div class="px-3 mb-2 text-[10px] font-bold tracking-wider text-slate-500 uppercase">Utama</div>
-                    <div class="space-y-1">
-                        <button id="btn-tab-monitor" onclick="switchTab('monitor')" class="nav-item active w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold text-slate-300 hover:text-white hover:bg-white/5 transition-all">
-                            <i data-lucide="activity" class="w-4 h-4 text-slate-400"></i>
-                            <span>Live Monitor</span>
-                        </button>
-                        <button id="btn-tab-memory" onclick="switchTab('memory')" class="nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold text-slate-300 hover:text-white hover:bg-white/5 transition-all">
-                            <i data-lucide="brain-circuit" class="w-4 h-4 text-slate-400"></i>
-                            <span>Basis Pengetahuan</span>
-                        </button>
-                    </div>
+            <div>
+                <h1 class="text-xs font-bold leading-tight">Jajan Digital</h1>
+                <div class="flex items-center gap-1.5 mt-0.5">
+                    <span id="status-dot" class="w-1.5 h-1.5 rounded-full bg-slate-500"></span>
+                    <span id="header-conn-label" class="text-[10px] text-[var(--text-muted)] font-medium">Memeriksa...</span>
                 </div>
-
-                <!-- Group: BISNIS & TOKO -->
-                <div>
-                    <div class="px-3 mb-2 text-[10px] font-bold tracking-wider text-slate-500 uppercase">Operasional Bisnis</div>
-                    <div class="space-y-1">
-                        <button id="btn-tab-transactions" onclick="switchTab('transactions')" class="nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold text-slate-300 hover:text-white hover:bg-white/5 transition-all">
-                            <i data-lucide="receipt" class="w-4 h-4 text-slate-400"></i>
-                            <span>Pesanan & Invoice</span>
-                        </button>
-                        <button id="btn-tab-premium" onclick="switchTab('premium')" class="nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold text-slate-300 hover:text-white hover:bg-white/5 transition-all">
-                            <i data-lucide="crown" class="w-4 h-4 text-slate-400"></i>
-                            <span>Stok Akun Premium</span>
-                        </button>
-                        <button id="btn-tab-groups" onclick="switchTab('groups')" class="nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold text-slate-300 hover:text-white hover:bg-white/5 transition-all">
-                            <i data-lucide="users" class="w-4 h-4 text-slate-400"></i>
-                            <span>Manajemen Grup</span>
-                        </button>
-                        <button id="btn-tab-shop" onclick="switchTab('shop')" class="nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold text-slate-300 hover:text-white hover:bg-white/5 transition-all">
-                            <i data-lucide="shopping-bag" class="w-4 h-4 text-slate-400"></i>
-                            <span>Menu & CRM Pelanggan</span>
-                        </button>
-                        <button id="btn-tab-referral" onclick="switchTab('referral')" class="nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold text-slate-300 hover:text-white hover:bg-white/5 transition-all">
-                            <i data-lucide="share-2" class="w-4 h-4 text-slate-400"></i>
-                            <span>Program Referral</span>
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Group: SISTEM & AI -->
-                <div>
-                    <div class="px-3 mb-2 text-[10px] font-bold tracking-wider text-slate-500 uppercase">Sistem & AI</div>
-                    <div class="space-y-1">
-                        <button id="btn-tab-apikeys" onclick="switchTab('apikeys')" class="nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold text-slate-300 hover:text-white hover:bg-white/5 transition-all">
-                            <i data-lucide="key-round" class="w-4 h-4 text-slate-400"></i>
-                            <span>API Key Manager</span>
-                        </button>
-                        <button id="btn-tab-settings" onclick="switchTab('settings')" class="nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold text-slate-300 hover:text-white hover:bg-white/5 transition-all">
-                            <i data-lucide="settings-2" class="w-4 h-4 text-slate-400"></i>
-                            <span>Pengaturan Bot</span>
-                        </button>
-                    </div>
-                </div>
-            </nav>
-
-            <!-- Sidebar Footer -->
-            <div class="p-4 border-t border-white/10 shrink-0">
-                <button onclick="logoutAdmin()" class="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold text-rose-400 hover:bg-rose-500/10 transition-all border border-rose-500/20">
-                    <i data-lucide="log-out" class="w-3.5 h-3.5"></i>
-                    <span>Keluar Sesi</span>
-                </button>
             </div>
         </div>
-    </aside>
 
-    <!-- MAIN WRAPPER -->
-    <div class="flex-1 flex flex-col min-w-0 pb-20 md:pb-6">
-        <!-- TOP HEADER BAR -->
-        <header class="h-16 border-b border-white/10 bg-[#0c1222]/80 backdrop-blur-md sticky top-0 z-20 flex items-center justify-between px-4 md:px-8 shrink-0">
-            <div class="flex items-center gap-3">
-                <div class="md:hidden w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center">
-                    <i data-lucide="bot" class="w-4 h-4 text-white"></i>
-                </div>
-                <div>
-                    <h2 class="font-bold text-sm text-white hidden sm:block">Panel Kontrol Operasional</h2>
-                    <p class="text-xs text-slate-400 hidden sm:block">Status Bot & Penjualan Terkini</p>
-                </div>
-            </div>
+        <div class="flex items-center gap-1.5">
+            <button onclick="toggleTheme()" class="p-2 rounded-xl bg-[var(--bg-subtle)] border border-[var(--border-color)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]" title="Ganti Tema">
+                <i data-lucide="sun" class="w-4 h-4 theme-toggle-icon"></i>
+            </button>
+            <button onclick="openQuickLinksModal()" class="p-2 rounded-xl bg-[var(--bg-subtle)] border border-[var(--border-color)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]" title="Tautan Publik">
+                <i data-lucide="link-2" class="w-4 h-4"></i>
+            </button>
+            <button onclick="openMobileMoreSheet()" class="p-2 rounded-xl bg-[var(--bg-subtle)] border border-[var(--border-color)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]" title="Menu Lain">
+                <i data-lucide="grid" class="w-4 h-4"></i>
+            </button>
+        </div>
+    </header>
 
-            <!-- Header Status & Actions -->
-            <div class="flex items-center gap-3">
-                <div id="header-connection-indicator" class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-900 border border-white/10 text-xs font-medium">
-                    <span id="status-dot" class="w-2 h-2 rounded-full bg-amber-400 status-dot-pulse"></span>
-                    <span id="header-conn-label" class="text-slate-300 text-[11px]">Memuat...</span>
-                </div>
-
-                <button onclick="openQuickLinksModal()" class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-indigo-600/10 hover:bg-indigo-600/20 text-indigo-400 border border-indigo-500/20 text-xs font-semibold transition-all" title="Buka Link Publik">
-                    <i data-lucide="external-link" class="w-3.5 h-3.5"></i>
-                    <span class="hidden sm:inline">Link Publik</span>
-                </button>
-
-                <button onclick="refreshQRCode(true)" class="p-2 rounded-xl bg-white/5 hover:bg-white/10 text-slate-300 transition-all border border-white/10" title="Refresh QR WhatsApp">
-                    <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
-                </button>
-            </div>
-        </header>
-
-        <!-- MAIN VIEWPORT CONTAINER -->
-        <main class="flex-1 p-4 md:p-8 max-w-7xl w-full mx-auto">
-            
-            <!-- ══════════════════════════════════════════════════════════════
-                 TAB 1: LIVE MONITOR
-                 ══════════════════════════════════════════════════════════════ -->
-            <div id="tab-monitor" class="tab-content space-y-6">
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    <!-- WhatsApp Status & QR Scanner -->
-                    <div class="lg:col-span-1 bg-[#0f172a] border border-white/10 rounded-2xl p-5 shadow-sm flex flex-col justify-between">
+    <div class="flex min-h-screen">
+        
+        <!-- ══════════════════════════════════════════════════════════════
+             2. DESKTOP SIDEBAR NAVIGATION (>= 1024px)
+             ══════════════════════════════════════════════════════════════ -->
+        <aside class="desktop-sidebar fixed top-0 bottom-0 left-0 w-64 bg-[var(--bg-surface)] border-r border-[var(--border-color)] z-40 flex flex-col justify-between p-4 overflow-y-auto">
+            <div class="space-y-5">
+                <!-- Brand Header -->
+                <div class="flex items-center justify-between px-2 pt-1 pb-3 border-b border-[var(--border-color)]">
+                    <div class="flex items-center gap-3">
+                        <div class="w-9 h-9 rounded-xl bg-indigo-600 text-white flex items-center justify-center font-extrabold text-base shadow-sm">
+                            JD
+                        </div>
                         <div>
-                            <div class="flex items-center justify-between mb-4">
-                                <h3 class="font-bold text-xs uppercase tracking-wider text-slate-400 flex items-center gap-2">
+                            <h2 class="text-sm font-bold leading-tight">Jajan Digital</h2>
+                            <p class="text-[10px] text-[var(--text-muted)] font-medium">Virtual Assistant Enterprise</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Navigation List -->
+                <nav class="space-y-1">
+                    <div class="px-2 py-1 text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-wider">Operasional & AI</div>
+                    <button id="sidebar-btn-monitor" onclick="switchTab('monitor')" class="sidebar-nav-btn active">
+                        <i data-lucide="activity" class="w-4 h-4"></i>
+                        <span>Live Monitor</span>
+                    </button>
+                    <button id="sidebar-btn-memory" onclick="switchTab('memory')" class="sidebar-nav-btn">
+                        <i data-lucide="brain" class="w-4 h-4"></i>
+                        <span>Basis Pengetahuan</span>
+                    </button>
+                    <button id="sidebar-btn-features" onclick="switchTab('features')" class="sidebar-nav-btn">
+                        <i data-lucide="zap" class="w-4 h-4"></i>
+                        <span>Fitur Auto-Reply</span>
+                    </button>
+                    <button id="sidebar-btn-notes" onclick="switchTab('notes')" class="sidebar-nav-btn">
+                        <i data-lucide="file-edit" class="w-4 h-4"></i>
+                        <span>Catatan & Memo</span>
+                    </button>
+
+                    <div class="px-2 pt-4 pb-1 text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-wider">Komunitas & Toko</div>
+                    <button id="sidebar-btn-groups" onclick="switchTab('groups')" class="sidebar-nav-btn">
+                        <i data-lucide="users" class="w-4 h-4"></i>
+                        <span>Manajemen Grup</span>
+                    </button>
+                    <button id="sidebar-btn-shop" onclick="switchTab('shop')" class="sidebar-nav-btn">
+                        <i data-lucide="store" class="w-4 h-4"></i>
+                        <span>Toko & CRM</span>
+                    </button>
+                    <button id="sidebar-btn-transactions" onclick="switchTab('transactions')" class="sidebar-nav-btn">
+                        <i data-lucide="credit-card" class="w-4 h-4"></i>
+                        <span>Transaksi & Kasir</span>
+                    </button>
+                    <button id="sidebar-btn-premium" onclick="switchTab('premium')" class="sidebar-nav-btn">
+                        <i data-lucide="crown" class="w-4 h-4"></i>
+                        <span>Akun Premium</span>
+                    </button>
+
+                    <div class="px-2 pt-4 pb-1 text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-wider">Pengaturan & API</div>
+                    <button id="sidebar-btn-referral" onclick="switchTab('referral')" class="sidebar-nav-btn">
+                        <i data-lucide="gift" class="w-4 h-4"></i>
+                        <span>Program Referral</span>
+                    </button>
+                    <button id="sidebar-btn-apikeys" onclick="switchTab('apikeys')" class="sidebar-nav-btn">
+                        <i data-lucide="key-round" class="w-4 h-4"></i>
+                        <span>API Key Manager</span>
+                    </button>
+                    <button id="sidebar-btn-settings" onclick="switchTab('settings')" class="sidebar-nav-btn">
+                        <i data-lucide="settings" class="w-4 h-4"></i>
+                        <span>Pengaturan Bot</span>
+                    </button>
+                </nav>
+            </div>
+
+            <!-- Sidebar Footer Controls -->
+            <div class="pt-4 border-t border-[var(--border-color)] space-y-2">
+                <button onclick="toggleTheme()" class="sidebar-nav-btn text-xs justify-between">
+                    <div class="flex items-center gap-2">
+                        <i data-lucide="sun" class="w-4 h-4 theme-toggle-icon"></i>
+                        <span class="theme-toggle-label">Mode Terang</span>
+                    </div>
+                </button>
+                <button onclick="openQuickLinksModal()" class="sidebar-nav-btn text-xs justify-between">
+                    <div class="flex items-center gap-2">
+                        <i data-lucide="link-2" class="w-4 h-4"></i>
+                        <span>Tautan Publik</span>
+                    </div>
+                </button>
+                <button onclick="logoutDashboard()" class="sidebar-nav-btn text-rose-400 hover:text-rose-300 text-xs">
+                    <i data-lucide="log-out" class="w-4 h-4"></i>
+                    <span>Keluar Sistem</span>
+                </button>
+            </div>
+        </aside>
+
+        <!-- ══════════════════════════════════════════════════════════════
+             3. MAIN WORKBENCH VIEWPORT
+             ══════════════════════════════════════════════════════════════ -->
+        <main class="main-content-wrapper flex-1 lg:ml-64 p-4 lg:p-6 pb-24 lg:pb-8 min-w-0">
+
+            <!-- ─── TAB 1: LIVE MONITOR ────────────────────────────────── -->
+            <div id="tab-monitor" class="tab-content space-y-5">
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+                    <!-- Left: Connection Status Card & QR -->
+                    <div class="enterprise-card flex flex-col justify-between space-y-4">
+                        <div>
+                            <div class="flex items-center justify-between pb-3 border-b border-[var(--border-color)]">
+                                <h3 class="font-bold text-xs uppercase tracking-wider flex items-center gap-2">
                                     <i data-lucide="smartphone" class="w-4 h-4 text-indigo-400"></i>
-                                    Koneksi WhatsApp
+                                    Status WhatsApp Bot
                                 </h3>
-                                <span id="status-text" class="text-[11px] font-bold px-2 py-0.5 rounded-md bg-amber-500/10 text-amber-400 border border-amber-500/20">MEMUAT...</span>
+                                <span id="status-text" class="text-[11px] font-bold px-2 py-0.5 rounded bg-white/5 border border-[var(--border-color)]">
+                                    OFFLINE
+                                </span>
                             </div>
 
-                            <div id="qr-container" class="aspect-square w-full max-w-[220px] mx-auto bg-[#090d16] border border-white/10 rounded-2xl p-3 flex flex-col items-center justify-center my-2 relative overflow-hidden">
-                                <div id="qr-placeholder" class="text-center p-4">
-                                    <i data-lucide="qr-code" class="w-12 h-12 mx-auto text-slate-600 mb-2"></i>
-                                    <p class="text-xs text-slate-400 font-medium">Menunggu Sinyal QR...</p>
+                            <div class="mt-4 space-y-3">
+                                <div class="bg-[var(--bg-subtle)] p-3 rounded-xl border border-[var(--border-color)] space-y-1">
+                                    <div class="flex items-center justify-between text-xs">
+                                        <span class="text-[var(--text-secondary)]">Status Sesi:</span>
+                                        <strong id="status-info" class="text-[var(--text-primary)]">Standby / Belum Login</strong>
+                                    </div>
+                                    <div class="flex items-center justify-between text-xs">
+                                        <span class="text-[var(--text-secondary)]">Perangkat:</span>
+                                        <strong id="status-device" class="text-[var(--text-primary)] font-mono-num">—</strong>
+                                    </div>
                                 </div>
-                                <div id="qr-code" class="w-full h-full flex items-center justify-center"></div>
-                                <p id="qr-status" class="absolute bottom-2 text-[10px] text-slate-500 font-mono"></p>
-                            </div>
 
-                            <div class="space-y-1.5 mt-3 text-xs">
-                                <div class="flex justify-between text-slate-400 py-1 border-b border-white/5">
-                                    <span>Perangkat Terhubung:</span>
-                                    <strong id="status-device" class="text-slate-200 font-mono">—</strong>
-                                </div>
-                                <div class="flex justify-between text-slate-400 py-1">
-                                    <span>Status Gateway:</span>
-                                    <strong id="status-info" class="text-slate-200 font-mono">Standby</strong>
+                                <!-- QR Canvas Container -->
+                                <div id="qr-container" class="border border-[var(--border-color)] rounded-xl p-4 text-center bg-[var(--bg-subtle)] min-h-[220px] flex flex-col items-center justify-center">
+                                    <div id="qr-placeholder" class="space-y-2">
+                                        <i data-lucide="qr-code" class="w-10 h-10 mx-auto text-[var(--text-muted)]"></i>
+                                        <p class="text-xs text-[var(--text-secondary)] font-medium">Klik Hubungkan untuk Scan QR</p>
+                                    </div>
+                                    <div id="qr-code" class="flex items-center justify-center"></div>
+                                    <p id="qr-status" class="text-[11px] text-amber-400 font-medium mt-2"></p>
                                 </div>
                             </div>
                         </div>
 
-                        <div class="grid grid-cols-2 gap-2 mt-4 pt-3 border-t border-white/10">
-                            <button id="btn-reconnect-wa" onclick="refreshQRCode(true)" class="flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold transition-all">
-                                <i data-lucide="rotate-cw" class="w-3.5 h-3.5"></i>
+                        <!-- Action Buttons -->
+                        <div class="grid grid-cols-2 gap-2 pt-2 border-t border-[var(--border-color)]">
+                            <button onclick="refreshQRCode(false)" class="enterprise-btn enterprise-btn-primary">
+                                <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
                                 <span>Hubungkan</span>
                             </button>
-                            <button id="btn-logout-wa" onclick="window.socket && window.socket.emit('logout_wa')" class="flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-white/5 hover:bg-rose-500/10 text-rose-400 border border-white/10 hover:border-rose-500/20 text-xs font-semibold transition-all">
+                            <button onclick="refreshQRCode(true)" class="enterprise-btn enterprise-btn-secondary text-rose-400">
                                 <i data-lucide="power" class="w-3.5 h-3.5"></i>
-                                <span>Putuskan</span>
+                                <span>Reset Sesi</span>
                             </button>
                         </div>
                     </div>
 
-                    <!-- Live Message Stream & Quick Stats -->
+                    <!-- Right: Quick Stats & Live Stream Obrolan -->
                     <div class="lg:col-span-2 space-y-4 flex flex-col">
                         <div class="grid grid-cols-3 gap-3">
-                            <div class="bg-[#0f172a] border border-white/10 rounded-2xl p-4 flex items-center gap-3">
-                                <div class="w-10 h-10 rounded-xl bg-sky-500/10 text-sky-400 flex items-center justify-center shrink-0">
-                                    <i data-lucide="message-square" class="w-5 h-5"></i>
+                            <div class="enterprise-card p-3.5 flex items-center gap-3">
+                                <div class="w-9 h-9 rounded-xl bg-sky-500/10 text-sky-400 flex items-center justify-center shrink-0">
+                                    <i data-lucide="message-square" class="w-4 h-4"></i>
                                 </div>
                                 <div>
-                                    <p class="text-[11px] font-medium text-slate-400">Total Pesan</p>
-                                    <h4 id="stat-msg-count" class="text-lg font-bold text-white leading-tight">0</h4>
+                                    <p class="text-[10px] text-[var(--text-secondary)] font-medium">Total Pesan</p>
+                                    <h4 id="stat-msg-count" class="text-base font-bold font-mono-num leading-tight">0</h4>
                                 </div>
                             </div>
-                            <div class="bg-[#0f172a] border border-white/10 rounded-2xl p-4 flex items-center gap-3">
-                                <div class="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center shrink-0">
-                                    <i data-lucide="user-check" class="w-5 h-5"></i>
+                            <div class="enterprise-card p-3.5 flex items-center gap-3">
+                                <div class="w-9 h-9 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center shrink-0">
+                                    <i data-lucide="user-check" class="w-4 h-4"></i>
                                 </div>
                                 <div>
-                                    <p class="text-[11px] font-medium text-slate-400">Sesi Aktif</p>
-                                    <h4 id="stat-session-count" class="text-lg font-bold text-white leading-tight">0</h4>
+                                    <p class="text-[10px] text-[var(--text-secondary)] font-medium">Sesi Aktif</p>
+                                    <h4 id="stat-session-count" class="text-base font-bold font-mono-num leading-tight">0</h4>
                                 </div>
                             </div>
-                            <div class="bg-[#0f172a] border border-white/10 rounded-2xl p-4 flex items-center gap-3">
-                                <div class="w-10 h-10 rounded-xl bg-purple-500/10 text-purple-400 flex items-center justify-center shrink-0">
-                                    <i data-lucide="clock" class="w-5 h-5"></i>
+                            <div class="enterprise-card p-3.5 flex items-center gap-3">
+                                <div class="w-9 h-9 rounded-xl bg-purple-500/10 text-purple-400 flex items-center justify-center shrink-0">
+                                    <i data-lucide="clock" class="w-4 h-4"></i>
                                 </div>
                                 <div>
-                                    <p class="text-[11px] font-medium text-slate-400">Uptime Bot</p>
-                                    <h4 id="stat-uptime" class="text-lg font-bold text-white leading-tight">0m</h4>
+                                    <p class="text-[10px] text-[var(--text-secondary)] font-medium">Uptime Bot</p>
+                                    <h4 id="stat-uptime" class="text-base font-bold font-mono-num leading-tight">0m</h4>
                                 </div>
                             </div>
                         </div>
 
-                        <div class="bg-[#0f172a] border border-white/10 rounded-2xl p-5 flex-1 flex flex-col min-h-[380px]">
-                            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 pb-3 border-b border-white/10">
+                        <!-- Live Message Stream -->
+                        <div class="enterprise-card flex-1 flex flex-col min-h-[380px]">
+                            <div class="flex items-center justify-between pb-3 mb-3 border-b border-[var(--border-color)]">
                                 <div>
-                                    <h3 class="font-bold text-sm text-white flex items-center gap-2">
+                                    <h3 class="font-bold text-xs uppercase tracking-wider flex items-center gap-2">
                                         <i data-lucide="terminal" class="w-4 h-4 text-indigo-400"></i>
                                         Live Stream Obrolan Bot
                                     </h3>
-                                    <p class="text-xs text-slate-400">Interaksi pesan masuk & respons otomatis AI</p>
                                 </div>
                                 <div class="flex items-center gap-2">
-                                    <div class="relative">
-                                        <i data-lucide="search" class="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
-                                        <input type="text" id="search-chat-input" onkeyup="filterChatLogs()" placeholder="Cari pesan..." class="bg-[#0b1120] border border-white/10 rounded-xl pl-9 pr-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 w-44">
-                                    </div>
-                                    <button onclick="clearChatLogs()" class="p-1.5 rounded-xl bg-white/5 hover:bg-rose-500/10 text-slate-400 hover:text-rose-400 border border-white/10 text-xs transition-all" title="Bersihkan Log">
+                                    <input type="text" id="search-chat-input" onkeyup="filterChatLogs()" placeholder="Cari pesan..." class="enterprise-input w-36 py-1 text-xs">
+                                    <button onclick="clearChatLogs()" class="p-1.5 rounded-lg bg-[var(--bg-subtle)] text-[var(--text-muted)] hover:text-rose-400 border border-[var(--border-color)]">
                                         <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
                                     </button>
                                 </div>
                             </div>
 
-                            <div id="chat-messages" class="flex-1 overflow-y-auto space-y-3 pr-1 max-h-[360px]">
-                                <div class="text-center py-12 text-slate-500 text-xs flex flex-col items-center justify-center">
+                            <div id="chat-messages" class="flex-1 overflow-y-auto space-y-2.5 pr-1 max-h-[380px]">
+                                <div class="text-center py-12 text-[var(--text-muted)] text-xs flex flex-col items-center justify-center">
                                     <i data-lucide="inbox" class="w-8 h-8 mb-2 opacity-40"></i>
                                     <span>Menunggu aktivitas pesan obrolan...</span>
                                 </div>
@@ -267,427 +273,226 @@
                 </div>
             </div>
 
-            <!-- ══════════════════════════════════════════════════════════════
-                 TAB 2: BASIS PENGETAHUAN
-                 ══════════════════════════════════════════════════════════════ -->
-            <div id="tab-memory" class="tab-content hidden space-y-6">
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <!-- Knowledge Documents -->
-                    <div class="bg-[#0f172a] border border-white/10 rounded-2xl p-5">
-                        <div class="flex items-center justify-between mb-4 pb-3 border-b border-white/10">
-                            <div>
-                                <h3 class="font-bold text-sm text-white flex items-center gap-2">
-                                    <i data-lucide="file-text" class="w-4 h-4 text-indigo-400"></i>
-                                    Dokumen Pengetahuan RAG
-                                </h3>
-                                <p class="text-xs text-slate-400">File referensi AI (PDF, TXT, DOCX)</p>
-                            </div>
+            <!-- ─── TAB 2: BASIS PENGETAHUAN (RAG) ─────────────────────── -->
+            <div id="tab-memory" class="tab-content hidden space-y-5">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+                    <div class="enterprise-card space-y-4">
+                        <div class="pb-3 border-b border-[var(--border-color)]">
+                            <h3 class="font-bold text-xs uppercase tracking-wider flex items-center gap-2">
+                                <i data-lucide="file-text" class="w-4 h-4 text-indigo-400"></i>
+                                Dokumen Pengetahuan RAG (PDF, TXT, DOCX)
+                            </h3>
                         </div>
-
-                        <div class="border-2 border-dashed border-white/10 hover:border-indigo-500/50 rounded-2xl p-6 text-center bg-[#0b1120] transition-all mb-4">
+                        <div class="border-2 border-dashed border-[var(--border-color)] rounded-xl p-5 text-center bg-[var(--bg-subtle)]">
                             <input type="file" id="file-upload-input" class="hidden" onchange="uploadFile()">
                             <i data-lucide="upload-cloud" class="w-8 h-8 mx-auto text-indigo-400 mb-2"></i>
-                            <p class="text-xs font-semibold text-slate-200">Klik untuk unggah dokumen baru</p>
-                            <p class="text-[11px] text-slate-500 mt-1">Maksimal 15MB per berkas</p>
-                            <button onclick="document.getElementById('file-upload-input').click()" class="mt-3 px-4 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold transition-all shadow-sm">
+                            <p class="text-xs font-semibold">Klik untuk unggah dokumen referensi AI</p>
+                            <p class="text-[11px] text-[var(--text-muted)] mt-0.5">Maksimal 15MB per berkas</p>
+                            <button onclick="document.getElementById('file-upload-input').click()" class="mt-3 enterprise-btn enterprise-btn-primary">
                                 Pilih Berkas
                             </button>
                         </div>
-                        <div id="upload-progress-bar" class="hidden w-full bg-slate-800 rounded-full h-1.5 mb-4 overflow-hidden">
-                            <div class="bg-indigo-500 h-full w-0 transition-all duration-300"></div>
-                        </div>
-
-                        <div id="files-list" class="space-y-2 max-h-[260px] overflow-y-auto">
-                            <div class="text-center py-6 text-slate-500 text-xs">Memuat daftar dokumen...</div>
+                        <div id="files-list" class="space-y-2 max-h-[280px] overflow-y-auto">
+                            <div class="text-center py-4 text-xs text-[var(--text-muted)]">Memuat daftar berkas...</div>
                         </div>
                     </div>
 
-                    <!-- Mini Word / Admin Notes -->
-                    <div class="bg-[#0f172a] border border-white/10 rounded-2xl p-5 flex flex-col">
-                        <div class="flex items-center justify-between mb-4 pb-3 border-b border-white/10">
-                            <div>
-                                <h3 class="font-bold text-sm text-white flex items-center gap-2">
-                                    <i data-lucide="notebook-pen" class="w-4 h-4 text-emerald-400"></i>
-                                    Catatan Operasional Admin
-                                </h3>
-                                <p class="text-xs text-slate-400">Penyimpanan teks internal admin (Auto-save)</p>
-                            </div>
-                            <span id="admin-notes-autosave-status" class="text-[11px] text-slate-500 font-mono">Tersimpan</span>
-                        </div>
-
-                        <textarea id="admin-notes-textarea" oninput="saveLocalNotes()" rows="12" placeholder="Tuliskan catatan internal, pricelist sementara, nomor rekening cadangan, atau catatan pengingat di sini..." class="w-full flex-1 bg-[#0b1120] border border-white/10 rounded-xl p-4 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-indigo-500 resize-none font-mono leading-relaxed"></textarea>
-                    </div>
-                </div>
-            </div>
-
-            <!-- ══════════════════════════════════════════════════════════════
-                 TAB 3: PESANAN & INVOICE
-                 ══════════════════════════════════════════════════════════════ -->
-            <div id="tab-transactions" class="tab-content hidden space-y-6">
-                <!-- Stat Summary -->
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    <div class="bg-[#0f172a] border border-white/10 rounded-2xl p-4 flex items-center gap-3">
-                        <div class="w-10 h-10 rounded-xl bg-indigo-500/10 text-indigo-400 flex items-center justify-center shrink-0">
-                            <i data-lucide="shopping-bag" class="w-5 h-5"></i>
-                        </div>
-                        <div>
-                            <p class="text-[11px] font-medium text-slate-400">Total Transaksi</p>
-                            <h4 id="order-stat-total" class="text-lg font-bold text-white leading-tight">0</h4>
-                        </div>
-                    </div>
-                    <div class="bg-[#0f172a] border border-white/10 rounded-2xl p-4 flex items-center gap-3">
-                        <div class="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-400 flex items-center justify-center shrink-0">
-                            <i data-lucide="clock" class="w-5 h-5"></i>
-                        </div>
-                        <div>
-                            <p class="text-[11px] font-medium text-slate-400">Pesanan Pending</p>
-                            <h4 id="order-stat-pending" class="text-lg font-bold text-amber-300 leading-tight">0</h4>
-                        </div>
-                    </div>
-                    <div class="bg-[#0f172a] border border-white/10 rounded-2xl p-4 flex items-center gap-3">
-                        <div class="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center shrink-0">
-                            <i data-lucide="check-circle" class="w-5 h-5"></i>
-                        </div>
-                        <div>
-                            <p class="text-[11px] font-medium text-slate-400">Pesanan Selesai</p>
-                            <h4 id="order-stat-completed" class="text-lg font-bold text-emerald-300 leading-tight">0</h4>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="flex items-center justify-between flex-wrap gap-3">
-                    <div class="inline-flex bg-[#0b1120] p-1 rounded-xl border border-white/10">
-                        <button id="sub-tab-orders-btn" onclick="switchSubTab('transactions', 'orders')" class="subtab-btn active px-4 py-2 rounded-lg text-xs font-semibold text-slate-300 hover:text-white transition-all">
-                            Daftar Pesanan
-                        </button>
-                        <button id="sub-tab-invoices-btn" onclick="switchSubTab('transactions', 'invoices')" class="subtab-btn px-4 py-2 rounded-lg text-xs font-semibold text-slate-300 hover:text-white transition-all">
-                            Faktur & Invoice
-                        </button>
-                    </div>
-
-                    <div class="flex items-center gap-2">
-                        <button id="btn-export-orders-csv" onclick="window.exportOrdersCsv && window.exportOrdersCsv()" class="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-slate-300 border border-white/10 text-xs font-semibold transition-all">
-                            <i data-lucide="download" class="w-3.5 h-3.5"></i>
-                            <span>Ekspor CSV</span>
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Orders Panel -->
-                <div id="panel-orders-container" class="bg-[#0f172a] border border-white/10 rounded-2xl p-5 space-y-4">
-                    <div class="flex flex-wrap items-center gap-2 pb-2">
-                        <button class="order-filter-btn active px-3 py-1.5 rounded-lg text-xs font-semibold bg-white/10 text-white" onclick="filterOrders('ALL')">Semua</button>
-                        <button class="order-filter-btn px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-white" onclick="filterOrders('PENDING')">Pending</button>
-                        <button class="order-filter-btn px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-white" onclick="filterOrders('SELESAI')">Selesai</button>
-                    </div>
-
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-left text-xs border-collapse">
-                            <thead>
-                                <tr class="border-b border-white/10 text-slate-400 font-bold uppercase tracking-wider text-[10px]">
-                                    <th class="py-3 px-3">Pelanggan</th>
-                                    <th class="py-3 px-3">Item / Layanan</th>
-                                    <th class="py-3 px-3">Nominal</th>
-                                    <th class="py-3 px-3">Status</th>
-                                    <th class="py-3 px-3">Waktu</th>
-                                    <th class="py-3 px-3 text-right">Aksi</th>
-                                </tr>
-                            </thead>
-                            <tbody id="orders-table-body" class="divide-y divide-white/5 text-slate-300">
-                                <tr><td colspan="6" class="py-8 text-center text-slate-500">Memuat data pesanan...</td></tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <!-- Invoices Panel (Hidden by default) -->
-                <div id="panel-invoices-container" class="bg-[#0f172a] border border-white/10 rounded-2xl p-5 space-y-4" style="display:none;">
-                    <div class="flex items-center gap-4 text-xs text-slate-400 pb-2">
-                        <span>Total: <strong id="invoice-stat-total" class="text-white">0</strong></span>
-                        <span>Proses: <strong id="invoice-stat-proses" class="text-amber-400">0</strong></span>
-                        <span>Selesai: <strong id="invoice-stat-selesai" class="text-emerald-400">0</strong></span>
-                    </div>
-
-                    <div class="flex flex-wrap items-center gap-2 pb-2">
-                        <button class="invoice-filter-btn active px-3 py-1.5 rounded-lg text-xs font-semibold bg-white/10 text-white" onclick="filterInvoices('ALL')">Semua Faktur</button>
-                        <button class="invoice-filter-btn px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-white" onclick="filterInvoices('PROSES')">Proses</button>
-                        <button class="invoice-filter-btn px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-white" onclick="filterInvoices('SELESAI')">Selesai</button>
-                    </div>
-
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-left text-xs border-collapse">
-                            <thead>
-                                <tr class="border-b border-white/10 text-slate-400 font-bold uppercase tracking-wider text-[10px]">
-                                    <th class="py-3 px-3">No Invoice</th>
-                                    <th class="py-3 px-3">Penerima</th>
-                                    <th class="py-3 px-3">Total Tagihan</th>
-                                    <th class="py-3 px-3">Status</th>
-                                    <th class="py-3 px-3">Jatuh Tempo</th>
-                                    <th class="py-3 px-3 text-right">Aksi</th>
-                                </tr>
-                            </thead>
-                            <tbody id="invoices-table-body" class="divide-y divide-white/5 text-slate-300">
-                                <tr><td colspan="6" class="py-8 text-center text-slate-500">Memuat data invoice...</td></tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-
-            <!-- ══════════════════════════════════════════════════════════════
-                 TAB 4: STOK AKUN PREMIUM
-                 ══════════════════════════════════════════════════════════════ -->
-            <div id="tab-premium" class="tab-content hidden space-y-6">
-                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                    <div class="bg-[#0f172a] border border-white/10 rounded-2xl p-4">
-                        <p class="text-[11px] font-medium text-slate-400">Subscriber Aktif</p>
-                        <h4 id="stat-active-subscribers" class="text-xl font-bold text-white mt-1">0</h4>
-                    </div>
-                    <div class="bg-[#0f172a] border border-white/10 rounded-2xl p-4">
-                        <p class="text-[11px] font-medium text-slate-400">Rasio Stok (Ready/Total)</p>
-                        <h4 id="stat-stock-ratio" class="text-xl font-bold text-sky-400 mt-1">0 / 0</h4>
-                    </div>
-                    <div class="bg-[#0f172a] border border-white/10 rounded-2xl p-4">
-                        <p class="text-[11px] font-medium text-slate-400">Estimasi Omset Aktif</p>
-                        <h4 id="stat-monthly-revenue" class="text-xl font-bold text-emerald-400 mt-1">Rp 0</h4>
-                    </div>
-                    <div class="bg-[#0f172a] border border-white/10 rounded-2xl p-4">
-                        <p class="text-[11px] font-medium text-slate-400">Jatuh Tempo H-5</p>
-                        <h4 id="stat-expiring-soon" class="text-xl font-bold text-amber-400 mt-1">0</h4>
-                    </div>
-                </div>
-
-                <div class="flex items-center justify-between flex-wrap gap-3">
-                    <div class="inline-flex bg-[#0b1120] p-1 rounded-xl border border-white/10">
-                        <button id="sub-tab-premium-stock-btn" onclick="switchSubTab('premium', 'stock')" class="subtab-btn active px-4 py-2 rounded-lg text-xs font-semibold text-slate-300 hover:text-white transition-all">
-                            Inventaris Akun
-                        </button>
-                        <button id="sub-tab-premium-sales-btn" onclick="switchSubTab('premium', 'sales')" class="subtab-btn px-4 py-2 rounded-lg text-xs font-semibold text-slate-300 hover:text-white transition-all">
-                            Riwayat Penjualan
-                        </button>
-                    </div>
-
-                    <div class="flex items-center gap-2">
-                        <button onclick="openPremiumModal('apk')" class="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-slate-300 border border-white/10 text-xs font-semibold transition-all">
-                            <i data-lucide="package" class="w-3.5 h-3.5"></i>
-                            <span>Kelola APK</span>
-                        </button>
-                        <button onclick="openPremiumModal('account')" class="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold transition-all shadow-sm">
-                            <i data-lucide="plus" class="w-3.5 h-3.5"></i>
-                            <span>Tambah Akun</span>
-                        </button>
-                        <button onclick="openPremiumModal('sale')" class="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold transition-all shadow-sm">
-                            <i data-lucide="user-plus" class="w-3.5 h-3.5"></i>
-                            <span>Catat Penjualan</span>
-                        </button>
-                    </div>
-                </div>
-
-                <div id="panel-premium-stock-container" class="bg-[#0f172a] border border-white/10 rounded-2xl p-5 space-y-4">
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-left text-xs border-collapse">
-                            <thead>
-                                <tr class="border-b border-white/10 text-slate-400 font-bold uppercase tracking-wider text-[10px]">
-                                    <th class="py-3 px-3">Produk</th>
-                                    <th class="py-3 px-3">Kredensial Akun</th>
-                                    <th class="py-3 px-3">Slot Sharing</th>
-                                    <th class="py-3 px-3">Status</th>
-                                    <th class="py-3 px-3 text-right">Aksi</th>
-                                </tr>
-                            </thead>
-                            <tbody id="premium-accounts-table-body" class="divide-y divide-white/5 text-slate-300">
-                                <tr><td colspan="5" class="py-8 text-center text-slate-500">Memuat inventaris akun premium...</td></tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <div id="panel-premium-sales-container" class="bg-[#0f172a] border border-white/10 rounded-2xl p-5 space-y-4" style="display:none;">
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-left text-xs border-collapse">
-                            <thead>
-                                <tr class="border-b border-white/10 text-slate-400 font-bold uppercase tracking-wider text-[10px]">
-                                    <th class="py-3 px-3">Produk / Akun</th>
-                                    <th class="py-3 px-3">Pembeli</th>
-                                    <th class="py-3 px-3">Profile Slot</th>
-                                    <th class="py-3 px-3">Masa Aktif</th>
-                                    <th class="py-3 px-3">Pembayaran</th>
-                                    <th class="py-3 px-3 text-right">Aksi</th>
-                                </tr>
-                            </thead>
-                            <tbody id="premium-sales-table-body" class="divide-y divide-white/5 text-slate-300">
-                                <tr><td colspan="6" class="py-8 text-center text-slate-500">Memuat riwayat penjualan...</td></tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-
-            <!-- ══════════════════════════════════════════════════════════════
-                 TAB 5: MANAJEMEN GRUP
-                 ══════════════════════════════════════════════════════════════ -->
-            <div id="tab-groups" class="tab-content hidden space-y-6">
-                <!-- Group Control & Configuration Form -->
-                <div class="bg-[#0f172a] border border-white/10 rounded-2xl p-5 space-y-5">
-                    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pb-4 border-b border-white/10">
-                        <div>
-                            <h3 class="font-bold text-sm text-white flex items-center gap-2">
-                                <i data-lucide="sliders" class="w-4 h-4 text-indigo-400"></i>
-                                Konfigurasi Operasional Grup
+                    <div class="enterprise-card space-y-4 flex flex-col">
+                        <div class="flex items-center justify-between pb-3 border-b border-[var(--border-color)]">
+                            <h3 class="font-bold text-xs uppercase tracking-wider flex items-center gap-2">
+                                <i data-lucide="brain" class="w-4 h-4 text-purple-400"></i>
+                                System Prompt & Aturan Kepribadian AI
                             </h3>
-                            <p class="text-xs text-slate-400">Atur pesan sambutan & jadwal buka-tutup grup otomatis</p>
+                            <button onclick="saveMemoryContent()" class="enterprise-btn enterprise-btn-primary py-1 px-3 text-xs">Simpan</button>
+                        </div>
+                        <textarea id="ai-memory-text" rows="14" class="enterprise-input flex-1 font-mono-num text-xs leading-relaxed" placeholder="Instruksi sistem, FAQ, panduan harga..."></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ─── TAB 3: FITUR OBROLAN ───────────────────────────────── -->
+            <div id="tab-features" class="tab-content hidden space-y-5">
+                <div class="enterprise-card space-y-4">
+                    <div class="flex items-center justify-between pb-3 border-b border-[var(--border-color)]">
+                        <div>
+                            <h3 class="font-bold text-xs uppercase tracking-wider flex items-center gap-2">
+                                <i data-lucide="zap" class="w-4 h-4 text-amber-400"></i>
+                                Aturan Pemicu Pesan Otomatis (Auto-Reply)
+                            </h3>
+                        </div>
+                        <button onclick="saveFeaturesConfig()" class="enterprise-btn enterprise-btn-primary">Simpan Aturan</button>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+                        <div class="space-y-2">
+                            <label class="block font-semibold">Pesan Sambutan Chat Pribadi (DM)</label>
+                            <textarea id="feat-welcome-dm" rows="4" class="enterprise-input" placeholder="Halo kak, ada yang bisa kami bantu?"></textarea>
+                        </div>
+                        <div class="space-y-2">
+                            <label class="block font-semibold">Pesan Luar Jam Operasional</label>
+                            <textarea id="feat-off-hours-msg" rows="4" class="enterprise-input" placeholder="Toko kami sedang tutup..."></textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ─── TAB 4: CATATAN & MEMO ──────────────────────────────── -->
+            <div id="tab-notes" class="tab-content hidden space-y-5">
+                <div class="enterprise-card space-y-4">
+                    <div class="flex items-center justify-between pb-3 border-b border-[var(--border-color)]">
+                        <h3 class="font-bold text-xs uppercase tracking-wider flex items-center gap-2">
+                            <i data-lucide="file-edit" class="w-4 h-4 text-indigo-400"></i>
+                            Notepad Sinkron Operasional
+                        </h3>
+                        <button onclick="saveLocalNotes()" class="enterprise-btn enterprise-btn-primary">Simpan Catatan</button>
+                    </div>
+                    <textarea id="local-notepad-input" rows="15" class="enterprise-input font-mono-num text-xs" placeholder="Tuliskan catatan internal di sini..."></textarea>
+                </div>
+            </div>
+
+            <!-- ─── TAB 5: MANAJEMEN GRUP ──────────────────────────────── -->
+            <div id="tab-groups" class="tab-content hidden space-y-5">
+                <div class="enterprise-card space-y-4">
+                    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pb-3 border-b border-[var(--border-color)]">
+                        <div>
+                            <h3 class="font-bold text-xs uppercase tracking-wider flex items-center gap-2">
+                                <i data-lucide="sliders" class="w-4 h-4 text-indigo-400"></i>
+                                Konfigurasi Operasional Grup WhatsApp
+                            </h3>
                         </div>
                         <div class="w-full sm:w-72">
-                            <select id="host-config-group-select" class="w-full bg-[#0b1120] border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500">
+                            <select id="host-config-group-select" class="enterprise-input text-xs">
                                 <option value="">-- Pilih Grup WhatsApp --</option>
                             </select>
                         </div>
                     </div>
 
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-                        <!-- Welcome Message -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div class="space-y-2">
-                            <label class="block text-xs font-semibold text-slate-300">Pesan Sambutan Member Baru (Welcome Message)</label>
-                            <textarea id="host-group-welcome-msg" rows="4" placeholder="Halo {user}, selamat datang di {group}..." class="w-full bg-[#0b1120] border border-white/10 rounded-xl p-3 text-xs text-white focus:outline-none focus:border-indigo-500"></textarea>
-                            <button onclick="saveHostWelcomeMsg()" class="px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold">Simpan Welcome</button>
+                            <label class="block text-xs font-semibold">Pesan Sambutan Member Baru</label>
+                            <textarea id="host-group-welcome-msg" rows="4" class="enterprise-input text-xs" placeholder="Halo {user}, selamat datang di {group}..."></textarea>
+                            <button onclick="saveHostWelcomeMsg()" class="enterprise-btn enterprise-btn-primary text-xs">Simpan Sambutan</button>
                         </div>
-
-                        <!-- Schedule Open/Close -->
-                        <div class="space-y-3 bg-[#0b1120] p-4 rounded-xl border border-white/5">
+                        <div class="space-y-3 bg-[var(--bg-subtle)] p-3.5 rounded-xl border border-[var(--border-color)]">
                             <div class="flex items-center justify-between">
-                                <span class="text-xs font-semibold text-slate-300">Jadwal Buka / Tutup Otomatis</span>
-                                <label class="flex items-center gap-2 cursor-pointer text-xs text-slate-400">
-                                    <input type="checkbox" id="host-scheduler-toggle" class="rounded bg-slate-900 border-white/10 text-indigo-600">
+                                <span class="text-xs font-semibold">Jadwal Buka/Tutup Grup Otomatis</span>
+                                <label class="flex items-center gap-2 cursor-pointer text-xs">
+                                    <input type="checkbox" id="host-scheduler-toggle" class="rounded">
                                     <span>Aktif</span>
                                 </label>
                             </div>
                             <div class="grid grid-cols-2 gap-3">
                                 <div>
-                                    <label class="block text-[11px] text-slate-400 mb-1">Jam Buka Grup</label>
-                                    <input type="time" id="host-scheduler-open" value="08:00" class="w-full bg-[#090d16] border border-white/10 rounded-lg p-2 text-xs text-white">
+                                    <label class="block text-[10px] text-[var(--text-secondary)] mb-1">Jam Buka</label>
+                                    <input type="time" id="host-scheduler-open" value="08:00" class="enterprise-input">
                                 </div>
                                 <div>
-                                    <label class="block text-[11px] text-slate-400 mb-1">Jam Tutup Grup</label>
-                                    <input type="time" id="host-scheduler-close" value="22:00" class="w-full bg-[#090d16] border border-white/10 rounded-lg p-2 text-xs text-white">
+                                    <label class="block text-[10px] text-[var(--text-secondary)] mb-1">Jam Tutup</label>
+                                    <input type="time" id="host-scheduler-close" value="22:00" class="enterprise-input">
                                 </div>
                             </div>
-                            <button onclick="saveHostScheduler()" class="px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold">Simpan Jadwal</button>
+                            <button onclick="saveHostScheduler()" class="enterprise-btn enterprise-btn-primary text-xs">Simpan Jadwal</button>
                         </div>
                     </div>
                 </div>
 
-                <!-- Groups List Grid -->
-                <div class="bg-[#0f172a] border border-white/10 rounded-2xl p-5 space-y-4">
-                    <div class="flex flex-col sm:flex-row items-center justify-between gap-3 pb-3 border-b border-white/10">
-                        <div>
-                            <h3 class="font-bold text-sm text-white flex items-center gap-2">
-                                <i data-lucide="users" class="w-4 h-4 text-emerald-400"></i>
-                                Daftar Grup WhatsApp Terdeteksi
-                            </h3>
-                            <p class="text-xs text-slate-400">Status perlindungan & bot guard per-grup</p>
-                        </div>
-                        <button id="btn-sync-groups" onclick="loadGroupsList()" class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold transition-all">
+                <div class="enterprise-card space-y-4">
+                    <div class="flex items-center justify-between pb-3 border-b border-[var(--border-color)]">
+                        <h3 class="font-bold text-xs uppercase tracking-wider flex items-center gap-2">
+                            <i data-lucide="users" class="w-4 h-4 text-emerald-400"></i>
+                            Daftar Grup WhatsApp Terdeteksi
+                        </h3>
+                        <button onclick="loadGroupsList()" class="enterprise-btn enterprise-btn-secondary text-xs">
                             <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
-                            <span>Muat Ulang Grup</span>
+                            <span>Muat Ulang</span>
                         </button>
                     </div>
-
                     <div id="groups-list-container" class="space-y-3">
-                        <div class="text-center py-8 text-slate-500 text-xs">Memuat daftar grup...</div>
+                        <div class="text-center py-6 text-xs text-[var(--text-muted)]">Memuat daftar grup...</div>
                     </div>
                 </div>
             </div>
 
-            <!-- ══════════════════════════════════════════════════════════════
-                 TAB 6: TOKO & CRM
-                 ══════════════════════════════════════════════════════════════ -->
-            <div id="tab-shop" class="tab-content hidden space-y-6">
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    <!-- Host Admins Section -->
-                    <div class="lg:col-span-1 bg-[#0f172a] border border-white/10 rounded-2xl p-5 space-y-4">
-                        <div class="pb-3 border-b border-white/10">
-                            <h3 class="font-bold text-sm text-white flex items-center gap-2">
+            <!-- ─── TAB 6: TOKO, CRM & MENU TREE ───────────────────────── -->
+            <div id="tab-shop" class="tab-content hidden space-y-5">
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+                    <div class="enterprise-card space-y-3">
+                        <div class="pb-2 border-b border-[var(--border-color)]">
+                            <h3 class="font-bold text-xs uppercase tracking-wider flex items-center gap-2">
                                 <i data-lucide="shield-check" class="w-4 h-4 text-sky-400"></i>
                                 Host Admin Toko
                             </h3>
-                            <p class="text-[11px] text-slate-400">Nomor admin berwenang</p>
                         </div>
                         <div id="shop-admins-list" class="space-y-2">
-                            <div class="text-center py-4 text-slate-500 text-xs">Memuat host admin...</div>
+                            <div class="text-center py-4 text-xs text-[var(--text-muted)]">Memuat host admin...</div>
                         </div>
                     </div>
 
-                    <!-- Customers CRM Section -->
-                    <div class="lg:col-span-2 bg-[#0f172a] border border-white/10 rounded-2xl p-5 space-y-4">
-                        <div class="flex flex-col sm:flex-row items-center justify-between gap-3 pb-3 border-b border-white/10">
-                            <div>
-                                <h3 class="font-bold text-sm text-white flex items-center gap-2">
-                                    <i data-lucide="contact" class="w-4 h-4 text-indigo-400"></i>
-                                    CRM Kontak Pelanggan
-                                </h3>
-                                <p class="text-[11px] text-slate-400">Database interaksi pembeli</p>
-                            </div>
+                    <div class="lg:col-span-2 enterprise-card space-y-3">
+                        <div class="flex items-center justify-between pb-2 border-b border-[var(--border-color)]">
+                            <h3 class="font-bold text-xs uppercase tracking-wider flex items-center gap-2">
+                                <i data-lucide="contact" class="w-4 h-4 text-indigo-400"></i>
+                                CRM Kontak Pelanggan
+                            </h3>
                         </div>
-                        <div id="shop-customers-list" class="space-y-2 max-h-[350px] overflow-y-auto">
-                            <div class="text-center py-6 text-slate-500 text-xs">Memuat data kontak...</div>
+                        <div id="shop-customers-list" class="space-y-2 max-h-[320px] overflow-y-auto">
+                            <div class="text-center py-6 text-xs text-[var(--text-muted)]">Memuat data kontak...</div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Interactive 2-Column Menu Tree Builder -->
-                <div class="bg-[#0f172a] border border-white/10 rounded-2xl p-5 space-y-4">
-                    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pb-3 border-b border-white/10">
+                <!-- 2-Column Visual Menu Tree Builder -->
+                <div class="enterprise-card space-y-4">
+                    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pb-3 border-b border-[var(--border-color)]">
                         <div>
-                            <h3 class="font-bold text-sm text-white flex items-center gap-2">
+                            <h3 class="font-bold text-xs uppercase tracking-wider flex items-center gap-2">
                                 <i data-lucide="git-fork" class="w-4 h-4 text-purple-400"></i>
                                 Visual Editor Pohon Menu (Menu Tree)
                             </h3>
-                            <p class="text-xs text-slate-400">Struktur alur navigasi menu & produk bot WhatsApp</p>
                         </div>
                         <div class="flex items-center gap-2">
-                            <button onclick="addChildNode()" class="px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/15 text-white text-xs font-semibold flex items-center gap-1.5 transition-all">
+                            <button onclick="addChildNode()" class="enterprise-btn enterprise-btn-secondary text-xs">
                                 <i data-lucide="plus" class="w-3.5 h-3.5"></i>
                                 <span>Tambah Menu</span>
                             </button>
-                            <button onclick="saveGroupConfiguration()" class="px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold flex items-center gap-1.5 shadow-sm transition-all">
+                            <button onclick="saveGroupConfiguration()" class="enterprise-btn enterprise-btn-primary text-xs">
                                 <i data-lucide="save" class="w-3.5 h-3.5"></i>
                                 <span>Simpan Menu</span>
                             </button>
                         </div>
                     </div>
 
-                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
-                        <!-- Kolom Kiri: Visual Tree -->
-                        <div class="lg:col-span-5 bg-[#0b1120] border border-white/10 rounded-xl p-3 max-h-[500px] overflow-y-auto">
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
+                        <!-- Left: Visual Tree -->
+                        <div class="lg:col-span-5 bg-[var(--bg-subtle)] border border-[var(--border-color)] rounded-xl p-3 max-h-[480px] overflow-y-auto">
                             <div id="menu-tree-visualizer" class="space-y-1">
-                                <div class="text-center py-8 text-slate-500 text-xs">Memuat struktur pohon menu...</div>
+                                <div class="text-center py-8 text-xs text-[var(--text-muted)]">Memuat struktur menu...</div>
                             </div>
                         </div>
 
-                        <!-- Kolom Kanan: Active Node Editor -->
-                        <div class="lg:col-span-7 bg-[#0b1120] border border-white/10 rounded-xl p-4 flex flex-col justify-between space-y-4">
-                            <div id="node-editor-placeholder" class="text-center py-16 text-slate-500 text-xs">
+                        <!-- Right: Active Node Editor -->
+                        <div class="lg:col-span-7 bg-[var(--bg-subtle)] border border-[var(--border-color)] rounded-xl p-4 flex flex-col justify-between space-y-3">
+                            <div id="node-editor-placeholder" class="text-center py-16 text-xs text-[var(--text-muted)]">
                                 <i data-lucide="mouse-pointer-click" class="w-8 h-8 mx-auto mb-2 opacity-40"></i>
-                                <p>Pilih salah satu menu di kolom kiri untuk mengedit.</p>
+                                <p>Pilih salah satu menu di sebelah kiri untuk mengedit.</p>
                             </div>
 
-                            <div id="node-editor-form" class="hidden space-y-4">
-                                <div class="flex items-center justify-between pb-2 border-b border-white/10">
-                                    <h4 id="node-editor-title" class="text-xs font-bold text-white uppercase tracking-wider">Edit Menu</h4>
-                                    <button onclick="deleteNode()" class="px-2.5 py-1 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/20 text-xs font-semibold flex items-center gap-1">
+                            <div id="node-editor-form" class="hidden space-y-3">
+                                <div class="flex items-center justify-between pb-2 border-b border-[var(--border-color)]">
+                                    <h4 id="node-editor-title" class="text-xs font-bold uppercase tracking-wider">Edit Menu</h4>
+                                    <button onclick="deleteNode()" class="p-1.5 rounded-lg bg-rose-500/10 text-rose-400 border border-rose-500/20 text-xs font-semibold flex items-center gap-1">
                                         <i data-lucide="trash-2" class="w-3 h-3"></i>
-                                        <span>Hapus Menu</span>
+                                        <span>Hapus</span>
                                     </button>
                                 </div>
 
                                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                     <div>
-                                        <label class="block text-[11px] font-semibold text-slate-300 mb-1">Nama Menu / Label</label>
-                                        <input type="text" id="node-name" class="w-full bg-[#090d16] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-indigo-500" placeholder="Capcut, Canva, dsb.">
+                                        <label class="block text-[11px] font-semibold mb-1">Nama Menu / Label</label>
+                                        <input type="text" id="node-name" class="enterprise-input">
                                     </div>
                                     <div>
-                                        <label class="block text-[11px] font-semibold text-slate-300 mb-1">Status Produk</label>
-                                        <select id="node-status" class="w-full bg-[#090d16] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-indigo-500">
+                                        <label class="block text-[11px] font-semibold mb-1">Status Produk</label>
+                                        <select id="node-status" class="enterprise-input">
                                             <option value="Tersedia">Tersedia (Ready)</option>
                                             <option value="Habis">Habis (Sold Out)</option>
                                             <option value="Pre-order">Pre-order</option>
@@ -697,33 +502,33 @@
 
                                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                     <div>
-                                        <label class="block text-[11px] font-semibold text-slate-300 mb-1">Kata Kunci Alternatif (Aliases)</label>
-                                        <input type="text" id="node-aliases" class="w-full bg-[#090d16] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-indigo-500" placeholder="capcut, cpc, cc">
+                                        <label class="block text-[11px] font-semibold mb-1">Kata Kunci Alternatif (Aliases)</label>
+                                        <input type="text" id="node-aliases" class="enterprise-input" placeholder="capcut, cpc, cc">
                                     </div>
                                     <div class="flex items-center gap-4 pt-4">
-                                        <label class="flex items-center gap-2 cursor-pointer text-xs text-slate-300">
-                                            <input type="checkbox" id="node-promo" class="rounded bg-slate-900 border-white/10 text-indigo-600">
+                                        <label class="flex items-center gap-2 cursor-pointer text-xs">
+                                            <input type="checkbox" id="node-promo" class="rounded">
                                             <span>Tag Promo 🔥</span>
                                         </label>
                                     </div>
                                 </div>
 
                                 <div>
-                                    <label class="block text-[11px] font-semibold text-slate-300 mb-1">Nama Berkas Media / Gambar (Opsional)</label>
-                                    <input type="text" id="node-media" class="w-full bg-[#090d16] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-indigo-500" placeholder="contoh: Qris.jpeg / banner.png">
+                                    <label class="block text-[11px] font-semibold mb-1">Nama Berkas Media / Gambar (Opsional)</label>
+                                    <input type="text" id="node-media" class="enterprise-input" placeholder="Qris.jpeg / banner.png">
                                 </div>
 
-                                <div id="node-sec-text" class="space-y-1.5">
+                                <div id="node-sec-text" class="space-y-1">
                                     <div class="flex items-center justify-between">
-                                        <label class="block text-[11px] font-semibold text-slate-300">Isi Balasan Teks / Deskripsi Menu</label>
+                                        <label class="block text-[11px] font-semibold">Isi Balasan Teks</label>
                                         <div class="flex items-center gap-1">
-                                            <button type="button" onclick="insertFormatToElement('node-text', '*')" class="px-2 py-0.5 rounded bg-white/5 hover:bg-white/10 text-[10px] text-slate-300 font-bold border border-white/10">B (*)</button>
-                                            <button type="button" onclick="insertFormatToElement('node-text', '_')" class="px-2 py-0.5 rounded bg-white/5 hover:bg-white/10 text-[10px] text-slate-300 italic border border-white/10">I (_)</button>
-                                            <button type="button" onclick="insertFormatToElement('node-text', '~')" class="px-2 py-0.5 rounded bg-white/5 hover:bg-white/10 text-[10px] text-slate-300 line-through border border-white/10">S (~)</button>
-                                            <button type="button" onclick="insertFormatToElement('node-text', '```')" class="px-2 py-0.5 rounded bg-white/5 hover:bg-white/10 text-[10px] text-slate-300 font-mono border border-white/10">Code (```)</button>
+                                            <button type="button" onclick="insertFormatToElement('node-text', '*')" class="px-2 py-0.5 rounded bg-[var(--bg-card)] border border-[var(--border-color)] text-[10px] font-bold">B (*)</button>
+                                            <button type="button" onclick="insertFormatToElement('node-text', '_')" class="px-2 py-0.5 rounded bg-[var(--bg-card)] border border-[var(--border-color)] text-[10px] italic">I (_)</button>
+                                            <button type="button" onclick="insertFormatToElement('node-text', '~')" class="px-2 py-0.5 rounded bg-[var(--bg-card)] border border-[var(--border-color)] text-[10px] line-through">S (~)</button>
+                                            <button type="button" onclick="insertFormatToElement('node-text', '```')" class="px-2 py-0.5 rounded bg-[var(--bg-card)] border border-[var(--border-color)] text-[10px] font-mono-num">Code</button>
                                         </div>
                                     </div>
-                                    <textarea id="node-text" rows="6" class="w-full bg-[#090d16] border border-white/10 rounded-lg p-3 text-xs text-white font-mono leading-relaxed focus:outline-none focus:border-indigo-500" placeholder="Deskripsi paket, harga, garansi, format order..."></textarea>
+                                    <textarea id="node-text" rows="5" class="enterprise-input font-mono-num text-xs leading-relaxed" placeholder="Deskripsi paket, harga, cara order..."></textarea>
                                 </div>
                             </div>
                         </div>
@@ -731,150 +536,266 @@
                 </div>
             </div>
 
-            <!-- ══════════════════════════════════════════════════════════════
-                 TAB 7: PROGRAM REFERRAL
-                 ══════════════════════════════════════════════════════════════ -->
-            <div id="tab-referral" class="tab-content hidden space-y-6">
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    <div class="bg-[#0f172a] border border-white/10 rounded-2xl p-5 flex items-center gap-4">
-                        <div class="w-12 h-12 rounded-xl bg-indigo-500/10 text-indigo-400 flex items-center justify-center shrink-0">
-                            <i data-lucide="users" class="w-6 h-6"></i>
-                        </div>
-                        <div>
-                            <p class="text-xs text-slate-400 font-medium">Total Peserta Afiliasi</p>
-                            <h3 id="dashRefTotalAffiliates" class="text-2xl font-bold text-white mt-0.5">0</h3>
-                        </div>
-                    </div>
-                    <div class="bg-[#0f172a] border border-white/10 rounded-2xl p-5 flex items-center gap-4">
-                        <div class="w-12 h-12 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center shrink-0">
-                            <i data-lucide="user-plus" class="w-6 h-6"></i>
-                        </div>
-                        <div>
-                            <p class="text-xs text-slate-400 font-medium">Total Undangan Sukses</p>
-                            <h3 id="dashRefTotalInvites" class="text-2xl font-bold text-white mt-0.5">0</h3>
-                        </div>
-                    </div>
-                    <div class="bg-[#0f172a] border border-white/10 rounded-2xl p-5 flex items-center gap-4">
-                        <div class="w-12 h-12 rounded-xl bg-amber-500/10 text-amber-400 flex items-center justify-center shrink-0">
-                            <i data-lucide="coins" class="w-6 h-6"></i>
-                        </div>
-                        <div>
-                            <p class="text-xs text-slate-400 font-medium">Total Poin Diberikan</p>
-                            <h3 id="dashRefTotalPoints" class="text-2xl font-bold text-white mt-0.5">0</h3>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="bg-[#0f172a] border border-white/10 rounded-2xl p-5 space-y-4">
-                    <div class="flex items-center justify-between pb-3 border-b border-white/10">
-                        <div>
-                            <h3 class="font-bold text-sm text-white flex items-center gap-2">
-                                <i data-lucide="settings" class="w-4 h-4 text-indigo-400"></i>
-                                Pengaturan Kampanye Referral
-                            </h3>
-                            <p class="text-xs text-slate-400">Atur bobot poin per undangan & deskripsi bonus</p>
-                        </div>
-                        <button onclick="saveReferralSettings()" class="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold transition-all shadow-sm">
-                            Simpan Aturan
+            <!-- ─── TAB 7: TRANSAKSI & KASIR ───────────────────────────── -->
+            <div id="tab-transactions" class="tab-content hidden space-y-5">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-2 p-1 bg-[var(--bg-surface)] border border-[var(--border-color)] rounded-xl">
+                        <button id="sub-tab-orders-btn" onclick="switchSubTab('transactions', 'orders')" class="subtab-btn active px-3.5 py-1.5 rounded-lg text-xs font-semibold">
+                            Daftar Pesanan
+                        </button>
+                        <button id="sub-tab-invoices-btn" onclick="switchSubTab('transactions', 'invoices')" class="subtab-btn px-3.5 py-1.5 rounded-lg text-xs font-semibold">
+                            Faktur & Tagihan
                         </button>
                     </div>
 
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-xs font-semibold text-slate-300 mb-1.5">Poin per Undangan (+ Poin)</label>
-                            <input type="number" id="ref-pts-per-invite" value="10" class="w-full bg-[#0b1120] border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-semibold text-slate-300 mb-1.5">Deskripsi Hadiah / Bonus</label>
-                            <input type="text" id="ref-bonus-desc" placeholder="Voucher Diskon & Bebas Biaya Admin" class="w-full bg-[#0b1120] border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500">
-                        </div>
-                    </div>
+                    <button onclick="loadOrders(); loadInvoices();" class="enterprise-btn enterprise-btn-secondary text-xs">
+                        <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
+                        <span>Segarkan</span>
+                    </button>
                 </div>
 
-                <!-- Leaderboard Table -->
-                <div class="bg-[#0f172a] border border-white/10 rounded-2xl p-5 space-y-4">
-                    <div class="flex flex-col sm:flex-row items-center justify-between gap-3 pb-3 border-b border-white/10">
-                        <div>
-                            <h3 class="font-bold text-sm text-white flex items-center gap-2">
-                                <i data-lucide="trophy" class="w-4 h-4 text-amber-400"></i>
-                                Peringkat Peserta Afiliasi
-                            </h3>
-                            <p class="text-xs text-slate-400">Daftar anggota yang memiliki kode referral aktif</p>
-                        </div>
-                        <div class="relative w-full sm:w-64">
-                            <i data-lucide="search" class="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
-                            <input type="text" id="ref-search-input" onkeyup="filterReferralDashboardTable()" placeholder="Cari nama/kode..." class="w-full bg-[#0b1120] border border-white/10 rounded-xl pl-9 pr-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500">
-                        </div>
+                <!-- Panel Orders (Dual-View: Desktop Table + Mobile Cards) -->
+                <div id="panel-orders-container" class="space-y-4">
+                    <div class="flex items-center gap-2 overflow-x-auto pb-1">
+                        <button onclick="filterOrders('ALL')" data-status="ALL" class="order-filter-btn active enterprise-btn enterprise-btn-secondary text-xs py-1 px-3">Semua</button>
+                        <button onclick="filterOrders('PENDING')" data-status="PENDING" class="order-filter-btn enterprise-btn enterprise-btn-secondary text-xs py-1 px-3">Pending</button>
+                        <button onclick="filterOrders('PAID')" data-status="PAID" class="order-filter-btn enterprise-btn enterprise-btn-secondary text-xs py-1 px-3">Dibayar</button>
+                        <button onclick="filterOrders('CANCELLED')" data-status="CANCELLED" class="order-filter-btn enterprise-btn enterprise-btn-secondary text-xs py-1 px-3">Batal</button>
                     </div>
 
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-left text-xs border-collapse">
+                    <!-- 1. Desktop Table -->
+                    <div class="desktop-table-view enterprise-table-container">
+                        <table class="enterprise-table">
                             <thead>
-                                <tr class="border-b border-white/10 text-slate-400 font-bold uppercase tracking-wider text-[10px]">
-                                    <th class="py-3 px-3">Nama Member</th>
-                                    <th class="py-3 px-3">Nomor WhatsApp</th>
-                                    <th class="py-3 px-3">Kode Unik</th>
-                                    <th class="py-3 px-3">Undangan</th>
-                                    <th class="py-3 px-3">Total Poin</th>
-                                    <th class="py-3 px-3 text-right">Aksi</th>
+                                <tr>
+                                    <th>ID Order</th>
+                                    <th>Waktu</th>
+                                    <th>Pelanggan</th>
+                                    <th>Produk</th>
+                                    <th class="text-right">Nominal</th>
+                                    <th>Status</th>
+                                    <th class="text-right">Aksi</th>
                                 </tr>
                             </thead>
-                            <tbody id="dashRefTableBody" class="divide-y divide-white/5 text-slate-300">
-                                <tr><td colspan="6" class="py-8 text-center text-slate-500">Memuat data referral...</td></tr>
+                            <tbody id="orders-table-body">
+                                <tr><td colspan="7" class="py-8 text-center text-xs text-[var(--text-muted)]">Memuat pesanan...</td></tr>
                             </tbody>
                         </table>
                     </div>
+
+                    <!-- 2. Mobile App Cards -->
+                    <div id="orders-mobile-cards" class="mobile-card-view">
+                        <div class="py-6 text-center text-xs text-[var(--text-muted)]">Memuat pesanan...</div>
+                    </div>
                 </div>
 
-                <!-- Audit Logs -->
-                <div class="bg-[#0f172a] border border-white/10 rounded-2xl p-5 space-y-4">
-                    <h3 class="font-bold text-sm text-white flex items-center gap-2 pb-3 border-b border-white/10">
-                        <i data-lucide="history" class="w-4 h-4 text-sky-400"></i>
-                        Riwayat Log Klaim Undangan Terbaru
-                    </h3>
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-left text-xs border-collapse">
+                <!-- Panel Invoices (Dual-View) -->
+                <div id="panel-invoices-container" class="space-y-4" style="display:none;">
+                    <div class="desktop-table-view enterprise-table-container">
+                        <table class="enterprise-table">
                             <thead>
-                                <tr class="border-b border-white/10 text-slate-400 font-bold uppercase tracking-wider text-[10px]">
-                                    <th class="py-3 px-3">Waktu Klaim</th>
-                                    <th class="py-3 px-3">Pengundang</th>
-                                    <th class="py-3 px-3">Member Baru</th>
-                                    <th class="py-3 px-3">Kode Digunakan</th>
-                                    <th class="py-3 px-3">ID Grup</th>
+                                <tr>
+                                    <th>No. Invoice</th>
+                                    <th>Tanggal</th>
+                                    <th>Pembeli</th>
+                                    <th>Keterangan</th>
+                                    <th class="text-right">Total Tagihan</th>
+                                    <th>Status</th>
+                                    <th class="text-right">Aksi</th>
                                 </tr>
                             </thead>
-                            <tbody id="dashRefLogsBody" class="divide-y divide-white/5 text-slate-300">
-                                <tr><td colspan="5" class="py-6 text-center text-slate-500">Memuat riwayat klaim...</td></tr>
+                            <tbody id="invoices-table-body">
+                                <tr><td colspan="7" class="py-8 text-center text-xs text-[var(--text-muted)]">Memuat invoice...</td></tr>
                             </tbody>
                         </table>
+                    </div>
+
+                    <div id="invoices-mobile-cards" class="mobile-card-view">
+                        <div class="py-6 text-center text-xs text-[var(--text-muted)]">Memuat invoice...</div>
                     </div>
                 </div>
             </div>
 
-            <!-- ══════════════════════════════════════════════════════════════
-                 TAB 8: API KEY MANAGER (AKM)
-                 ══════════════════════════════════════════════════════════════ -->
-            <div id="tab-apikeys" class="tab-content hidden space-y-6">
-                <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-[#0f172a] border border-white/10 rounded-2xl p-5">
+            <!-- ─── TAB 8: AKUN PREMIUM ────────────────────────────────── -->
+            <div id="tab-premium" class="tab-content hidden space-y-5">
+                <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                    <div class="enterprise-card p-3.5">
+                        <p class="text-[10px] text-[var(--text-secondary)] font-medium">Pelanggan Aktif</p>
+                        <h4 id="stat-active-subscribers" class="text-base font-bold font-mono-num mt-0.5">0</h4>
+                    </div>
+                    <div class="enterprise-card p-3.5">
+                        <p class="text-[10px] text-[var(--text-secondary)] font-medium">Stok Akun Ready</p>
+                        <h4 id="stat-stock-ratio" class="text-base font-bold font-mono-num mt-0.5">0 / 0</h4>
+                    </div>
+                    <div class="enterprise-card p-3.5">
+                        <p class="text-[10px] text-[var(--text-secondary)] font-medium">Estimasi Omset</p>
+                        <h4 id="stat-monthly-revenue" class="text-base font-bold font-mono-num mt-0.5 text-emerald-400">Rp 0</h4>
+                    </div>
+                    <div class="enterprise-card p-3.5">
+                        <p class="text-[10px] text-[var(--text-secondary)] font-medium">Jatuh Tempo (5 Hari)</p>
+                        <h4 id="stat-expiring-soon" class="text-base font-bold font-mono-num mt-0.5 text-amber-400">0</h4>
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-2 p-1 bg-[var(--bg-surface)] border border-[var(--border-color)] rounded-xl">
+                        <button id="sub-tab-acc-btn" onclick="switchSubTab('premium', 'accounts')" class="subtab-btn active px-3.5 py-1.5 rounded-lg text-xs font-semibold">
+                            Stok Akun
+                        </button>
+                        <button id="sub-tab-sales-btn" onclick="switchSubTab('premium', 'sales')" class="subtab-btn px-3.5 py-1.5 rounded-lg text-xs font-semibold">
+                            Riwayat Penjualan
+                        </button>
+                    </div>
+
+                    <div class="flex items-center gap-2">
+                        <button onclick="openPremiumModal('account')" class="enterprise-btn enterprise-btn-secondary text-xs">
+                            <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+                            <span>Tambah Akun</span>
+                        </button>
+                        <button onclick="openPremiumModal('sale')" class="enterprise-btn enterprise-btn-primary text-xs">
+                            <i data-lucide="user-plus" class="w-3.5 h-3.5"></i>
+                            <span>Catat Jual</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Panel Accounts (Dual View) -->
+                <div id="panel-premium-accounts-container" class="space-y-4">
+                    <div class="desktop-table-view enterprise-table-container">
+                        <table class="enterprise-table">
+                            <thead>
+                                <tr>
+                                    <th>Aplikasi / APK</th>
+                                    <th>Akun & Kredensial</th>
+                                    <th>Slot / Pengguna</th>
+                                    <th>Status</th>
+                                    <th class="text-right">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="premium-accounts-table-body">
+                                <tr><td colspan="5" class="py-8 text-center text-xs text-[var(--text-muted)]">Memuat akun...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div id="premium-accounts-mobile-cards" class="mobile-card-view">
+                        <div class="py-6 text-center text-xs text-[var(--text-muted)]">Memuat akun...</div>
+                    </div>
+                </div>
+
+                <!-- Panel Sales (Dual View) -->
+                <div id="panel-premium-sales-container" class="space-y-4" style="display:none;">
+                    <div class="desktop-table-view enterprise-table-container">
+                        <table class="enterprise-table">
+                            <thead>
+                                <tr>
+                                    <th>Aplikasi</th>
+                                    <th>Pembeli</th>
+                                    <th>Slot Profile</th>
+                                    <th>Masa Aktif</th>
+                                    <th>Pembayaran</th>
+                                    <th class="text-right">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="premium-sales-table-body">
+                                <tr><td colspan="6" class="py-8 text-center text-xs text-[var(--text-muted)]">Memuat riwayat penjualan...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div id="premium-sales-mobile-cards" class="mobile-card-view">
+                        <div class="py-6 text-center text-xs text-[var(--text-muted)]">Memuat riwayat penjualan...</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ─── TAB 9: PROGRAM REFERRAL ────────────────────────────── -->
+            <div id="tab-referral" class="tab-content hidden space-y-5">
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div class="enterprise-card p-4 flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-xl bg-indigo-500/10 text-indigo-400 flex items-center justify-center shrink-0">
+                            <i data-lucide="users" class="w-5 h-5"></i>
+                        </div>
+                        <div>
+                            <p class="text-[10px] text-[var(--text-secondary)] font-medium">Total Peserta</p>
+                            <h3 id="dashRefTotalAffiliates" class="text-lg font-bold font-mono-num">0</h3>
+                        </div>
+                    </div>
+                    <div class="enterprise-card p-4 flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center shrink-0">
+                            <i data-lucide="user-plus" class="w-5 h-5"></i>
+                        </div>
+                        <div>
+                            <p class="text-[10px] text-[var(--text-secondary)] font-medium">Undangan Sukses</p>
+                            <h3 id="dashRefTotalInvites" class="text-lg font-bold font-mono-num">0</h3>
+                        </div>
+                    </div>
+                    <div class="enterprise-card p-4 flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-400 flex items-center justify-center shrink-0">
+                            <i data-lucide="coins" class="w-5 h-5"></i>
+                        </div>
+                        <div>
+                            <p class="text-[10px] text-[var(--text-secondary)] font-medium">Poin Terdistribusi</p>
+                            <h3 id="dashRefTotalPoints" class="text-lg font-bold font-mono-num">0</h3>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="enterprise-card space-y-4">
+                    <div class="flex items-center justify-between pb-3 border-b border-[var(--border-color)]">
+                        <h3 class="font-bold text-xs uppercase tracking-wider flex items-center gap-2">
+                            <i data-lucide="gift" class="w-4 h-4 text-indigo-400"></i>
+                            Daftar Anggota & Poin Referral
+                        </h3>
+                        <div class="w-48">
+                            <input type="text" id="ref-search-input" onkeyup="filterReferralDashboardTable()" placeholder="Cari member/kode..." class="enterprise-input text-xs py-1">
+                        </div>
+                    </div>
+
+                    <!-- Dual-View: Desktop Table + Mobile Cards -->
+                    <div class="desktop-table-view enterprise-table-container">
+                        <table class="enterprise-table">
+                            <thead>
+                                <tr>
+                                    <th>Nama Member</th>
+                                    <th>WhatsApp</th>
+                                    <th>Kode Referral</th>
+                                    <th>Undangan</th>
+                                    <th>Total Poin</th>
+                                    <th class="text-right">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="dashRefTableBody">
+                                <tr><td colspan="6" class="py-8 text-center text-xs text-[var(--text-muted)]">Memuat data referral...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div id="dashRefMobileCards" class="mobile-card-view">
+                        <div class="py-6 text-center text-xs text-[var(--text-muted)]">Memuat data referral...</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ─── TAB 10: API KEY MANAGER (AKM) ──────────────────────── -->
+            <div id="tab-apikeys" class="tab-content hidden space-y-5">
+                <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 enterprise-card">
                     <div>
-                        <h2 class="text-base font-bold text-white flex items-center gap-2">
-                            <i data-lucide="key-round" class="w-5 h-5 text-indigo-400"></i>
-                            API Key Manager & Health Scan
+                        <h2 class="text-sm font-bold flex items-center gap-2">
+                            <i data-lucide="key-round" class="w-4 h-4 text-indigo-400"></i>
+                            API Key Manager & Health Diagnostic
                         </h2>
                         <div class="flex flex-wrap items-center gap-2 mt-2">
-                            <span class="px-2.5 py-1 rounded-lg bg-white/5 border border-white/10 text-[11px] text-slate-300">Total: <strong id="akm-stat-total" class="text-white">0</strong></span>
-                            <span class="px-2.5 py-1 rounded-lg bg-indigo-500/10 border border-indigo-500/20 text-[11px] text-indigo-300">Pool Rotasi: <strong id="akm-stat-pool" class="text-indigo-200">0</strong></span>
-                            <span class="px-2.5 py-1 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-[11px] text-emerald-300">Single: <strong id="akm-stat-single" class="text-emerald-200">0</strong></span>
-                            <span class="px-2.5 py-1 rounded-lg bg-amber-500/10 border border-amber-500/20 text-[11px] text-amber-300">Terpakai: <strong id="akm-stat-used" class="text-amber-200">0</strong></span>
+                            <span class="badge-chip badge-slate">Total: <strong id="akm-stat-total" class="font-mono-num">0</strong></span>
+                            <span class="badge-chip badge-blue">Pool: <strong id="akm-stat-pool" class="font-mono-num">0</strong></span>
+                            <span class="badge-chip badge-emerald">Single: <strong id="akm-stat-single" class="font-mono-num">0</strong></span>
+                            <span class="badge-chip badge-amber">Terpakai: <strong id="akm-stat-used" class="font-mono-num">0</strong></span>
                         </div>
                     </div>
 
                     <div class="flex items-center gap-2 w-full sm:w-auto">
-                        <button id="akm-btn-check-live" onclick="runLiveHealthCheck(false)" class="flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/30 text-xs font-semibold transition-all">
+                        <button id="akm-btn-check-live" onclick="runLiveHealthCheck(false)" class="flex-1 sm:flex-none enterprise-btn enterprise-btn-secondary text-amber-400 text-xs">
                             <i data-lucide="zap" class="w-3.5 h-3.5"></i>
                             <span>Scan Semua API</span>
                         </button>
-                        <button onclick="openAddKeyModal()" class="flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold transition-all shadow-sm">
+                        <button onclick="openAddKeyModal()" class="flex-1 sm:flex-none enterprise-btn enterprise-btn-primary text-xs">
                             <i data-lucide="plus" class="w-3.5 h-3.5"></i>
                             <span>Tambah Key</span>
                         </button>
@@ -882,144 +803,132 @@
                 </div>
 
                 <div id="akm-filter-tabs" class="flex items-center gap-2 overflow-x-auto pb-1">
-                    <button class="akm-filter-tab active px-3 py-1.5 rounded-xl text-xs font-semibold bg-white/10 text-white" onclick="setAkmFilter('all')">Semua Provider</button>
+                    <button class="akm-filter-tab active" onclick="setAkmFilter('all')">Semua Provider</button>
                 </div>
 
                 <div id="akm-key-list" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div class="col-span-full text-center py-8 text-slate-500 text-xs">Memuat daftar API Key...</div>
+                    <div class="col-span-full text-center py-8 text-xs text-[var(--text-muted)]">Memuat daftar API Key...</div>
                 </div>
             </div>
 
-            <!-- ══════════════════════════════════════════════════════════════
-                 TAB 9: PENGATURAN BOT (SETTINGS)
-                 ══════════════════════════════════════════════════════════════ -->
-            <div id="tab-settings" class="tab-content hidden space-y-6">
-                <!-- Telegram Bot Settings -->
-                <div class="bg-[#0f172a] border border-white/10 rounded-2xl p-6 space-y-5">
-                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-white/10">
-                        <div>
-                            <h3 class="font-bold text-sm text-white flex items-center gap-2">
-                                <i data-lucide="send" class="w-4 h-4 text-sky-400"></i>
-                                Integrasi Bot Telegram
-                            </h3>
-                            <p class="text-xs text-slate-400">Hubungkan bot Telegram sebagai CS cadangan / kontrol boss</p>
+            <!-- ─── TAB 11: PENGATURAN BOT ─────────────────────────────── -->
+            <div id="tab-settings" class="tab-content hidden space-y-5">
+                <div class="enterprise-card space-y-4">
+                    <div class="pb-3 border-b border-[var(--border-color)]">
+                        <h3 class="font-bold text-xs uppercase tracking-wider flex items-center gap-2">
+                            <i data-lucide="send" class="w-4 h-4 text-sky-400"></i>
+                            Integrasi Bot Telegram
+                        </h3>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+                        <div class="space-y-2">
+                            <label class="block font-semibold">Token Bot Telegram</label>
+                            <input type="password" id="cfg-tg-token" class="enterprise-input font-mono-num" placeholder="123456789:ABCDefGhI...">
                         </div>
-                        <div class="flex items-center gap-2">
-                            <div class="flex items-center gap-2 px-3 py-1 rounded-lg bg-[#0b1120] border border-white/10 text-xs">
-                                <span id="tg-status-dot" class="w-2 h-2 rounded-full bg-slate-500"></span>
-                                <span id="tg-status-text" class="text-slate-400 text-[11px]">Memeriksa status...</span>
-                            </div>
+                        <div class="space-y-2">
+                            <label class="block font-semibold">Chat ID Admin Telegram</label>
+                            <input type="text" id="cfg-tg-admin-chat-id" class="enterprise-input font-mono-num" placeholder="-100123456789">
                         </div>
                     </div>
-
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-                        <div>
-                            <label class="block text-xs font-semibold text-slate-300 mb-1.5">Token Bot (@BotFather)</label>
-                            <div class="relative">
-                                <input type="password" id="tg-bot-token" placeholder="1234567890:AA..." class="w-full bg-[#0b1120] border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500 font-mono">
-                                <button onclick="toggleTgTokenVisibility()" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white text-xs">
-                                    <i data-lucide="eye" class="w-3.5 h-3.5"></i>
-                                </button>
-                            </div>
-                        </div>
-                        <div>
-                            <label class="block text-xs font-semibold text-slate-300 mb-1.5">ID Telegram Boss / Owner</label>
-                            <input type="text" id="tg-boss-id" placeholder="Contoh: 123456789" class="w-full bg-[#0b1120] border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500 font-mono">
-                        </div>
-                    </div>
-
-                    <div class="flex items-center gap-3 pt-2">
-                        <label class="flex items-center gap-2 cursor-pointer text-xs text-slate-300 font-medium">
-                            <input type="checkbox" id="tg-enabled-toggle" class="rounded bg-[#0b1120] border-white/10 text-indigo-600 focus:ring-0">
-                            <span>Aktifkan Bot Telegram</span>
-                        </label>
-                        <label class="flex items-center gap-2 cursor-pointer text-xs text-slate-300 font-medium ml-4">
-                            <input type="checkbox" id="tg-private-enabled" class="rounded bg-[#0b1120] border-white/10 text-indigo-600 focus:ring-0" checked>
-                            <span>Izinkan Chat Pribadi</span>
-                        </label>
-                    </div>
-
-                    <div class="flex items-center justify-end gap-2 pt-3 border-t border-white/10">
-                        <button onclick="testTelegramConnection()" class="px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-slate-300 border border-white/10 text-xs font-semibold transition-all">
-                            Test Token
-                        </button>
-                        <button id="btn-save-tg-config" onclick="saveTelegramConfig()" class="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold transition-all shadow-sm">
-                            Simpan Konfigurasi Telegram
-                        </button>
-                    </div>
-                </div>
-
-                <!-- System Theme Switcher -->
-                <div class="bg-[#0f172a] border border-white/10 rounded-2xl p-6 space-y-4">
-                    <h3 class="font-bold text-sm text-white flex items-center gap-2 pb-3 border-b border-white/10">
-                        <i data-lucide="palette" class="w-4 h-4 text-purple-400"></i>
-                        Tema Antarmuka Dasbor
-                    </h3>
-                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                        <button id="tc-dark" onclick="changeTheme('dark')" class="theme-card active p-4 rounded-xl border border-white/10 bg-[#090d16] text-left hover:border-indigo-500/50 transition-all">
-                            <div class="w-4 h-4 rounded-full bg-indigo-500 mb-2"></div>
-                            <h4 class="text-xs font-bold text-white">Midnight Dark (Default)</h4>
-                            <p class="text-[11px] text-slate-400">Nuansa gelap modern dengan kontras tinggi</p>
-                        </button>
-                        <button id="tc-minimal-dark" onclick="changeTheme('minimal-dark')" class="theme-card p-4 rounded-xl border border-white/10 bg-[#121212] text-left hover:border-indigo-500/50 transition-all">
-                            <div class="w-4 h-4 rounded-full bg-slate-400 mb-2"></div>
-                            <h4 class="text-xs font-bold text-white">Minimal Charcoal</h4>
-                            <p class="text-[11px] text-slate-400">Nuansa abu-abu arang monokromatis</p>
-                        </button>
-                        <button id="tc-minimal-light" onclick="changeTheme('minimal-light')" class="theme-card p-4 rounded-xl border border-white/10 bg-slate-100 text-left hover:border-indigo-500/50 transition-all">
-                            <div class="w-4 h-4 rounded-full bg-white border border-slate-300 mb-2"></div>
-                            <h4 class="text-xs font-bold text-slate-900">Minimal Clean Light</h4>
-                            <p class="text-[11px] text-slate-600">Nuansa terang cerah untuk siang hari</p>
-                        </button>
-                    </div>
+                    <button onclick="saveTelegramSettings()" class="enterprise-btn enterprise-btn-primary text-xs">Simpan Telegram</button>
                 </div>
             </div>
 
         </main>
     </div>
 
-    <!-- MOBILE BOTTOM NAVIGATION BAR -->
-    <nav class="md:hidden fixed bottom-0 left-0 right-0 h-16 bg-[#0c1222]/95 backdrop-blur-lg border-t border-white/10 z-40 flex items-center justify-around px-2">
-        <button id="mob-tab-monitor" onclick="switchTab('monitor')" class="flex flex-col items-center gap-1 text-slate-400 hover:text-white py-1">
-            <i data-lucide="activity" class="w-4 h-4"></i>
-            <span class="text-[10px] font-medium">Monitor</span>
+    <!-- ══════════════════════════════════════════════════════════════
+         4. MOBILE BOTTOM NAVIGATION BAR (< 1024px)
+         ══════════════════════════════════════════════════════════════ -->
+    <nav class="mobile-bottom-nav lg:hidden">
+        <button id="mob-nav-monitor" onclick="switchTab('monitor')" class="mobile-nav-item active">
+            <i data-lucide="activity" class="w-5 h-5"></i>
+            <span>Monitor</span>
         </button>
-        <button id="mob-tab-transactions" onclick="switchTab('transactions')" class="flex flex-col items-center gap-1 text-slate-400 hover:text-white py-1">
-            <i data-lucide="receipt" class="w-4 h-4"></i>
-            <span class="text-[10px] font-medium">Pesanan</span>
+        <button id="mob-nav-memory" onclick="switchTab('memory')" class="mobile-nav-item">
+            <i data-lucide="brain" class="w-5 h-5"></i>
+            <span>Memori</span>
         </button>
-        <button id="mob-tab-premium" onclick="switchTab('premium')" class="flex flex-col items-center gap-1 text-slate-400 hover:text-white py-1">
-            <i data-lucide="crown" class="w-4 h-4"></i>
-            <span class="text-[10px] font-medium">Premium</span>
+        <button id="mob-nav-groups" onclick="switchTab('groups')" class="mobile-nav-item">
+            <i data-lucide="users" class="w-5 h-5"></i>
+            <span>Grup</span>
         </button>
-        <button id="mob-tab-groups" onclick="switchTab('groups')" class="flex flex-col items-center gap-1 text-slate-400 hover:text-white py-1">
-            <i data-lucide="users" class="w-4 h-4"></i>
-            <span class="text-[10px] font-medium">Grup</span>
+        <button id="mob-nav-shop" onclick="switchTab('shop')" class="mobile-nav-item">
+            <i data-lucide="store" class="w-5 h-5"></i>
+            <span>Toko</span>
         </button>
-        <button id="mob-tab-settings" onclick="switchTab('settings')" class="flex flex-col items-center gap-1 text-slate-400 hover:text-white py-1">
-            <i data-lucide="settings" class="w-4 h-4"></i>
-            <span class="text-[10px] font-medium">Setting</span>
+        <button id="mob-nav-transactions" onclick="switchTab('transactions')" class="mobile-nav-item">
+            <i data-lucide="credit-card" class="w-5 h-5"></i>
+            <span>Transaksi</span>
         </button>
     </nav>
 
     <!-- ══════════════════════════════════════════════════════════════
-         MODAL DIALOGS
+         5. MOBILE MORE SHEET (< 1024px Drawer)
+         ══════════════════════════════════════════════════════════════ -->
+    <div id="mobile-more-sheet" class="modal-overlay hidden" onclick="closeMobileMoreSheet()">
+        <div class="modal-panel bg-[var(--bg-surface)] space-y-4" onclick="event.stopPropagation()">
+            <div class="flex items-center justify-between pb-2 border-b border-[var(--border-color)]">
+                <h3 class="font-bold text-xs uppercase tracking-wider">Menu Navigasi Tambahan</h3>
+                <button onclick="closeMobileMoreSheet()" class="text-[var(--text-muted)] hover:text-[var(--text-primary)]"><i data-lucide="x" class="w-4 h-4"></i></button>
+            </div>
+            <div class="grid grid-cols-2 gap-2 text-xs">
+                <button onclick="switchTab('premium')" class="p-3 rounded-xl bg-[var(--bg-subtle)] border border-[var(--border-color)] flex items-center gap-2.5 font-semibold text-left">
+                    <i data-lucide="crown" class="w-4 h-4 text-amber-400"></i>
+                    <span>Akun Premium</span>
+                </button>
+                <button onclick="switchTab('referral')" class="p-3 rounded-xl bg-[var(--bg-subtle)] border border-[var(--border-color)] flex items-center gap-2.5 font-semibold text-left">
+                    <i data-lucide="gift" class="w-4 h-4 text-indigo-400"></i>
+                    <span>Program Referral</span>
+                </button>
+                <button onclick="switchTab('apikeys')" class="p-3 rounded-xl bg-[var(--bg-subtle)] border border-[var(--border-color)] flex items-center gap-2.5 font-semibold text-left">
+                    <i data-lucide="key-round" class="w-4 h-4 text-purple-400"></i>
+                    <span>API Key Manager</span>
+                </button>
+                <button onclick="switchTab('notes')" class="p-3 rounded-xl bg-[var(--bg-subtle)] border border-[var(--border-color)] flex items-center gap-2.5 font-semibold text-left">
+                    <i data-lucide="file-edit" class="w-4 h-4 text-sky-400"></i>
+                    <span>Catatan Memo</span>
+                </button>
+                <button onclick="switchTab('features')" class="p-3 rounded-xl bg-[var(--bg-subtle)] border border-[var(--border-color)] flex items-center gap-2.5 font-semibold text-left">
+                    <i data-lucide="zap" class="w-4 h-4 text-emerald-400"></i>
+                    <span>Fitur Auto-Reply</span>
+                </button>
+                <button onclick="switchTab('settings')" class="p-3 rounded-xl bg-[var(--bg-subtle)] border border-[var(--border-color)] flex items-center gap-2.5 font-semibold text-left">
+                    <i data-lucide="settings" class="w-4 h-4 text-slate-400"></i>
+                    <span>Pengaturan Bot</span>
+                </button>
+            </div>
+            <div class="pt-2 border-t border-[var(--border-color)] flex items-center justify-between">
+                <button onclick="toggleTheme()" class="enterprise-btn enterprise-btn-secondary text-xs">
+                    <i data-lucide="sun" class="w-3.5 h-3.5 theme-toggle-icon"></i>
+                    <span class="theme-toggle-label">Ganti Tema</span>
+                </button>
+                <button onclick="logoutDashboard()" class="enterprise-btn enterprise-btn-secondary text-rose-400 text-xs">
+                    <i data-lucide="log-out" class="w-3.5 h-3.5"></i>
+                    <span>Keluar</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════════════
+         6. MODAL DIALOGS
          ══════════════════════════════════════════════════════════════ -->
 
     <!-- MODAL: Tambah API Key -->
     <div id="akm-modal-add" class="modal-overlay hidden" role="dialog" aria-modal="true">
-        <div class="bg-[#0f172a] border border-white/10 rounded-2xl w-full max-w-md p-6 shadow-2xl space-y-4">
-            <div class="flex items-center justify-between pb-3 border-b border-white/10">
-                <h3 class="font-bold text-sm text-white flex items-center gap-2">
+        <div class="modal-panel">
+            <div class="flex items-center justify-between pb-2 border-b border-[var(--border-color)]">
+                <h3 class="font-bold text-xs uppercase tracking-wider flex items-center gap-2">
                     <i data-lucide="key" class="w-4 h-4 text-indigo-400"></i>
                     Tambah API Key Provider
                 </h3>
-                <button onclick="closeAddKeyModal()" class="text-slate-400 hover:text-white"><i data-lucide="x" class="w-4 h-4"></i></button>
+                <button onclick="closeAddKeyModal()" class="text-[var(--text-muted)] hover:text-[var(--text-primary)]"><i data-lucide="x" class="w-4 h-4"></i></button>
             </div>
             <div class="space-y-3 text-xs">
                 <div>
-                    <label class="block font-semibold text-slate-300 mb-1">Provider AI</label>
-                    <select id="akm-add-provider" onchange="updateAddModelPlaceholder()" class="w-full bg-[#0b1120] border border-white/10 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-indigo-500">
+                    <label class="block font-semibold mb-1">Provider AI</label>
+                    <select id="akm-add-provider" onchange="updateAddModelPlaceholder()" class="enterprise-input">
                         <option value="gemini">Google Gemini</option>
                         <option value="groq">Groq</option>
                         <option value="deepseek">DeepSeek</option>
@@ -1029,183 +938,186 @@
                     </select>
                 </div>
                 <div>
-                    <label class="block font-semibold text-slate-300 mb-1">API Key</label>
-                    <textarea id="akm-add-key" rows="2" placeholder="Masukkan kunci API..." class="w-full bg-[#0b1120] border border-white/10 rounded-xl p-2.5 text-white focus:outline-none focus:border-indigo-500 font-mono"></textarea>
+                    <label class="block font-semibold mb-1">API Key</label>
+                    <textarea id="akm-add-key" rows="2" placeholder="Masukkan kunci API..." class="enterprise-input font-mono-num"></textarea>
                 </div>
                 <div>
-                    <label class="block font-semibold text-slate-300 mb-1">Model (Opsional)</label>
-                    <input type="text" id="akm-add-model" placeholder="gemini-2.0-flash" class="w-full bg-[#0b1120] border border-white/10 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-indigo-500">
+                    <label class="block font-semibold mb-1">Model (Opsional)</label>
+                    <input type="text" id="akm-add-model" placeholder="gemini-2.0-flash" class="enterprise-input">
                 </div>
                 <div id="akm-add-url-row" style="display:none;">
-                    <label class="block font-semibold text-slate-300 mb-1">API URL (LM Studio)</label>
-                    <input type="text" id="akm-add-url" placeholder="http://localhost:1234/v1/chat/completions" class="w-full bg-[#0b1120] border border-white/10 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-indigo-500 font-mono">
+                    <label class="block font-semibold mb-1">API URL (LM Studio)</label>
+                    <input type="text" id="akm-add-url" placeholder="http://localhost:1234/v1/chat/completions" class="enterprise-input font-mono-num">
                 </div>
                 <div>
-                    <label class="block font-semibold text-slate-300 mb-1">Label / Catatan</label>
-                    <input type="text" id="akm-add-label" placeholder="Contoh: Key Utama Pool #1" class="w-full bg-[#0b1120] border border-white/10 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-indigo-500">
+                    <label class="block font-semibold mb-1">Label / Catatan</label>
+                    <input type="text" id="akm-add-label" placeholder="Contoh: Key Utama Pool #1" class="enterprise-input">
                 </div>
-                <div id="akm-test-result" class="text-[11px] font-mono"></div>
+                <div id="akm-test-result" class="text-[11px] font-mono-num"></div>
             </div>
-            <div class="flex items-center justify-end gap-2 pt-3 border-t border-white/10">
-                <button onclick="testApiKeyBeforeAdd()" class="px-3 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-slate-300 border border-white/10 text-xs font-semibold transition-all">Test Koneksi</button>
-                <button id="akm-save-btn" onclick="saveNewApiKey()" class="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold transition-all shadow-sm">Simpan Key</button>
+            <div class="flex items-center justify-end gap-2 pt-2 border-t border-[var(--border-color)]">
+                <button onclick="testApiKeyBeforeAdd()" class="enterprise-btn enterprise-btn-secondary text-xs">Test Koneksi</button>
+                <button id="akm-save-btn" onclick="saveNewApiKey()" class="enterprise-btn enterprise-btn-primary text-xs">Simpan Key</button>
             </div>
         </div>
     </div>
 
     <!-- MODAL: Tambah Akun Premium -->
     <div id="modal-premium-account" class="modal-overlay hidden" role="dialog" aria-modal="true">
-        <div class="bg-[#0f172a] border border-white/10 rounded-2xl w-full max-w-md p-6 shadow-2xl space-y-4">
-            <div class="flex items-center justify-between pb-3 border-b border-white/10">
-                <h3 class="font-bold text-sm text-white flex items-center gap-2">
+        <div class="modal-panel">
+            <div class="flex items-center justify-between pb-2 border-b border-[var(--border-color)]">
+                <h3 class="font-bold text-xs uppercase tracking-wider flex items-center gap-2">
                     <i data-lucide="crown" class="w-4 h-4 text-indigo-400"></i>
                     Tambah Stok Akun Premium
                 </h3>
-                <button onclick="closePremiumModal('account')" class="text-slate-400 hover:text-white"><i data-lucide="x" class="w-4 h-4"></i></button>
+                <button onclick="closePremiumModal('account')" class="text-[var(--text-muted)] hover:text-[var(--text-primary)]"><i data-lucide="x" class="w-4 h-4"></i></button>
             </div>
             <div class="space-y-3 text-xs">
                 <div>
-                    <label class="block font-semibold text-slate-300 mb-1">Aplikasi / APK</label>
-                    <select id="acc-product-id" class="w-full bg-[#0b1120] border border-white/10 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-indigo-500">
+                    <label class="block font-semibold mb-1">Aplikasi / APK</label>
+                    <select id="acc-product-id" class="enterprise-input">
                         <option value="">-- Pilih APK --</option>
                     </select>
                 </div>
                 <div>
-                    <label class="block font-semibold text-slate-300 mb-1">Email / Username Akun</label>
-                    <input type="text" id="acc-email" placeholder="user@gmail.com" class="w-full bg-[#0b1120] border border-white/10 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-indigo-500 font-mono">
+                    <label class="block font-semibold mb-1">Email / Username Akun</label>
+                    <input type="text" id="acc-email" placeholder="user@gmail.com" class="enterprise-input font-mono-num">
                 </div>
                 <div>
-                    <label class="block font-semibold text-slate-300 mb-1">Password Akun</label>
-                    <input type="text" id="acc-password" placeholder="Pass123..." class="w-full bg-[#0b1120] border border-white/10 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-indigo-500 font-mono">
+                    <label class="block font-semibold mb-1">Password Akun</label>
+                    <input type="text" id="acc-password" placeholder="Pass123..." class="enterprise-input font-mono-num">
                 </div>
                 <div class="grid grid-cols-2 gap-3">
                     <div>
-                        <label class="block font-semibold text-slate-300 mb-1">Maksimal User (Slot)</label>
-                        <input type="number" id="acc-max-users" value="5" class="w-full bg-[#0b1120] border border-white/10 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-indigo-500">
+                        <label class="block font-semibold mb-1">Maksimal User (Slot)</label>
+                        <input type="number" id="acc-max-users" value="1" min="1" class="enterprise-input font-mono-num">
                     </div>
                     <div>
-                        <label class="block font-semibold text-slate-300 mb-1">Catatan Profil</label>
-                        <input type="text" id="acc-notes" placeholder="Pin 1234" class="w-full bg-[#0b1120] border border-white/10 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-indigo-500">
+                        <label class="block font-semibold mb-1">Status Awal</label>
+                        <select id="acc-status" class="enterprise-input">
+                            <option value="Tersedia">Tersedia</option>
+                            <option value="Penuh">Penuh</option>
+                        </select>
                     </div>
                 </div>
             </div>
-            <div class="flex items-center justify-end gap-2 pt-3 border-t border-white/10">
-                <button onclick="closePremiumModal('account')" class="px-3 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-slate-300 border border-white/10 text-xs font-semibold">Batal</button>
-                <button onclick="window.savePremiumAccount && window.savePremiumAccount()" class="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold shadow-sm">Simpan Akun</button>
+            <div class="flex items-center justify-end gap-2 pt-2 border-t border-[var(--border-color)]">
+                <button onclick="closePremiumModal('account')" class="enterprise-btn enterprise-btn-secondary text-xs">Batal</button>
+                <button onclick="window.savePremiumAccount && window.savePremiumAccount()" class="enterprise-btn enterprise-btn-primary text-xs">Simpan Akun</button>
             </div>
         </div>
     </div>
 
-    <!-- MODAL: Catat Penjualan Premium -->
+    <!-- MODAL: Catat Penjualan Akun Premium -->
     <div id="modal-premium-sale" class="modal-overlay hidden" role="dialog" aria-modal="true">
-        <div class="bg-[#0f172a] border border-white/10 rounded-2xl w-full max-w-md p-6 shadow-2xl space-y-4">
-            <div class="flex items-center justify-between pb-3 border-b border-white/10">
-                <h3 class="font-bold text-sm text-white flex items-center gap-2">
+        <div class="modal-panel">
+            <div class="flex items-center justify-between pb-2 border-b border-[var(--border-color)]">
+                <h3 class="font-bold text-xs uppercase tracking-wider flex items-center gap-2">
                     <i data-lucide="user-plus" class="w-4 h-4 text-emerald-400"></i>
                     Catat Penjualan Akun Premium
                 </h3>
-                <button onclick="closePremiumModal('sale')" class="text-slate-400 hover:text-white"><i data-lucide="x" class="w-4 h-4"></i></button>
+                <button onclick="closePremiumModal('sale')" class="text-[var(--text-muted)] hover:text-[var(--text-primary)]"><i data-lucide="x" class="w-4 h-4"></i></button>
             </div>
             <div class="space-y-3 text-xs">
                 <div>
-                    <label class="block font-semibold text-slate-300 mb-1">Pilih Akun Sumber</label>
-                    <select id="sale-account-id" class="w-full bg-[#0b1120] border border-white/10 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-indigo-500">
+                    <label class="block font-semibold mb-1">Pilih Akun Sumber</label>
+                    <select id="sale-account-id" class="enterprise-input">
                         <option value="">-- Pilih Akun --</option>
                     </select>
                 </div>
                 <div>
-                    <label class="block font-semibold text-slate-300 mb-1">Nama Pembeli</label>
-                    <input type="text" id="sale-buyer-name" placeholder="Nama pelanggan" class="w-full bg-[#0b1120] border border-white/10 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-indigo-500">
+                    <label class="block font-semibold mb-1">Nama Pembeli</label>
+                    <input type="text" id="sale-buyer-name" placeholder="Nama pelanggan" class="enterprise-input">
                 </div>
                 <div>
-                    <label class="block font-semibold text-slate-300 mb-1">Nomor WhatsApp Pembeli</label>
-                    <input type="text" id="sale-buyer-phone" placeholder="628123456789" class="w-full bg-[#0b1120] border border-white/10 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-indigo-500 font-mono">
+                    <label class="block font-semibold mb-1">Nomor WhatsApp Pembeli</label>
+                    <input type="text" id="sale-buyer-phone" placeholder="628123456789" class="enterprise-input font-mono-num">
                 </div>
                 <div class="grid grid-cols-2 gap-3">
                     <div>
-                        <label class="block font-semibold text-slate-300 mb-1">Nama Profile/Slot</label>
-                        <input type="text" id="sale-profile-name" placeholder="User 1" class="w-full bg-[#0b1120] border border-white/10 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-indigo-500">
+                        <label class="block font-semibold mb-1">Nama Profile/Slot</label>
+                        <input type="text" id="sale-profile-name" placeholder="User 1" class="enterprise-input">
                     </div>
                     <div>
-                        <label class="block font-semibold text-slate-300 mb-1">Harga Jual (Rp)</label>
-                        <input type="number" id="sale-price" placeholder="30000" class="w-full bg-[#0b1120] border border-white/10 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-indigo-500">
+                        <label class="block font-semibold mb-1">Harga Jual (Rp)</label>
+                        <input type="number" id="sale-price" placeholder="30000" class="enterprise-input font-mono-num">
                     </div>
                 </div>
                 <div class="grid grid-cols-2 gap-3">
                     <div>
-                        <label class="block font-semibold text-slate-300 mb-1">Tanggal Berakhir</label>
-                        <input type="date" id="sale-end-date" class="w-full bg-[#0b1120] border border-white/10 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-indigo-500">
+                        <label class="block font-semibold mb-1">Tanggal Berakhir</label>
+                        <input type="date" id="sale-end-date" class="enterprise-input">
                     </div>
                     <div>
-                        <label class="block font-semibold text-slate-300 mb-1">Status Pembayaran</label>
-                        <select id="sale-payment-status" class="w-full bg-[#0b1120] border border-white/10 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-indigo-500">
+                        <label class="block font-semibold mb-1">Status Pembayaran</label>
+                        <select id="sale-payment-status" class="enterprise-input">
                             <option value="Lunas">Lunas</option>
                             <option value="Pending">Pending</option>
                         </select>
                     </div>
                 </div>
             </div>
-            <div class="flex items-center justify-end gap-2 pt-3 border-t border-white/10">
-                <button onclick="closePremiumModal('sale')" class="px-3 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-slate-300 border border-white/10 text-xs font-semibold">Batal</button>
-                <button onclick="window.savePremiumSale && window.savePremiumSale()" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold shadow-sm">Simpan Penjualan</button>
+            <div class="flex items-center justify-end gap-2 pt-2 border-t border-[var(--border-color)]">
+                <button onclick="closePremiumModal('sale')" class="enterprise-btn enterprise-btn-secondary text-xs">Batal</button>
+                <button onclick="window.savePremiumSale && window.savePremiumSale()" class="enterprise-btn enterprise-btn-primary text-xs">Simpan Penjualan</button>
             </div>
         </div>
     </div>
 
-    <!-- MODAL: Quick Links Modal -->
+    <!-- MODAL: Quick Links -->
     <div id="quick-links-modal" class="modal-overlay hidden" role="dialog" aria-modal="true">
-        <div class="bg-[#0f172a] border border-white/10 rounded-2xl w-full max-w-lg p-6 shadow-2xl space-y-4">
-            <div class="flex items-center justify-between pb-3 border-b border-white/10">
-                <h3 class="font-bold text-sm text-white flex items-center gap-2">
-                    <i data-lucide="link" class="w-4 h-4 text-sky-400"></i>
-                    Tautan Halaman Publik Sistem
+        <div class="modal-panel">
+            <div class="flex items-center justify-between pb-2 border-b border-[var(--border-color)]">
+                <h3 class="font-bold text-xs uppercase tracking-wider flex items-center gap-2">
+                    <i data-lucide="link-2" class="w-4 h-4 text-sky-400"></i>
+                    Tautan Portal Publik
                 </h3>
-                <button onclick="closeQuickLinksModal()" class="text-slate-400 hover:text-white"><i data-lucide="x" class="w-4 h-4"></i></button>
+                <button onclick="closeQuickLinksModal()" class="text-[var(--text-muted)] hover:text-[var(--text-primary)]"><i data-lucide="x" class="w-4 h-4"></i></button>
             </div>
-            <div class="space-y-3">
-                <div class="p-3 rounded-xl bg-[#0b1120] border border-white/10 flex items-center justify-between">
+            <div class="space-y-2.5 text-xs">
+                <div class="p-3 rounded-xl bg-[var(--bg-subtle)] border border-[var(--border-color)] flex items-center justify-between">
                     <div>
-                        <h4 class="text-xs font-bold text-white">Portal Pembayaran QRIS</h4>
-                        <p class="text-[11px] text-slate-400">/q atau /qris</p>
+                        <h4 class="font-bold text-white">Portal Pembayaran QRIS</h4>
+                        <p class="text-[11px] text-[var(--text-muted)]">/q atau /qris</p>
                     </div>
-                    <button onclick="copyPublicUrl('/q')" class="px-3 py-1.5 rounded-lg bg-indigo-600/20 text-indigo-400 text-xs font-semibold hover:bg-indigo-600/30">Salin Link</button>
+                    <button onclick="copyPublicUrl('/q')" class="enterprise-btn enterprise-btn-secondary text-xs">Salin Link</button>
                 </div>
-                <div class="p-3 rounded-xl bg-[#0b1120] border border-white/10 flex items-center justify-between">
+                <div class="p-3 rounded-xl bg-[var(--bg-subtle)] border border-[var(--border-color)] flex items-center justify-between">
                     <div>
-                        <h4 class="text-xs font-bold text-white">Unggah Bukti Transfer</h4>
-                        <p class="text-[11px] text-slate-400">/u atau /upload-bukti</p>
+                        <h4 class="font-bold text-white">Unggah Bukti Transfer</h4>
+                        <p class="text-[11px] text-[var(--text-muted)]">/u atau /upload-bukti</p>
                     </div>
-                    <button onclick="copyPublicUrl('/u')" class="px-3 py-1.5 rounded-lg bg-indigo-600/20 text-indigo-400 text-xs font-semibold hover:bg-indigo-600/30">Salin Link</button>
+                    <button onclick="copyPublicUrl('/u')" class="enterprise-btn enterprise-btn-secondary text-xs">Salin Link</button>
                 </div>
-                <div class="p-3 rounded-xl bg-[#0b1120] border border-white/10 flex items-center justify-between">
+                <div class="p-3 rounded-xl bg-[var(--bg-subtle)] border border-[var(--border-color)] flex items-center justify-between">
                     <div>
-                        <h4 class="text-xs font-bold text-white">Leaderboard Referral Publik</h4>
-                        <p class="text-[11px] text-slate-400">/referral atau /affiliate</p>
+                        <h4 class="font-bold text-white">Leaderboard Referral Publik</h4>
+                        <p class="text-[11px] text-[var(--text-muted)]">/referral atau /affiliate</p>
                     </div>
-                    <button onclick="copyPublicUrl('/referral')" class="px-3 py-1.5 rounded-lg bg-indigo-600/20 text-indigo-400 text-xs font-semibold hover:bg-indigo-600/30">Salin Link</button>
+                    <button onclick="copyPublicUrl('/referral')" class="enterprise-btn enterprise-btn-secondary text-xs">Salin Link</button>
                 </div>
             </div>
         </div>
     </div>
 
     <!-- ══════════════════════════════════════════════════════════════
-         CORE JAVASCRIPT MODULES
+         7. SCRIPTS & PLUGINS
          ══════════════════════════════════════════════════════════════ -->
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="/socket.io/socket.io.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
 
-    <!-- 10 Modular Clean Frontend Scripts -->
-    <script src="js/core.js?v=28"></script>
-    <script src="js/monitor.js?v=28"></script>
-    <script src="js/memory.js?v=28"></script>
-    <script src="js/groups.js?v=28"></script>
-    <script src="js/shop.js?v=28"></script>
-    <script src="js/transactions.js?v=28"></script>
-    <script src="js/premium.js?v=28"></script>
-    <script src="js/referral.js?v=28"></script>
-    <script src="js/apikeys.js?v=28"></script>
-    <script src="js/settings.js?v=28"></script>
+    <!-- 10 Modular Core Scripts -->
+    <script src="js/core.js?v=32"></script>
+    <script src="js/monitor.js?v=32"></script>
+    <script src="js/memory.js?v=32"></script>
+    <script src="js/groups.js?v=32"></script>
+    <script src="js/shop.js?v=32"></script>
+    <script src="js/transactions.js?v=32"></script>
+    <script src="js/premium.js?v=32"></script>
+    <script src="js/referral.js?v=32"></script>
+    <script src="js/apikeys.js?v=32"></script>
+    <script src="js/settings.js?v=32"></script>
 
 </body>
 </html>

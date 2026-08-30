@@ -1,8 +1,14 @@
-﻿// public/js/referral.js
-// Modul Referral & Afiliasi Multi-Grup
+// ==========================================
+// REFERRAL & AFFILIATE SYSTEM (DUAL-VIEW)
+// ==========================================
 'use strict';
 
 let allDashRefCodesData = [];
+
+function escapeHtml(str) {
+    if (!str) return '';
+    return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
 
 window.loadReferralGlobalSettings = async function() {
     try {
@@ -34,15 +40,12 @@ window.saveReferralSettings = async function() {
 
         const data = await res.json();
         if (data.success) {
-            if (window.showToast) window.showToast('success', `Pengaturan referral berhasil disimpan! (+${points_per_invite} Poin)`);
-            else alert(`✓ Pengaturan campaign berhasil disimpan!\n• Poin per undangan: +${points_per_invite} Poin`);
+            if (window.showToast) window.showToast('success', `Pengaturan referral disimpan! (+${points_per_invite} Poin per member)`);
         } else {
-            if (window.showToast) window.showToast('error', data.error || 'Gagal menyimpan pengaturan.');
-            else alert('❌ Error: ' + (data.error || 'Gagal menyimpan pengaturan.'));
+            if (window.showToast) window.showToast('error', data.error || 'Gagal menyimpan.');
         }
     } catch (err) {
         if (window.showToast) window.showToast('error', 'Error koneksi server.');
-        else alert('❌ Error koneksi server.');
     }
 };
 
@@ -68,7 +71,6 @@ window.loadReferralDashboardData = async function() {
         }
 
         window.loadGroupInviteLinksConfig();
-
         if (window.lucide) lucide.createIcons();
     } catch (err) {
         console.error('[Dashboard Referral Error]:', err);
@@ -92,35 +94,75 @@ function renderReferralDashboardCodes(codes) {
     if (elPts) elPts.textContent = totalPoints.toLocaleString('id-ID');
 
     const tbody = document.getElementById('dashRefTableBody');
-    if (!tbody) return;
+    const mobileCards = document.getElementById('dashRefMobileCards');
 
     if (codes.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:20px; color:var(--text-secondary);">Belum ada peserta referral terdaftar.</td></tr>';
+        if (tbody) tbody.innerHTML = '<tr><td colspan="6" class="py-8 text-center text-xs text-slate-500">Belum ada peserta referral terdaftar.</td></tr>';
+        if (mobileCards) mobileCards.innerHTML = '<div class="py-8 text-center text-xs text-slate-500">Belum ada peserta referral terdaftar.</div>';
         return;
     }
 
-    let html = '';
-    codes.forEach((c) => {
-        html += `
-            <tr style="border-bottom: 1px solid var(--border-color);">
-                <td style="padding: 10px; font-weight: 600;">${c.user_name || 'Member'}</td>
-                <td style="padding: 10px; color: var(--text-secondary);">${c.phone}</td>
-                <td style="padding: 10px;"><span style="background: rgba(56, 189, 248, 0.15); color: #38bdf8; padding: 2px 8px; border-radius: 6px; font-weight: 800;">${c.code}</span></td>
-                <td style="padding: 10px; font-weight: 700; color: #10b981;">
-                    <input type="number" id="ref-inv-${c.phone}" value="${c.total_invites || 0}" style="width: 70px; padding: 4px; border-radius: 6px; border: 1px solid var(--border-color); background: var(--surface2); color: var(--text-color);">
-                </td>
-                <td style="padding: 10px; font-weight: 700; color: #f59e0b;">
-                    <input type="number" id="ref-pts-${c.phone}" value="${c.points || 0}" style="width: 80px; padding: 4px; border-radius: 6px; border: 1px solid var(--border-color); background: var(--surface2); color: var(--text-color);">
-                </td>
-                <td style="padding: 10px; text-align: right;">
-                    <button type="button" class="btn btn-primary btn-sm" onclick="saveReferralPoints('${c.phone}')" style="margin-right: 4px;">Simpan</button>
-                    <button type="button" class="btn btn-danger btn-sm" onclick="deleteReferralCode('${c.phone}')">Hapus</button>
-                </td>
-            </tr>
-        `;
-    });
+    // 1. Desktop Table
+    if (tbody) {
+        tbody.innerHTML = codes.map(item => {
+            const cleanPhone = (item.user_phone || '').replace(/\D/g, '');
+            return `
+                <tr>
+                    <td class="font-bold text-xs text-white">${escapeHtml(item.user_name || 'Member')}</td>
+                    <td class="font-mono-num text-xs text-emerald-400">+${cleanPhone}</td>
+                    <td>
+                        <code class="font-mono-num font-bold text-xs text-indigo-400 bg-white/5 px-2 py-0.5 rounded border border-white/10">${escapeHtml(item.code)}</code>
+                    </td>
+                    <td class="font-mono-num text-xs">${item.total_invites || 0} orang</td>
+                    <td>
+                        <span class="font-mono-num font-bold text-xs text-amber-400">${item.points || 0} Poin</span>
+                    </td>
+                    <td class="text-right">
+                        <div class="flex items-center justify-end gap-1.5">
+                            <button onclick="window.openManualRewardModal('${item.user_phone}', '${escapeHtml(item.user_name || 'Member')}', ${item.points || 0})" class="px-2 py-1 rounded-lg bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-300 border border-indigo-500/20 text-[11px] font-semibold">
+                                Atur Poin
+                            </button>
+                            <button onclick="window.deleteReferralCodeDirect('${item.code}')" class="p-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/20 text-xs">
+                                <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        }).join('');
+    }
 
-    tbody.innerHTML = html;
+    // 2. Mobile Cards
+    if (mobileCards) {
+        mobileCards.innerHTML = codes.map(item => {
+            const cleanPhone = (item.user_phone || '').replace(/\D/g, '');
+            return `
+                <div class="mobile-entity-card">
+                    <div class="mobile-entity-header">
+                        <div>
+                            <h4 class="font-bold text-xs text-white">${escapeHtml(item.user_name || 'Member')}</h4>
+                            <span class="font-mono-num text-[11px] text-emerald-400">+${cleanPhone}</span>
+                        </div>
+                        <code class="font-mono-num font-bold text-xs text-indigo-400 bg-white/5 px-2 py-0.5 rounded border border-white/10">${escapeHtml(item.code)}</code>
+                    </div>
+                    <div class="flex items-center justify-between text-xs text-slate-300 pt-1">
+                        <span>Undangan: <strong>${item.total_invites || 0}</strong></span>
+                        <span class="font-bold text-amber-400">${item.points || 0} Poin</span>
+                    </div>
+                    <div class="mobile-entity-actions">
+                        <button onclick="window.openManualRewardModal('${item.user_phone}', '${escapeHtml(item.user_name || 'Member')}', ${item.points || 0})" class="px-3 py-1 rounded-lg bg-indigo-600 text-white text-[11px] font-semibold">
+                            Atur Poin
+                        </button>
+                        <button onclick="window.deleteReferralCodeDirect('${item.code}')" class="p-1 rounded-lg bg-rose-500/10 text-rose-400 border border-rose-500/20">
+                            <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                        </button>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    if (window.lucide) lucide.createIcons();
 }
 
 function renderReferralDashboardLogs(logs) {
@@ -128,190 +170,118 @@ function renderReferralDashboardLogs(logs) {
     if (!tbody) return;
 
     if (logs.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:20px; color:var(--text-secondary);">Belum ada riwayat klaim referral.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="5" class="py-6 text-center text-xs text-slate-500">Belum ada riwayat klaim undangan.</td></tr>';
         return;
     }
 
-    let html = '';
-    logs.forEach((l) => {
-        const dateFormatted = l.claimed_at ? new Date(l.claimed_at).toLocaleString('id-ID') : '-';
-        html += `
-            <tr style="border-bottom: 1px solid var(--border-color);">
-                <td style="padding: 10px; font-size: 0.8rem; color: var(--text-secondary);">${dateFormatted}</td>
-                <td style="padding: 10px; font-weight: 600;">${l.referrer_name || '-'} (${l.referrer_phone || '-'})</td>
-                <td style="padding: 10px; color: #10b981; font-weight: 600;">${l.referred_name || '-'} (${l.referred_phone || '-'})</td>
-                <td style="padding: 10px;"><span style="background: rgba(56, 189, 248, 0.15); color: #38bdf8; padding: 2px 6px; border-radius: 4px; font-weight: 700;">${l.code_used}</span></td>
-                <td style="padding: 10px; font-size: 0.8rem; color: var(--text-secondary);">${l.group_id}</td>
+    tbody.innerHTML = logs.map(l => {
+        const timeStr = new Date(l.created_at || Date.now()).toLocaleString('id-ID', { dateStyle: 'short', timeStyle: 'short' });
+        const referrerPhone = (l.referrer_phone || '').replace(/\D/g, '');
+        const refereePhone = (l.referee_phone || '').replace(/\D/g, '');
+        const cleanGid = (l.group_id || '-').split('@')[0];
+
+        return `
+            <tr>
+                <td class="text-slate-400 text-[11px] font-mono-num whitespace-nowrap">${timeStr}</td>
+                <td class="text-xs font-semibold text-white">+${referrerPhone}</td>
+                <td class="text-xs text-slate-300">+${refereePhone}</td>
+                <td>
+                    <code class="font-mono-num text-[11px] text-indigo-400">${escapeHtml(l.referral_code)}</code>
+                </td>
+                <td class="text-slate-400 text-[11px] font-mono-num">${cleanGid}</td>
             </tr>
         `;
-    });
-
-    tbody.innerHTML = html;
+    }).join('');
 }
 
 window.filterReferralDashboardTable = function() {
-    const q = (document.getElementById('ref-search-input')?.value || '').toLowerCase().trim();
-    if (!q) {
-        renderReferralDashboardCodes(allDashRefCodesData);
-        return;
-    }
-    const filtered = allDashRefCodesData.filter(c =>
+    const input = document.getElementById('ref-search-input');
+    if (!input) return;
+    const q = input.value.toLowerCase().trim();
+    
+    const filtered = allDashRefCodesData.filter(c => 
         (c.user_name && c.user_name.toLowerCase().includes(q)) ||
-        (c.code && c.code.toLowerCase().includes(q)) ||
-        (c.phone && c.phone.includes(q))
+        (c.user_phone && c.user_phone.includes(q)) ||
+        (c.code && c.code.toLowerCase().includes(q))
     );
     renderReferralDashboardCodes(filtered);
 };
 
-window.saveReferralPoints = async function(phone) {
-    try {
-        const ptsInput = document.getElementById(`ref-pts-${phone}`);
-        const invInput = document.getElementById(`ref-inv-${phone}`);
-        
-        const points = ptsInput ? parseInt(ptsInput.value, 10) : 0;
-        const total_invites = invInput ? parseInt(invInput.value, 10) : 0;
+window.openManualRewardModal = function(phone, name, currentPts) {
+    const newPts = prompt(`Edit Poin Referral untuk ${name} (+${phone.replace(/\D/g,'')}):\n\nMasukkan jumlah total poin baru:`, currentPts);
+    if (newPts === null) return;
+    const parsed = parseInt(newPts, 10);
+    if (isNaN(parsed)) {
+        if (window.showToast) window.showToast('warning', 'Poin harus berupa angka valid!');
+        return;
+    }
 
-        const res = await fetch('/api/referrals/update-points', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ phone, points, total_invites })
-        });
-        const data = await res.json();
-        if (data.success) {
-            if (window.showToast) window.showToast('success', 'Poin referral berhasil diperbarui!');
-            else alert('✓ Poin referral berhasil diperbarui!');
+    fetch('/api/referrals/points', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone, points: parsed })
+    }).then(r => r.json()).then(d => {
+        if (d.success) {
+            if (window.showToast) window.showToast('success', `Poin untuk ${name} berhasil diubah menjadi ${parsed} Poin!`);
             window.loadReferralDashboardData();
         } else {
-            if (window.showToast) window.showToast('error', data.error || 'Gagal meng-update poin.');
-            else alert('❌ Error: ' + (data.error || 'Gagal meng-update poin.'));
+            if (window.showToast) window.showToast('error', d.error || 'Gagal mengubah poin');
         }
-    } catch (err) {
-        if (window.showToast) window.showToast('error', 'Error koneksi server.');
-        else alert('❌ Error koneksi server.');
-    }
+    }).catch(e => {
+        if (window.showToast) window.showToast('error', 'Error: ' + e.message);
+    });
 };
 
-window.deleteReferralCode = async function(phone) {
-    if (!confirm('Apakah Anda yakin ingin menghapus kode referral ini?')) return;
-    try {
-        const res = await fetch(`/api/referrals/code/${phone}`, { method: 'DELETE' });
-        const data = await res.json();
-        if (data.success) {
-            if (window.showToast) window.showToast('success', 'Kode referral berhasil dihapus.');
-            else alert('✓ Kode referral berhasil dihapus.');
+window.deleteReferralCodeDirect = function(code) {
+    if (!confirm(`Hapus kode referral "${code}" dari sistem?`)) return;
+
+    fetch('/api/referrals/codes', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code })
+    }).then(r => r.json()).then(d => {
+        if (d.success) {
+            if (window.showToast) window.showToast('success', `Kode referral ${code} dihapus!`);
             window.loadReferralDashboardData();
         } else {
-            if (window.showToast) window.showToast('error', data.error || 'Gagal menghapus kode.');
-            else alert('❌ Error: ' + (data.error || 'Gagal menghapus kode.'));
+            if (window.showToast) window.showToast('error', d.error || 'Gagal');
         }
-    } catch (err) {
-        if (window.showToast) window.showToast('error', 'Error koneksi server.');
-        else alert('❌ Error koneksi server.');
-    }
-};
-
-window.openQuickLinksModal = function() {
-    const modal = document.getElementById('quick-links-modal');
-    if (modal) modal.classList.remove('hidden');
-    if (window.lucide) lucide.createIcons();
-};
-
-window.closeQuickLinksModal = function() {
-    const modal = document.getElementById('quick-links-modal');
-    if (modal) modal.classList.add('hidden');
-};
-
-window.copyPublicUrl = function(path) {
-    const fullUrl = window.location.origin + path;
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(fullUrl).then(() => {
-            if (window.showToast) window.showToast('success', 'Link berhasil disalin ke clipboard!');
-            else alert('✓ Link berhasil disalin ke clipboard:\n' + fullUrl);
-        }).catch(() => {
-            prompt('Salin link berikut:', fullUrl);
-        });
-    } else {
-        prompt('Salin link berikut:', fullUrl);
-    }
+    }).catch(e => {
+        if (window.showToast) window.showToast('error', 'Error: ' + e.message);
+    });
 };
 
 window.loadGroupInviteLinksConfig = async function() {
-    const tbody = document.getElementById('dashRefGroupLinksBody');
-    if (!tbody) return;
     try {
-        const res = await fetch('/api/groups');
-        const groups = await res.json();
-        if (!Array.isArray(groups) || groups.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:20px; color:var(--text-secondary);">Belum ada grup terdeteksi.</td></tr>';
-            return;
+        const res = await fetch('/api/referrals/invite-links');
+        const data = await res.json();
+        if (data.success && data.links) {
+            const container = document.getElementById('dashRefGroupLinksContainer');
+            if (!container) return;
+            const keys = Object.keys(data.links);
+            if (keys.length === 0) {
+                container.innerHTML = '<p class="text-xs text-slate-500">Belum ada tautan undangan grup terkonfigurasi.</p>';
+                return;
+            }
+            container.innerHTML = keys.map(gid => {
+                const link = data.links[gid];
+                const cleanGid = gid.split('@')[0];
+                return `
+                    <div class="p-3 rounded-xl bg-[#0b1120] border border-white/10 flex items-center justify-between gap-3 text-xs">
+                        <div>
+                            <span class="font-bold text-white">Grup: ${cleanGid}</span>
+                            <p class="text-[11px] text-slate-400 font-mono-num truncate max-w-xs">${escapeHtml(link)}</p>
+                        </div>
+                        <a href="${link}" target="_blank" class="px-2.5 py-1 rounded-lg bg-indigo-600/20 text-indigo-300 text-[11px] font-semibold hover:bg-indigo-600/30">Buka</a>
+                    </div>
+                `;
+            }).join('');
         }
-
-        let html = '';
-        groups.forEach(g => {
-            const cfg = g.config || {};
-            const invLink = cfg.inviteLink || '';
-            const isEnabled = g.enabled !== false;
-            const statusBadge = isEnabled 
-                ? '<span style="background: rgba(16, 185, 129, 0.15); color: #10b981; padding: 2px 6px; border-radius: 4px; font-weight: 700; font-size: 0.75rem;">Aktif</span>'
-                : '<span style="background: rgba(239, 68, 68, 0.15); color: #ef4444; padding: 2px 6px; border-radius: 4px; font-weight: 700; font-size: 0.75rem;">Nonaktif</span>';
-
-            html += `
-                <tr style="border-bottom: 1px solid var(--border-color);">
-                    <td style="padding: 10px; font-weight: 600;">${g.name}</td>
-                    <td style="padding: 10px; font-size: 0.75rem; color: var(--text-secondary); font-family: monospace;">${g.id}</td>
-                    <td style="padding: 10px;">${statusBadge}</td>
-                    <td style="padding: 10px;">
-                        <input type="text" id="grp-inv-link-${g.id}" value="${invLink}" placeholder="Kosongkan untuk Auto-Detect Link WA" style="width: 100%; min-width: 250px; padding: 6px 10px; border-radius: 6px; border: 1px solid var(--border-color); background: var(--surface2); color: var(--text-color); font-size: 0.8rem;">
-                    </td>
-                    <td style="padding: 10px; text-align: right;">
-                        <button type="button" class="btn btn-primary btn-sm" onclick="saveSingleGroupInviteLink('${g.id}')">Simpan Link</button>
-                    </td>
-                </tr>
-            `;
-        });
-
-        tbody.innerHTML = html;
-        if (window.lucide) lucide.createIcons();
-    } catch (err) {
-        console.error('[Load Group Links Error]:', err);
-        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:20px; color:var(--text-secondary);">Gagal memuat daftar grup.</td></tr>';
-    }
+    } catch(e) {}
 };
 
-window.saveSingleGroupInviteLink = async function(groupId) {
-    try {
-        const inputEl = document.getElementById(`grp-inv-link-${groupId}`);
-        const inviteLink = inputEl ? inputEl.value.trim() : '';
-
-        const resGroups = await fetch('/api/groups');
-        const groups = await resGroups.json();
-        const currentGrp = groups.find(g => g.id === groupId);
-        const currentCfg = currentGrp ? (currentGrp.config || {}) : {};
-
-        const payload = {
-            ...currentCfg,
-            groupName: currentGrp ? currentGrp.name : '',
-            enabled: currentGrp ? currentGrp.enabled !== false : true,
-            inviteLink
-        };
-
-        const resSave = await fetch(`/api/groups/${groupId}`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-        });
-
-        const dataSave = await resSave.json();
-        if (dataSave.success) {
-            if (window.showToast) window.showToast('success', 'Link undangan grup berhasil disimpan!');
-            else alert('✓ Link undangan grup berhasil disimpan!');
-            window.loadGroupInviteLinksConfig();
-        } else {
-            if (window.showToast) window.showToast('error', dataSave.error || 'Gagal menyimpan link grup.');
-            else alert('❌ Error: ' + (dataSave.error || 'Gagal menyimpan link grup.'));
-        }
-    } catch (err) {
-        if (window.showToast) window.showToast('error', 'Error koneksi server.');
-        else alert('❌ Error koneksi server.');
-    }
-};
+document.addEventListener('DOMContentLoaded', () => {
+    setTimeout(() => {
+        if (window.loadReferralDashboardData) window.loadReferralDashboardData();
+    }, 600);
+});

@@ -1,10 +1,52 @@
-// public/js/core.js
-// Inisialisasi Socket.io, Notifikasi Toast, Navigasi Tab, Tema & Modal Global
+// ==========================================
+// CORE SYSTEM: SOCKET, THEMES, TOASTS & DUAL NAVIGATION
+// ==========================================
 'use strict';
 
 const socket = io();
 window.socket = socket;
 
+// ─── 1. TEMA GELAP & TERANG (DARK / LIGHT THEME ENGINE) ────
+window.initTheme = function() {
+    const savedTheme = localStorage.getItem('dashboard_theme') || 'dark';
+    window.setTheme(savedTheme, false);
+};
+
+window.setTheme = function(theme, notify = true) {
+    const root = document.documentElement;
+    root.setAttribute('data-theme', theme);
+    localStorage.setItem('dashboard_theme', theme);
+
+    // Update Theme Toggle Buttons
+    const themeIcons = document.querySelectorAll('.theme-toggle-icon');
+    const themeLabels = document.querySelectorAll('.theme-toggle-label');
+
+    themeIcons.forEach(icon => {
+        if (theme === 'light') {
+            icon.setAttribute('data-lucide', 'moon');
+        } else {
+            icon.setAttribute('data-lucide', 'sun');
+        }
+    });
+
+    themeLabels.forEach(label => {
+        label.textContent = theme === 'light' ? 'Mode Gelap' : 'Mode Terang';
+    });
+
+    if (window.lucide) lucide.createIcons();
+
+    if (notify && window.showToast) {
+        window.showToast('info', `Beralih ke ${theme === 'light' ? 'Mode Terang (Light Mode)' : 'Mode Gelap (Dark Mode)'}`);
+    }
+};
+
+window.toggleTheme = function() {
+    const currentTheme = document.documentElement.getAttribute('data-theme') || 'dark';
+    const nextTheme = currentTheme === 'light' ? 'dark' : 'light';
+    window.setTheme(nextTheme, true);
+};
+
+// ─── 2. TOAST NOTIFICATIONS (ZERO ALERT REPLACEMENT) ───────
 window.showToast = function(typeOrMsg, msg, duration = 3500) {
     let type = 'info';
     let message = typeOrMsg;
@@ -24,17 +66,17 @@ window.showToast = function(typeOrMsg, msg, duration = 3500) {
     const toast = document.createElement('div');
     toast.className = `toast-notification toast-${type}`;
     
-    let iconSvg = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>';
+    let iconSvg = '<i data-lucide="info" class="w-4 h-4"></i>';
     let defaultTitle = 'Informasi';
 
     if (type === 'success') {
-        iconSvg = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>';
+        iconSvg = '<i data-lucide="check-circle-2" class="w-4 h-4"></i>';
         defaultTitle = 'Berhasil';
     } else if (type === 'error') {
-        iconSvg = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>';
+        iconSvg = '<i data-lucide="alert-circle" class="w-4 h-4"></i>';
         defaultTitle = 'Gagal';
     } else if (type === 'warning') {
-        iconSvg = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>';
+        iconSvg = '<i data-lucide="alert-triangle" class="w-4 h-4"></i>';
         defaultTitle = 'Perhatian';
     }
 
@@ -45,12 +87,13 @@ window.showToast = function(typeOrMsg, msg, duration = 3500) {
             <span class="toast-message">${message}</span>
         </div>
         <button class="toast-close" onclick="this.parentElement.remove()">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            <i data-lucide="x" class="w-3.5 h-3.5"></i>
         </button>
         <div class="toast-progress" style="animation-duration: ${duration}ms;"></div>
     `;
 
     container.appendChild(toast);
+    if (window.lucide) lucide.createIcons();
 
     requestAnimationFrame(() => {
         toast.classList.add('show');
@@ -60,30 +103,40 @@ window.showToast = function(typeOrMsg, msg, duration = 3500) {
         toast.classList.remove('show');
         setTimeout(() => {
             if (toast.parentElement) toast.remove();
-        }, 350);
+        }, 300);
     }, duration);
 };
 
+// ─── 3. DUAL-NAV TAB SWITCHER (DESKTOP & MOBILE) ───────────
 window.switchTab = function(tabId) {
+    // Sembunyikan semua tab konten
     document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
-    document.querySelectorAll('.ios-tab-btn, .hdr-tab-btn, .sidebar-nav-btn').forEach(el => el.classList.remove('active'));
     
+    // Hapus kelas aktif dari sidebar dan mobile bar
+    document.querySelectorAll('.sidebar-nav-btn, .mobile-nav-item').forEach(el => el.classList.remove('active'));
+    
+    // Tampilkan tab yang dipilih
     const selectedTab = document.getElementById(`tab-${tabId}`);
     if (selectedTab) selectedTab.classList.remove('hidden');
     
-    let buttonId = tabId;
-    if (tabId === 'features' || tabId === 'notes') {
-        buttonId = 'memory';
+    // Aktifkan tombol sidebar desktop
+    const deskBtn = document.getElementById(`sidebar-btn-${tabId}`);
+    if (deskBtn) deskBtn.classList.add('active');
+
+    // Aktifkan tombol mobile bottom bar
+    let mobileTarget = tabId;
+    if (['features', 'notes', 'referral', 'apikeys', 'settings', 'premium'].includes(tabId)) {
+        mobileTarget = 'more';
     }
-    const selectedBtn = document.getElementById(`btn-tab-${buttonId}`);
-    if (selectedBtn) selectedBtn.classList.add('active');
-
-    const selectedHdrBtn = document.getElementById(`hdr-btn-tab-${buttonId}`);
-    if (selectedHdrBtn) selectedHdrBtn.classList.add('active');
-
-    const mobBtn = document.getElementById(`mob-tab-${buttonId}`);
+    const mobBtn = document.getElementById(`mob-nav-${mobileTarget}`);
     if (mobBtn) mobBtn.classList.add('active');
-    
+
+    // Tutup mobile more sheet jika terbuka
+    window.closeMobileMoreSheet();
+
+    // Scroll to top
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+
     // Auto-fetch data per tab
     if (tabId === 'groups' || tabId === 'broadcast') {
         if (window.loadGroupsList) window.loadGroupsList();
@@ -115,6 +168,21 @@ window.switchTab = function(tabId) {
     if (window.lucide) lucide.createIcons();
 };
 
+// ─── 4. MOBILE MORE SHEET CONTROL ──────────────────────────
+window.openMobileMoreSheet = function() {
+    const sheet = document.getElementById('mobile-more-sheet');
+    if (sheet) {
+        sheet.classList.remove('hidden');
+        if (window.lucide) lucide.createIcons();
+    }
+};
+
+window.closeMobileMoreSheet = function() {
+    const sheet = document.getElementById('mobile-more-sheet');
+    if (sheet) sheet.classList.add('hidden');
+};
+
+// ─── 5. SUB-TABS (TRANSAKSI, DLL) ──────────────────────────
 window.switchSubTab = function(parentTab, subTab) {
     if (parentTab === 'transactions') {
         const ordersPanel = document.getElementById('panel-orders-container');
@@ -123,107 +191,79 @@ window.switchSubTab = function(parentTab, subTab) {
         const invoicesBtn = document.getElementById('sub-tab-invoices-btn');
         
         if (subTab === 'orders') {
-            if (ordersPanel) ordersPanel.style.display = 'flex';
+            if (ordersPanel) ordersPanel.style.display = 'block';
             if (invoicesPanel) invoicesPanel.style.display = 'none';
-            if (ordersBtn) ordersBtn.classList.add('active');
-            if (invoicesBtn) invoicesBtn.classList.remove('active');
-        } else {
+            if (ordersBtn) { ordersBtn.classList.add('active'); }
+            if (invoicesBtn) { invoicesBtn.classList.remove('active'); }
+            if (window.loadOrders) window.loadOrders();
+        } else if (subTab === 'invoices') {
             if (ordersPanel) ordersPanel.style.display = 'none';
-            if (invoicesPanel) invoicesPanel.style.display = 'flex';
-            if (ordersBtn) ordersBtn.classList.remove('active');
-            if (invoicesBtn) invoicesBtn.classList.add('active');
+            if (invoicesPanel) invoicesPanel.style.display = 'block';
+            if (ordersBtn) { ordersBtn.classList.remove('active'); }
+            if (invoicesBtn) { invoicesBtn.classList.add('active'); }
+            if (window.loadInvoices) window.loadInvoices();
         }
     } else if (parentTab === 'premium') {
-        const stockPanel = document.getElementById('panel-premium-stock-container');
+        const accPanel = document.getElementById('panel-premium-accounts-container');
         const salesPanel = document.getElementById('panel-premium-sales-container');
-        const stockBtn = document.getElementById('sub-tab-premium-stock-btn');
-        const salesBtn = document.getElementById('sub-tab-premium-sales-btn');
-        
-        if (subTab === 'stock') {
-            if (stockPanel) stockPanel.style.display = 'flex';
+        const accBtn = document.getElementById('sub-tab-acc-btn');
+        const salesBtn = document.getElementById('sub-tab-sales-btn');
+
+        if (subTab === 'accounts') {
+            if (accPanel) accPanel.style.display = 'block';
             if (salesPanel) salesPanel.style.display = 'none';
-            if (stockBtn) stockBtn.classList.add('active');
+            if (accBtn) accBtn.classList.add('active');
             if (salesBtn) salesBtn.classList.remove('active');
-        } else {
-            if (stockPanel) stockPanel.style.display = 'none';
-            if (salesPanel) salesPanel.style.display = 'flex';
-            if (stockBtn) stockBtn.classList.remove('active');
+        } else if (subTab === 'sales') {
+            if (accPanel) accPanel.style.display = 'none';
+            if (salesPanel) salesPanel.style.display = 'block';
+            if (accBtn) accBtn.classList.remove('active');
             if (salesBtn) salesBtn.classList.add('active');
         }
     }
     if (window.lucide) lucide.createIcons();
 };
 
-window.switchTabWithSub = function(tabId, subTabId) {
-    window.switchTab(tabId);
-    if (subTabId) {
-        if (tabId === 'transactions') window.switchSubTab('transactions', subTabId);
-        else if (tabId === 'premium') window.switchSubTab('premium', subTabId);
+// ─── 6. MODAL QUICK LINKS & LOGOUT ─────────────────────────
+window.openQuickLinksModal = function() {
+    const modal = document.getElementById('quick-links-modal');
+    if (modal) {
+        modal.classList.remove('hidden');
+        if (window.lucide) lucide.createIcons();
     }
-    document.querySelectorAll('.combined-sub-btn').forEach(btn => {
-        const tTab = btn.getAttribute('data-tab');
-        const tSub = btn.getAttribute('data-sub');
-        if (tTab === tabId && (!tSub || tSub === subTabId)) {
-            btn.classList.add('active');
-        } else {
-            btn.classList.remove('active');
-        }
+};
+
+window.closeQuickLinksModal = function() {
+    const modal = document.getElementById('quick-links-modal');
+    if (modal) modal.classList.add('hidden');
+};
+
+window.copyPublicUrl = function(pathStr) {
+    const fullUrl = window.location.origin + pathStr;
+    navigator.clipboard.writeText(fullUrl).then(() => {
+        window.showToast('success', `Tautan disalin: ${fullUrl}`);
+    }).catch(err => {
+        window.showToast('error', 'Gagal menyalin tautan: ' + err.message);
     });
 };
 
-window.switchNodeEditorTab = function(tabName) {
-    document.querySelectorAll('.node-tab-btn').forEach(btn => btn.classList.remove('active'));
-    const btnMap = { 'message': 0, 'media': 1, 'status': 2 };
-    const btns = document.querySelectorAll('.node-tab-btn');
-    if (btns && btns[btnMap[tabName]]) btns[btnMap[tabName]].classList.add('active');
-    document.querySelectorAll('.node-editor-section').forEach(sec => sec.classList.add('hidden'));
-    document.getElementById(`node-sec-${tabName}`)?.classList.remove('hidden');
-    if (window.lucide) lucide.createIcons();
-};
-
-window.switchGlobalSettingsTab = function(tabName) {
-    document.querySelectorAll('.global-tab-btn').forEach(btn => btn.classList.remove('active'));
-    const btnMap = { 'ai': 0, 'features': 1, 'prompt': 2 };
-    const btns = document.querySelectorAll('.global-tab-btn');
-    if (btns && btns[btnMap[tabName]]) btns[btnMap[tabName]].classList.add('active');
-    document.querySelectorAll('.global-settings-section').forEach(sec => sec.classList.add('hidden'));
-    document.getElementById(`global-sec-${tabName}`)?.classList.remove('hidden');
-    if (window.lucide) lucide.createIcons();
-};
-
-window.changeTheme = function(theme) {
-    document.querySelectorAll('.theme-card').forEach(c => c.classList.remove('active'));
-    const card = document.getElementById('tc-' + theme);
-    if (card) card.classList.add('active');
-
-    document.documentElement.className = '';
-    if (theme !== 'light' && theme !== 'ios-dark') {
-        const mapped = (theme === 'ios-light') ? 'minimal-light' : theme;
-        document.documentElement.classList.add('theme-' + mapped);
-    }
-    localStorage.setItem('dashboard-theme', theme);
-    const sel = document.getElementById('cfg-theme-selector');
-    if (sel) sel.value = theme;
-};
-
-window.logoutAdmin = function() {
-    if (confirm('Apakah Anda yakin ingin keluar dari dasbor admin?')) {
-        fetch('/api/logout', { method: 'POST' }).finally(() => {
-            window.location.href = '/login';
-        });
+window.logoutDashboard = function() {
+    if (confirm('Apakah Anda yakin ingin keluar dari Dasbor?')) {
+        document.cookie = 'session_token=; Max-Age=0; path=/;';
+        window.location.href = '/login';
     }
 };
 
-window.refreshQRCode = function(force = false) {
-    if (window.socket) {
-        window.socket.emit('request_qr', { force });
-        if (window.showToast) window.showToast('info', 'Meminta QR Code WhatsApp...');
+// Keyboard ESC listener untuk modal
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+        document.querySelectorAll('.modal-overlay').forEach(m => m.classList.add('hidden'));
+        window.closeMobileMoreSheet();
     }
-};
+});
 
-// Initial sync on load
+// Auto-inisialisasi
 document.addEventListener('DOMContentLoaded', () => {
-    const savedTheme = localStorage.getItem('dashboard-theme') || 'light';
-    window.changeTheme(savedTheme);
+    window.initTheme();
     if (window.lucide) lucide.createIcons();
 });

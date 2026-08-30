@@ -1,35 +1,38 @@
 // ==========================================
-// PREMIUM MANAGER TAB LOGIC
+// PREMIUM INVENTORY & SUBSCRIPTIONS (DUAL-VIEW)
 // ==========================================
+'use strict';
+
 let premiumProducts = [];
 let premiumAccounts = [];
 let premiumSales = [];
 
+function formatRupiah(num) {
+    if (isNaN(num)) return 'Rp 0';
+    return 'Rp ' + Number(num).toLocaleString('id-ID');
+}
+
+function escapeHtml(str) {
+    if (!str) return '';
+    return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
 window.openPremiumModal = function(type) {
     const modal = document.getElementById('modal-premium-' + type);
     if (modal) {
-        modal.classList.remove('hidden-modal');
+        modal.classList.remove('hidden');
         if (type === 'sale') {
             loadPremiumAccountsListForSale();
         } else if (type === 'account') {
             loadPremiumProductsListForAccount();
-        } else if (type === 'apk') {
-            window.renderPremiumApkList();
         }
+        if (window.lucide) lucide.createIcons();
     }
 };
 
 window.closePremiumModal = function(type) {
     const modal = document.getElementById('modal-premium-' + type);
-    if (modal) {
-        modal.classList.add('hidden-modal');
-    }
-};
-
-window.closePremiumModalOnOverlay = function(event, type) {
-    if (event.target.classList.contains('premium-modal')) {
-        closePremiumModal(type);
-    }
+    if (modal) modal.classList.add('hidden');
 };
 
 window.loadPremiumData = async function() {
@@ -48,300 +51,337 @@ window.loadPremiumData = async function() {
 async function loadPremiumProducts() {
     try {
         const res = await fetch('/api/premium/products');
-        if (!res.ok) throw new Error('Gagal memuat produk');
-        premiumProducts = await res.json();
-    } catch(err) {
-        console.error('Error loadPremiumProducts:', err);
-    }
+        if (res.ok) premiumProducts = await res.json();
+    } catch(e) {}
 }
 
 async function loadPremiumAccounts() {
     try {
         const res = await fetch('/api/premium/accounts');
-        if (!res.ok) throw new Error('Gagal memuat akun');
-        premiumAccounts = await res.json();
-        renderPremiumAccountsTable();
-    } catch(err) {
-        console.error('Error loadPremiumAccounts:', err);
-    }
+        if (res.ok) {
+            premiumAccounts = await res.json();
+            renderPremiumAccounts();
+        }
+    } catch(e) {}
 }
 
 async function loadPremiumSales() {
     try {
         const res = await fetch('/api/premium/sales');
-        if (!res.ok) throw new Error('Gagal memuat penjualan');
-        premiumSales = await res.json();
-        renderPremiumSalesTable();
-    } catch(err) {
-        console.error('Error loadPremiumSales:', err);
-    }
+        if (res.ok) {
+            premiumSales = await res.json();
+            renderPremiumSales();
+        }
+    } catch(e) {}
 }
 
 function updatePremiumStats() {
     const todayStr = new Date().toISOString().substring(0, 10);
     const activeSubs = premiumSales.filter(s => s.payment_status === 'Lunas' && s.end_date >= todayStr).length;
-    document.getElementById('stat-active-subscribers').textContent = activeSubs;
+    const statActive = document.getElementById('stat-active-subscribers');
+    if (statActive) statActive.textContent = activeSubs;
     
     const totalAccs = premiumAccounts.length;
     const readyAccs = premiumAccounts.filter(a => a.status === 'Tersedia').length;
-    document.getElementById('stat-stock-ratio').textContent = `${readyAccs} / ${totalAccs}`;
+    const statStock = document.getElementById('stat-stock-ratio');
+    if (statStock) statStock.textContent = `${readyAccs} / ${totalAccs}`;
     
     const activeSales = premiumSales.filter(s => s.payment_status === 'Lunas' && s.end_date >= todayStr);
     const estimatedRev = activeSales.reduce((acc, curr) => acc + (curr.price || 0), 0);
-    document.getElementById('stat-monthly-revenue').textContent = `Rp ${estimatedRev.toLocaleString('id-ID')}`;
-    
-    const soonExpiring = premiumSales.filter(s => {
-        if (!s.end_date) return false;
-        const diffTime = new Date(s.end_date) - new Date();
-        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-        return diffDays <= 5 && diffDays >= 0;
-    }).length;
-    document.getElementById('stat-expiring-soon').textContent = soonExpiring;
+    const statRev = document.getElementById('stat-monthly-revenue');
+    if (statRev) statRev.textContent = formatRupiah(estimatedRev);
 }
 
-function renderPremiumAccountsTable() {
+function renderPremiumAccounts() {
     const tbody = document.getElementById('premium-accounts-table-body');
-    if (!tbody) return;
-    tbody.innerHTML = '';
-    
-    if (premiumAccounts.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 20px; color: var(--text-secondary);">Belum ada stok akun premium.</td></tr>';
+    const mobileCards = document.getElementById('premium-accounts-mobile-cards');
+
+    if (!premiumAccounts || premiumAccounts.length === 0) {
+        if (tbody) tbody.innerHTML = '<tr><td colspan="5" class="py-8 text-center text-xs text-slate-500">Belum ada stok akun premium.</td></tr>';
+        if (mobileCards) mobileCards.innerHTML = '<div class="py-8 text-center text-xs text-slate-500">Belum ada stok akun premium.</div>';
         return;
     }
-    
-    premiumAccounts.forEach(acc => {
-        const tr = document.createElement('tr');
-        tr.style.borderBottom = '1px solid rgba(255,255,255,0.05)';
-        
-        let statusColor = '#ffd60a'; 
-        if (acc.status === 'Penuh') statusColor = '#ff453a';
-        if (acc.status === 'Nonaktif') statusColor = 'var(--text-secondary)';
-        if (acc.status === 'Tersedia') statusColor = '#30d158';
 
-        tr.innerHTML = `
-            <td style="padding: 10px 8px; font-weight: 600;">${acc.product_name || 'APK'}</td>
-            <td style="padding: 10px 8px;">
-                <div style="font-weight: 500;">${acc.email}</div>
-                <div style="font-size: 0.7rem; color: var(--text-secondary); font-family: monospace;">Pass: ${acc.password}</div>
-                ${acc.notes ? `<div style="font-size: 0.7rem; color: #ffd60a; margin-top: 2px;">📝 ${acc.notes}</div>` : ''}
-            </td>
-            <td style="padding: 10px 8px;">${acc.active_users || 0} / ${acc.max_users}</td>
-            <td style="padding: 10px 8px;"><span class="badge" style="background: rgba(255,255,255,0.05); color: ${statusColor};">${acc.status}</span></td>
-            <td style="padding: 10px 8px; text-align: right;">
-                <button class="btn btn-danger btn-sm" onclick="deletePremiumAccount(${acc.id})" style="padding: 3px 8px; font-size: 0.7rem; min-height: auto; height: 24px; width: auto; display: inline-flex; align-items: center; justify-content: center;"><i data-lucide="trash-2" style="width: 12px; height: 12px;"></i></button>
-            </td>
-        `;
-        tbody.appendChild(tr);
-    });
-    lucide.createIcons();
+    // 1. Desktop Table
+    if (tbody) {
+        tbody.innerHTML = premiumAccounts.map(acc => {
+            let statusBadge = '<span class="badge-chip badge-emerald">TERSEDIA</span>';
+            if (acc.status === 'Penuh') statusBadge = '<span class="badge-chip badge-rose">PENUH</span>';
+            if (acc.status === 'Nonaktif') statusBadge = '<span class="badge-chip badge-slate">NONAKTIF</span>';
+
+            return `
+                <tr>
+                    <td class="font-bold text-xs text-white">${escapeHtml(acc.product_name || 'APK')}</td>
+                    <td>
+                        <div class="font-semibold text-xs text-white font-mono-num">${escapeHtml(acc.email)}</div>
+                        <div class="text-[11px] text-slate-400 font-mono-num">Pass: ${escapeHtml(acc.password)}</div>
+                    </td>
+                    <td class="font-mono-num text-xs">${acc.active_users || 0} / ${acc.max_users}</td>
+                    <td>${statusBadge}</td>
+                    <td class="text-right">
+                        <button onclick="deletePremiumAccount(${acc.id})" class="p-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/20 text-xs">
+                            <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                        </button>
+                    </td>
+                </tr>
+            `;
+        }).join('');
+    }
+
+    // 2. Mobile Cards
+    if (mobileCards) {
+        mobileCards.innerHTML = premiumAccounts.map(acc => {
+            let statusBadge = '<span class="badge-chip badge-emerald">TERSEDIA</span>';
+            if (acc.status === 'Penuh') statusBadge = '<span class="badge-chip badge-rose">PENUH</span>';
+
+            return `
+                <div class="mobile-entity-card">
+                    <div class="mobile-entity-header">
+                        <span class="font-bold text-xs text-white">${escapeHtml(acc.product_name || 'APK')}</span>
+                        ${statusBadge}
+                    </div>
+                    <div class="space-y-1">
+                        <div class="text-xs font-mono-num text-indigo-300">${escapeHtml(acc.email)}</div>
+                        <div class="text-[11px] font-mono-num text-slate-400">Pass: ${escapeHtml(acc.password)}</div>
+                    </div>
+                    <div class="mobile-entity-actions">
+                        <span class="text-[11px] text-slate-400 mr-auto">Slot: ${acc.active_users || 0}/${acc.max_users}</span>
+                        <button onclick="deletePremiumAccount(${acc.id})" class="p-1.5 rounded-lg bg-rose-500/10 text-rose-400 border border-rose-500/20">
+                            <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                        </button>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    if (window.lucide) lucide.createIcons();
 }
 
-function renderPremiumSalesTable() {
+function renderPremiumSales() {
     const tbody = document.getElementById('premium-sales-table-body');
-    if (!tbody) return;
-    tbody.innerHTML = '';
-    
-    if (premiumSales.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 20px; color: var(--text-secondary);">Belum ada data penjualan premium.</td></tr>';
+    const mobileCards = document.getElementById('premium-sales-mobile-cards');
+
+    if (!premiumSales || premiumSales.length === 0) {
+        if (tbody) tbody.innerHTML = '<tr><td colspan="6" class="py-8 text-center text-xs text-slate-500">Belum ada riwayat penjualan.</td></tr>';
+        if (mobileCards) mobileCards.innerHTML = '<div class="py-8 text-center text-xs text-slate-500">Belum ada riwayat penjualan.</div>';
         return;
     }
-    
-    premiumSales.forEach(sale => {
-        const tr = document.createElement('tr');
-        tr.style.borderBottom = '1px solid rgba(255,255,255,0.05)';
-        
-        let daysLeft = 0;
-        if (sale.end_date) {
-            const diffTime = new Date(sale.end_date) - new Date();
-            daysLeft = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-        }
-        
-        let daysBadge = '';
-        if (daysLeft < 0) {
-            daysBadge = `<span class="badge" style="background: rgba(255,69,58,0.15); color: #ff453a;">Expired (${Math.abs(daysLeft)} h)</span>`;
-        } else if (daysLeft <= 5) {
-            daysBadge = `<span class="badge" style="background: rgba(255,214,10,0.15); color: #ffd60a;">${daysLeft} Hari Lagi</span>`;
-        } else {
-            daysBadge = `<span class="badge" style="background: rgba(48,209,88,0.15); color: #30d158;">${daysLeft} Hari</span>`;
-        }
 
-        let paymentColor = sale.payment_status === 'Lunas' ? '#30d158' : '#ffd60a';
+    // 1. Desktop Table
+    if (tbody) {
+        tbody.innerHTML = premiumSales.map(sale => {
+            const cleanPhone = (sale.buyer_phone || '').replace(/\D/g, '');
+            let daysLeft = 0;
+            if (sale.end_date) {
+                const diffTime = new Date(sale.end_date) - new Date();
+                daysLeft = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            }
+            
+            let daysBadge = `<span class="badge-chip badge-emerald">${daysLeft} Hari</span>`;
+            if (daysLeft < 0) daysBadge = `<span class="badge-chip badge-rose">EXPIRED</span>`;
+            else if (daysLeft <= 5) daysBadge = `<span class="badge-chip badge-amber">${daysLeft} Hari Lagi</span>`;
 
-        tr.innerHTML = `
-            <td style="padding: 10px 8px;">
-                <div style="font-weight: 600;">${sale.product_name || 'APK'}</div>
-                <div style="font-size: 0.7rem; color: var(--text-secondary); max-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${sale.account_email || ''}</div>
-            </td>
-            <td style="padding: 10px 8px;">
-                <div style="font-weight: 500;">${sale.buyer_name}</div>
-                <div style="font-size: 0.7rem; color: var(--text-secondary); font-family: monospace;">+${sale.buyer_phone}</div>
-            </td>
-            <td style="padding: 10px 8px;">${sale.profile_name || '-'}</td>
-            <td style="padding: 10px 8px;">
-                ${daysBadge}
-                <div style="font-size: 0.65rem; color: var(--text-secondary); margin-top: 2px;">s/d ${sale.end_date || ''}</div>
-            </td>
-            <td style="padding: 10px 8px;">
-                <span class="badge" style="background: rgba(255,255,255,0.05); color: ${paymentColor};">${sale.payment_status}</span>
-                <div style="font-size: 0.65rem; color: var(--text-secondary); margin-top: 2px;">Rp ${(sale.price || 0).toLocaleString('id-ID')}</div>
-            </td>
-            <td style="padding: 10px 8px; text-align: right;">
-                <div style="display: flex; gap: 4px; justify-content: flex-end; align-items: center;">
-                    <button class="btn btn-secondary btn-sm" onclick="sendPremiumReminder(${sale.id}, this)" title="Kirim Pengingat WA" style="padding: 3px 8px; font-size: 0.7rem; min-height: auto; height: 24px; width: auto; display: inline-flex; align-items: center; justify-content: center; color: #25d366;"><i data-lucide="bell" style="width: 12px; height: 12px;"></i></button>
-                    <button class="btn btn-danger btn-sm" onclick="deletePremiumSale(${sale.id})" style="padding: 3px 8px; font-size: 0.7rem; min-height: auto; height: 24px; width: auto; display: inline-flex; align-items: center; justify-content: center;"><i data-lucide="trash-2" style="width: 12px; height: 12px;"></i></button>
+            let payBadge = sale.payment_status === 'Lunas'
+                ? '<span class="badge-chip badge-emerald">LUNAS</span>'
+                : '<span class="badge-chip badge-amber">PENDING</span>';
+
+            return `
+                <tr>
+                    <td>
+                        <div class="font-bold text-xs text-white">${escapeHtml(sale.product_name || 'APK')}</div>
+                        <div class="text-[11px] text-slate-400 font-mono-num truncate max-w-[140px]">${escapeHtml(sale.account_email || '')}</div>
+                    </td>
+                    <td>
+                        <div class="font-semibold text-xs text-white">${escapeHtml(sale.buyer_name)}</div>
+                        <a href="https://wa.me/${cleanPhone}" target="_blank" class="text-[11px] text-emerald-400 font-mono-num hover:underline">+${cleanPhone}</a>
+                    </td>
+                    <td class="text-xs">${escapeHtml(sale.profile_name || '-')}</td>
+                    <td>
+                        <div>${daysBadge}</div>
+                        <div class="text-[10px] text-slate-400 mt-0.5">s/d ${sale.end_date || '-'}</div>
+                    </td>
+                    <td>
+                        <div>${payBadge}</div>
+                        <div class="font-mono-num font-bold text-xs text-white mt-0.5">${formatRupiah(sale.price)}</div>
+                    </td>
+                    <td class="text-right">
+                        <div class="flex items-center justify-end gap-1.5">
+                            <button onclick="sendPremiumReminder(${sale.id}, this)" class="p-1.5 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/20" title="Kirim Pengingat WA">
+                                <i data-lucide="bell" class="w-3.5 h-3.5"></i>
+                            </button>
+                            <button onclick="deletePremiumSale(${sale.id})" class="p-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/20" title="Hapus">
+                                <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        }).join('');
+    }
+
+    // 2. Mobile Cards
+    if (mobileCards) {
+        mobileCards.innerHTML = premiumSales.map(sale => {
+            const cleanPhone = (sale.buyer_phone || '').replace(/\D/g, '');
+            return `
+                <div class="mobile-entity-card">
+                    <div class="mobile-entity-header">
+                        <span class="font-bold text-xs text-white">${escapeHtml(sale.product_name || 'APK')} - ${escapeHtml(sale.profile_name || 'Slot')}</span>
+                        <span class="font-mono-num font-bold text-xs text-emerald-400">${formatRupiah(sale.price)}</span>
+                    </div>
+                    <div class="text-xs text-slate-300">
+                        <span>${escapeHtml(sale.buyer_name)} (+${cleanPhone})</span>
+                        <div class="text-[11px] text-slate-400 mt-0.5">Berakhir: ${sale.end_date || '-'}</div>
+                    </div>
+                    <div class="mobile-entity-actions">
+                        <a href="https://wa.me/${cleanPhone}" target="_blank" class="px-2.5 py-1 rounded-lg bg-white/5 border border-white/10 text-[11px] text-slate-300 flex items-center gap-1">
+                            <i data-lucide="message-circle" class="w-3 h-3 text-emerald-400"></i>
+                            <span>Chat</span>
+                        </a>
+                        <button onclick="sendPremiumReminder(${sale.id}, this)" class="px-2.5 py-1 rounded-lg bg-emerald-600 text-white text-[11px] font-semibold flex items-center gap-1">
+                            <i data-lucide="bell" class="w-3 h-3"></i>
+                            <span>Ingatkan</span>
+                        </button>
+                        <button onclick="deletePremiumSale(${sale.id})" class="p-1 rounded-lg bg-rose-500/10 text-rose-400 border border-rose-500/20">
+                            <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                        </button>
+                    </div>
                 </div>
-            </td>
-        `;
-        tbody.appendChild(tr);
-    });
-    lucide.createIcons();
+            `;
+        }).join('');
+    }
+
+    if (window.lucide) lucide.createIcons();
 }
 
 function loadPremiumProductsListForAccount() {
-    const select = document.getElementById('acc-product-id');
-    if (!select) return;
-    select.innerHTML = '<option value="">-- Pilih APK --</option>';
+    const sel = document.getElementById('acc-product-id');
+    if (!sel) return;
+    sel.innerHTML = '<option value="">-- Pilih Aplikasi / APK --</option>';
     premiumProducts.forEach(p => {
         const opt = document.createElement('option');
         opt.value = p.id;
         opt.textContent = p.name;
-        select.appendChild(opt);
+        sel.appendChild(opt);
     });
 }
 
 function loadPremiumAccountsListForSale() {
-    const select = document.getElementById('sale-account-id');
-    if (!select) return;
-    select.innerHTML = '<option value="">-- Pilih Akun --</option>';
+    const sel = document.getElementById('sale-account-id');
+    if (!sel) return;
+    sel.innerHTML = '<option value="">-- Pilih Akun Sumber --</option>';
     premiumAccounts.forEach(a => {
         const opt = document.createElement('option');
         opt.value = a.id;
-        opt.textContent = `${a.product_name || 'APK'} - ${a.email} (${a.active_users || 0}/${a.max_users} User)`;
-        select.appendChild(opt);
+        opt.textContent = `${a.product_name || 'APK'} - ${a.email} (${a.active_users || 0}/${a.max_users})`;
+        sel.appendChild(opt);
     });
 }
 
-window.renderPremiumApkList = function() {
-    const list = document.getElementById('premium-apk-list');
-    if (!list) return;
-    list.innerHTML = '';
-    
-    if (premiumProducts.length === 0) {
-        list.innerHTML = '<span style="font-size: 0.75rem; color: var(--text-secondary); width: 100%; text-align: center;">Belum ada jenis APK. Tambahkan di atas.</span>';
+window.savePremiumAccount = async function() {
+    const productId = document.getElementById('acc-product-id').value;
+    const email = document.getElementById('acc-email').value.trim();
+    const password = document.getElementById('acc-password').value.trim();
+    const maxUsers = document.getElementById('acc-max-users').value || 1;
+    const status = document.getElementById('acc-status').value || 'Tersedia';
+
+    if (!email || !password) {
+        if (window.showToast) window.showToast('warning', 'Email dan Password wajib diisi!');
         return;
     }
-    
-    premiumProducts.forEach(p => {
-        const badge = document.createElement('div');
-        badge.style = 'display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; background: rgba(255,255,255,0.05); border: 1px solid var(--border-color); border-radius: 6px; font-size: 0.75rem; font-weight: 500;';
-        badge.innerHTML = `
-            <span>${p.name}</span>
-            <i data-lucide="x" onclick="deletePremiumProduct(${p.id})" style="width: 12px; height: 12px; color: var(--text-secondary); cursor: pointer; transition: color 0.15s;" onmouseover="this.style.color='#ff453a'" onmouseout="this.style.color='var(--text-secondary)'"></i>
-        `;
-        list.appendChild(badge);
-    });
-    lucide.createIcons();
-};
 
-window.addPremiumProduct = async function() {
-    const input = document.getElementById('premium-apk-name');
-    if (!input || !input.value.trim()) return;
-    const name = input.value.trim();
-    
     try {
-        const res = await fetch('/api/premium/products', {
+        const res = await fetch('/api/premium/accounts', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ name })
+            body: JSON.stringify({ product_id: productId, email, password, max_users: maxUsers, status })
         });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error || 'Server error');
-        
-        input.value = '';
-        await loadPremiumProducts();
-        window.renderPremiumApkList();
+        if (res.ok) {
+            window.closePremiumModal('account');
+            if (window.showToast) window.showToast('success', 'Akun premium berhasil ditambahkan!');
+            window.loadPremiumData();
+        } else {
+            throw new Error(await res.text());
+        }
     } catch(err) {
-        alert('Gagal menambah jenis APK: ' + err.message);
+        if (window.showToast) window.showToast('error', 'Gagal menyimpan akun: ' + err.message);
     }
 };
 
-window.deletePremiumProduct = async function(id) {
-    if (!confirm('Hapus jenis APK ini? Semua akun dengan jenis ini juga akan terpengaruh.')) return;
+window.savePremiumSale = async function() {
+    const accountId = document.getElementById('sale-account-id').value;
+    const buyerName = document.getElementById('sale-buyer-name').value.trim();
+    const buyerPhone = document.getElementById('sale-buyer-phone').value.trim();
+    const profileName = document.getElementById('sale-profile-name').value.trim();
+    const price = document.getElementById('sale-price').value || 0;
+    const endDate = document.getElementById('sale-end-date').value;
+    const paymentStatus = document.getElementById('sale-payment-status').value || 'Lunas';
+
+    if (!buyerName || !buyerPhone || !endDate) {
+        if (window.showToast) window.showToast('warning', 'Nama pembeli, nomor WhatsApp, dan tanggal berakhir wajib diisi!');
+        return;
+    }
+
     try {
-        const res = await fetch('/api/premium/products/' + id, { method: 'DELETE' });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error || 'Server error');
-        
-        await loadPremiumProducts();
-        window.renderPremiumApkList();
-        loadPremiumAccounts(); 
+        const res = await fetch('/api/premium/sales', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ account_id: accountId, buyer_name: buyerName, buyer_phone: buyerPhone, profile_name: profileName, price, end_date: endDate, payment_status: paymentStatus })
+        });
+        if (res.ok) {
+            window.closePremiumModal('sale');
+            if (window.showToast) window.showToast('success', 'Penjualan premium berhasil dicatat!');
+            window.loadPremiumData();
+        } else {
+            throw new Error(await res.text());
+        }
     } catch(err) {
-        alert('Gagal menghapus APK: ' + err.message);
+        if (window.showToast) window.showToast('error', 'Gagal menyimpan penjualan: ' + err.message);
     }
 };
 
 window.deletePremiumAccount = async function(id) {
-    if (!confirm('Hapus akun premium ini dari stok?')) return;
+    if (!confirm('Hapus akun premium ini dari inventaris?')) return;
     try {
-        const res = await fetch('/api/premium/accounts/' + id, { method: 'DELETE' });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error || 'Server error');
-        loadPremiumAccounts();
-    } catch(err) {
-        alert('Gagal menghapus akun: ' + err.message);
-    }
+        const res = await fetch(`/api/premium/accounts/${id}`, { method: 'DELETE' });
+        if (res.ok) {
+            if (window.showToast) window.showToast('success', 'Akun premium dihapus.');
+            window.loadPremiumData();
+        }
+    } catch(e) {}
 };
 
 window.deletePremiumSale = async function(id) {
-    if (!confirm('Hapus data penjualan ini?')) return;
+    if (!confirm('Hapus riwayat penjualan ini?')) return;
     try {
-        const res = await fetch('/api/premium/sales/' + id, { method: 'DELETE' });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error || 'Server error');
-        loadPremiumSales();
-    } catch(err) {
-        alert('Gagal menghapus data penjualan: ' + err.message);
-    }
+        const res = await fetch(`/api/premium/sales/${id}`, { method: 'DELETE' });
+        if (res.ok) {
+            if (window.showToast) window.showToast('success', 'Penjualan dihapus.');
+            window.loadPremiumData();
+        }
+    } catch(e) {}
 };
 
-window.sendPremiumReminder = async function(id, btn) {
-    const oldHtml = btn.innerHTML;
-    btn.disabled = true;
-    btn.innerHTML = '<span class="loader" style="width:10px; height:10px; border-width:1.5px; display:inline-block;"></span>';
-    
+window.sendPremiumReminder = async function(saleId, btn) {
+    if (btn) btn.disabled = true;
     try {
-        const res = await fetch('/api/premium/send-reminder', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ saleId: id })
-        });
+        const res = await fetch(`/api/premium/sales/${saleId}/remind`, { method: 'POST' });
         const data = await res.json();
-        if (!res.ok) throw new Error(data.error || 'Server error');
-        alert('✅ Pesan WhatsApp reminder manual berhasil dikirim ke pembeli!');
+        if (data.success) {
+            if (window.showToast) window.showToast('success', 'Pengingat WhatsApp berhasil dikirim ke pelanggan!');
+        } else {
+            throw new Error(data.error || 'Gagal');
+        }
     } catch(err) {
-        alert('❌ Gagal mengirim reminder WA: ' + err.message);
+        if (window.showToast) window.showToast('error', 'Gagal kirim pengingat: ' + err.message);
     } finally {
-        btn.disabled = false;
-        btn.innerHTML = oldHtml;
+        if (btn) btn.disabled = false;
     }
-}
+};
 
-// --- NEW PREMIUM REQUIREMENTS ---
-window.addPremiumSale = async function() {
-    console.log("addPremiumSale placeholder");
-};
-window.crudPremiumProduct = function(action, id) {
-    console.log("crudPremiumProduct placeholder");
-};
-window.allocatePremiumSlot = function(accountId, type) {
-    console.log("allocatePremiumSlot placeholder");
-};
-window.filterPremiumAvailability = function(status) {
-    console.log("filterPremiumAvailability placeholder");
-};
-window.showDueDateReminder = function() {
-    console.log("showDueDateReminder placeholder");
-};
-window.calculateStockAndRevenue = function() {
-    console.log("calculateStockAndRevenue placeholder");
-};
+document.addEventListener('DOMContentLoaded', () => {
+    setTimeout(() => {
+        if (window.loadPremiumData) window.loadPremiumData();
+    }, 500);
+});
