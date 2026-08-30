@@ -137,38 +137,6 @@
             50% { top: 90%; opacity: 1; }
         }
 
-        /* Interactive Physics Ball Container */
-        .toy-canvas-container {
-            position: relative;
-            width: 100%;
-            height: 120px;
-            border-radius: 14px;
-            background: var(--bg-subtle);
-            border: 1px solid var(--border-color);
-            overflow: hidden;
-            touch-action: none;
-        }
-        #toy-ball-canvas {
-            display: block;
-            width: 100%;
-            height: 100%;
-            cursor: grab;
-        }
-        #toy-ball-canvas:active {
-            cursor: grabbing;
-        }
-
-        /* Canvas Confetti */
-        #confetti-canvas {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            pointer-events: none;
-            z-index: 9998;
-        }
-
         /* Toast Notification */
         #portal-toast {
             position: fixed;
@@ -200,9 +168,6 @@
     </style>
 </head>
 <body class="flex flex-col items-center justify-center p-3 sm:p-6 antialiased">
-
-    <!-- Confetti Canvas -->
-    <canvas id="confetti-canvas"></canvas>
 
     <!-- Toast Notification Element -->
     <div id="portal-toast">
@@ -288,13 +253,8 @@
                 </div>
             </div>
 
-            <!-- Interactive Physics Energy Ball (Playable Toy) -->
-            <div class="toy-canvas-container">
-                <canvas id="toy-ball-canvas"></canvas>
-            </div>
-
             <!-- CTA to Upload -->
-            <div class="pt-1 border-t border-[var(--border-color)]">
+            <div class="pt-2 border-t border-[var(--border-color)]">
                 <button onclick="switchPortalTab('upload')" class="w-full py-2.5 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold shadow flex items-center justify-center gap-2 transition-all">
                     <span>Sudah Bayar? Unggah Bukti</span>
                     <i data-lucide="arrow-right" class="w-4 h-4"></i>
@@ -400,255 +360,6 @@
             }
         }
 
-        // ─── 1. INTERACTIVE PHYSICS BOUNCING BALL (TOY) ─────────
-        (function initPhysicsToy() {
-            const canvas = document.getElementById('toy-ball-canvas');
-            if (!canvas) return;
-            const ctx = canvas.getContext('2d');
-
-            function resize() {
-                const rect = canvas.getBoundingClientRect();
-                canvas.width = rect.width * (window.devicePixelRatio || 1);
-                canvas.height = rect.height * (window.devicePixelRatio || 1);
-            }
-            window.addEventListener('resize', resize);
-            resize();
-
-            const colors = [
-                { main: '#6366f1', glow: 'rgba(99, 102, 241, 0.45)' },
-                { main: '#10b981', glow: 'rgba(16, 185, 129, 0.45)' },
-                { main: '#38bdf8', glow: 'rgba(56, 189, 248, 0.45)' },
-                { main: '#f59e0b', glow: 'rgba(245, 158, 11, 0.45)' },
-                { main: '#ec4899', glow: 'rgba(236, 72, 153, 0.45)' }
-            ];
-            let colorIdx = 0;
-
-            const ball = {
-                x: 60,
-                y: 50,
-                radius: 18,
-                vx: 3,
-                vy: 0,
-                isDragging: false,
-                lastX: 60,
-                lastY: 50,
-                scaleX: 1,
-                scaleY: 1
-            };
-
-            const ripples = [];
-
-            function getPointerPos(e) {
-                const rect = canvas.getBoundingClientRect();
-                const dpr = window.devicePixelRatio || 1;
-                const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-                const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-                return {
-                    x: (clientX - rect.left) * dpr,
-                    y: (clientY - rect.top) * dpr
-                };
-            }
-
-            function onPointerDown(e) {
-                const pos = getPointerPos(e);
-                const dx = pos.x - ball.x;
-                const dy = pos.y - ball.y;
-                const dist = Math.hypot(dx, dy);
-
-                if (dist < ball.radius * 2.5) {
-                    ball.isDragging = true;
-                    ball.vx = 0;
-                    ball.vy = 0;
-                    ball.lastX = pos.x;
-                    ball.lastY = pos.y;
-                    colorIdx = (colorIdx + 1) % colors.length;
-                    ripples.push({ x: ball.x, y: ball.y, r: 10, alpha: 0.8, color: colors[colorIdx].main });
-                }
-            }
-
-            function onPointerMove(e) {
-                if (!ball.isDragging) return;
-                const pos = getPointerPos(e);
-                ball.vx = (pos.x - ball.lastX) * 0.4;
-                ball.vy = (pos.y - ball.lastY) * 0.4;
-                ball.x = pos.x;
-                ball.y = pos.y;
-                ball.lastX = pos.x;
-                ball.lastY = pos.y;
-            }
-
-            function onPointerUp() {
-                if (ball.isDragging) {
-                    ball.isDragging = false;
-                    ripples.push({ x: ball.x, y: ball.y, r: 15, alpha: 1, color: colors[colorIdx].main });
-                }
-            }
-
-            canvas.addEventListener('mousedown', onPointerDown);
-            window.addEventListener('mousemove', onPointerMove);
-            window.addEventListener('mouseup', onPointerUp);
-
-            canvas.addEventListener('touchstart', onPointerDown, { passive: true });
-            window.addEventListener('touchmove', onPointerMove, { passive: true });
-            window.addEventListener('touchend', onPointerUp);
-
-            const trail = [];
-
-            function loop() {
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-                // Update physics
-                if (!ball.isDragging) {
-                    ball.vy += 0.35; // gravity
-                    ball.vx *= 0.99; // air resistance
-                    ball.x += ball.vx;
-                    ball.y += ball.vy;
-
-                    // Bounds bounce
-                    const dpr = window.devicePixelRatio || 1;
-                    const r = ball.radius * dpr;
-
-                    // Floor
-                    if (ball.y + r > canvas.height) {
-                        ball.y = canvas.height - r;
-                        ball.vy = -ball.vy * 0.76;
-                        ball.vx *= 0.96; // ground friction
-                        if (Math.abs(ball.vy) > 1.5) {
-                            ripples.push({ x: ball.x, y: canvas.height - 2, r: 5, alpha: 0.5, color: colors[colorIdx].main });
-                        }
-                    }
-                    // Ceiling
-                    if (ball.y - r < 0) {
-                        ball.y = r;
-                        ball.vy = -ball.vy * 0.76;
-                    }
-                    // Left wall
-                    if (ball.x - r < 0) {
-                        ball.x = r;
-                        ball.vx = -ball.vx * 0.8;
-                    }
-                    // Right wall
-                    if (ball.x + r > canvas.width) {
-                        ball.x = canvas.width - r;
-                        ball.vx = -ball.vx * 0.8;
-                    }
-                }
-
-                // Trail
-                trail.push({ x: ball.x, y: ball.y, alpha: 0.5 });
-                if (trail.length > 8) trail.shift();
-
-                trail.forEach((t, i) => {
-                    t.alpha *= 0.85;
-                    ctx.beginPath();
-                    ctx.arc(t.x, t.y, (ball.radius * 0.7) * (i / trail.length), 0, Math.PI * 2);
-                    ctx.fillStyle = colors[colorIdx].glow;
-                    ctx.globalAlpha = t.alpha;
-                    ctx.fill();
-                    ctx.globalAlpha = 1;
-                });
-
-                // Ripples
-                for (let i = ripples.length - 1; i >= 0; i--) {
-                    const rip = ripples[i];
-                    rip.r += 2.5;
-                    rip.alpha -= 0.03;
-                    if (rip.alpha <= 0) {
-                        ripples.splice(i, 1);
-                    } else {
-                        ctx.beginPath();
-                        ctx.arc(rip.x, rip.y, rip.r, 0, Math.PI * 2);
-                        ctx.strokeStyle = rip.color;
-                        ctx.globalAlpha = rip.alpha;
-                        ctx.lineWidth = 2;
-                        ctx.stroke();
-                        ctx.globalAlpha = 1;
-                    }
-                }
-
-                // Draw Glowing Ball
-                const dpr = window.devicePixelRatio || 1;
-                const r = ball.radius * dpr;
-
-                const grad = ctx.createRadialGradient(ball.x - r * 0.3, ball.y - r * 0.3, r * 0.1, ball.x, ball.y, r);
-                grad.addColorStop(0, '#ffffff');
-                grad.addColorStop(0.3, colors[colorIdx].main);
-                grad.addColorStop(1, colors[colorIdx].main);
-
-                // Outer Glow
-                ctx.shadowColor = colors[colorIdx].main;
-                ctx.shadowBlur = 18;
-                ctx.beginPath();
-                ctx.arc(ball.x, ball.y, r, 0, Math.PI * 2);
-                ctx.fillStyle = grad;
-                ctx.fill();
-                ctx.shadowBlur = 0; // Reset
-
-                requestAnimationFrame(loop);
-            }
-            loop();
-        })();
-
-        // ─── 2. LIGHTWEIGHT CELEBRATION CONFETTI ───────────────
-        function launchCelebrationConfetti() {
-            const canvas = document.getElementById('confetti-canvas');
-            if (!canvas) return;
-            const ctx = canvas.getContext('2d');
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-
-            const particles = [];
-            const colors = ['#6366f1', '#10b981', '#f59e0b', '#ec4899', '#38bdf8'];
-
-            for (let i = 0; i < 70; i++) {
-                particles.push({
-                    x: canvas.width / 2,
-                    y: canvas.height / 2,
-                    vx: (Math.random() - 0.5) * 14,
-                    vy: (Math.random() - 0.8) * 14,
-                    size: Math.random() * 6 + 4,
-                    color: colors[Math.floor(Math.random() * colors.length)],
-                    alpha: 1,
-                    rotation: Math.random() * 360,
-                    vr: (Math.random() - 0.5) * 10
-                });
-            }
-
-            let animationFrame;
-            function render() {
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-                let alive = 0;
-
-                particles.forEach(p => {
-                    p.x += p.vx;
-                    p.y += p.vy;
-                    p.vy += 0.3;
-                    p.rotation += p.vr;
-                    p.alpha -= 0.015;
-
-                    if (p.alpha > 0) {
-                        alive++;
-                        ctx.save();
-                        ctx.globalAlpha = p.alpha;
-                        ctx.translate(p.x, p.y);
-                        ctx.rotate((p.rotation * Math.PI) / 180);
-                        ctx.fillStyle = p.color;
-                        ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size);
-                        ctx.restore();
-                    }
-                });
-
-                if (alive > 0) {
-                    animationFrame = requestAnimationFrame(render);
-                } else {
-                    ctx.clearRect(0, 0, canvas.width, canvas.height);
-                    cancelAnimationFrame(animationFrame);
-                }
-            }
-            render();
-        }
-
-        // ─── 3. THEME & TABS LOGIC ─────────────────────────────
         function initTheme() {
             const saved = localStorage.getItem('portal_theme') || 'dark';
             setTheme(saved);
@@ -760,7 +471,6 @@
 
                     btn.classList.add('hidden');
                     showToast('Bukti transfer berhasil diunggah');
-                    launchCelebrationConfetti();
                 } else {
                     showToast('Gagal: ' + (data.error || 'Terjadi kesalahan'));
                 }
