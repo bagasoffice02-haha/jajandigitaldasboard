@@ -521,68 +521,120 @@ async function setMessagesAdminsOnlyHelper(client, groupId, adminsOnly) {
     try {
         if (!client) throw new Error('WhatsApp client tidak terhubung.');
         
-        const chat = await client.getChatById(groupId);
-        if (!chat) throw new Error('Grup tidak ditemukan.');
-        if (!chat.isGroup) throw new Error('Bukan grup WhatsApp.');
+        const chat = await client.getChatById(groupId).catch(() => null);
+        if (!chat) throw new Error('Grup tidak ditemukan atau bot belum memuat obrolan.');
+        if (!chat.isGroup) throw new Error('Target bukan grup WhatsApp.');
         
+        // 1. Coba metode native whatsapp-web.js
         if (typeof chat.setMessagesAdminsOnly === 'function') {
-            // Cara native whatsapp-web.js — paling andal
-            await chat.setMessagesAdminsOnly(adminsOnly);
-            return true;
+            try {
+                const nativeRes = await chat.setMessagesAdminsOnly(adminsOnly);
+                if (nativeRes !== false) return true;
+            } catch (nativeErr) {
+                console.warn(`[setMessagesAdminsOnlyHelper] Native gagal (${nativeErr.message}), mencoba fallback Puppeteer evaluate...`);
+            }
         }
         
-        // Fallback: Puppeteer evaluate jika native tidak tersedia
+        // 2. Fallback Puppeteer evaluate dengan deteksi admin & modul dinamis
         const result = await client.pupPage.evaluate(async (chatId, adminsOnly) => {
-            const errs = [];
-            
-            // Method 1: WAWebSetPropertyGroupAction (metode standar whatsapp-web.js)
             try {
-                const chat = await window.WWebJS.getChat(chatId, { getAsModel: false });
-                if (!chat) return { success: false, error: 'Chat tidak ditemukan di WhatsApp Web.' };
-                
-                const mod = window.require('WAWebSetPropertyGroupAction');
-                const response = await mod.setGroupProperty(chat, 'announcement', adminsOnly ? 1 : 0);
-                
-                // Cek status response dari WA server
-                if (response && response.status && response.status !== 200) {
-                    if (response.status === 401 || response.status === 403) {
-                        return { success: false, error: `Bot bukan Admin di grup ini (status ${response.status}). Jadikan bot sebagai Admin grup terlebih dahulu.` };
+                // ── A. Cari chat object ──
+                let chat = null;
+                try {
+                    chat = await window.WWebJS.getChat(chatId, { getAsModel: false });
+                } catch(_) {}
+
+                if (!chat && window.Store && window.Store.Chat) {
+                    const models = window.Store.Chat.models || (typeof window.Store.Chat.getModels === 'function' ? window.Store.Chat.getModels() : []) || [];
+                    chat = models.find(c => c && c.id && (c.id._serialized === chatId || c.id.user === chatId.replace(/\D/g, ''))) || null;
+                }
+
+                if (!chat) return { success: false, error: 'Chat grup tidak ditemukan di memori WhatsApp Web.' };
+
+                // ── B. Cek apakah Bot adalah Admin di grup ini ──
+                try {
+                    const meWid = (window.Store && window.Store.User && window.Store.User.getMeUser) ? window.Store.User.getMeUser() : null;
+                    let groupMeta = (window.Store && window.Store.GroupMetadata) ? window.Store.GroupMetadata.get(chatId) : null;
+                    if (!groupMeta && window.Store && window.Store.GroupMetadata && window.Store.GroupMetadata.find) {
+                        try { groupMeta = await window.Store.GroupMetadata.find(chatId); } catch(_) {}
                     }
-                    return { success: false, error: `WhatsApp menolak permintaan (status ${response.status}).` };
+                    if (groupMeta && groupMeta.participants && meWid) {
+                        const myParticipant = groupMeta.participants.find(p => p.id && (p.id._serialized === meWid._serialized || p.id.user === meWid.user));
+                        if (myParticipant && !myParticipant.isAdmin && !myParticipant.isSuperAdmin) {
+                            return { success: false, error: 'Akun Bot BUKAN Admin di grup ini. Silakan jadikan nomor bot sebagai Admin grup terlebih dahulu.' };
+                        }
+                    }
+                } catch(_) {}
+
+                // ── C. Cari dan jalankan fungsi setGroupProperty ──
+                let setPropertyFn = null;
+                const knownModules = [
+                    'WAWebGroupSetPropertyAction',
+                    'WAWebSetPropertyGroupAction',
+                    'WAWebSetGroupPropertyAction'
+                ];
+
+                for (const modName of knownModules) {
+                    try {
+                        const m = window.require(modName);
+                        if (m && typeof m.setGroupProperty === 'function') {
+                            setPropertyFn = (c, p, v) => m.setGroupProperty(c, p, v);
+                            break;
+                        }
+                    } catch(_) {}
                 }
-                return { success: true };
-            } catch(e) {
-                const msg = (e && e.message) ? e.message : String(e);
-                if (msg === 'r' || msg.length <= 2) {
-                    errs.push('Bot kemungkinan bukan Admin di grup ini.');
-                } else {
-                    errs.push(msg);
+
+                if (!setPropertyFn) {
+                    try {
+                        const moduleMap = window.require.m || {};
+                        for (const key of Object.keys(moduleMap)) {
+                            try {
+                                const m = window.require(key);
+                                if (m && typeof m.setGroupProperty === 'function') {
+                                    setPropertyFn = (c, p, v) => m.setGroupProperty(c, p, v);
+                                    break;
+                                }
+                            } catch(_) {}
+                        }
+                    } catch(_) {}
                 }
+
+                if (setPropertyFn) {
+                    const resp = await setPropertyFn(chat, 'announcement', adminsOnly ? 1 : 0);
+                    if (resp && resp.status && resp.status !== 200) {
+                        if (resp.status === 401 || resp.status === 403) {
+                            return { success: false, error: 'Bot bukan Admin di grup ini (Error status: ' + resp.status + '). Jadikan bot sebagai Admin grup terlebih dahulu.' };
+                        }
+                    }
+                    return { success: true };
+                }
+
+                // ── D. Alternatif Store.GroupUtils ──
+                if (window.Store && window.Store.GroupUtils && typeof window.Store.GroupUtils.sendSetGroupProperty === 'function') {
+                    await window.Store.GroupUtils.sendSetGroupProperty(chat.id || chatId, 'announcement', adminsOnly ? 1 : 0);
+                    return { success: true };
+                }
+
+                return { success: false, error: 'Modul setGroupProperty WhatsApp Web tidak ditemukan.' };
+            } catch (err) {
+                const emsg = (err && err.message) ? err.message : String(err);
+                if (emsg === 'r' || emsg.length <= 2 || emsg.includes('ServerStatusCodeError')) {
+                    return { success: false, error: 'Bot bukan Admin di grup ini atau hak akses WhatsApp belum tersinkronisasi. Pastikan nomor bot telah dijadikan Admin grup.' };
+                }
+                return { success: false, error: emsg };
             }
-            
-            // Method 2: Coba via window.Store langsung
-            try {
-                const chatWid = window.Store.WidFactory && window.Store.WidFactory.createWid
-                    ? window.Store.WidFactory.createWid(chatId)
-                    : null;
-                if (chatWid) {
-                    const storeKeys = Object.keys(window.Store);
-                    const actionKey = storeKeys.find(k => window.Store[k] && typeof window.Store[k].sendSetGroupAnnounce === 'function');
-                    if (actionKey) {
-                        await window.Store[actionKey].sendSetGroupAnnounce(chatWid, adminsOnly);
-                        return { success: true };
-                    }
-                }
-            } catch(e2) { errs.push(String(e2.message || e2)); }
-            
-            return { success: false, error: errs.join(' | ') || 'Gagal mengubah setelan grup. Pastikan bot adalah Admin.' };
         }, groupId, adminsOnly);
         
         if (!result.success) throw new Error(result.error);
         return true;
     } catch (err) {
-        console.error(`[setMessagesAdminsOnlyHelper] Error:`, err.message);
-        throw err;
+        let msg = err.message || String(err);
+        msg = msg.replace(/^Evaluation failed:\s*/i, '');
+        if (msg === 'r' || msg.length <= 2 || msg.includes('ServerStatusCodeError')) {
+            msg = 'Bot bukan Admin di grup ini atau hak akses WhatsApp belum tersinkronisasi. Pastikan nomor bot telah dijadikan Admin grup.';
+        }
+        console.error(`[setMessagesAdminsOnlyHelper] Error (${groupId}):`, msg);
+        throw new Error(msg);
     }
 }
 

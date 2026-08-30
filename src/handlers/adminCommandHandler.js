@@ -3,119 +3,7 @@
 const fs = require('fs');
 const { getDb } = require('../db/sqlite');
 const { saveGroupConfig } = require('../db/models');
-
-/**
- * setGroupAnnounce — Set mode hanya-admin (tutup) atau semua (buka) di grup.
- * Mencari modul secara DINAMIS — tidak hardcode nama modul yang bisa berubah
- * setiap WhatsApp Web update. Juga scan Store.Chat.models untuk ID grup format baru.
- */
-async function setGroupAnnounce(client, groupId, announce, attempt = 1) {
-    const userPart = (groupId.split('@')[0] || '').replace(/\D/g, '');
-
-    const result = await client.pupPage.evaluate(async (groupId, userPart, announce) => {
-        try {
-            // ── 1. Cari chat object ───────────────────────────────────────────
-            let chat = null;
-
-            // Metode A: WWebJS standar
-            try {
-                const c = await window.WWebJS.getChat(groupId, { getAsModel: false });
-                if (c) chat = c;
-            } catch(_) {}
-
-            // Metode B: Scan Store.Chat.models
-            if (!chat && window.Store && window.Store.Chat) {
-                const models = window.Store.Chat.models
-                    || (typeof window.Store.Chat.getModels === 'function' ? window.Store.Chat.getModels() : [])
-                    || [];
-                chat = models.find(c => {
-                    if (!c || !c.id) return false;
-                    const cu = String(c.id.user || c.id._serialized || '').replace(/\D/g, '');
-                    return cu === userPart || (c.id._serialized || '') === groupId;
-                }) || null;
-            }
-
-            // Metode C: Store.GroupMetadata
-            if (!chat && window.Store && window.Store.GroupMetadata) {
-                chat = window.Store.GroupMetadata.get(groupId) || null;
-            }
-
-            if (!chat) return { ok: false, error: `NOTFOUND:Grup tidak ditemukan (id: ${groupId})` };
-
-            // ── 2. Cari modul setGroupProperty SECARA DINAMIS ─────────────────
-            // Tidak hardcode nama modul karena WA Web sering update & rename
-            let setPropertyFn = null;
-            const knownNames = [
-                'WAWebSetPropertyGroupAction',
-                'WAWebGroupSetPropertyAction',
-                'WAWebSetGroupPropertyAction',
-            ];
-
-            // Coba nama yang diketahui dulu (lebih cepat)
-            for (const name of knownNames) {
-                try {
-                    const m = window.require(name);
-                    if (m && typeof m.setGroupProperty === 'function') {
-                        setPropertyFn = (c, prop, val) => m.setGroupProperty(c, prop, val);
-                        break;
-                    }
-                } catch(_) {}
-            }
-
-            // Jika tidak ada, scan SEMUA modul webpack
-            if (!setPropertyFn) {
-                try {
-                    const moduleMap = window.require.m || {};
-                    for (const key of Object.keys(moduleMap)) {
-                        try {
-                            const m = window.require(key);
-                            if (m && typeof m.setGroupProperty === 'function') {
-                                setPropertyFn = (c, prop, val) => m.setGroupProperty(c, prop, val);
-                                break;
-                            }
-                        } catch(_) {}
-                    }
-                } catch(_) {}
-            }
-
-            if (!setPropertyFn) return { ok: false, error: 'NOTFOUND:Modul setGroupProperty tidak ditemukan di WA Web.' };
-
-            // ── 3. Jalankan ──────────────────────────────────────────────────
-            try {
-                await setPropertyFn(chat, 'announcement', announce ? 1 : 0);
-                return { ok: true };
-            } catch(e) {
-                const name = (e && e.name)    ? e.name    : '';
-                const emsg = (e && e.message) ? e.message : String(e);
-                if (name === 'ServerStatusCodeError') return { ok: false, error: 'NOTADMIN:Bot bukan Admin di grup ini.' };
-                if (emsg === 'r' || emsg.length <= 2) return { ok: false, error: 'RETRY:WA server belum siap, coba lagi.' };
-                return { ok: false, error: emsg };
-            }
-
-        } catch(outerErr) {
-            const emsg = outerErr.message || String(outerErr);
-            if (emsg === 'r' || emsg.length <= 2) return { ok: false, error: 'RETRY:WA error sementara.' };
-            return { ok: false, error: emsg };
-        }
-    }, groupId, userPart, announce);
-
-    // ── Retry logic ──────────────────────────────────────────────────────────
-    if (result.ok) return true;
-
-    const errMsg = result.error || '';
-    console.log(`[setGroupAnnounce] attempt=${attempt} → ${errMsg}`);
-
-    if (errMsg.startsWith('RETRY:') && attempt <= 5) {
-        console.log(`[setGroupAnnounce] Retry ${attempt}/5 dalam 3 detik...`);
-        await new Promise(r => setTimeout(r, 3000));
-        return setGroupAnnounce(client, groupId, announce, attempt + 1);
-    }
-
-    const cleanMsg = errMsg.replace(/^(RETRY:|NOTFOUND:|NOTADMIN:)/, '');
-    throw new Error(cleanMsg);
-}
-
-
+const { setMessagesAdminsOnlyHelper } = require('../services/whatsapp/client');
 
 async function handleAdminCommandMessage(msg, {
     senderId, userMessage, textLower, isSenderHostAdmin, isGroup, shopData,
@@ -161,15 +49,19 @@ async function handleAdminCommandMessage(msg, {
             const chatObj = await msg.getChat();
             try { await chatObj.sendSeen(); } catch(_) {}
             try { await chatObj.sendStateTyping(); } catch(_) {}
-            await new Promise(r => setTimeout(r, 2000));
-            await setGroupAnnounce(clientInstance, groupId, false);
+            await new Promise(r => setTimeout(r, 1000));
+            
+            await setMessagesAdminsOnlyHelper(clientInstance, groupId, false);
+            
             const cfg = gConfigs && gConfigs[groupId];
             const openText = (cfg && cfg.groupOpenText && cfg.groupOpenText.trim() !== '')
                 ? cfg.groupOpenText
                 : "🔓 *Pemberitahuan:* Toko telah dibuka. Semua anggota dapat mengirim pesan.";
             await msg.reply(openText);
         } catch (err) {
-            await msg.reply("❌ Gagal membuka grup: " + ((err && err.message) ? err.message : String(err)));
+            const emsg = (err && err.message) ? err.message : String(err);
+            const cleanMsg = emsg.replace(/^Evaluation failed:\s*/i, '');
+            await msg.reply(`❌ Gagal membuka grup:\n${cleanMsg}`);
         }
         return true;
     }
@@ -183,15 +75,19 @@ async function handleAdminCommandMessage(msg, {
             const chatObj = await msg.getChat();
             try { await chatObj.sendSeen(); } catch(_) {}
             try { await chatObj.sendStateTyping(); } catch(_) {}
-            await new Promise(r => setTimeout(r, 1200));
-            await setGroupAnnounce(clientInstance, groupId, true);
+            await new Promise(r => setTimeout(r, 1000));
+            
+            await setMessagesAdminsOnlyHelper(clientInstance, groupId, true);
+            
             const cfg = gConfigs && gConfigs[groupId];
             const closeText = (cfg && cfg.groupCloseText && cfg.groupCloseText.trim() !== '')
                 ? cfg.groupCloseText
                 : "🔒 *Pemberitahuan:* Toko telah ditutup. Hanya Admin yang dapat mengirim pesan.";
             await msg.reply(closeText);
         } catch (err) {
-            await msg.reply("❌ Gagal menutup grup: " + ((err && err.message) ? err.message : String(err)));
+            const emsg = (err && err.message) ? err.message : String(err);
+            const cleanMsg = emsg.replace(/^Evaluation failed:\s*/i, '');
+            await msg.reply(`❌ Gagal menutup grup:\n${cleanMsg}`);
         }
         return true;
     }
