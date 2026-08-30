@@ -180,6 +180,82 @@ module.exports = function(dependencies) {
         res.json({ success: true, url: viewUrl, fullUrl, filename: req.file.filename });
     });
 
+    // ─── PUBLIC VIEWER: BUKTI PEMBAYARAN DENGAN PREVIEW OPEN GRAPH DI WHATSAPP ───
+    router.get(['/b/:filename', '/v/:filename'], (req, res) => {
+        const filename = req.params.filename;
+        const safeFilename = path.basename(filename);
+        const filePath = path.join(__dirname, '..', '..', 'public', 'uploads', 'payments', safeFilename);
+        
+        if (!fs.existsSync(filePath)) {
+            return res.status(404).send('Bukti pembayaran tidak ditemukan atau telah kadaluarsa.');
+        }
+        
+        const { baseUrl } = getPublicUrlInfo(req);
+        const fullImageUrl = `${baseUrl}/uploads/payments/${safeFilename}`;
+        const pageUrl = `${baseUrl}/b/${safeFilename}`;
+        
+        let mimeType = 'image/jpeg';
+        if (safeFilename.endsWith('.png')) mimeType = 'image/png';
+        if (safeFilename.endsWith('.webp')) mimeType = 'image/webp';
+
+        const html = `<!DOCTYPE html>
+<html lang="id" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Bukti Pembayaran Pelanggan — Jajan Digital</title>
+    
+    <!-- Open Graph Meta Tags (Agar gambar muncul otomatis di WhatsApp Link Preview) -->
+    <meta property="og:site_name" content="Jajan Digital" />
+    <meta property="og:title" content="Bukti Pembayaran Pelanggan" />
+    <meta property="og:description" content="Bukti transfer pembayaran pesanan Jajan Digital." />
+    <meta property="og:image" content="${fullImageUrl}" />
+    <meta property="og:image:secure_url" content="${fullImageUrl}" />
+    <meta property="og:image:type" content="${mimeType}" />
+    <meta property="og:image:width" content="600" />
+    <meta property="og:image:height" content="600" />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="${pageUrl}" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:image" content="${fullImageUrl}" />
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background: #0a0e17; color: #f8fafc; }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center justify-center p-4 antialiased">
+    <div class="w-full max-w-md bg-[#111827] border border-white/10 rounded-2xl p-5 space-y-4 shadow-2xl text-center">
+        <div class="flex items-center justify-between pb-3 border-b border-white/10">
+            <span class="text-xs font-bold uppercase tracking-wider text-emerald-400 flex items-center gap-1.5">
+                <i data-lucide="shield-check" class="w-4 h-4"></i>
+                <span>Bukti Pembayaran</span>
+            </span>
+            <span class="text-[10px] text-slate-400 font-mono">${safeFilename}</span>
+        </div>
+        <div class="rounded-xl overflow-hidden bg-black/40 border border-white/10 p-2">
+            <img src="${fullImageUrl}" alt="Bukti Pembayaran" class="w-full h-auto max-h-[480px] object-contain rounded-lg mx-auto shadow-sm">
+        </div>
+        <div class="pt-2 flex items-center justify-center gap-2">
+            <a href="${fullImageUrl}" download="${safeFilename}" class="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold flex items-center gap-2 shadow">
+                <i data-lucide="download" class="w-4 h-4"></i>
+                <span>Unduh Gambar</span>
+            </a>
+            <a href="/q" class="px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-slate-300 text-xs font-semibold">
+                Portal QRIS
+            </a>
+        </div>
+    </div>
+    <script>if (window.lucide) lucide.createIcons();</script>
+</body>
+</html>`;
+
+        res.setHeader('Cache-Control', 'public, max-age=86400');
+        res.send(html);
+    });
+
     router.post('/api/request-reset-otp', async (req, res) => {
         try {
             const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress || 'unknown';
