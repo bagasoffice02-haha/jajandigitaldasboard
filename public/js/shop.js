@@ -191,6 +191,13 @@ window.renderMenuTreeVisual = async function() {
     const container = document.getElementById('menu-tree-visualizer');
     if (!container) return;
 
+    // Jika daftar grup belum dimuat sama sekali, muat daftar grup terlebih dahulu
+    if (!window.activeGroups || window.activeGroups.length === 0) {
+        if (typeof window.loadGroupsList === 'function') {
+            await window.loadGroupsList();
+        }
+    }
+
     // Pastikan kita memiliki group config aktif
     if (!window.selectedGroupConfig || !window.selectedGroupConfig.menuTree) {
         // Coba muat grup aktif pertama jika ada
@@ -208,9 +215,10 @@ window.renderMenuTreeVisual = async function() {
     
     if (!window.selectedGroupConfig || !window.selectedGroupConfig.menuTree) {
         container.innerHTML = `
-            <div class="p-6 text-center bg-[#0b1120] border border-[var(--border-color)] rounded-2xl">
-                <i data-lucide="git-fork" class="w-8 h-8 mx-auto text-slate-600 mb-2"></i>
-                <p class="text-xs text-[var(--text-muted)]">Pilih grup pada tab <strong>Manajemen Grup</strong> untuk melihat struktur menu pohon.</p>
+            <div class="p-8 text-center bg-[var(--bg-subtle)] border border-[var(--border-color)] rounded-2xl space-y-2">
+                <i data-lucide="git-fork" class="w-8 h-8 mx-auto text-[var(--text-muted)] opacity-50"></i>
+                <p class="text-xs font-semibold text-[var(--text-primary)]">Belum Ada Grup Terpilih</p>
+                <p class="text-[11px] text-[var(--text-muted)]">Pilih salah satu grup WhatsApp pada dropdown di atas untuk mengedit struktur pohon menu.</p>
             </div>
         `;
         if (window.lucide) lucide.createIcons();

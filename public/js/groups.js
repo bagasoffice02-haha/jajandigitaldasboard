@@ -144,28 +144,33 @@ window.renderGroupsListSidebar = function() {
     if (window.lucide) lucide.createIcons();
 };
 
-// Update dropdown pilihan grup pada konfigurasi operasional
+// Update dropdown pilihan grup pada konfigurasi operasional & Visual Menu Tree
 window.updateHostGroupSelect = function() {
-    const select = document.getElementById('host-config-group-select');
-    if (!select) return;
+    const selects = [
+        document.getElementById('host-config-group-select'),
+        document.getElementById('menu-tree-group-select')
+    ];
 
-    select.innerHTML = '<option value="">-- Pilih Grup WhatsApp --</option>';
-    window.activeGroups.forEach(g => {
-        const opt = document.createElement('option');
-        opt.value = g.id;
-        opt.textContent = `${g.name || g.id} (${g.id.split('@')[0]})`;
-        select.appendChild(opt);
-    });
+    selects.forEach(select => {
+        if (!select) return;
+        select.innerHTML = '<option value="">-- Pilih Grup WhatsApp --</option>';
+        window.activeGroups.forEach(g => {
+            const opt = document.createElement('option');
+            opt.value = g.id;
+            opt.textContent = `${g.name || g.id} (${g.id.split('@')[0]})`;
+            select.appendChild(opt);
+        });
 
-    if (window.selectedGroupId) {
-        select.value = window.selectedGroupId;
-    }
-
-    select.onchange = (e) => {
-        if (e.target.value) {
-            window.selectGroup(e.target.value);
+        if (window.selectedGroupId) {
+            select.value = window.selectedGroupId;
         }
-    };
+
+        select.onchange = (e) => {
+            if (e.target.value) {
+                window.selectGroup(e.target.value);
+            }
+        };
+    });
 };
 
 // Memilih grup aktif untuk diedit konfigurasinya
@@ -173,10 +178,14 @@ window.selectGroup = async function(groupId) {
     if (!groupId) return;
     window.selectedGroupId = groupId;
     
-    // Update select dropdown value
-    const select = document.getElementById('host-config-group-select');
-    if (select && select.value !== groupId) {
-        select.value = groupId;
+    // Update select dropdowns value
+    const hostSelect = document.getElementById('host-config-group-select');
+    if (hostSelect && hostSelect.value !== groupId) {
+        hostSelect.value = groupId;
+    }
+    const treeSelect = document.getElementById('menu-tree-group-select');
+    if (treeSelect && treeSelect.value !== groupId) {
+        treeSelect.value = groupId;
     }
 
     // Re-render highlight kartu

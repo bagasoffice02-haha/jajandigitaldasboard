@@ -442,14 +442,21 @@
 
                 <!-- 2-Column Visual Menu Tree Builder -->
                 <div class="enterprise-card space-y-4">
-                    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pb-3 border-b border-[var(--border-color)]">
+                    <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-3 pb-3 border-b border-[var(--border-color)]">
                         <div>
                             <h3 class="font-bold text-xs uppercase tracking-wider flex items-center gap-2">
                                 <i data-lucide="git-fork" class="w-4 h-4 text-purple-400"></i>
                                 Visual Editor Pohon Menu (Menu Tree)
                             </h3>
+                            <p class="text-[11px] text-[var(--text-muted)] mt-0.5">Kelola struktur alur pesan interaktif untuk grup WhatsApp yang dipilih</p>
                         </div>
-                        <div class="flex items-center gap-2">
+                        <div class="flex flex-wrap items-center gap-2 w-full md:w-auto">
+                            <!-- Group Selector Dropdown -->
+                            <div class="w-full sm:w-60">
+                                <select id="menu-tree-group-select" onchange="window.selectGroup(this.value)" class="enterprise-input text-xs">
+                                    <option value="">-- Pilih Grup WhatsApp --</option>
+                                </select>
+                            </div>
                             <button onclick="addChildNode()" class="enterprise-btn enterprise-btn-secondary text-xs">
                                 <i data-lucide="plus" class="w-3.5 h-3.5"></i>
                                 <span>Tambah Menu</span>
