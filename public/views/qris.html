@@ -197,7 +197,7 @@
         <div class="p-1 bg-[var(--bg-subtle)] border border-[var(--border-color)] rounded-xl flex items-center gap-1">
             <button id="tab-btn-qris" onclick="switchPortalTab('qris')" class="portal-tab-btn flex-1 flex items-center justify-center gap-2 active">
                 <i data-lucide="qr-code" class="w-4 h-4 text-indigo-400"></i>
-                <span>Scan QRIS & Rek</span>
+                <span>Scan QRIS</span>
             </button>
             <button id="tab-btn-upload" onclick="switchPortalTab('upload')" class="portal-tab-btn flex-1 flex items-center justify-center gap-2">
                 <i data-lucide="upload-cloud" class="w-4 h-4 text-emerald-400"></i>
@@ -253,46 +253,6 @@
                     <span>Verifikasi Sistem</span>
                 </span>
                 <span class="text-emerald-400 font-bold">${formattedTxCount} Transaksi Sukses</span>
-            </div>
-
-            <!-- Manual Bank Accounts & E-Wallet -->
-            <div class="space-y-2 pt-1">
-                <div class="flex items-center justify-between text-[11px] font-bold uppercase tracking-wider text-[var(--text-muted)]">
-                    <span>Transfer Bank & E-Wallet Alternatif</span>
-                    <span class="text-[10px] text-indigo-400 font-normal">Klik untuk salin</span>
-                </div>
-                
-                <!-- Dana -->
-                <div class="copy-pill p-3 flex items-center justify-between text-xs cursor-pointer" onclick="copyNumber('081234567890', 'Nomor DANA')">
-                    <div class="flex items-center gap-2.5">
-                        <div class="w-8 h-8 rounded-lg bg-sky-500/10 text-sky-400 flex items-center justify-center font-bold text-[10px] shrink-0">
-                            DANA
-                        </div>
-                        <div>
-                            <span class="font-bold text-[var(--text-primary)] font-mono-num">0812-3456-7890</span>
-                            <p class="text-[10px] text-[var(--text-muted)]">A/N Jajan Digital</p>
-                        </div>
-                    </div>
-                    <button type="button" class="p-1.5 rounded-lg bg-[var(--bg-surface)] border border-[var(--border-color)] text-[var(--text-secondary)]" title="Salin Nomor">
-                        <i data-lucide="copy" class="w-3.5 h-3.5"></i>
-                    </button>
-                </div>
-
-                <!-- GoPay / OVO -->
-                <div class="copy-pill p-3 flex items-center justify-between text-xs cursor-pointer" onclick="copyNumber('081234567890', 'Nomor GoPay / OVO')">
-                    <div class="flex items-center gap-2.5">
-                        <div class="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-400 flex items-center justify-center font-bold text-[10px] shrink-0">
-                            GOPAY
-                        </div>
-                        <div>
-                            <span class="font-bold text-[var(--text-primary)] font-mono-num">0812-3456-7890</span>
-                            <p class="text-[10px] text-[var(--text-muted)]">A/N Jajan Digital</p>
-                        </div>
-                    </div>
-                    <button type="button" class="p-1.5 rounded-lg bg-[var(--bg-surface)] border border-[var(--border-color)] text-[var(--text-secondary)]" title="Salin Nomor">
-                        <i data-lucide="copy" class="w-3.5 h-3.5"></i>
-                    </button>
-                </div>
             </div>
 
             <!-- CTA to Upload -->
