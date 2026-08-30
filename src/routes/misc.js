@@ -7,11 +7,21 @@ const archiver = require('archiver');
 const unzipper = require('unzipper');
 const { getDb, initDatabase } = require('../db/sqlite');
 const { getLogHistory } = require('../db/models');
-const { getClient, getStatus, restartClient } = require('../services/whatsapp/client');
+const { getClient, getStatus, getQrCode, restartClient } = require('../services/whatsapp/client');
 const { sendDailyReport, checkPremiumExpirations, runWeeklyBackup } = require('../scheduler/reminderJob');
 const { config } = require('../config/config');
 
 const KNOWLEDGE_DIR = './knowledge';
+
+router.get('/whatsapp/status', (req, res) => {
+    try {
+        const status = getStatus();
+        const qr = (status !== 'CONNECTED') ? getQrCode() : null;
+        res.json({ status, qr });
+    } catch(err) {
+        res.status(500).json({ error: err.message });
+    }
+});
 
 router.get('/test-buka', async (req, res) => {
     try {

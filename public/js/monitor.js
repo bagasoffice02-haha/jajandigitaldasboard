@@ -1,283 +1,312 @@
-function updateConnectionStatus(status) {
-    statusDot.className = 'status-dot';
-    
-    if (status === 'CONNECTED') {
-        statusDot.classList.add('connected');
-        statusText.textContent = 'Terhubung (Aktif)';
-        qrContainer.classList.add('hidden');
-        activeSessionInfo.classList.remove('hidden');
-    } else if (status === 'INITIALIZING') {
-        statusDot.classList.add('initializing');
-        statusText.textContent = 'Menginisialisasi WhatsApp...';
-        qrContainer.classList.add('hidden');
-        activeSessionInfo.classList.add('hidden');
-    } else if (status === 'QR_RECEIVED') {
-        statusDot.classList.add('initializing');
-        statusText.textContent = 'Menunggu Pindai QR';
-        qrContainer.classList.remove('hidden');
-        activeSessionInfo.classList.add('hidden');
-    } else {
-        statusDot.classList.add('disconnected');
-        statusText.textContent = 'Terputus (Offline)';
-        if (!qrPlaceholder.querySelector('canvas')) {
-            qrContainer.classList.add('hidden');
-        } else {
-            qrContainer.classList.remove('hidden');
-        }
-        activeSessionInfo.classList.add('hidden');
-    }
-    if (window.lucide) {
-        lucide.createIcons();
-    }
+// ==========================================
+// LIVE MONITOR & WHATSAPP CONNECTION MODULE
+// ==========================================
+
+let messageCount = 0;
+let activeSessionsSet = new Set();
+let botStartTime = Date.now();
+
+// Helper escape HTML
+function escapeHtml(str) {
+    if (!str) return '';
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
 }
 
-function renderQRCode(qrData) {
-    qrPlaceholder.innerHTML = '';
-    
-    const canvas = document.createElement('canvas');
-    qrPlaceholder.appendChild(canvas);
-    
-    // Draw QR using the global QRCode library loaded via CDN
-    QRCode.toCanvas(canvas, qrData, { 
-        width: 220, 
-        margin: 1,
-        color: {
-            dark: '#0b0f19',
-            light: '#ffffff'
+// Update UI Status Koneksi WhatsApp
+window.updateConnectionStatus = function(status) {
+    const statusDot = document.getElementById('status-dot');
+    const headerConnLabel = document.getElementById('header-conn-label');
+    const statusText = document.getElementById('status-text');
+    const statusInfo = document.getElementById('status-info');
+    const statusDevice = document.getElementById('status-device');
+    const qrPlaceholder = document.getElementById('qr-placeholder');
+    const qrCodeDiv = document.getElementById('qr-code');
+    const qrStatus = document.getElementById('qr-status');
+
+    console.log('[Monitor] Status WA:', status);
+
+    if (status === 'CONNECTED') {
+        if (statusDot) {
+            statusDot.className = 'w-2 h-2 rounded-full bg-emerald-400 status-dot-pulse';
         }
-    }, function (error) {
-        if (error) {
-            console.error('Error drawing QR canvas:', error);
-            qrPlaceholder.innerHTML = '<p style="color:red">Gagal memuat QR Code</p>';
+        if (headerConnLabel) {
+            headerConnLabel.textContent = 'WhatsApp Terhubung';
+            headerConnLabel.className = 'text-emerald-400 text-[11px] font-semibold';
+        }
+        if (statusText) {
+            statusText.textContent = 'TERHUBUNG (AKTIF)';
+            statusText.className = 'text-[11px] font-bold px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-400 border border-emerald-500/20';
+        }
+        if (statusInfo) statusInfo.textContent = 'Gateway Siap & Responsif';
+        if (statusDevice) statusDevice.textContent = 'Sesi Aktif (Online)';
+
+        if (qrPlaceholder) qrPlaceholder.classList.add('hidden');
+        if (qrCodeDiv) {
+            qrCodeDiv.innerHTML = `
+                <div class="text-center p-4 flex flex-col items-center justify-center">
+                    <div class="w-12 h-12 rounded-full bg-emerald-500/10 text-emerald-400 flex items-center justify-center mb-2 shadow-inner">
+                        <i data-lucide="check-circle" class="w-6 h-6"></i>
+                    </div>
+                    <p class="text-xs font-bold text-slate-200">Bot Terhubung</p>
+                    <p class="text-[10px] text-slate-400 mt-0.5">WhatsApp siap melayani pesan</p>
+                </div>
+            `;
+        }
+        if (qrStatus) qrStatus.textContent = '';
+    } else if (status === 'QR_RECEIVED') {
+        if (statusDot) {
+            statusDot.className = 'w-2 h-2 rounded-full bg-amber-400 status-dot-pulse';
+        }
+        if (headerConnLabel) {
+            headerConnLabel.textContent = 'Scan QR Diperlukan';
+            headerConnLabel.className = 'text-amber-400 text-[11px] font-semibold';
+        }
+        if (statusText) {
+            statusText.textContent = 'MENUNGGU SCAN QR';
+            statusText.className = 'text-[11px] font-bold px-2 py-0.5 rounded-md bg-amber-500/10 text-amber-400 border border-amber-500/20';
+        }
+        if (statusInfo) statusInfo.textContent = 'Buka WA di HP > Perangkat Tertaut';
+        if (statusDevice) statusDevice.textContent = 'Menunggu Login';
+        if (qrPlaceholder) qrPlaceholder.classList.add('hidden');
+        if (qrStatus) qrStatus.textContent = 'Pindai QR ini melalui aplikasi WhatsApp';
+    } else if (status === 'INITIALIZING') {
+        if (statusDot) {
+            statusDot.className = 'w-2 h-2 rounded-full bg-sky-400 status-dot-pulse';
+        }
+        if (headerConnLabel) {
+            headerConnLabel.textContent = 'Menginisialisasi...';
+            headerConnLabel.className = 'text-sky-400 text-[11px] font-semibold';
+        }
+        if (statusText) {
+            statusText.textContent = 'MEMULAI GATEWAY...';
+            statusText.className = 'text-[11px] font-bold px-2 py-0.5 rounded-md bg-sky-500/10 text-sky-400 border border-sky-500/20';
+        }
+        if (statusInfo) statusInfo.textContent = 'Menghubungkan Headless Browser...';
+        if (qrPlaceholder) {
+            qrPlaceholder.classList.remove('hidden');
+            qrPlaceholder.innerHTML = `
+                <div class="w-6 h-6 border-2 border-sky-500/20 border-t-sky-500 rounded-full animate-spin mx-auto mb-2"></div>
+                <p class="text-xs text-slate-400">Menyiapkan koneksi WhatsApp...</p>
+            `;
+        }
+        if (qrCodeDiv) qrCodeDiv.innerHTML = '';
+        if (qrStatus) qrStatus.textContent = '';
+    } else {
+        if (statusDot) {
+            statusDot.className = 'w-2 h-2 rounded-full bg-slate-500';
+        }
+        if (headerConnLabel) {
+            headerConnLabel.textContent = 'Terputus (Offline)';
+            headerConnLabel.className = 'text-slate-400 text-[11px]';
+        }
+        if (statusText) {
+            statusText.textContent = 'OFFLINE';
+            statusText.className = 'text-[11px] font-bold px-2 py-0.5 rounded-md bg-white/5 text-slate-400 border border-white/10';
+        }
+        if (statusInfo) statusInfo.textContent = 'Standby / Belum login';
+        if (statusDevice) statusDevice.textContent = '—';
+        if (qrPlaceholder) {
+            qrPlaceholder.classList.remove('hidden');
+            qrPlaceholder.innerHTML = `
+                <i data-lucide="qr-code" class="w-10 h-10 mx-auto text-slate-600 mb-2"></i>
+                <p class="text-xs text-slate-400 font-medium">Klik Hubungkan untuk Scan QR</p>
+            `;
+        }
+        if (qrCodeDiv) qrCodeDiv.innerHTML = '';
+        if (qrStatus) qrStatus.textContent = '';
+    }
+
+    if (window.lucide) lucide.createIcons();
+};
+
+// Render QR Code pada Canvas
+window.renderQRCode = function(qrData) {
+    if (!qrData) return;
+    const qrPlaceholder = document.getElementById('qr-placeholder');
+    const qrCodeDiv = document.getElementById('qr-code');
+    const qrStatus = document.getElementById('qr-status');
+
+    if (qrPlaceholder) qrPlaceholder.classList.add('hidden');
+    if (!qrCodeDiv) return;
+
+    qrCodeDiv.innerHTML = '';
+    const canvas = document.createElement('canvas');
+    canvas.className = 'rounded-xl shadow-lg';
+    qrCodeDiv.appendChild(canvas);
+
+    if (typeof QRCode !== 'undefined' && QRCode.toCanvas) {
+        QRCode.toCanvas(canvas, qrData, {
+            width: 190,
+            margin: 1,
+            color: {
+                dark: '#090d16',
+                light: '#ffffff'
+            }
+        }, function (error) {
+            if (error) {
+                console.error('[Monitor] Error toCanvas:', error);
+                qrCodeDiv.innerHTML = '<p class="text-xs text-rose-400 text-center">Gagal menggambar QR Code</p>';
+            }
+        });
+    }
+
+    if (qrStatus) qrStatus.textContent = 'Scan via WhatsApp > Perangkat Tertaut';
+    window.updateConnectionStatus('QR_RECEIVED');
+};
+
+// Hubungkan / Refresh QR Code
+window.refreshQRCode = async function(force = false) {
+    if (window.showToast) window.showToast('info', 'Meminta sinyal koneksi WhatsApp...');
+    window.updateConnectionStatus('INITIALIZING');
+
+    try {
+        const res = await fetch('/api/whatsapp/restart', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ clearSession: force })
+        });
+        const data = await res.json();
+        if (data.success) {
+            if (window.showToast) window.showToast('success', data.message || 'Memulai ulang client WhatsApp...');
+        }
+    } catch (err) {
+        console.error('Error restart WA:', err);
+    }
+};
+
+// Ambil Status Awal Saat Halaman Dibuka
+window.checkInitialWhatsAppStatus = async function() {
+    try {
+        const res = await fetch('/api/whatsapp/status');
+        if (res.ok) {
+            const data = await res.json();
+            window.updateConnectionStatus(data.status);
+            if (data.qr && data.status !== 'CONNECTED') {
+                window.renderQRCode(data.qr);
+            }
+        }
+    } catch (err) {
+        console.warn('Initial WA status fetch fallback:', err.message);
+    }
+};
+
+// Tambahkan Pesan ke Live Stream Obrolan
+window.appendMessageLog = function(msg) {
+    const chatContainer = document.getElementById('chat-messages');
+    if (!chatContainer) return;
+
+    // Bersihkan placeholder kosong jika ada
+    const placeholder = chatContainer.querySelector('.text-slate-500');
+    if (placeholder) placeholder.remove();
+
+    messageCount++;
+    const statMsg = document.getElementById('stat-msg-count');
+    if (statMsg) statMsg.textContent = messageCount;
+
+    const cleanChatId = (msg.chatId || '').split('@')[0];
+    if (cleanChatId) activeSessionsSet.add(cleanChatId);
+    const statSess = document.getElementById('stat-session-count');
+    if (statSess) statSess.textContent = activeSessionsSet.size;
+
+    const timeStr = new Date(msg.timestamp || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const isOutgoing = msg.type === 'outgoing';
+
+    const bubble = document.createElement('div');
+    bubble.className = `flex items-start gap-2.5 message-log-item ${isOutgoing ? 'flex-row-reverse' : ''}`;
+    
+    const avatarBg = isOutgoing ? 'bg-indigo-600 text-white' : 'bg-sky-500/20 text-sky-300';
+    const bubbleBg = isOutgoing ? 'bg-indigo-600/20 border-indigo-500/30 text-indigo-100' : 'bg-[#0b1120] border-white/10 text-slate-200';
+
+    bubble.innerHTML = `
+        <div class="w-7 h-7 rounded-lg ${avatarBg} flex items-center justify-center shrink-0 text-xs font-bold shadow-sm">
+            ${isOutgoing ? 'AI' : 'U'}
+        </div>
+        <div class="max-w-[78%] rounded-2xl p-3 border text-xs ${bubbleBg} shadow-sm space-y-1">
+            <div class="flex items-center justify-between gap-3 text-[10px] text-slate-400 font-mono">
+                <span>+${cleanChatId}</span>
+                <span>${timeStr}</span>
+            </div>
+            <p class="whitespace-pre-wrap leading-relaxed">${escapeHtml(msg.body)}</p>
+            ${msg.fileSent ? `
+                <div class="inline-flex items-center gap-1.5 px-2 py-1 rounded bg-white/5 border border-white/10 text-[10px] text-indigo-300 mt-1">
+                    <i data-lucide="paperclip" class="w-3 h-3"></i>
+                    <span>Berkas: ${escapeHtml(msg.fileSent)}</span>
+                </div>
+            ` : ''}
+        </div>
+    `;
+
+    chatContainer.appendChild(bubble);
+    chatContainer.scrollTop = chatContainer.scrollHeight;
+
+    if (window.lucide) lucide.createIcons();
+};
+
+window.clearChatLogs = function() {
+    const chatContainer = document.getElementById('chat-messages');
+    if (!chatContainer) return;
+    chatContainer.innerHTML = `
+        <div class="text-center py-12 text-slate-500 text-xs flex flex-col items-center justify-center">
+            <i data-lucide="inbox" class="w-8 h-8 mb-2 opacity-40"></i>
+            <span>Log obrolan telah dibersihkan.</span>
+        </div>
+    `;
+    if (window.lucide) lucide.createIcons();
+};
+
+window.filterChatLogs = function() {
+    const input = document.getElementById('search-chat-input');
+    if (!input) return;
+    const query = input.value.toLowerCase().trim();
+    const items = document.querySelectorAll('#chat-messages .message-log-item');
+    items.forEach(item => {
+        const text = item.textContent.toLowerCase();
+        item.style.display = text.includes(query) ? 'flex' : 'none';
+    });
+};
+
+// Update Uptime Counter
+setInterval(() => {
+    const uptimeEl = document.getElementById('stat-uptime');
+    if (!uptimeEl) return;
+    const diff = Date.now() - botStartTime;
+    const minutes = Math.floor(diff / 60000);
+    const hours = Math.floor(minutes / 60);
+    if (hours > 0) {
+        uptimeEl.textContent = `${hours}j ${minutes % 60}m`;
+    } else {
+        uptimeEl.textContent = `${minutes}m`;
+    }
+}, 30000);
+
+// Socket Listeners
+if (window.socket) {
+    window.socket.on('connect', () => {
+        console.log('[Socket] Terhubung ke backend dashboard.');
+        window.checkInitialWhatsAppStatus();
+    });
+
+    window.socket.on('whatsapp_status', (data) => {
+        window.updateConnectionStatus(data.status);
+    });
+
+    window.socket.on('qr', (qrData) => {
+        if (qrData) {
+            window.renderQRCode(qrData);
         }
     });
 
-    qrContainer.classList.remove('hidden');
-    activeSessionInfo.classList.add('hidden');
+    window.socket.on('message_log', (msg) => {
+        window.appendMessageLog(msg);
+    });
 }
 
-function appendMessageLog(msg) {
-    const placeholder = chatMessages.querySelector('.chat-placeholder');
-    if (placeholder) {
-        placeholder.remove();
-    }
-
-    const cleanChatId = msg.chatId.split('@')[0];
-    const timestampStr = new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    
-    let sessionBlock = document.getElementById(`session-${cleanChatId}`);
-    if (!sessionBlock) {
-        sessionBlock = document.createElement('div');
-        sessionBlock.id = `session-${cleanChatId}`;
-        sessionBlock.className = 'chat-session-block';
-        
-        const header = document.createElement('div');
-        header.className = 'session-user-header';
-        header.textContent = `WA User: +${cleanChatId}`;
-        sessionBlock.appendChild(header);
-        chatMessages.appendChild(sessionBlock);
-    }
-    
-    const bubble = document.createElement('div');
-    bubble.className = `message-bubble ${msg.type}`; // 'incoming' (User) or 'outgoing' (Sania) or 'system-cmd'
-    
-    let bubbleContent = `<div>${escapeHtml(msg.body)}</div>`;
-    
-    if (msg.fileSent) {
-        const iconName = msg.fileSent.endsWith('.png') ? 'image' : 'file-text';
-        bubbleContent += `
-            <div class="media-tag-indicator" style="display:inline-flex; align-items:center; gap:6px;">
-                <i data-lucide="${iconName}" style="width:14px; height:14px;"></i>
-                <span>Mengirim Berkas: <strong>${escapeHtml(msg.fileSent)}</strong></span>
-            </div>
-        `;
-    }
-    
-    bubbleContent += `<span class="message-time">${timestampStr}</span>`;
-    bubble.innerHTML = bubbleContent;
-    
-    sessionBlock.appendChild(bubble);
-    chatMessages.scrollTop = chatMessages.scrollHeight;
-
-    if (window.lucide) {
-        lucide.createIcons();
-    }
-}
-
-
-// Expose functions to window for HTML onclick compatibility
-window.updateConnectionStatus = updateConnectionStatus;
-window.renderQRCode = renderQRCode;
-window.appendMessageLog = appendMessageLog;
-
-
-// Socket Listeners
-window.socket.on('connect', () => {
-    console.log('Connected to dashboard backend server via WebSockets.');
-});
-
-window.socket.on('whatsapp_status', (data) => {
-    updateConnectionStatus(data.status);
-});
-
-window.socket.on('qr', (qrData) => {
-    renderQRCode(qrData);
-});
-
-window.socket.on('message_log', (msg) => {
-    appendMessageLog(msg);
-});
-
-window.socket.on('history_updated', (data) => {
-    renderHistoryLog(data);
-});
-
-window.socket.on('memory_updated', (data) => {
-    if (cfgAiMemory) {
-        cfgAiMemory.value = data.content;
-    }
-    loadFiles();
-});
-
-window.socket.on('broadcast_progress', (data) => {
-    const container = document.getElementById('broadcast-progress-container');
-    const placeholder = document.getElementById('broadcast-progress-placeholder');
-    const statusBar = document.getElementById('broadcast-progress-bar');
-    const statusText = document.getElementById('broadcast-progress-status');
-    const percentText = document.getElementById('broadcast-progress-percent');
-    const statTotal = document.getElementById('broadcast-stat-total');
-    const statSuccess = document.getElementById('broadcast-stat-success');
-    const statFail = document.getElementById('broadcast-stat-fail');
-    const terminal = document.getElementById('broadcast-terminal');
-    
-    if (container && placeholder) {
-        container.classList.remove('hidden');
-        placeholder.classList.add('hidden');
-    }
-    
-    const pct = Math.round((data.current / data.total) * 100) || 0;
-    if (statusBar) statusBar.style.width = `${pct}%`;
-    if (percentText) percentText.innerText = `${pct}%`;
-    if (statTotal) statTotal.innerText = data.total;
-    if (statSuccess) statSuccess.innerText = data.successCount;
-    if (statFail) statFail.innerText = data.failCount;
-    
-    if (statusText) {
-        if (data.status === 'RUNNING') {
-            statusText.innerText = 'Sedang Mengirim...';
-            statusText.style.color = '#3b82f6';
-        } else if (data.status === 'COMPLETED') {
-            statusText.innerText = '✓ Selesai';
-            statusText.style.color = '#10b981';
-        } else if (data.status === 'CANCELLED') {
-            statusText.innerText = '✕ Dihentikan';
-            statusText.style.color = '#ef4444';
-        }
-    }
-    
-    if (terminal && data.lastJid) {
-        const time = new Date().toLocaleTimeString('id-ID');
-        const formattedJid = data.lastJid.replace('@c.us', '');
-        const symbol = data.lastStatus === 'SUCCESS' ? '✅' : '❌';
-        const msgStr = `[${time}] Kirim ke ${formattedJid} ... ${data.lastStatus === 'SUCCESS' ? 'SUKSES' : 'GAGAL'} ${symbol}\n`;
-        terminal.innerText += msgStr;
-        terminal.scrollTop = terminal.scrollHeight;
-    }
-    
-    if (data.status === 'CANCELLED' && terminal) {
-        terminal.innerText += `[System] Broadcast dibatalkan/dihentikan oleh admin.\n`;
-        terminal.scrollTop = terminal.scrollHeight;
-    }
-});
-
-window.socket.on('group_config_updated', (data) => {
-    if (selectedGroupId && data.groupId === selectedGroupId) {
-        setTimeout(async () => {
-            if (selectedGroupId === data.groupId) {
-                try {
-                    const res = await fetch(`/api/group-config/${selectedGroupId}`);
-                    if (res.ok) {
-                        selectedGroupConfig = await res.json();
-                        if (quickEditOpen) {
-                            renderQuickEditList();
-                        } else {
-                            renderMenuTreeVisual();
-                        }
-                    }
-                } catch (e) {
-                    console.error('Error auto-refreshing group config:', e);
-                }
-            }
-        }, 200);
-    }
-});
-
-window.socket.on('order_created', (newOrder) => {
-    playNotificationSound();
-    
-    const toast = document.createElement('div');
-    toast.style = 'position: fixed; top: 20px; right: 20px; background: #0a84ff; color: white; padding: 12px 20px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.3); z-index: 9999; display: flex; align-items: center; gap: 8px; font-weight: 500; font-size: 0.9rem; animation: slideIn 0.3s ease;';
-    toast.innerHTML = `<i data-lucide="shopping-bag" style="width: 18px; height: 18px;"></i> <span>Pesanan Baru Masuk! #${newOrder.id}</span>`;
-    document.body.appendChild(toast);
-    
-    if (window.lucide) lucide.createIcons();
-    
-    setTimeout(() => {
-        toast.style.animation = 'slideOut 0.3s ease';
-        setTimeout(() => toast.remove(), 300);
-    }, 4000);
-
-    const activeTab = document.querySelector('.ios-tab-btn.active');
-    if (activeTab && activeTab.id === 'btn-tab-shop') {
-        loadOrders();
-    } else {
-        const btnShop = document.getElementById('btn-tab-shop');
-        if (btnShop) {
-            btnShop.style.position = 'relative';
-            let dot = document.getElementById('transaction-badge-dot');
-            if (!dot) {
-                dot = document.createElement('span');
-                dot.id = 'transaction-badge-dot';
-                dot.style = 'position: absolute; top: 6px; right: 12px; width: 8px; height: 8px; background: #ff453a; border-radius: 50%;';
-                btnShop.appendChild(dot);
-            }
-        }
-    }
-});
-
-window.socket.on('invoice_created', (newInv) => {
-    playNotificationSound();
-    
-    const toast = document.createElement('div');
-    toast.style = 'position: fixed; top: 20px; right: 20px; background: #ff9f0a; color: white; padding: 12px 20px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.3); z-index: 9999; display: flex; align-items: center; gap: 8px; font-weight: 500; font-size: 0.9rem; animation: slideIn 0.3s ease;';
-    toast.innerHTML = `<i data-lucide="file-text" style="width: 18px; height: 18px;"></i> <span>Invoice Baru Dicetak! #${newInv.id}</span>`;
-    document.body.appendChild(toast);
-    
-    if (window.lucide) lucide.createIcons();
-    
-    setTimeout(() => {
-        toast.style.animation = 'slideOut 0.3s ease';
-        setTimeout(() => toast.remove(), 300);
-    }, 4000);
-
-    const activeTab = document.querySelector('.ios-tab-btn.active');
-    if (activeTab && activeTab.id === 'btn-tab-shop') {
-        loadInvoices();
-    } else {
-        const btnShop = document.getElementById('btn-tab-shop');
-        if (btnShop) {
-            btnShop.style.position = 'relative';
-            let dot = document.getElementById('transaction-badge-dot');
-            if (!dot) {
-                dot = document.createElement('span');
-                dot.id = 'transaction-badge-dot';
-                dot.style = 'position: absolute; top: 6px; right: 12px; width: 8px; height: 8px; background: #ff9f0a; border-radius: 50%;';
-                btnShop.appendChild(dot);
-            }
-        }
-    }
-});
-
-window.socket.on('telegram_status', (data) => {
-    updateTelegramStatusUI(data.status, data.message);
+// Inisialisasi awal
+document.addEventListener('DOMContentLoaded', () => {
+    window.checkInitialWhatsAppStatus();
 });

@@ -1,9 +1,9 @@
 // ==========================================
-// SHOP, HOST ADMIN & CRM MODULE
+// SHOP, HOST ADMIN, CRM & VISUAL MENU TREE
 // ==========================================
 
 let activeCustomers = [];
-let selectedNodeId = null;
+window.selectedNodeId = 'root';
 
 // ─── 1. HOST ADMIN MANAGEMENT ───────────────────────────
 window.loadHostAdmins = async function() {
@@ -171,10 +171,40 @@ window.filterCustomersTable = function() {
     });
 };
 
-// ─── 3. MENU TREE BUILDER ────────────────────────────────
-window.renderMenuTreeVisual = function() {
+// ─── 3. VISUAL MENU TREE BUILDER ─────────────────────────
+
+// Helper: Cari node di dalam pohon secara rekursif
+function findNodeInTree(node, id) {
+    if (!node) return null;
+    if (node.id === id) return node;
+    if (node.children && Array.isArray(node.children)) {
+        for (const child of node.children) {
+            const found = findNodeInTree(child, id);
+            if (found) return found;
+        }
+    }
+    return null;
+}
+
+// Render pohon visual
+window.renderMenuTreeVisual = async function() {
     const container = document.getElementById('menu-tree-visualizer');
     if (!container) return;
+
+    // Pastikan kita memiliki group config aktif
+    if (!window.selectedGroupConfig || !window.selectedGroupConfig.menuTree) {
+        // Coba muat grup aktif pertama jika ada
+        if (window.activeGroups && window.activeGroups.length > 0 && !window.selectedGroupId) {
+            await window.selectGroup(window.activeGroups[0].id);
+        } else if (window.selectedGroupId) {
+            try {
+                const res = await fetch(`/api/group-config/${window.selectedGroupId}`);
+                if (res.ok) {
+                    window.selectedGroupConfig = await res.json();
+                }
+            } catch(e) {}
+        }
+    }
     
     if (!window.selectedGroupConfig || !window.selectedGroupConfig.menuTree) {
         container.innerHTML = `
@@ -194,38 +224,55 @@ window.renderMenuTreeVisual = function() {
     container.appendChild(rootEl);
     
     if (window.lucide) lucide.createIcons();
+
+    // Pastikan form editor aktif menampilkan data node yang terpilih
+    if (window.selectedNodeId) {
+        window.loadNodeDataToEditor(window.selectedNodeId);
+    }
 };
 
 function createNodeHTML(node, depth) {
     const div = document.createElement('div');
-    div.style.marginLeft = `${depth * 16}px`;
+    div.style.marginLeft = `${depth * 14}px`;
     div.className = 'my-1';
     
+    const isSelected = window.selectedNodeId === node.id;
+    const isCategory = node.type === 'category';
+    
     const header = document.createElement('div');
-    const isSelected = selectedNodeId === node.id;
-    header.className = `flex items-center gap-2 p-2 rounded-xl text-xs border transition-all cursor-pointer ${
-        isSelected ? 'bg-indigo-600/20 border-indigo-500 text-white' : 'bg-[#0b1120] border-white/10 text-slate-300 hover:border-white/20'
-    }`;
+    header.className = `menu-node-item ${isSelected ? 'selected' : ''}`;
     
     header.onclick = (e) => {
         e.stopPropagation();
-        selectTreeNode(node.id);
+        window.selectTreeNode(node.id);
     };
     
-    const iconName = node.type === 'category' ? 'folder' : 'file-text';
-    const iconColor = node.type === 'category' ? 'text-amber-400' : 'text-sky-400';
+    const iconName = isCategory ? 'folder' : 'file-text';
+    const iconColor = isCategory ? 'text-amber-400' : 'text-sky-400';
     
+    let statusClass = 'tersedia';
+    if (node.status === 'Habis') statusClass = 'habis';
+    if (node.status === 'Pre-order') statusClass = 'preorder';
+
+    const statusBadge = (!isCategory && node.status) 
+        ? `<span class="status-badge-item ${statusClass}" onclick="window.quickToggleStatus(event, '${node.id}')" title="Klik untuk ubah status">${node.status}</span>`
+        : '';
+
+    const promoBadge = node.isPromo ? '<span class="text-[10px] bg-rose-500/20 text-rose-300 px-1.5 py-0.5 rounded font-bold">🔥 PROMO</span>' : '';
+
     header.innerHTML = `
-        <i data-lucide="${iconName}" class="w-3.5 h-3.5 ${iconColor}"></i>
-        <span class="font-medium flex-1 truncate">${node.name || 'Menu'}</span>
-        ${node.status ? `<span class="text-[10px] px-1.5 py-0.5 rounded bg-white/5 border border-white/10">${node.status}</span>` : ''}
-        ${node.type === 'category' && node.children ? `<span class="text-[10px] text-slate-400 bg-white/5 px-1.5 py-0.5 rounded">${node.children.length}</span>` : ''}
+        <i data-lucide="${iconName}" class="w-3.5 h-3.5 ${iconColor} shrink-0"></i>
+        <span class="font-medium flex-1 truncate text-xs ${isSelected ? 'text-white font-bold' : 'text-slate-200'}">${node.name || 'Menu'}</span>
+        ${promoBadge}
+        ${statusBadge}
+        ${isCategory && node.children ? `<span class="text-[10px] text-slate-400 bg-white/5 px-1.5 py-0.5 rounded">${node.children.length} item</span>` : ''}
     `;
     
     div.appendChild(header);
     
-    if (node.type === 'category' && node.children && node.children.length > 0) {
+    if (isCategory && node.children && node.children.length > 0) {
         const childContainer = document.createElement('div');
+        childContainer.className = 'border-l border-white/10 pl-2 ml-2';
         node.children.forEach(child => {
             const childEl = createNodeHTML(child, depth + 1);
             childContainer.appendChild(childEl);
@@ -236,27 +283,268 @@ function createNodeHTML(node, depth) {
     return div;
 }
 
-function findNodeInTree(node, id) {
-    if (!node) return null;
-    if (node.id === id) return node;
-    if (node.children && Array.isArray(node.children)) {
-        for (const child of node.children) {
-            const found = findNodeInTree(child, id);
-            if (found) return found;
+// Quick toggle status Tersedia / Habis / Pre-order
+window.quickToggleStatus = function(e, nodeId) {
+    if (e) e.stopPropagation();
+    if (!window.selectedGroupConfig) return;
+    
+    const node = findNodeInTree(window.selectedGroupConfig.menuTree, nodeId);
+    if (node && node.type !== 'category') {
+        const statuses = ['Tersedia', 'Habis', 'Pre-order'];
+        const currentIdx = statuses.indexOf(node.status || 'Tersedia');
+        const nextIdx = (currentIdx + 1) % statuses.length;
+        node.status = statuses[nextIdx];
+        
+        window.renderMenuTreeVisual();
+        if (window.selectedNodeId === nodeId) {
+            const statusSelect = document.getElementById('node-status');
+            if (statusSelect) statusSelect.value = node.status;
         }
     }
-    return null;
-}
-
-window.selectTreeNode = function(nodeId) {
-    selectedNodeId = nodeId;
-    window.renderMenuTreeVisual();
 };
 
-// Initializer
+// Memilih node untuk ditampilkan di editor form sebelah kanan
+window.selectTreeNode = function(nodeId) {
+    window.selectedNodeId = nodeId;
+    window.renderMenuTreeVisual();
+    window.loadNodeDataToEditor(nodeId);
+};
+
+window.loadNodeDataToEditor = function(nodeId) {
+    if (!window.selectedGroupConfig) return;
+    const node = findNodeInTree(window.selectedGroupConfig.menuTree, nodeId);
+    if (!node) return;
+
+    const editorTitle = document.getElementById('node-editor-title');
+    const placeholder = document.getElementById('node-editor-placeholder');
+    const formPanel = document.getElementById('node-editor-form');
+
+    if (placeholder) placeholder.classList.add('hidden');
+    if (formPanel) formPanel.classList.remove('hidden');
+
+    if (editorTitle) editorTitle.textContent = `Edit Menu: ${node.name || node.id}`;
+
+    const inputName = document.getElementById('node-name');
+    const inputAliases = document.getElementById('node-aliases');
+    const inputType = document.getElementById('node-type');
+    const inputText = document.getElementById('node-text');
+    const inputStatus = document.getElementById('node-status');
+    const inputPromo = document.getElementById('node-promo');
+    const inputMedia = document.getElementById('node-media');
+
+    if (inputName) inputName.value = node.name || '';
+    if (inputAliases) inputAliases.value = Array.isArray(node.aliases) ? node.aliases.join(', ') : (node.aliases || '');
+    if (inputType) inputType.value = node.type || 'content';
+    if (inputText) inputText.value = node.text || '';
+    if (inputStatus) inputStatus.value = node.status || 'Tersedia';
+    if (inputPromo) inputPromo.checked = !!node.isPromo;
+    if (inputMedia) inputMedia.value = node.media || '';
+
+    // Sembunyikan field yang tidak relevan jika kategori
+    const textSec = document.getElementById('node-sec-text');
+    if (textSec) {
+        textSec.style.display = node.type === 'category' ? 'none' : 'block';
+    }
+};
+
+// Helper tambah format teks WhatsApp
+window.insertFormatToElement = function(elementId, formatChar) {
+    const el = document.getElementById(elementId);
+    if (!el) return;
+
+    const start = el.selectionStart;
+    const end = el.selectionEnd;
+    const text = el.value;
+    const selected = text.substring(start, end) || 'teks';
+
+    const replacement = `${formatChar}${selected}${formatChar}`;
+    el.value = text.substring(0, start) + replacement + text.substring(end);
+    el.focus();
+    el.setSelectionRange(start + formatChar.length, start + formatChar.length + selected.length);
+
+    // Trigger update ke node aktif
+    if (window.selectedGroupConfig && window.selectedNodeId) {
+        const node = findNodeInTree(window.selectedGroupConfig.menuTree, window.selectedNodeId);
+        if (node) node.text = el.value;
+    }
+};
+
+// Tambah node anak baru
+window.addChildNode = function() {
+    if (!window.selectedGroupConfig || !window.selectedGroupConfig.menuTree) {
+        alert('Pilih grup WhatsApp terlebih dahulu!');
+        return;
+    }
+
+    let parentNode = findNodeInTree(window.selectedGroupConfig.menuTree, window.selectedNodeId);
+    if (!parentNode || parentNode.type !== 'category') {
+        parentNode = window.selectedGroupConfig.menuTree; // Fallback ke root
+    }
+
+    const newId = Date.now().toString();
+    const newNode = {
+        id: newId,
+        name: "Produk / Menu Baru",
+        type: "content",
+        text: "Deskripsi & harga produk...",
+        status: "Tersedia",
+        isPromo: false,
+        media: ""
+    };
+
+    parentNode.children = parentNode.children || [];
+    parentNode.children.push(newNode);
+
+    window.selectedNodeId = newId;
+    window.renderMenuTreeVisual();
+    window.loadNodeDataToEditor(newId);
+};
+
+// Hapus node aktif
+window.deleteNode = function() {
+    if (!window.selectedGroupConfig || !window.selectedNodeId) return;
+    if (window.selectedNodeId === 'root') {
+        alert('Node Utama (Root) tidak dapat dihapus!');
+        return;
+    }
+
+    if (!confirm('Apakah Anda yakin ingin menghapus menu ini?')) return;
+
+    function removeRecursive(parentNode, targetId) {
+        if (!parentNode.children) return false;
+        for (let i = 0; i < parentNode.children.length; i++) {
+            if (parentNode.children[i].id === targetId) {
+                parentNode.children.splice(i, 1);
+                return true;
+            }
+            if (removeRecursive(parentNode.children[i], targetId)) return true;
+        }
+        return false;
+    }
+
+    removeRecursive(window.selectedGroupConfig.menuTree, window.selectedNodeId);
+    window.selectedNodeId = 'root';
+    window.renderMenuTreeVisual();
+    window.loadNodeDataToEditor('root');
+};
+
+// Simpan konfigurasi menu pohon ke server
+window.saveGroupConfiguration = async function() {
+    if (!window.selectedGroupId || !window.selectedGroupConfig) {
+        alert('Pilih grup terlebih dahulu untuk menyimpan menu!');
+        return;
+    }
+
+    // Ambil data form terkini jika ada
+    const inputName = document.getElementById('node-name');
+    const inputText = document.getElementById('node-text');
+    const inputStatus = document.getElementById('node-status');
+    const inputPromo = document.getElementById('node-promo');
+    const inputMedia = document.getElementById('node-media');
+    const inputAliases = document.getElementById('node-aliases');
+
+    if (window.selectedNodeId) {
+        const node = findNodeInTree(window.selectedGroupConfig.menuTree, window.selectedNodeId);
+        if (node) {
+            if (inputName) node.name = inputName.value.trim();
+            if (inputText) node.text = inputText.value;
+            if (inputStatus) node.status = inputStatus.value;
+            if (inputPromo) node.isPromo = inputPromo.checked;
+            if (inputMedia) node.media = inputMedia.value.trim();
+            if (inputAliases) node.aliases = inputAliases.value.split(',').map(s => s.trim()).filter(Boolean);
+        }
+    }
+
+    try {
+        const res = await fetch(`/api/group-config/${window.selectedGroupId}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(window.selectedGroupConfig)
+        });
+
+        if (res.ok) {
+            alert('Struktur Pohon Menu berhasil disimpan ke Database!');
+            window.renderMenuTreeVisual();
+        } else {
+            throw new Error(await res.text());
+        }
+    } catch(err) {
+        alert('Gagal menyimpan menu: ' + err.message);
+    }
+};
+
+// Event listener input real-time
 document.addEventListener('DOMContentLoaded', () => {
+    const inputName = document.getElementById('node-name');
+    const inputText = document.getElementById('node-text');
+    const inputStatus = document.getElementById('node-status');
+    const inputPromo = document.getElementById('node-promo');
+    const inputMedia = document.getElementById('node-media');
+    const inputAliases = document.getElementById('node-aliases');
+
+    if (inputName) {
+        inputName.addEventListener('input', (e) => {
+            if (!window.selectedGroupConfig || !window.selectedNodeId) return;
+            const node = findNodeInTree(window.selectedGroupConfig.menuTree, window.selectedNodeId);
+            if (node) {
+                node.name = e.target.value;
+                // Live update label
+                const selectedItem = document.querySelector('.menu-node-item.selected span');
+                if (selectedItem) selectedItem.textContent = node.name;
+            }
+        });
+    }
+
+    if (inputText) {
+        inputText.addEventListener('input', (e) => {
+            if (!window.selectedGroupConfig || !window.selectedNodeId) return;
+            const node = findNodeInTree(window.selectedGroupConfig.menuTree, window.selectedNodeId);
+            if (node) node.text = e.target.value;
+        });
+    }
+
+    if (inputStatus) {
+        inputStatus.addEventListener('change', (e) => {
+            if (!window.selectedGroupConfig || !window.selectedNodeId) return;
+            const node = findNodeInTree(window.selectedGroupConfig.menuTree, window.selectedNodeId);
+            if (node) {
+                node.status = e.target.value;
+                window.renderMenuTreeVisual();
+            }
+        });
+    }
+
+    if (inputPromo) {
+        inputPromo.addEventListener('change', (e) => {
+            if (!window.selectedGroupConfig || !window.selectedNodeId) return;
+            const node = findNodeInTree(window.selectedGroupConfig.menuTree, window.selectedNodeId);
+            if (node) {
+                node.isPromo = e.target.checked;
+                window.renderMenuTreeVisual();
+            }
+        });
+    }
+
+    if (inputMedia) {
+        inputMedia.addEventListener('input', (e) => {
+            if (!window.selectedGroupConfig || !window.selectedNodeId) return;
+            const node = findNodeInTree(window.selectedGroupConfig.menuTree, window.selectedNodeId);
+            if (node) node.media = e.target.value.trim();
+        });
+    }
+
+    if (inputAliases) {
+        inputAliases.addEventListener('input', (e) => {
+            if (!window.selectedGroupConfig || !window.selectedNodeId) return;
+            const node = findNodeInTree(window.selectedGroupConfig.menuTree, window.selectedNodeId);
+            if (node) node.aliases = e.target.value.split(',').map(s => s.trim()).filter(Boolean);
+        });
+    }
+
+    // Auto-load saat awal
     setTimeout(() => {
         if (window.loadHostAdmins) window.loadHostAdmins();
         if (window.loadCustomersList) window.loadCustomersList();
-    }, 500);
+        if (window.renderMenuTreeVisual) window.renderMenuTreeVisual();
+    }, 400);
 });

@@ -1,4 +1,4 @@
-﻿// public/js/core.js
+// public/js/core.js
 // Inisialisasi Socket.io, Notifikasi Toast, Navigasi Tab, Tema & Modal Global
 'use strict';
 
@@ -91,6 +91,7 @@ window.switchTab = function(tabId) {
         if (window.loadHostAdmins) window.loadHostAdmins();
         if (window.loadCustomersList) window.loadCustomersList();
         if (window.loadGroupsList) window.loadGroupsList();
+        if (window.renderMenuTreeVisual) window.renderMenuTreeVisual();
     } else if (tabId === 'transactions') {
         if (window.loadOrders) window.loadOrders();
         if (window.loadInvoices) window.loadInvoices();
