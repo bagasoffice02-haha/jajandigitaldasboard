@@ -1,4 +1,4 @@
-﻿// Polyfill untuk DOMMatrix yang dibutuhkan oleh pdfjs-dist / pdf-parse di Node.js
+// Polyfill untuk DOMMatrix yang dibutuhkan oleh pdfjs-dist / pdf-parse di Node.js
 if (typeof global.DOMMatrix === 'undefined') {
     global.DOMMatrix = class DOMMatrix {};
 }
@@ -133,13 +133,122 @@ app.post('/api/upload/products', productsUpload.single('file'), (req, res) => re
 
 app.use('/api', apiRoutes);
 
+// ─── Real-Time Enterprise System & Error Logger ──────────────────────────────
+global.recentSystemLogs = [];
+const MAX_SYSTEM_LOGS = 250;
+
+function pushSystemLog(level, message, tag = 'SISTEM') {
+    const logObj = {
+        id: Date.now() + '_' + Math.random().toString(36).substring(2, 7),
+        level: level || 'info', // 'info' | 'warn' | 'error' | 'ai'
+        message: String(message),
+        tag: tag || 'SISTEM',
+        timestamp: Date.now()
+    };
+    global.recentSystemLogs.push(logObj);
+    if (global.recentSystemLogs.length > MAX_SYSTEM_LOGS) {
+        global.recentSystemLogs.shift();
+    }
+    if (io) {
+        io.emit('system_log', logObj);
+    }
+    return logObj;
+}
+global.pushSystemLog = pushSystemLog;
+
+// Hook console logging to feed into live web terminal stream
+const originalConsoleLog = console.log.bind(console);
+const originalConsoleWarn = console.warn.bind(console);
+const originalConsoleError = console.error.bind(console);
+
+console.log = (...args) => {
+    originalConsoleLog(...args);
+    const msg = args.map(a => (typeof a === 'object' ? JSON.stringify(a) : String(a))).join(' ');
+    let tag = 'SISTEM';
+    let level = 'info';
+    if (msg.includes('[AI]') || msg.includes('Gemini') || msg.includes('Groq') || msg.includes('OpenAI')) {
+        tag = 'AI ENGINE';
+        level = 'ai';
+    } else if (msg.includes('[DEBUG CHAT]')) {
+        tag = 'CHAT MASUK';
+        level = 'info';
+    } else if (msg.includes('[Scheduler]')) {
+        tag = 'SCHEDULER';
+        level = 'info';
+    } else if (msg.includes('[AntiSpam]')) {
+        tag = 'ANTI-SPAM';
+        level = 'warn';
+    } else if (msg.includes('[Telegram]')) {
+        tag = 'TELEGRAM';
+        level = 'info';
+    } else if (msg.includes('[WhatsApp]')) {
+        tag = 'WHATSAPP';
+        level = 'info';
+    } else if (msg.includes('[Payment Upload]')) {
+        tag = 'PEMBAYARAN';
+        level = 'info';
+    }
+    pushSystemLog(level, msg, tag);
+};
+
+console.warn = (...args) => {
+    originalConsoleWarn(...args);
+    const msg = args.map(a => (typeof a === 'object' ? JSON.stringify(a) : String(a))).join(' ');
+    pushSystemLog('warn', msg, 'PERINGATAN');
+};
+
+console.error = (...args) => {
+    originalConsoleError(...args);
+    const msg = args.map(a => (typeof a === 'object' ? (a.stack || JSON.stringify(a)) : String(a))).join(' ');
+    pushSystemLog('error', msg, 'ERROR');
+};
+
+// Endpoints untuk log sistem & simulasi pengujian
+app.get('/api/system/logs', (req, res) => {
+    res.json({ success: true, logs: global.recentSystemLogs || [] });
+});
+
+app.post('/api/system/clear-logs', (req, res) => {
+    global.recentSystemLogs = [];
+    io.emit('system_logs_cleared');
+    res.json({ success: true });
+});
+
+app.post('/api/system/simulate-chat', (req, res) => {
+    try {
+        const { message, senderId, isGroup } = req.body;
+        if (!message) return res.status(400).json({ error: 'Pesan simulasi wajib diisi.' });
+
+        const simSender = senderId || '6281234567890@c.us';
+        const simChatId = isGroup ? '120363000000000000@g.us' : simSender;
+
+        io.emit('message_log', {
+            chatId: simChatId,
+            senderId: simSender,
+            body: message,
+            type: 'incoming',
+            isGroup: Boolean(isGroup),
+            timestamp: Date.now(),
+            isSimulation: true
+        });
+
+        pushSystemLog('info', `Simulasi pesan diterima: "${message}" dari ${simSender}`, 'SIMULATOR');
+        res.json({ success: true, message: 'Simulasi pesan dikirim ke live monitor.' });
+    } catch(err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
 // ─── Socket.io & Global Protections ──────────────────────────────────────────
 io.on('connection', (socket) => {
     socket.emit('whatsapp_status', { status: getStatus() });
     if (getQrCode() && getStatus() !== 'CONNECTED') socket.emit('qr', getQrCode());
+    socket.emit('system_logs_batch', { logs: global.recentSystemLogs || [] });
 });
 
-process.on('uncaughtException', (err) => console.error('uncaughtException global:', err.message));
+process.on('uncaughtException', (err) => {
+    console.error('uncaughtException global:', err.message);
+});
 process.on('unhandledRejection', (reason) => {
     const errMsg = reason ? (reason.message || reason.toString()) : '';
     if (!errMsg.includes('Execution context was destroyed') && !errMsg.includes('Navigating frame was detached')) {

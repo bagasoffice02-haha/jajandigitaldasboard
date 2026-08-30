@@ -130,6 +130,19 @@ async function handleIncomingMessage(msg) {
     if (chatId === 'status@broadcast') return;
 
     const senderId = msg.fromMe ? (clientInstance && clientInstance.info ? clientInstance.info.wid._serialized : (msg.author || msg.from)) : (msg.author || msg.from);
+    const isGroup = msg.isGroupMsg || chatId.includes('@g.us');
+
+    // Broadcast pesan masuk ke Live Stream Obrolan di Web Dashboard
+    if (ioInstance && userMessage) {
+        ioInstance.emit('message_log', {
+            chatId,
+            senderId,
+            body: userMessage,
+            type: msg.fromMe ? 'outgoing' : 'incoming',
+            isGroup,
+            timestamp: Date.now()
+        });
+    }
 
     // Jika pesan dari nomor bot sendiri, abaikan jika bukan command/shortcut
     if (msg.fromMe) {
@@ -140,7 +153,7 @@ async function handleIncomingMessage(msg) {
         if (!isCommand) return;
     }
 
-    // Wrap msg.reply to support @user (mention) and @nama (pushname)
+    // Wrap msg.reply to support @user (mention), @nama (pushname), and live dashboard stream
     const originalReply = msg.reply.bind(msg);
     msg.reply = async (content, chatIdOrOptions, options) => {
         let opt = options;
@@ -151,6 +164,7 @@ async function handleIncomingMessage(msg) {
         }
         opt = opt || {};
 
+        let replacedContent = content;
         if (typeof content === 'string' && (content.includes('@user') || content.includes('@nama'))) {
             try {
                 const contact = await msg.getContact();
@@ -158,9 +172,7 @@ async function handleIncomingMessage(msg) {
                 const userMentionId = contact.id.user;
                 const mentionTag = `@${userMentionId}`;
                 
-                let replacedContent = content;
                 let mentions = [];
-                
                 if (replacedContent.includes('@user')) {
                     replacedContent = replacedContent.replace(/@user/g, mentionTag);
                     mentions.push(contact);
@@ -172,15 +184,28 @@ async function handleIncomingMessage(msg) {
                 if (mentions.length > 0) {
                     opt.mentions = (opt.mentions || []).concat(mentions);
                 }
-                return await originalReply(replacedContent, cid, opt);
             } catch (err) {
                 console.error('Error in custom msg.reply wrapper:', err);
             }
         }
-        return await originalReply(content, chatIdOrOptions, options);
+
+        const replyResult = await originalReply(replacedContent, cid, opt);
+
+        // Broadcast balasan keluar ke Live Stream Obrolan di Web Dashboard
+        if (ioInstance && typeof replacedContent === 'string') {
+            ioInstance.emit('message_log', {
+                chatId: cid || chatId,
+                senderId: 'BOT_AI',
+                body: replacedContent,
+                type: 'outgoing',
+                isGroup,
+                timestamp: Date.now()
+            });
+        }
+
+        return replyResult;
     };
 
-    const isGroup = msg.isGroupMsg || chatId.includes('@g.us');
     const { group_configs: gConfigs } = await getGroupConfigs();
     const shopData = await getShopData();
 

@@ -195,60 +195,83 @@
             </div>
 
 
-            <!-- ─── TAB 1: LIVE MONITOR ────────────────────────────────── -->
+            <!-- ─── TAB 1: LIVE MONITOR & DIAGNOSA SISTEM ───────────────── -->
             <div id="tab-monitor" class="tab-content space-y-5">
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
-                    <!-- Left: Connection Status Card & QR -->
-                    <div class="enterprise-card flex flex-col justify-between space-y-4">
-                        <div>
-                            <div class="flex items-center justify-between pb-3 border-b border-[var(--border-color)]">
-                                <h3 class="font-bold text-xs uppercase tracking-wider flex items-center gap-2">
-                                    <i data-lucide="smartphone" class="w-4 h-4 text-indigo-400"></i>
-                                    Status WhatsApp Bot
-                                </h3>
-                                <span id="status-text" class="text-[11px] font-bold px-2 py-0.5 rounded bg-[var(--bg-subtle)] border border-[var(--border-color)]">
-                                    OFFLINE
-                                </span>
+                    <!-- Left: Connection Status Card & QR & Resource Monitor -->
+                    <div class="space-y-4 flex flex-col">
+                        <div class="enterprise-card flex flex-col justify-between space-y-4">
+                            <div>
+                                <div class="flex items-center justify-between pb-3 border-b border-[var(--border-color)]">
+                                    <h3 class="font-bold text-xs uppercase tracking-wider flex items-center gap-2">
+                                        <i data-lucide="smartphone" class="w-4 h-4 text-indigo-400"></i>
+                                        Status WhatsApp Bot
+                                    </h3>
+                                    <span id="status-text" class="text-[11px] font-bold px-2 py-0.5 rounded bg-[var(--bg-subtle)] border border-[var(--border-color)]">
+                                        OFFLINE
+                                    </span>
+                                </div>
+
+                                <div class="mt-4 space-y-3">
+                                    <div class="bg-[var(--bg-subtle)] p-3 rounded-xl border border-[var(--border-color)] space-y-1">
+                                        <div class="flex items-center justify-between text-xs">
+                                            <span class="text-[var(--text-secondary)]">Status Sesi:</span>
+                                            <strong id="status-info" class="text-[var(--text-primary)]">Standby / Belum Login</strong>
+                                        </div>
+                                        <div class="flex items-center justify-between text-xs">
+                                            <span class="text-[var(--text-secondary)]">Perangkat:</span>
+                                            <strong id="status-device" class="text-[var(--text-primary)] font-mono-num">—</strong>
+                                        </div>
+                                    </div>
+
+                                    <!-- QR Canvas Container -->
+                                    <div id="qr-container" class="border border-[var(--border-color)] rounded-xl p-4 text-center bg-[var(--bg-subtle)] min-h-[200px] flex flex-col items-center justify-center">
+                                        <div id="qr-placeholder" class="space-y-2">
+                                            <i data-lucide="qr-code" class="w-10 h-10 mx-auto text-[var(--text-muted)]"></i>
+                                            <p class="text-xs text-[var(--text-secondary)] font-medium">Klik Hubungkan untuk Scan QR</p>
+                                        </div>
+                                        <div id="qr-code" class="flex items-center justify-center"></div>
+                                        <p id="qr-status" class="text-[11px] text-amber-400 font-medium mt-2"></p>
+                                    </div>
+                                </div>
                             </div>
 
-                            <div class="mt-4 space-y-3">
-                                <div class="bg-[var(--bg-subtle)] p-3 rounded-xl border border-[var(--border-color)] space-y-1">
-                                    <div class="flex items-center justify-between text-xs">
-                                        <span class="text-[var(--text-secondary)]">Status Sesi:</span>
-                                        <strong id="status-info" class="text-[var(--text-primary)]">Standby / Belum Login</strong>
-                                    </div>
-                                    <div class="flex items-center justify-between text-xs">
-                                        <span class="text-[var(--text-secondary)]">Perangkat:</span>
-                                        <strong id="status-device" class="text-[var(--text-primary)] font-mono-num">—</strong>
-                                    </div>
-                                </div>
-
-                                <!-- QR Canvas Container -->
-                                <div id="qr-container" class="border border-[var(--border-color)] rounded-xl p-4 text-center bg-[var(--bg-subtle)] min-h-[220px] flex flex-col items-center justify-center">
-                                    <div id="qr-placeholder" class="space-y-2">
-                                        <i data-lucide="qr-code" class="w-10 h-10 mx-auto text-[var(--text-muted)]"></i>
-                                        <p class="text-xs text-[var(--text-secondary)] font-medium">Klik Hubungkan untuk Scan QR</p>
-                                    </div>
-                                    <div id="qr-code" class="flex items-center justify-center"></div>
-                                    <p id="qr-status" class="text-[11px] text-amber-400 font-medium mt-2"></p>
-                                </div>
+                            <!-- Action Buttons -->
+                            <div class="grid grid-cols-2 gap-2 pt-2 border-t border-[var(--border-color)]">
+                                <button onclick="refreshQRCode(false)" class="enterprise-btn enterprise-btn-primary">
+                                    <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
+                                    <span>Hubungkan</span>
+                                </button>
+                                <button onclick="refreshQRCode(true)" class="enterprise-btn enterprise-btn-secondary text-rose-400">
+                                    <i data-lucide="power" class="w-3.5 h-3.5"></i>
+                                    <span>Reset Sesi</span>
+                                </button>
                             </div>
                         </div>
 
-                        <!-- Action Buttons -->
-                        <div class="grid grid-cols-2 gap-2 pt-2 border-t border-[var(--border-color)]">
-                            <button onclick="refreshQRCode(false)" class="enterprise-btn enterprise-btn-primary">
-                                <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
-                                <span>Hubungkan</span>
-                            </button>
-                            <button onclick="refreshQRCode(true)" class="enterprise-btn enterprise-btn-secondary text-rose-400">
-                                <i data-lucide="power" class="w-3.5 h-3.5"></i>
-                                <span>Reset Sesi</span>
-                            </button>
+                        <!-- System Health / Status Telemetry -->
+                        <div class="enterprise-card p-3.5 space-y-2">
+                            <div class="flex items-center justify-between text-xs font-bold pb-2 border-b border-[var(--border-color)]">
+                                <span class="flex items-center gap-1.5 text-[var(--text-secondary)]">
+                                    <i data-lucide="activity" class="w-3.5 h-3.5 text-emerald-400"></i>
+                                    Kesehatan Server
+                                </span>
+                                <span class="text-[10px] text-emerald-400 font-mono">NODE.JS ONLINE</span>
+                            </div>
+                            <div class="grid grid-cols-2 gap-2 text-xs">
+                                <div class="p-2 rounded-lg bg-[var(--bg-subtle)] border border-[var(--border-color)]">
+                                    <p class="text-[10px] text-[var(--text-muted)]">Socket Klien</p>
+                                    <p id="stat-socket-clients" class="font-bold font-mono-num text-[var(--text-primary)]">1 Aktif</p>
+                                </div>
+                                <div class="p-2 rounded-lg bg-[var(--bg-subtle)] border border-[var(--border-color)]">
+                                    <p class="text-[10px] text-[var(--text-muted)]">Error Terdeteksi</p>
+                                    <p id="stat-error-count" class="font-bold font-mono-num text-emerald-400">0 Error</p>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
-                    <!-- Right: Quick Stats & Live Stream Obrolan -->
+                    <!-- Right: Quick Stats + Dual Studio (Live Chat & Diagnosa Log) -->
                     <div class="lg:col-span-2 space-y-4 flex flex-col">
                         <div class="grid grid-cols-3 gap-3">
                             <div class="enterprise-card p-3.5 flex items-center gap-3">
@@ -280,27 +303,93 @@
                             </div>
                         </div>
 
-                        <!-- Live Message Stream -->
-                        <div class="enterprise-card flex-1 flex flex-col min-h-[380px]">
-                            <div class="flex items-center justify-between pb-3 mb-3 border-b border-[var(--border-color)]">
-                                <div>
-                                    <h3 class="font-bold text-xs uppercase tracking-wider flex items-center gap-2">
-                                        <i data-lucide="terminal" class="w-4 h-4 text-indigo-400"></i>
-                                        Live Stream Obrolan Bot
-                                    </h3>
+                        <!-- Live Studio Dual Pane (Live Chat & Diagnosa Log) -->
+                        <div class="enterprise-card flex-1 flex flex-col min-h-[440px]">
+                            <!-- Dual Mode Header Switcher -->
+                            <div class="flex flex-wrap items-center justify-between gap-2 pb-3 mb-3 border-b border-[var(--border-color)]">
+                                <div class="flex items-center gap-1.5 p-1 bg-[var(--bg-subtle)] border border-[var(--border-color)] rounded-xl">
+                                    <button id="monitor-mode-chat-btn" onclick="switchMonitorStudioMode('chat')" class="px-3 py-1 text-xs font-bold rounded-lg bg-[var(--bg-surface)] text-[var(--text-primary)] shadow-sm flex items-center gap-1.5 transition-all">
+                                        <i data-lucide="message-circle" class="w-3.5 h-3.5 text-indigo-400"></i>
+                                        <span>Live Chat Stream</span>
+                                    </button>
+                                    <button id="monitor-mode-logs-btn" onclick="switchMonitorStudioMode('logs')" class="px-3 py-1 text-xs font-semibold rounded-lg text-[var(--text-muted)] hover:text-[var(--text-primary)] flex items-center gap-1.5 transition-all">
+                                        <i data-lucide="terminal" class="w-3.5 h-3.5 text-emerald-400"></i>
+                                        <span>Diagnosa & Error Log</span>
+                                        <span id="log-error-pill" class="hidden px-1.5 py-0.2 rounded-full text-[9px] font-bold bg-rose-500/20 text-rose-400 border border-rose-500/30 font-mono">0</span>
+                                    </button>
                                 </div>
-                                <div class="flex items-center gap-2">
-                                    <input type="text" id="search-chat-input" onkeyup="filterChatLogs()" placeholder="Cari pesan..." class="enterprise-input w-36 py-1 text-xs">
-                                    <button onclick="clearChatLogs()" class="p-1.5 rounded-lg bg-[var(--bg-subtle)] text-[var(--text-muted)] hover:text-rose-400 border border-[var(--border-color)]">
+
+                                <!-- Dynamic Right Controls -->
+                                <div id="monitor-chat-controls" class="flex items-center gap-2">
+                                    <div class="flex items-center gap-1 bg-[var(--bg-subtle)] p-0.5 rounded-lg border border-[var(--border-color)] text-[10px]">
+                                        <button onclick="setChatFilter('all')" id="chat-filter-all" class="px-2 py-0.5 rounded font-bold bg-[var(--bg-surface)] text-[var(--text-primary)]">Semua</button>
+                                        <button onclick="setChatFilter('incoming')" id="chat-filter-incoming" class="px-2 py-0.5 rounded text-[var(--text-muted)]">Pelanggan</button>
+                                        <button onclick="setChatFilter('outgoing')" id="chat-filter-outgoing" class="px-2 py-0.5 rounded text-[var(--text-muted)]">Bot AI</button>
+                                    </div>
+                                    <input type="text" id="search-chat-input" onkeyup="filterChatLogs()" placeholder="Cari pesan/nomor..." class="enterprise-input w-28 sm:w-36 py-1 text-xs">
+                                    <button onclick="clearChatLogs()" class="p-1.5 rounded-lg bg-[var(--bg-subtle)] text-[var(--text-muted)] hover:text-rose-400 border border-[var(--border-color)]" title="Bersihkan Chat">
+                                        <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                                    </button>
+                                </div>
+
+                                <div id="monitor-logs-controls" class="hidden flex items-center gap-2">
+                                    <div class="flex items-center gap-1 bg-[var(--bg-subtle)] p-0.5 rounded-lg border border-[var(--border-color)] text-[10px]">
+                                        <button onclick="setLogFilter('all')" id="log-filter-all" class="px-2 py-0.5 rounded font-bold bg-[var(--bg-surface)] text-[var(--text-primary)]">Semua</button>
+                                        <button onclick="setLogFilter('error')" id="log-filter-error" class="px-2 py-0.5 rounded text-rose-400">Error</button>
+                                        <button onclick="setLogFilter('warn')" id="log-filter-warn" class="px-2 py-0.5 rounded text-amber-400">Peringatan</button>
+                                        <button onclick="setLogFilter('ai')" id="log-filter-ai" class="px-2 py-0.5 rounded text-purple-400">AI</button>
+                                    </div>
+                                    <input type="text" id="search-log-input" onkeyup="filterSystemLogs()" placeholder="Cari log..." class="enterprise-input w-24 sm:w-32 py-1 text-xs font-mono">
+                                    <button onclick="copyAllSystemLogs()" class="p-1.5 rounded-lg bg-[var(--bg-subtle)] text-[var(--text-muted)] hover:text-[var(--text-primary)] border border-[var(--border-color)]" title="Salin Log">
+                                        <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+                                    </button>
+                                    <button onclick="downloadSystemLogs()" class="p-1.5 rounded-lg bg-[var(--bg-subtle)] text-[var(--text-muted)] hover:text-[var(--text-primary)] border border-[var(--border-color)]" title="Unduh .log">
+                                        <i data-lucide="download" class="w-3.5 h-3.5"></i>
+                                    </button>
+                                    <button onclick="clearSystemLogs()" class="p-1.5 rounded-lg bg-[var(--bg-subtle)] text-[var(--text-muted)] hover:text-rose-400 border border-[var(--border-color)]" title="Bersihkan Log">
                                         <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
                                     </button>
                                 </div>
                             </div>
 
-                            <div id="chat-messages" class="flex-1 overflow-y-auto space-y-2.5 pr-1 max-h-[380px]">
-                                <div class="text-center py-12 text-[var(--text-muted)] text-xs flex flex-col items-center justify-center">
-                                    <i data-lucide="inbox" class="w-8 h-8 mb-2 opacity-40"></i>
-                                    <span>Menunggu aktivitas pesan obrolan...</span>
+                            <!-- PANE 1: LIVE CHAT STREAM -->
+                            <div id="monitor-pane-chat" class="flex-1 flex flex-col justify-between">
+                                <div id="chat-messages" class="flex-1 overflow-y-auto space-y-2.5 pr-1 max-h-[360px] min-h-[280px]">
+                                    <div class="text-center py-12 text-[var(--text-muted)] text-xs flex flex-col items-center justify-center">
+                                        <i data-lucide="inbox" class="w-8 h-8 mb-2 opacity-40"></i>
+                                        <span>Menunggu aktivitas obrolan pesan...</span>
+                                    </div>
+                                </div>
+
+                                <!-- Test Simulator Box at Bottom -->
+                                <div class="pt-3 mt-2 border-t border-[var(--border-color)]">
+                                    <div class="flex items-center gap-2">
+                                        <div class="relative flex-1">
+                                            <input type="text" id="sim-message-input" onkeydown="if(event.key==='Enter') sendSimulatedTestMessage()" placeholder="Ketik pesan simulasi tes bot (misal: !menu, beli capcut, halo admin)..." class="enterprise-input w-full py-1.5 text-xs pl-8">
+                                            <i data-lucide="play-circle" class="w-3.5 h-3.5 text-indigo-400 absolute left-2.5 top-2.5"></i>
+                                        </div>
+                                        <button onclick="sendSimulatedTestMessage()" class="enterprise-btn enterprise-btn-primary py-1.5 px-3 text-xs whitespace-nowrap">
+                                            <i data-lucide="send" class="w-3.5 h-3.5"></i>
+                                            <span>Simulasi</span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- PANE 2: TERMINAL & DIAGNOSA ERROR LOG -->
+                            <div id="monitor-pane-logs" class="hidden flex-1 flex flex-col justify-between">
+                                <div id="system-logs-container" class="flex-1 overflow-y-auto space-y-1.5 p-3 rounded-xl bg-black/50 border border-[var(--border-color)] font-mono text-[11px] leading-relaxed max-h-[380px] min-h-[300px] select-text">
+                                    <div class="text-slate-500 text-center py-10">Memuat log sistem & diagnosa...</div>
+                                </div>
+                                <div class="pt-2 flex items-center justify-between text-[11px] text-[var(--text-muted)]">
+                                    <div class="flex items-center gap-2">
+                                        <span class="inline-block w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                                        <span>Live Logger Streaming Aktif</span>
+                                    </div>
+                                    <label class="flex items-center gap-1.5 cursor-pointer text-[10px]">
+                                        <input type="checkbox" id="log-autoscroll-chk" checked class="rounded border-[var(--border-color)] text-indigo-600">
+                                        <span>Auto-Scroll</span>
+                                    </label>
                                 </div>
                             </div>
                         </div>
