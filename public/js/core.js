@@ -6,6 +6,20 @@
 const socket = io();
 window.socket = socket;
 
+const TAB_TITLES = {
+    monitor:      { title: 'Live Monitor', category: 'Operasional & AI' },
+    memory:       { title: 'Basis Pengetahuan (RAG)', category: 'Operasional & AI' },
+    features:     { title: 'Fitur Auto-Reply', category: 'Operasional & AI' },
+    notes:        { title: 'Catatan & Memo Operasional', category: 'Operasional & AI' },
+    groups:       { title: 'Manajemen Grup WhatsApp', category: 'Komunitas & Toko' },
+    shop:         { title: 'Toko, CRM & Menu Tree', category: 'Komunitas & Toko' },
+    transactions: { title: 'Transaksi & Kasir', category: 'Komunitas & Toko' },
+    premium:      { title: 'Akun Premium & Inventaris', category: 'Komunitas & Toko' },
+    referral:     { title: 'Program Referral & Afiliasi', category: 'Pengaturan & API' },
+    apikeys:      { title: 'API Key Manager & Diagnosa', category: 'Pengaturan & API' },
+    settings:     { title: 'Pengaturan Bot & Integrasi', category: 'Pengaturan & API' }
+};
+
 // ─── 1. TEMA GELAP & TERANG (DARK / LIGHT THEME ENGINE) ────
 window.initTheme = function() {
     const savedTheme = localStorage.getItem('dashboard_theme') || 'dark';
@@ -67,29 +81,16 @@ window.showToast = function(typeOrMsg, msg, duration = 3500) {
     toast.className = `toast-notification toast-${type}`;
     
     let iconSvg = '<i data-lucide="info" class="w-4 h-4"></i>';
-    let defaultTitle = 'Informasi';
-
-    if (type === 'success') {
-        iconSvg = '<i data-lucide="check-circle-2" class="w-4 h-4"></i>';
-        defaultTitle = 'Berhasil';
-    } else if (type === 'error') {
-        iconSvg = '<i data-lucide="alert-circle" class="w-4 h-4"></i>';
-        defaultTitle = 'Gagal';
-    } else if (type === 'warning') {
-        iconSvg = '<i data-lucide="alert-triangle" class="w-4 h-4"></i>';
-        defaultTitle = 'Perhatian';
-    }
+    if (type === 'success') iconSvg = '<i data-lucide="check-circle-2" class="w-4 h-4"></i>';
+    else if (type === 'error') iconSvg = '<i data-lucide="alert-circle" class="w-4 h-4"></i>';
+    else if (type === 'warning') iconSvg = '<i data-lucide="alert-triangle" class="w-4 h-4"></i>';
 
     toast.innerHTML = `
         <div class="toast-icon">${iconSvg}</div>
-        <div class="toast-content">
-            <span class="toast-title">${defaultTitle}</span>
-            <span class="toast-message">${message}</span>
-        </div>
+        <div class="toast-message">${message}</div>
         <button class="toast-close" onclick="this.parentElement.remove()">
             <i data-lucide="x" class="w-3.5 h-3.5"></i>
         </button>
-        <div class="toast-progress" style="animation-duration: ${duration}ms;"></div>
     `;
 
     container.appendChild(toast);
@@ -131,6 +132,9 @@ window.switchTab = function(tabId) {
     const mobBtn = document.getElementById(`mob-nav-${mobileTarget}`);
     if (mobBtn) mobBtn.classList.add('active');
 
+    // Update Desktop Breadcrumb & Tab Title
+    updateWorkbenchHeader(tabId);
+
     // Tutup mobile more sheet jika terbuka
     window.closeMobileMoreSheet();
 
@@ -155,7 +159,6 @@ window.switchTab = function(tabId) {
     } else if (tabId === 'settings') {
         setTimeout(() => { 
             if (window.loadTelegramConfig) window.loadTelegramConfig(); 
-            if (window.checkAllApiStatus) window.checkAllApiStatus();
         }, 150);
     } else if (tabId === 'referral') {
         if (window.loadReferralDashboardData) window.loadReferralDashboardData();
@@ -168,7 +171,31 @@ window.switchTab = function(tabId) {
     if (window.lucide) lucide.createIcons();
 };
 
-// ─── 4. MOBILE MORE SHEET CONTROL ──────────────────────────
+function updateWorkbenchHeader(tabId) {
+    const meta = TAB_TITLES[tabId] || { title: 'Dashboard', category: 'Operasional' };
+    const breadcrumbCat = document.getElementById('workbench-breadcrumb-cat');
+    const breadcrumbTitle = document.getElementById('workbench-breadcrumb-title');
+
+    if (breadcrumbCat) breadcrumbCat.textContent = meta.category;
+    if (breadcrumbTitle) breadcrumbTitle.textContent = meta.title;
+}
+
+// ─── 4. LIVE CLOCK TICKER ──────────────────────────────────
+function startLiveClock() {
+    const clockEl = document.getElementById('workbench-clock');
+    if (!clockEl) return;
+
+    function update() {
+        const now = new Date();
+        const timeStr = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        const dateStr = now.toLocaleDateString('id-ID', { weekday: 'short', day: 'numeric', month: 'short' });
+        clockEl.textContent = `${dateStr}, ${timeStr} WIB`;
+    }
+    update();
+    setInterval(update, 1000);
+}
+
+// ─── 5. MOBILE MORE SHEET CONTROL ──────────────────────────
 window.openMobileMoreSheet = function() {
     const sheet = document.getElementById('mobile-more-sheet');
     if (sheet) {
@@ -182,26 +209,24 @@ window.closeMobileMoreSheet = function() {
     if (sheet) sheet.classList.add('hidden');
 };
 
-// ─── 5. SUB-TABS (TRANSAKSI, DLL) ──────────────────────────
+// ─── 6. SUB-TABS CONTROL ───────────────────────────────────
 window.switchSubTab = function(parentTab, subTab) {
     if (parentTab === 'transactions') {
         const ordersPanel = document.getElementById('panel-orders-container');
         const invoicesPanel = document.getElementById('panel-invoices-container');
         const ordersBtn = document.getElementById('sub-tab-orders-btn');
         const invoicesBtn = document.getElementById('sub-tab-invoices-btn');
-        
+
         if (subTab === 'orders') {
             if (ordersPanel) ordersPanel.style.display = 'block';
             if (invoicesPanel) invoicesPanel.style.display = 'none';
-            if (ordersBtn) { ordersBtn.classList.add('active'); }
-            if (invoicesBtn) { invoicesBtn.classList.remove('active'); }
-            if (window.loadOrders) window.loadOrders();
-        } else if (subTab === 'invoices') {
+            if (ordersBtn) ordersBtn.classList.add('active');
+            if (invoicesBtn) invoicesBtn.classList.remove('active');
+        } else {
             if (ordersPanel) ordersPanel.style.display = 'none';
             if (invoicesPanel) invoicesPanel.style.display = 'block';
-            if (ordersBtn) { ordersBtn.classList.remove('active'); }
-            if (invoicesBtn) { invoicesBtn.classList.add('active'); }
-            if (window.loadInvoices) window.loadInvoices();
+            if (ordersBtn) ordersBtn.classList.remove('active');
+            if (invoicesBtn) invoicesBtn.classList.add('active');
         }
     } else if (parentTab === 'premium') {
         const accPanel = document.getElementById('panel-premium-accounts-container');
@@ -214,7 +239,7 @@ window.switchSubTab = function(parentTab, subTab) {
             if (salesPanel) salesPanel.style.display = 'none';
             if (accBtn) accBtn.classList.add('active');
             if (salesBtn) salesBtn.classList.remove('active');
-        } else if (subTab === 'sales') {
+        } else {
             if (accPanel) accPanel.style.display = 'none';
             if (salesPanel) salesPanel.style.display = 'block';
             if (accBtn) accBtn.classList.remove('active');
@@ -224,7 +249,7 @@ window.switchSubTab = function(parentTab, subTab) {
     if (window.lucide) lucide.createIcons();
 };
 
-// ─── 6. MODAL QUICK LINKS & LOGOUT ─────────────────────────
+// ─── 7. QUICK LINKS & PUBLIC PORTALS ───────────────────────
 window.openQuickLinksModal = function() {
     const modal = document.getElementById('quick-links-modal');
     if (modal) {
@@ -238,32 +263,39 @@ window.closeQuickLinksModal = function() {
     if (modal) modal.classList.add('hidden');
 };
 
-window.copyPublicUrl = function(pathStr) {
-    const fullUrl = window.location.origin + pathStr;
+window.copyPublicUrl = function(pathUrl) {
+    const fullUrl = window.location.origin + pathUrl;
     navigator.clipboard.writeText(fullUrl).then(() => {
-        window.showToast('success', `Tautan disalin: ${fullUrl}`);
-    }).catch(err => {
-        window.showToast('error', 'Gagal menyalin tautan: ' + err.message);
+        if (window.showToast) window.showToast('success', `Tautan disalin: ${fullUrl}`);
+    }).catch(() => {
+        prompt('Salin tautan ini:', fullUrl);
     });
 };
 
 window.logoutDashboard = function() {
-    if (confirm('Apakah Anda yakin ingin keluar dari Dasbor?')) {
-        document.cookie = 'session_token=; Max-Age=0; path=/;';
-        window.location.href = '/login';
+    if (confirm('Keluar dari sesi dashboard?')) {
+        document.cookie = 'auth=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;';
+        window.location.reload();
     }
 };
 
-// Keyboard ESC listener untuk modal
+// ─── 8. GLOBAL KEYBOARD SHORTCUTS ──────────────────────────
 document.addEventListener('keydown', (e) => {
+    // ESC: Close open modals
     if (e.key === 'Escape') {
-        document.querySelectorAll('.modal-overlay').forEach(m => m.classList.add('hidden'));
-        window.closeMobileMoreSheet();
+        const openModals = document.querySelectorAll('.modal-overlay:not(.hidden)');
+        openModals.forEach(m => m.classList.add('hidden'));
+    }
+    // Ctrl+K / Cmd+K: Open Quick Links
+    if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+        e.preventDefault();
+        window.openQuickLinksModal();
     }
 });
 
-// Auto-inisialisasi
+// Initial Bootstrap
 document.addEventListener('DOMContentLoaded', () => {
     window.initTheme();
+    startLiveClock();
     if (window.lucide) lucide.createIcons();
 });

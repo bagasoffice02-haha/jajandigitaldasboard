@@ -1,5 +1,5 @@
 // ==========================================
-// TRANSACTIONS & INVOICING MODULE (DUAL-VIEW)
+// TRANSACTIONS & INVOICING MODULE (ENTERPRISE DUAL-VIEW)
 // ==========================================
 'use strict';
 
@@ -7,6 +7,8 @@ let allOrders = [];
 let allInvoices = [];
 let currentOrderFilter = 'ALL';
 let currentInvoiceFilter = 'ALL';
+let orderSearchQuery = '';
+let invoiceSearchQuery = '';
 
 function formatRupiah(num) {
     if (isNaN(num)) return 'Rp 0';
@@ -16,6 +18,26 @@ function formatRupiah(num) {
 function escapeHtml(str) {
     if (!str) return '';
     return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+function updateTransactionKPIs() {
+    const totalOrdersCount = allOrders.length;
+    const paidOrders = allOrders.filter(o => o.status === 'PAID');
+    const pendingOrders = allOrders.filter(o => !o.status || o.status === 'PENDING');
+    const totalRev = paidOrders.reduce((sum, o) => sum + Number(o.amount || o.price || 0), 0);
+
+    const unpaidInvoices = allInvoices.filter(i => i.status !== 'PAID');
+    const totalUnpaidInv = unpaidInvoices.reduce((sum, i) => sum + Number(i.amount || 0), 0);
+
+    const elTotal = document.getElementById('stat-trans-total-orders');
+    const elRev = document.getElementById('stat-trans-total-revenue');
+    const elPending = document.getElementById('stat-trans-pending-orders');
+    const elInv = document.getElementById('stat-trans-unpaid-invoices');
+
+    if (elTotal) elTotal.textContent = totalOrdersCount.toLocaleString('id-ID');
+    if (elRev) elRev.textContent = formatRupiah(totalRev);
+    if (elPending) elPending.textContent = pendingOrders.length.toLocaleString('id-ID');
+    if (elInv) elInv.textContent = formatRupiah(totalUnpaidInv);
 }
 
 // ─── 1. ORDERS / PESANAN ──────────────────────────────────
@@ -31,6 +53,7 @@ window.loadOrders = async function() {
         if (!res.ok) throw new Error('Gagal mengambil daftar pesanan');
         allOrders = await res.json();
         
+        updateTransactionKPIs();
         window.renderOrders();
     } catch (err) {
         console.error('Error loadOrders:', err);
@@ -39,13 +62,28 @@ window.loadOrders = async function() {
     }
 };
 
+window.filterOrdersBySearch = function(query) {
+    orderSearchQuery = (query || '').toLowerCase().trim();
+    window.renderOrders();
+};
+
 window.renderOrders = function() {
     const tableBody = document.getElementById('orders-table-body');
     const mobileCards = document.getElementById('orders-mobile-cards');
 
-    const filtered = currentOrderFilter === 'ALL'
+    let filtered = currentOrderFilter === 'ALL'
         ? allOrders
         : allOrders.filter(o => (o.status || 'PENDING').toUpperCase() === currentOrderFilter);
+
+    if (orderSearchQuery) {
+        filtered = filtered.filter(o => 
+            String(o.id).includes(orderSearchQuery) ||
+            (o.customer_name && o.customer_name.toLowerCase().includes(orderSearchQuery)) ||
+            (o.customer_phone && o.customer_phone.includes(orderSearchQuery)) ||
+            (o.product_name && o.product_name.toLowerCase().includes(orderSearchQuery)) ||
+            (o.item_name && o.item_name.toLowerCase().includes(orderSearchQuery))
+        );
+    }
 
     if (!filtered || filtered.length === 0) {
         const emptyMsg = '<div class="py-8 text-center text-xs text-[var(--text-muted)]">Tidak ada pesanan ditemukan.</div>';
@@ -133,7 +171,7 @@ window.renderOrders = function() {
                             <span>Chat</span>
                         </a>
                         ${order.status !== 'PAID' ? `
-                            <button onclick="updateOrderStatus(${order.id}, 'PAID')" class="px-3 py-1 rounded-lg bg-emerald-600 text-[var(--text-primary)] text-[11px] font-semibold shadow-sm">
+                            <button onclick="updateOrderStatus(${order.id}, 'PAID')" class="px-3 py-1 rounded-lg bg-emerald-600 text-white text-[11px] font-semibold shadow-sm">
                                 Tandai Lunas
                             </button>
                         ` : ''}
@@ -185,6 +223,7 @@ window.loadInvoices = async function() {
         if (!res.ok) throw new Error('Gagal mengambil daftar invoice');
         allInvoices = await res.json();
         
+        updateTransactionKPIs();
         window.renderInvoices();
     } catch (err) {
         console.error('Error loadInvoices:', err);
@@ -193,13 +232,27 @@ window.loadInvoices = async function() {
     }
 };
 
+window.filterInvoicesBySearch = function(query) {
+    invoiceSearchQuery = (query || '').toLowerCase().trim();
+    window.renderInvoices();
+};
+
 window.renderInvoices = function() {
     const tableBody = document.getElementById('invoices-table-body');
     const mobileCards = document.getElementById('invoices-mobile-cards');
 
-    const filtered = currentInvoiceFilter === 'ALL'
+    let filtered = currentInvoiceFilter === 'ALL'
         ? allInvoices
         : allInvoices.filter(i => (i.status || 'UNPAID').toUpperCase() === currentInvoiceFilter);
+
+    if (invoiceSearchQuery) {
+        filtered = filtered.filter(i => 
+            String(i.id).includes(invoiceSearchQuery) ||
+            (i.customer_name && i.customer_name.toLowerCase().includes(invoiceSearchQuery)) ||
+            (i.customer_phone && i.customer_phone.includes(invoiceSearchQuery)) ||
+            (i.description && i.description.toLowerCase().includes(invoiceSearchQuery))
+        );
+    }
 
     if (!filtered || filtered.length === 0) {
         const emptyMsg = '<div class="py-8 text-center text-xs text-[var(--text-muted)]">Tidak ada invoice ditemukan.</div>';
@@ -267,7 +320,7 @@ window.renderInvoices = function() {
                     </div>
                     ${inv.status !== 'PAID' ? `
                         <div class="mobile-entity-actions">
-                            <button onclick="updateInvoiceStatus(${inv.id}, 'PAID')" class="px-3 py-1 rounded-lg bg-emerald-600 text-[var(--text-primary)] text-[11px] font-semibold">
+                            <button onclick="updateInvoiceStatus(${inv.id}, 'PAID')" class="px-3 py-1 rounded-lg bg-emerald-600 text-white text-[11px] font-semibold">
                                 Set Lunas
                             </button>
                         </div>

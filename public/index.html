@@ -158,7 +158,42 @@
         <!-- ══════════════════════════════════════════════════════════════
              3. MAIN WORKBENCH VIEWPORT
              ══════════════════════════════════════════════════════════════ -->
+        
+        <!-- ══════════════════════════════════════════════════════════════
+             3. MAIN WORKBENCH VIEWPORT
+             ══════════════════════════════════════════════════════════════ -->
         <main class="main-content-wrapper flex-1 lg:ml-64 p-4 lg:p-6 pb-24 lg:pb-8 min-w-0">
+
+            <!-- Desktop Top Workbench Bar (>= 1024px) -->
+            <div class="hidden lg:flex items-center justify-between gap-4 pb-4 mb-5 border-b border-[var(--border-color)]">
+                <!-- Breadcrumb -->
+                <div>
+                    <div class="flex items-center gap-2 text-[11px] text-[var(--text-muted)] font-medium">
+                        <span>Jajan Digital</span>
+                        <i data-lucide="chevron-right" class="w-3 h-3 text-[var(--text-muted)]"></i>
+                        <span id="workbench-breadcrumb-cat">Operasional & AI</span>
+                        <i data-lucide="chevron-right" class="w-3 h-3 text-[var(--text-muted)]"></i>
+                        <span id="workbench-breadcrumb-title" class="text-[var(--text-primary)] font-bold">Live Monitor</span>
+                    </div>
+                </div>
+
+                <!-- Right Status Bar & Clock -->
+                <div class="flex items-center gap-3">
+                    <div class="flex items-center gap-1.5 px-3 py-1 rounded-xl bg-[var(--bg-subtle)] border border-[var(--border-color)] text-xs font-mono-num text-[var(--text-secondary)]">
+                        <i data-lucide="clock" class="w-3.5 h-3.5 text-indigo-400"></i>
+                        <span id="workbench-clock">Memuat waktu...</span>
+                    </div>
+                    <button onclick="window.openQuickLinksModal()" class="enterprise-btn enterprise-btn-secondary text-xs py-1 px-2.5" title="Buka Portal Publik (Ctrl+K)">
+                        <i data-lucide="link-2" class="w-3.5 h-3.5 text-sky-400"></i>
+                        <span>Portal Publik</span>
+                        <kbd class="ml-1 px-1.5 py-0.2 rounded bg-[var(--bg-card)] border border-[var(--border-color)] text-[9px] font-mono text-[var(--text-muted)]">Ctrl K</kbd>
+                    </button>
+                    <button onclick="toggleTheme()" class="p-1.5 rounded-xl bg-[var(--bg-subtle)] border border-[var(--border-color)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]" title="Ganti Tema">
+                        <i data-lucide="sun" class="w-4 h-4 theme-toggle-icon"></i>
+                    </button>
+                </div>
+            </div>
+
 
             <!-- ─── TAB 1: LIVE MONITOR ────────────────────────────────── -->
             <div id="tab-monitor" class="tab-content space-y-5">
@@ -525,6 +560,7 @@
                                     <input type="text" id="node-media" class="enterprise-input" placeholder="Qris.jpeg / banner.png">
                                 </div>
 
+                                
                                 <div id="node-sec-text" class="space-y-1">
                                     <div class="flex items-center justify-between">
                                         <label class="block text-[11px] font-semibold">Isi Balasan Teks</label>
@@ -537,15 +573,48 @@
                                     </div>
                                     <textarea id="node-text" rows="5" class="enterprise-input font-mono-num text-xs leading-relaxed" placeholder="Deskripsi paket, harga, cara order..."></textarea>
                                 </div>
+
+                                <!-- Live WhatsApp Preview Bubble -->
+                                <div class="p-3 rounded-xl bg-[var(--bg-card)] border border-[var(--border-color)] space-y-1.5">
+                                    <div class="flex items-center justify-between text-[10px] text-[var(--text-muted)] font-semibold uppercase tracking-wider">
+                                        <span class="flex items-center gap-1"><i data-lucide="eye" class="w-3 h-3 text-emerald-400"></i> Pratinjau Pesan WhatsApp</span>
+                                        <span class="font-mono">Chat Pelanggan</span>
+                                    </div>
+                                    <div class="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-xs text-[var(--text-primary)] leading-relaxed" id="node-wa-preview">
+                                        <p class="text-[var(--text-muted)] italic">Ketik isi balasan teks untuk melihat pratinjau pesan di sini...</p>
+                                    </div>
+                                </div>
+
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
 
+            
             <!-- ─── TAB 7: TRANSAKSI & KASIR ───────────────────────────── -->
             <div id="tab-transactions" class="tab-content hidden space-y-5">
-                <div class="flex items-center justify-between">
+                <!-- Summary KPI Cards -->
+                <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                    <div class="enterprise-card p-3.5">
+                        <p class="text-[10px] text-[var(--text-muted)] font-medium">Total Pesanan</p>
+                        <h4 id="stat-trans-total-orders" class="text-base font-bold font-mono-num mt-0.5">0</h4>
+                    </div>
+                    <div class="enterprise-card p-3.5">
+                        <p class="text-[10px] text-[var(--text-muted)] font-medium">Omset Lunas</p>
+                        <h4 id="stat-trans-total-revenue" class="text-base font-bold font-mono-num mt-0.5 text-emerald-400">Rp 0</h4>
+                    </div>
+                    <div class="enterprise-card p-3.5">
+                        <p class="text-[10px] text-[var(--text-muted)] font-medium">Pesanan Pending</p>
+                        <h4 id="stat-trans-pending-orders" class="text-base font-bold font-mono-num mt-0.5 text-amber-400">0</h4>
+                    </div>
+                    <div class="enterprise-card p-3.5">
+                        <p class="text-[10px] text-[var(--text-muted)] font-medium">Faktur Belum Lunas</p>
+                        <h4 id="stat-trans-unpaid-invoices" class="text-base font-bold font-mono-num mt-0.5 text-rose-400">Rp 0</h4>
+                    </div>
+                </div>
+
+                <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                     <div class="flex items-center gap-2 p-1 bg-[var(--bg-surface)] border border-[var(--border-color)] rounded-xl">
                         <button id="sub-tab-orders-btn" onclick="switchSubTab('transactions', 'orders')" class="subtab-btn active px-3.5 py-1.5 rounded-lg text-xs font-semibold">
                             Daftar Pesanan
@@ -555,11 +624,17 @@
                         </button>
                     </div>
 
-                    <button onclick="loadOrders(); loadInvoices();" class="enterprise-btn enterprise-btn-secondary text-xs">
-                        <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
-                        <span>Segarkan</span>
-                    </button>
+                    <div class="flex items-center gap-2 w-full sm:w-auto">
+                        <div class="w-full sm:w-56">
+                            <input type="text" id="trans-search-input" onkeyup="filterOrdersBySearch(this.value); filterInvoicesBySearch(this.value);" placeholder="Cari order/invoice..." class="enterprise-input text-xs py-1">
+                        </div>
+                        <button onclick="loadOrders(); loadInvoices();" class="enterprise-btn enterprise-btn-secondary text-xs">
+                            <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
+                            <span>Segarkan</span>
+                        </button>
+                    </div>
                 </div>
+
 
                 <!-- Panel Orders (Dual-View: Desktop Table + Mobile Cards) -->
                 <div id="panel-orders-container" class="space-y-4">
