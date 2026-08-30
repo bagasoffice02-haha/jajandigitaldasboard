@@ -1,209 +1,194 @@
-async function loadFiles() {
+// ==========================================
+// KNOWLEDGE BASE (RAG), AI MEMORY & NOTEPAD
+// ==========================================
+'use strict';
+
+function escapeHtml(str) {
+    if (!str) return '';
+    return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+// ─── 1. KNOWLEDGE BASE (RAG) FILES ────────────────────────
+window.loadFiles = async function() {
+    const container = document.getElementById('files-list');
+    if (!container) return;
+
     try {
         const res = await fetch('/api/files');
+        if (!res.ok) throw new Error('Gagal memuat berkas');
         const data = await res.json();
-        cachedFilesData = data;
         
-        renderFileList(knowledgeList, data.knowledge, 'knowledge');
-        renderFileList(mediaList, data[currentMediaCategory] || [], currentMediaCategory);
-    } catch (err) {
-        console.error('Gagal memuat berkas:', err);
-    }
-}
+        const files = data.knowledge || [];
+        container.innerHTML = '';
 
-function renderFileList(container, files, type) {
-    container.innerHTML = '';
-    
-    if (!files || files.length === 0) {
-        container.innerHTML = `<div class="file-item-placeholder">Tidak ada berkas di kategori ini.</div>`;
-        return;
-    }
-    
-    files.forEach(fileObj => {
-        const file = typeof fileObj === 'string' ? fileObj : (fileObj.name || '');
-        const fileUrl = typeof fileObj === 'object' && fileObj.url ? fileObj.url : (
-            type === 'knowledge' ? `/knowledge/${file}` : 
-            type === 'media' ? `/media/${file}` : 
-            `/uploads/${type}/${file}`
-        );
-        if (!file) return;
-
-        const item = document.createElement('div');
-        item.className = 'file-item';
-        item.style.alignItems = 'center';
-        
-        // Render thumbnail if image
-        const isImg = /\.(jpg|jpeg|png|webp|gif)$/i.test(file);
-        let thumbHtml = '';
-        if (isImg) {
-            thumbHtml = `<img src="${fileUrl}" style="width: 34px; height: 34px; object-fit: cover; border-radius: 6px; border: 1px solid rgba(255,255,255,0.15); margin-right: 8px; flex-shrink: 0;" alt="thumb">`;
+        if (files.length === 0) {
+            container.innerHTML = '<p class="text-center py-6 text-xs text-[var(--text-muted)]">Belum ada dokumen referensi RAG.</p>';
+            return;
         }
 
-        const nameSpan = document.createElement('div');
-        nameSpan.className = 'file-name';
-        nameSpan.style.display = 'flex';
-        nameSpan.style.alignItems = 'center';
-        nameSpan.style.flex = '1';
-        nameSpan.style.minWidth = '0';
-        nameSpan.innerHTML = `${thumbHtml}<span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${file}">${file}</span>`;
-        
-        const actionsDiv = document.createElement('div');
-        actionsDiv.className = 'file-actions';
-        actionsDiv.style.display = 'flex';
-        actionsDiv.style.gap = '5px';
-        actionsDiv.style.flexShrink = '0';
-        
-        const viewBtn = document.createElement('button');
-        viewBtn.className = 'btn btn-secondary btn-sm';
-        viewBtn.innerHTML = 'Lihat';
-        viewBtn.onclick = () => window.open(fileUrl, '_blank');
-        
-        const renameBtn = document.createElement('button');
-        renameBtn.className = 'btn btn-secondary btn-sm';
-        renameBtn.innerHTML = 'Rename';
-        renameBtn.onclick = () => renameFile(type, file);
-        
-        const deleteBtn = document.createElement('button');
-        deleteBtn.className = 'btn btn-danger btn-sm';
-        deleteBtn.textContent = 'Hapus';
-        deleteBtn.onclick = () => deleteFile(type, file);
-        
-        actionsDiv.appendChild(viewBtn);
-        if (type === 'media' || type === 'knowledge') actionsDiv.appendChild(renameBtn);
-        actionsDiv.appendChild(deleteBtn);
-        
-        item.appendChild(nameSpan);
-        item.appendChild(actionsDiv);
-        container.appendChild(item);
-    });
-}
+        files.forEach(fileObj => {
+            const fileName = typeof fileObj === 'string' ? fileObj : (fileObj.name || '');
+            if (!fileName) return;
+            const fileUrl = `/knowledge/${fileName}`;
 
-async function renameFile(type, filename) {
-    const newName = prompt(`Masukkan nama baru untuk berkas "${filename}":`, filename);
-    if (!newName || newName.trim() === '' || newName.trim() === filename) return;
-    
-    try {
-        const res = await fetch('/api/files/rename', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ type, oldFilename: filename, newFilename: newName.trim() })
+            const item = document.createElement('div');
+            item.className = 'p-3 rounded-xl bg-[var(--bg-subtle)] border border-[var(--border-color)] flex items-center justify-between gap-3 text-xs';
+            item.innerHTML = `
+                <div class="flex items-center gap-2.5 min-w-0">
+                    <div class="w-7 h-7 rounded-lg bg-indigo-500/10 text-indigo-400 flex items-center justify-center shrink-0">
+                        <i data-lucide="file-text" class="w-3.5 h-3.5"></i>
+                    </div>
+                    <span class="font-medium truncate max-w-[200px] text-white" title="${escapeHtml(fileName)}">${escapeHtml(fileName)}</span>
+                </div>
+                <div class="flex items-center gap-1.5 shrink-0">
+                    <a href="${fileUrl}" target="_blank" class="px-2 py-1 rounded-lg bg-white/5 hover:bg-white/10 text-slate-300 text-[11px] font-semibold border border-[var(--border-color)]">
+                        Buka
+                    </a>
+                    <button onclick="deleteFile('knowledge', '${escapeHtml(fileName)}')" class="p-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/20">
+                        <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                    </button>
+                </div>
+            `;
+            container.appendChild(item);
         });
-        
-        if (res.ok) {
-            alert('Nama berkas berhasil diubah!');
-            loadFiles();
-        } else {
-            alert('Gagal mengubah nama berkas: ' + await res.text());
-        }
+
+        if (window.lucide) lucide.createIcons();
     } catch(err) {
-        alert('Gagal mengubah nama berkas: ' + err.message);
+        console.error('Error loadFiles:', err);
+        if (container) container.innerHTML = `<p class="text-center py-4 text-xs text-rose-400">Gagal: ${err.message}</p>`;
     }
-}
+};
 
-function setupUploadHandlers() {
-    knowledgeUpload.addEventListener('change', () => handleFileUpload(knowledgeUpload, 'knowledge'));
-    mediaUpload.addEventListener('change', () => handleFileUpload(mediaUpload, currentMediaCategory));
-}
+window.uploadFile = async function() {
+    const input = document.getElementById('file-upload-input');
+    if (!input || !input.files || input.files.length === 0) return;
 
-async function handleFileUpload(inputElement, type) {
-    const file = inputElement.files[0];
-    if (!file) return;
-    
+    const file = input.files[0];
     const formData = new FormData();
     formData.append('file', file);
-    
+
+    if (window.showToast) window.showToast('info', `Mengunggah ${file.name}...`);
+
     try {
-        const res = await fetch(`/api/upload/${type}`, {
+        const res = await fetch('/api/upload/knowledge', {
             method: 'POST',
             body: formData
         });
-        
+
         if (res.ok) {
-            alert(`File ${file.name} berhasil diunggah.`);
-            loadFiles();
+            if (window.showToast) window.showToast('success', `Berkas ${file.name} berhasil diunggah!`);
+            window.loadFiles();
         } else {
-            const errText = await res.text();
-            alert(`Gagal mengunggah: ${errText}`);
+            throw new Error(await res.text());
         }
     } catch (err) {
-        console.error('Kesalahan unggah:', err);
-        alert('Gagal mengunggah karena gangguan koneksi.');
+        if (window.showToast) window.showToast('error', 'Gagal mengunggah berkas: ' + err.message);
     } finally {
-        inputElement.value = '';
+        input.value = '';
     }
-}
+};
 
-async function deleteFile(type, filename) {
+window.deleteFile = async function(type, filename) {
     if (!confirm(`Apakah Anda yakin ingin menghapus berkas "${filename}"?`)) return;
-    
+
     try {
         const res = await fetch('/api/files/delete', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ type, filename })
         });
-        
+
         if (res.ok) {
-            loadFiles();
+            if (window.showToast) window.showToast('success', 'Berkas berhasil dihapus.');
+            window.loadFiles();
         } else {
-            alert('Gagal menghapus berkas.');
+            throw new Error(await res.text());
         }
     } catch (err) {
-        console.error('Kesalahan hapus berkas:', err);
+        if (window.showToast) window.showToast('error', 'Gagal menghapus berkas: ' + err.message);
     }
-}
+};
 
+// ─── 2. AI MEMORY & SYSTEM PROMPT ─────────────────────────
+window.loadMemoryContent = async function() {
+    const textarea = document.getElementById('ai-memory-text');
+    if (!textarea) return;
+
+    try {
+        const res = await fetch('/api/memory');
+        if (res.ok) {
+            const data = await res.json();
+            textarea.value = data.content || '';
+        }
+    } catch (err) {
+        console.error('Error loadMemoryContent:', err);
+    }
+};
+
+window.saveMemoryContent = async function() {
+    const textarea = document.getElementById('ai-memory-text');
+    if (!textarea) return;
+
+    const content = textarea.value;
+    try {
+        const res = await fetch('/api/memory', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ content })
+        });
+
+        if (res.ok) {
+            if (window.showToast) window.showToast('success', 'System Prompt & Kepribadian AI berhasil disimpan!');
+        } else {
+            throw new Error(await res.text());
+        }
+    } catch (err) {
+        if (window.showToast) window.showToast('error', 'Gagal menyimpan memori AI: ' + err.message);
+    }
+};
+
+// ─── 3. NOTEPAD SINKRON ───────────────────────────────────
 window.loadLocalNotes = async function() {
-    const editor = document.getElementById('local-notepad-editor');
-    if (!editor) return;
-    
+    const textarea = document.getElementById('local-notepad-input');
+    if (!textarea) return;
+
     try {
         const res = await fetch('/api/notepad');
-        if (!res.ok) throw new Error('Gagal mengambil data catatan.');
-        const data = await res.json();
-        editor.innerHTML = data.content || '<p>Mulai ketik catatan operasional atau memo toko Anda di sini...</p>';
-    } catch(err) {
+        if (res.ok) {
+            const data = await res.json();
+            textarea.value = data.content || '';
+        }
+    } catch (err) {
         console.error('Error loadLocalNotes:', err);
     }
 };
 
 window.saveLocalNotes = async function() {
-    const editor = document.getElementById('local-notepad-editor');
-    const btn = document.getElementById('btn-save-notes');
-    if (!editor || !btn) return;
-    
-    const content = editor.innerHTML.trim();
-    const oldHtml = btn.innerHTML;
-    
-    btn.disabled = true;
-    btn.innerHTML = '<span class="loader" style="width:12px; height:12px; border-width:2px; display:inline-block; vertical-align:middle; margin-right:6px;"></span> Menyimpan...';
-    
+    const textarea = document.getElementById('local-notepad-input');
+    if (!textarea) return;
+
+    const content = textarea.value;
     try {
         const res = await fetch('/api/notepad', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ content })
         });
-        
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error || 'Server error');
-        
-        alert('✅ Catatan berhasil disimpan ke database!');
-    } catch(err) {
-        alert('❌ Gagal menyimpan catatan: ' + err.message);
-    } finally {
-        btn.disabled = false;
-        btn.innerHTML = oldHtml;
+
+        if (res.ok) {
+            if (window.showToast) window.showToast('success', 'Catatan operasional berhasil disimpan!');
+        } else {
+            throw new Error(await res.text());
+        }
+    } catch (err) {
+        if (window.showToast) window.showToast('error', 'Gagal menyimpan catatan: ' + err.message);
     }
 };
 
-
-// Expose functions to window for HTML onclick compatibility
-window.loadFiles = loadFiles;
-window.renderFileList = renderFileList;
-window.renameFile = renameFile;
-window.setupUploadHandlers = setupUploadHandlers;
-window.handleFileUpload = handleFileUpload;
-window.deleteFile = deleteFile;
+document.addEventListener('DOMContentLoaded', () => {
+    setTimeout(() => {
+        if (window.loadFiles) window.loadFiles();
+        if (window.loadMemoryContent) window.loadMemoryContent();
+        if (window.loadLocalNotes) window.loadLocalNotes();
+    }, 500);
+});
