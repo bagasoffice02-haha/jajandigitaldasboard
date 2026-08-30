@@ -100,10 +100,9 @@ async function checkAndProcessGuards(msg, {
         }
     }
 
-    console.log(`[Guard] boss="${bossDigits}" lid="${bossLid}" | contact="${contactDigits}" sender="${senderPartDigits}" | isBoss=${!!isSenderBoss}`);
+    console.log(`[Guard] boss="${bossDigits}" lid="${bossLid}" | contact="${contactDigits}" sender="${senderPartDigits}" | isBoss=${!!isSenderBoss} | fromMe=${!!msg.fromMe}`);
 
-    // Tidak ada cek async getChatById/Puppeteer — langsung pakai hasil di atas
-    const isSenderHostAdmin = !!isSenderBoss;
+    const isSenderHostAdmin = Boolean(isSenderBoss || msg.fromMe);
 
     // Touch customer to update last interaction time
     if (!isSenderHostAdmin && senderId !== 'status@broadcast' && !msg.fromMe) {
@@ -148,4 +147,4 @@ async function checkAndProcessGuards(msg, {
     return { shouldIgnore: false, isSenderHostAdmin, isSenderBoss };
 }
 
-module.exports = { checkAndProcessGuards };
+module.exports = { checkAndProcessGuards, isSenderGroupAdminHelper };

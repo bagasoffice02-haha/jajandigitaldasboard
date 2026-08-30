@@ -4,26 +4,35 @@ const fs = require('fs');
 const { getDb } = require('../db/sqlite');
 const { saveGroupConfig } = require('../db/models');
 const { setMessagesAdminsOnlyHelper } = require('../services/whatsapp/client');
+const { isSenderGroupAdminHelper } = require('./guardHandler');
 
 async function handleAdminCommandMessage(msg, {
     senderId, userMessage, textLower, isSenderHostAdmin, isGroup, shopData,
     clientInstance, ioInstance, setMessagesAdminsOnly, gConfigs, groupId
 }) {
-    if (!isSenderHostAdmin) return false;
     const cmd = userMessage.toLowerCase().trim();
     const isBareDone = cmd === 'done' || cmd.startsWith('done ');
     if (!userMessage.startsWith('!') && !userMessage.startsWith('.') && !isBareDone) return false;
 
-    if (cmd === '.id') {
+    // Cek otorisasi admin (Boss number, msg.fromMe, atau admin di grup)
+    let isAuthorized = Boolean(isSenderHostAdmin || msg.fromMe);
+    if (!isAuthorized && isGroup) {
+        try {
+            isAuthorized = await isSenderGroupAdminHelper(clientInstance, groupId, senderId);
+        } catch(_) {}
+    }
+    if (!isAuthorized) return false;
+
+    if (cmd === '.id' || cmd === '!id') {
         if (!isGroup) {
-            await msg.reply(`📌 *ID Grup WA ini:* \`${groupId}\``);
+            await msg.reply(`📌 *ID Chat ini:* \`${groupId || senderId}\``);
             return true;
         }
         await msg.reply(`📌 *ID Grup WA ini:* \`${groupId}\``);
         return true;
     }
 
-    if (cmd.startsWith('.resetpass')) {
+    if (cmd.startsWith('.resetpass') || cmd.startsWith('!resetpass')) {
         const parts = userMessage.trim().split(/\s+/);
         const newPass = parts[1];
         if (!newPass || newPass.length < 6) {
@@ -40,9 +49,10 @@ async function handleAdminCommandMessage(msg, {
         return true;
     }
 
-    if (cmd === '.buka' || cmd === '!toko buka') {
+    const isBukaCmd = cmd === '.buka' || cmd === '!toko buka' || cmd === '!buka' || cmd === '.open' || cmd === '!open';
+    if (isBukaCmd) {
         if (!isGroup) {
-            await msg.reply("❌ Perintah ini hanya dapat digunakan di dalam grup.");
+            await msg.reply("❌ Perintah ini hanya dapat digunakan di dalam grup WhatsApp.");
             return true;
         }
         try {
@@ -66,9 +76,10 @@ async function handleAdminCommandMessage(msg, {
         return true;
     }
 
-    if (cmd === '.tutup' || cmd === '!toko tutup') {
+    const isTutupCmd = cmd === '.tutup' || cmd === '!toko tutup' || cmd === '!tutup' || cmd === '.close' || cmd === '!close';
+    if (isTutupCmd) {
         if (!isGroup) {
-            await msg.reply("❌ Perintah ini hanya dapat digunakan di dalam grup.");
+            await msg.reply("❌ Perintah ini hanya dapat digunakan di dalam grup WhatsApp.");
             return true;
         }
         try {

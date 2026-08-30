@@ -39,10 +39,22 @@ window.switchMonitorStudioMode = function(mode) {
         if (logsBtn) {
             logsBtn.className = 'px-3 py-1 text-xs font-semibold rounded-lg text-[var(--text-muted)] hover:text-[var(--text-primary)] flex items-center gap-1.5 transition-all';
         }
-        if (chatControls) chatControls.classList.remove('hidden');
-        if (logsControls) logsControls.classList.add('hidden');
-        if (chatPane) chatPane.classList.remove('hidden');
-        if (logsPane) logsPane.classList.add('hidden');
+        if (chatControls) {
+            chatControls.classList.remove('hidden');
+            chatControls.style.display = 'flex';
+        }
+        if (logsControls) {
+            logsControls.classList.add('hidden');
+            logsControls.style.display = 'none';
+        }
+        if (chatPane) {
+            chatPane.classList.remove('hidden');
+            chatPane.style.display = 'flex';
+        }
+        if (logsPane) {
+            logsPane.classList.add('hidden');
+            logsPane.style.display = 'none';
+        }
     } else {
         if (logsBtn) {
             logsBtn.className = 'px-3 py-1 text-xs font-bold rounded-lg bg-[var(--bg-surface)] text-[var(--text-primary)] shadow-sm flex items-center gap-1.5 transition-all';
@@ -50,10 +62,23 @@ window.switchMonitorStudioMode = function(mode) {
         if (chatBtn) {
             chatBtn.className = 'px-3 py-1 text-xs font-semibold rounded-lg text-[var(--text-muted)] hover:text-[var(--text-primary)] flex items-center gap-1.5 transition-all';
         }
-        if (logsControls) logsControls.classList.remove('hidden');
-        if (chatControls) chatControls.classList.add('hidden');
-        if (logsPane) logsPane.classList.remove('hidden');
-        if (chatPane) chatPane.classList.add('hidden');
+        if (logsControls) {
+            logsControls.classList.remove('hidden');
+            logsControls.style.display = 'flex';
+        }
+        if (chatControls) {
+            chatControls.classList.add('hidden');
+            chatControls.style.display = 'none';
+        }
+        if (logsPane) {
+            logsPane.classList.remove('hidden');
+            logsPane.style.display = 'flex';
+            window.fetchInitialSystemLogs();
+        }
+        if (chatPane) {
+            chatPane.classList.add('hidden');
+            chatPane.style.display = 'none';
+        }
     }
 
     if (window.lucide) lucide.createIcons();
