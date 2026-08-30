@@ -1,11 +1,450 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="id" data-theme="dark">
 <head>
     <meta charset="UTF-8">
-    <meta http-equiv="refresh" content="0;url=/u">
-    <title>Mengalihkan ke Halaman Upload... — Jajan Digital</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Portal Pembayaran QRIS & Bukti Transfer — Jajan Digital</title>
+
+    <!-- Open Graph Meta Tags -->
+    <meta property="og:site_name" content="Jajan Digital" />
+    <meta property="og:title" content="Pembayaran QRIS & Transfer — Jajan Digital" />
+    <meta property="og:description" content="Scan QRIS resmi atau unggah bukti transfer pembayaran Anda dengan aman dan cepat." />
+    <meta property="og:image" content="${fullImageUrl}" />
+    <meta property="og:image:secure_url" content="${fullImageUrl}" />
+    <meta property="og:image:type" content="${mimeType}" />
+    <meta property="og:image:width" content="600" />
+    <meta property="og:image:height" content="600" />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="${pageUrl}" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:image" content="${fullImageUrl}" />
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: ['class', '[data-theme="dark"]'],
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            500: '#6366f1',
+                            600: '#4f46e5',
+                            700: '#4338ca'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Google Fonts & Lucide Icons -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <style>
+        :root, [data-theme="dark"] {
+            --bg-main: #0a0e17;
+            --bg-surface: #111827;
+            --bg-subtle: #1c263c;
+            --bg-card: #151d30;
+            --bg-input: #0a0e17;
+            --border-color: rgba(255, 255, 255, 0.09);
+            --border-hover: rgba(255, 255, 255, 0.2);
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --brand-primary: #6366f1;
+        }
+        [data-theme="light"] {
+            --bg-main: #f8fafc;
+            --bg-surface: #ffffff;
+            --bg-subtle: #f1f5f9;
+            --bg-card: #ffffff;
+            --bg-input: #ffffff;
+            --border-color: #e2e8f0;
+            --border-hover: #cbd5e1;
+            --text-primary: #0f172a;
+            --text-secondary: #334155;
+            --text-muted: #64748b;
+            --brand-primary: #4f46e5;
+        }
+        body {
+            font-family: 'Plus Jakarta Sans', -apple-system, sans-serif;
+            background-color: var(--bg-main);
+            color: var(--text-primary);
+            min-height: 100vh;
+        }
+        .font-mono-num {
+            font-family: 'JetBrains Mono', monospace;
+            font-variant-numeric: tabular-nums;
+        }
+        .portal-card {
+            background-color: var(--bg-surface);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.15);
+        }
+        .portal-tab-btn {
+            padding: 8px 14px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            border-radius: 10px;
+            color: var(--text-muted);
+            transition: all 0.15s ease;
+        }
+        .portal-tab-btn.active {
+            background-color: var(--bg-surface);
+            color: var(--text-primary);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .copy-pill {
+            background: var(--bg-subtle);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            transition: all 0.15s ease;
+        }
+        .copy-pill:hover {
+            border-color: var(--border-hover);
+        }
+    </style>
 </head>
-<body style="background:#070c19; color:white; font-family:sans-serif; display:flex; align-items:center; justify-content:center; height:100vh;">
-    <script>window.location.href = '/u';</script>
+<body class="flex flex-col items-center justify-center p-3 sm:p-6 transition-colors duration-200">
+
+    <div class="w-full max-w-md mx-auto space-y-4">
+        
+        <!-- Header Brand & Theme Switcher -->
+        <header class="flex items-center justify-between px-1">
+            <div class="flex items-center gap-2.5">
+                <div class="w-9 h-9 rounded-xl bg-indigo-600 text-white flex items-center justify-center font-extrabold text-sm shadow-sm">
+                    JD
+                </div>
+                <div>
+                    <h1 class="text-sm font-bold text-[var(--text-primary)] leading-tight">Jajan Digital</h1>
+                    <p class="text-[10px] text-[var(--text-muted)] font-medium">Portal Pembayaran & Verifikasi</p>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-1.5">
+                <button onclick="togglePortalTheme()" class="p-2 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-color)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] shadow-sm" title="Ganti Tema">
+                    <i data-lucide="sun" id="theme-icon" class="w-4 h-4"></i>
+                </button>
+            </div>
+        </header>
+
+        <!-- Trust Verified Badge -->
+        <div class="flex items-center justify-between px-3 py-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-xs">
+            <div class="flex items-center gap-2 text-emerald-400 font-semibold text-[11px]">
+                <i data-lucide="shield-check" class="w-4 h-4 shrink-0"></i>
+                <span>Merchant Resmi Terverifikasi</span>
+            </div>
+            <span class="text-[10px] text-emerald-400 font-mono-num font-bold">QRIS Standar BI</span>
+        </div>
+
+        <!-- Dual Tab Switcher -->
+        <div class="p-1 bg-[var(--bg-subtle)] border border-[var(--border-color)] rounded-xl flex items-center gap-1">
+            <button id="tab-btn-qris" onclick="switchPortalTab('qris')" class="portal-tab-btn flex-1 flex items-center justify-center gap-2 active">
+                <i data-lucide="qr-code" class="w-4 h-4 text-indigo-400"></i>
+                <span>Scan QRIS & Rek</span>
+            </button>
+            <button id="tab-btn-upload" onclick="switchPortalTab('upload')" class="portal-tab-btn flex-1 flex items-center justify-center gap-2">
+                <i data-lucide="upload-cloud" class="w-4 h-4 text-emerald-400"></i>
+                <span>Unggah Bukti</span>
+            </button>
+        </div>
+
+        <!-- ═══════════════════════════════════════════════════════════
+             TAB 1: QRIS CODE & REKENING PEMBAYARAN
+             ═══════════════════════════════════════════════════════════ -->
+        <main id="portal-view-qris" class="portal-card p-4 sm:p-5 space-y-4">
+            <!-- QRIS Image Box -->
+            <div class="text-center space-y-3">
+                <div class="relative group inline-block bg-white p-3 rounded-2xl border border-[var(--border-color)] shadow-sm max-w-[280px] w-full mx-auto">
+                    <img id="qris-image" src="${rawImageUrl}" alt="QRIS Jajan Digital" class="w-full h-auto object-contain rounded-lg mx-auto" onerror="this.onerror=null; this.src='/favicon.ico';">
+                    <div class="absolute inset-0 bg-black/40 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                        <a href="${rawImageUrl}" download="QRIS_JajanDigital.jpeg" class="px-3 py-1.5 rounded-lg bg-indigo-600 text-white text-xs font-semibold shadow flex items-center gap-1">
+                            <i data-lucide="download" class="w-3.5 h-3.5"></i> Unduh
+                        </a>
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-center gap-2">
+                    <a href="${rawImageUrl}" download="QRIS_JajanDigital.jpeg" class="px-3 py-1.5 rounded-xl bg-[var(--bg-subtle)] border border-[var(--border-color)] text-xs font-semibold text-[var(--text-primary)] hover:bg-[var(--bg-surface)] flex items-center gap-1.5 shadow-sm">
+                        <i data-lucide="download" class="w-3.5 h-3.5 text-indigo-400"></i>
+                        <span>Unduh Gambar QRIS</span>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Transaction Stats Counter -->
+            <div class="p-3 rounded-xl bg-[var(--bg-subtle)] border border-[var(--border-color)] flex items-center justify-between text-xs font-mono-num">
+                <span class="text-[var(--text-muted)] flex items-center gap-1.5">
+                    <i data-lucide="zap" class="w-3.5 h-3.5 text-amber-400"></i>
+                    <span>Status Transaksi</span>
+                </span>
+                <span class="text-emerald-400 font-bold">${formattedTxCount} Transaksi Sukses</span>
+            </div>
+
+            <!-- Manual Bank Accounts & E-Wallet -->
+            <div class="space-y-2 pt-1">
+                <h3 class="text-xs font-bold uppercase tracking-wider text-[var(--text-muted)]">Atau Transfer Manual / E-Wallet:</h3>
+                
+                <!-- Dana -->
+                <div class="copy-pill p-3 flex items-center justify-between text-xs">
+                    <div class="flex items-center gap-2.5">
+                        <div class="w-7 h-7 rounded-lg bg-sky-500/10 text-sky-400 flex items-center justify-center font-bold text-[10px]">
+                            DANA
+                        </div>
+                        <div>
+                            <span class="font-bold text-[var(--text-primary)] font-mono-num">0812-3456-7890</span>
+                            <p class="text-[10px] text-[var(--text-muted)]">A/N Jajan Digital</p>
+                        </div>
+                    </div>
+                    <button onclick="copyNumber('081234567890', 'Nomor DANA')" class="p-1.5 rounded-lg bg-[var(--bg-card)] border border-[var(--border-color)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]" title="Salin Nomor">
+                        <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+                    </button>
+                </div>
+
+                <!-- GoPay / OVO / ShopeePay -->
+                <div class="copy-pill p-3 flex items-center justify-between text-xs">
+                    <div class="flex items-center gap-2.5">
+                        <div class="w-7 h-7 rounded-lg bg-emerald-500/10 text-emerald-400 flex items-center justify-center font-bold text-[10px]">
+                            GOPAY
+                        </div>
+                        <div>
+                            <span class="font-bold text-[var(--text-primary)] font-mono-num">0812-3456-7890</span>
+                            <p class="text-[10px] text-[var(--text-muted)]">A/N Jajan Digital</p>
+                        </div>
+                    </div>
+                    <button onclick="copyNumber('081234567890', 'Nomor GoPay')" class="p-1.5 rounded-lg bg-[var(--bg-card)] border border-[var(--border-color)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]" title="Salin Nomor">
+                        <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- CTA to Upload -->
+            <div class="pt-2 border-t border-[var(--border-color)]">
+                <button onclick="switchPortalTab('upload')" class="w-full py-2.5 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold shadow flex items-center justify-center gap-2 transition-all">
+                    <span>Sudah Bayar? Unggah Bukti Sekarang</span>
+                    <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                </button>
+            </div>
+        </main>
+
+        <!-- ═══════════════════════════════════════════════════════════
+             TAB 2: UNGGAH BUKTI PEMBAYARAN
+             ═══════════════════════════════════════════════════════════ -->
+        <main id="portal-view-upload" class="portal-card p-4 sm:p-5 space-y-4" style="display: none;">
+            <div class="pb-2 border-b border-[var(--border-color)]">
+                <h2 class="text-xs font-bold uppercase tracking-wider text-[var(--text-primary)] flex items-center gap-2">
+                    <i data-lucide="upload" class="w-4 h-4 text-emerald-400"></i>
+                    Kirim Bukti Pembayaran
+                </h2>
+                <p class="text-[11px] text-[var(--text-muted)] mt-0.5">Unggah foto struk/screenshot transfer Anda untuk diverifikasi bot & admin</p>
+            </div>
+
+            <!-- Upload Drop Area -->
+            <div id="drop-zone" onclick="document.getElementById('file-input').click()" class="border-2 border-dashed border-[var(--border-color)] hover:border-indigo-500/50 rounded-2xl p-5 text-center bg-[var(--bg-subtle)] cursor-pointer transition-all space-y-2">
+                <input type="file" id="file-input" accept="image/*" class="hidden" onchange="previewSelectedFile()">
+                <div id="upload-idle-state" class="space-y-1.5">
+                    <div class="w-10 h-10 rounded-full bg-indigo-500/10 text-indigo-400 flex items-center justify-center mx-auto">
+                        <i data-lucide="image-plus" class="w-5 h-5"></i>
+                    </div>
+                    <p class="text-xs font-semibold text-[var(--text-primary)]">Pilih atau Ambil Foto Bukti Transfer</p>
+                    <p class="text-[10px] text-[var(--text-muted)]">Mendukung format JPG, PNG, WEBP (Maksimal 10MB)</p>
+                </div>
+                <!-- Thumbnail Preview Container -->
+                <div id="upload-preview-container" class="hidden space-y-2">
+                    <img id="preview-img" src="" alt="Bukti Transfer" class="max-h-48 mx-auto rounded-xl object-contain shadow-sm border border-[var(--border-color)]">
+                    <p id="preview-filename" class="text-[11px] text-indigo-400 font-mono-num font-semibold"></p>
+                </div>
+            </div>
+
+            <!-- Form Optional Details -->
+            <div class="space-y-3 text-xs">
+                <div>
+                    <label class="block font-semibold mb-1 text-[var(--text-secondary)]">Nomor WhatsApp Pelanggan</label>
+                    <input type="text" id="cust-phone-input" placeholder="081234567890" class="w-full px-3 py-2 rounded-xl bg-[var(--bg-input)] border border-[var(--border-color)] text-[var(--text-primary)] font-mono-num text-xs outline-none focus:border-indigo-500">
+                </div>
+                <div>
+                    <label class="block font-semibold mb-1 text-[var(--text-secondary)]">Catatan / Produk yang Dipesan</label>
+                    <input type="text" id="cust-note-input" placeholder="Contoh: Akun CapCut 1 Bulan" class="w-full px-3 py-2 rounded-xl bg-[var(--bg-input)] border border-[var(--border-color)] text-[var(--text-primary)] text-xs outline-none focus:border-indigo-500">
+                </div>
+            </div>
+
+            <!-- Submit Button & Result -->
+            <div class="pt-2 border-t border-[var(--border-color)] space-y-3">
+                <button id="upload-btn" onclick="submitPaymentProof()" class="w-full py-2.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow flex items-center justify-center gap-2 transition-all">
+                    <i data-lucide="send" class="w-4 h-4"></i>
+                    <span>Kirim Bukti Pembayaran</span>
+                </button>
+
+                <!-- Success Box -->
+                <div id="upload-success-box" class="hidden p-3.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-xs space-y-2">
+                    <div class="flex items-center gap-2 text-emerald-400 font-bold">
+                        <i data-lucide="check-circle-2" class="w-4 h-4"></i>
+                        <span>Bukti Pembayaran Berhasil Diunggah!</span>
+                    </div>
+                    <div class="p-2 rounded-lg bg-[var(--bg-surface)] border border-[var(--border-color)] flex items-center justify-between gap-2">
+                        <input type="text" id="proof-link-input" readonly class="bg-transparent font-mono-num text-[11px] text-indigo-400 w-full outline-none">
+                        <button onclick="copyProofLink()" class="p-1 rounded text-[var(--text-muted)] hover:text-[var(--text-primary)]" title="Salin Tautan">
+                            <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+                        </button>
+                    </div>
+                    <a id="wa-confirm-btn" href="#" target="_blank" class="w-full py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold flex items-center justify-center gap-1.5 shadow-sm">
+                        <i data-lucide="message-circle" class="w-3.5 h-3.5"></i>
+                        <span>Konfirmasi ke Admin via WhatsApp</span>
+                    </a>
+                </div>
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <footer class="text-center text-[10px] text-[var(--text-muted)] pt-2 space-y-1">
+            <p>© 2026 Jajan Digital. Aman, Cepat, dan Terpercaya.</p>
+        </footer>
+
+    </div>
+
+    <!-- Script Logic -->
+    <script>
+        let selectedFile = null;
+
+        function initTheme() {
+            const saved = localStorage.getItem('portal_theme') || 'dark';
+            setTheme(saved);
+        }
+
+        function setTheme(t) {
+            document.documentElement.setAttribute('data-theme', t);
+            localStorage.setItem('portal_theme', t);
+            const icon = document.getElementById('theme-icon');
+            if (icon) icon.setAttribute('data-lucide', t === 'light' ? 'moon' : 'sun');
+            if (window.lucide) lucide.createIcons();
+        }
+
+        function togglePortalTheme() {
+            const cur = document.documentElement.getAttribute('data-theme') || 'dark';
+            setTheme(cur === 'light' ? 'dark' : 'light');
+        }
+
+        function switchPortalTab(tab) {
+            const qrisView = document.getElementById('portal-view-qris');
+            const uploadView = document.getElementById('portal-view-upload');
+            const btnQris = document.getElementById('tab-btn-qris');
+            const btnUpload = document.getElementById('tab-btn-upload');
+
+            if (tab === 'qris') {
+                if (qrisView) qrisView.style.display = 'block';
+                if (uploadView) uploadView.style.display = 'none';
+                if (btnQris) btnQris.classList.add('active');
+                if (btnUpload) btnUpload.classList.remove('active');
+            } else {
+                if (qrisView) qrisView.style.display = 'none';
+                if (uploadView) uploadView.style.display = 'block';
+                if (btnQris) btnQris.classList.remove('active');
+                if (btnUpload) btnUpload.classList.add('active');
+            }
+            if (window.lucide) lucide.createIcons();
+        }
+
+        function copyNumber(num, label) {
+            navigator.clipboard.writeText(num).then(() => {
+                alert(`✓ ${label} (${num}) berhasil disalin!`);
+            }).catch(() => {
+                prompt('Salin nomor:', num);
+            });
+        }
+
+        function previewSelectedFile() {
+            const input = document.getElementById('file-input');
+            if (!input.files || input.files.length === 0) return;
+
+            selectedFile = input.files[0];
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const idle = document.getElementById('upload-idle-state');
+                const prevCont = document.getElementById('upload-preview-container');
+                const img = document.getElementById('preview-img');
+                const fn = document.getElementById('preview-filename');
+
+                if (idle) idle.classList.add('hidden');
+                if (prevCont) prevCont.classList.remove('hidden');
+                if (img) img.src = e.target.result;
+                if (fn) fn.textContent = selectedFile.name;
+            };
+            reader.readAsDataURL(selectedFile);
+        }
+
+        async function submitPaymentProof() {
+            if (!selectedFile) {
+                alert('Pilih foto bukti transfer terlebih dahulu!');
+                return;
+            }
+
+            const btn = document.getElementById('upload-btn');
+            const originalHtml = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<span class="animate-spin inline-block mr-2">⟳</span> Mengunggah...';
+
+            const phone = document.getElementById('cust-phone-input').value.trim();
+            const note = document.getElementById('cust-note-input').value.trim();
+
+            const formData = new FormData();
+            formData.append('file', selectedFile);
+            if (phone) formData.append('phone', phone);
+            if (note) formData.append('note', note);
+
+            try {
+                const res = await fetch('/api/upload-bukti', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await res.json();
+
+                if (data.success) {
+                    const successBox = document.getElementById('upload-success-box');
+                    const linkInput = document.getElementById('proof-link-input');
+                    const waBtn = document.getElementById('wa-confirm-btn');
+
+                    if (successBox) successBox.classList.remove('hidden');
+                    if (linkInput) linkInput.value = data.fullUrl || (window.location.origin + data.url);
+
+                    const cleanPhone = phone.replace(/\D/g, '');
+                    const waMsg = encodeURIComponent(`Halo Admin, saya sudah transfer untuk pesanan: ${note || 'Produk'}\n\nBukti Transfer: ${data.fullUrl || (window.location.origin + data.url)}`);
+                    if (waBtn) waBtn.href = `https://wa.me/?text=${waMsg}`;
+
+                    btn.classList.add('hidden');
+                } else {
+                    alert('Gagal mengunggah: ' + (data.error || 'Terjadi kesalahan'));
+                }
+            } catch(e) {
+                alert('Kesalahan koneksi: ' + e.message);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = originalHtml;
+                if (window.lucide) lucide.createIcons();
+            }
+        }
+
+        function copyProofLink() {
+            const inp = document.getElementById('proof-link-input');
+            if (!inp || !inp.value) return;
+            navigator.clipboard.writeText(inp.value).then(() => {
+                alert('Tautan bukti transfer disalin!');
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            initTheme();
+            const urlParams = new URLSearchParams(window.location.search);
+            if (window.location.pathname.includes('/u') || window.location.pathname.includes('/upload-bukti') || 'upload' === 'upload') {
+                switchPortalTab('upload');
+            }
+            if (window.lucide) lucide.createIcons();
+        });
+    </script>
 </body>
 </html>

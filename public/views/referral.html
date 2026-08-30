@@ -1,255 +1,205 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="id" data-theme="dark">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Papan Peringkat Live Referral & Affiliate - Jajan Digital</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Papan Peringkat Live Referral & Afiliasi — Jajan Digital</title>
     
     <!-- Open Graph Meta Tags -->
     <meta property="og:site_name" content="Jajan Digital" />
-    <meta property="og:title" content="Papan Peringkat Live Referral & Affiliate - Jajan Digital" />
+    <meta property="og:title" content="Papan Peringkat Live Referral & Afiliasi — Jajan Digital" />
     <meta property="og:description" content="Lihat daftar peringkat dan poin pengundang event referral Jajan Digital secara live!" />
     <meta property="og:type" content="website" />
     <meta property="og:url" content="${pageUrl}" />
 
-    <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; }
-        body {
-            background: #070c19;
-            color: #f8fafc;
-            min-height: 100vh;
-            padding: 16px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: ['class', '[data-theme="dark"]'],
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            500: '#6366f1',
+                            600: '#4f46e5',
+                            700: '#4338ca'
+                        }
+                    }
+                }
+            }
         }
-        .wrapper {
-            max-width: 900px;
-            width: 100%;
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-        }
-        .header-box {
-            text-align: center;
-            padding: 24px 16px;
-            background: linear-gradient(135deg, rgba(15, 23, 42, 0.9) 0%, rgba(30, 41, 59, 0.9) 100%);
-            border: 1px solid rgba(56, 189, 248, 0.3);
-            border-radius: 20px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            backdrop-filter: blur(10px);
-        }
-        .header-title {
-            font-size: 1.4rem;
-            font-weight: 800;
-            color: #38bdf8;
-            letter-spacing: 0.5px;
-            text-transform: uppercase;
-        }
-        .header-subtitle {
-            font-size: 0.88rem;
-            color: #94a3b8;
-            margin-top: 6px;
-        }
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 12px;
-        }
-        .stat-card {
-            background: rgba(15, 23, 42, 0.8);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 14px;
-            padding: 16px;
-            text-align: center;
-        }
-        .stat-value {
-            font-size: 1.6rem;
-            font-weight: 800;
-            color: #10b981;
-        }
-        .stat-label {
-            font-size: 0.78rem;
-            color: #cbd5e1;
-            margin-top: 4px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-        .podium-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-            gap: 16px;
-        }
-        .podium-card {
-            background: rgba(15, 23, 42, 0.85);
-            border-radius: 16px;
-            padding: 20px;
-            text-align: center;
-            position: relative;
-            box-shadow: 0 8px 25px rgba(0,0,0,0.4);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-        .podium-rank-1 { border-color: rgba(245, 158, 11, 0.6); background: linear-gradient(135deg, rgba(245, 158, 11, 0.12) 0%, rgba(15, 23, 42, 0.9) 100%); }
-        .podium-rank-2 { border-color: rgba(148, 163, 184, 0.6); background: linear-gradient(135deg, rgba(148, 163, 184, 0.12) 0%, rgba(15, 23, 42, 0.9) 100%); }
-        .podium-rank-3 { border-color: rgba(217, 119, 6, 0.6); background: linear-gradient(135deg, rgba(217, 119, 6, 0.12) 0%, rgba(15, 23, 42, 0.9) 100%); }
-        .podium-badge {
-            display: inline-block;
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 0.75rem;
-            font-weight: 800;
-            margin-bottom: 10px;
-        }
-        .badge-1 { background: #f59e0b; color: #0f172a; }
-        .badge-2 { background: #94a3b8; color: #0f172a; }
-        .badge-3 { background: #d97706; color: #ffffff; }
-        .podium-name { font-size: 1.1rem; font-weight: 700; color: #f8fafc; }
-        .podium-code { font-size: 0.85rem; font-weight: 800; color: #38bdf8; margin: 4px 0; }
-        .podium-score { font-size: 0.9rem; color: #cbd5e1; font-weight: 600; }
-        
-        .search-box {
-            width: 100%;
-            padding: 12px 16px;
-            background: rgba(15, 23, 42, 0.8);
-            border: 1px solid rgba(56, 189, 248, 0.3);
-            border-radius: 12px;
-            color: white;
-            font-size: 0.9rem;
-            outline: none;
-        }
-        .search-box:focus { border-color: #38bdf8; box-shadow: 0 0 12px rgba(56, 189, 248, 0.3); }
+    </script>
 
-        .table-container {
-            width: 100%;
-            overflow-x: auto;
-            background: rgba(15, 23, 42, 0.8);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+    <!-- Google Fonts & Lucide Icons -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <style>
+        :root, [data-theme="dark"] {
+            --bg-main: #0a0e17;
+            --bg-surface: #111827;
+            --bg-subtle: #1c263c;
+            --bg-card: #151d30;
+            --border-color: rgba(255, 255, 255, 0.09);
+            --border-hover: rgba(255, 255, 255, 0.2);
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+        }
+        [data-theme="light"] {
+            --bg-main: #f8fafc;
+            --bg-surface: #ffffff;
+            --bg-subtle: #f1f5f9;
+            --bg-card: #ffffff;
+            --border-color: #e2e8f0;
+            --border-hover: #cbd5e1;
+            --text-primary: #0f172a;
+            --text-secondary: #334155;
+            --text-muted: #64748b;
+        }
+        body {
+            font-family: 'Plus Jakarta Sans', -apple-system, sans-serif;
+            background-color: var(--bg-main);
+            color: var(--text-primary);
+            min-height: 100vh;
+        }
+        .font-mono-num {
+            font-family: 'JetBrains Mono', monospace;
+            font-variant-numeric: tabular-nums;
+        }
+        .enterprise-card {
+            background-color: var(--bg-surface);
+            border: 1px solid var(--border-color);
             border-radius: 16px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.15);
         }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            text-align: left;
-            font-size: 0.85rem;
-        }
-        th, td {
-            padding: 14px 16px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-        }
-        th {
-            background: rgba(30, 41, 59, 0.8);
-            color: #38bdf8;
-            font-weight: 700;
-            text-transform: uppercase;
-            font-size: 0.75rem;
-            letter-spacing: 0.5px;
-        }
-        tr:hover { background: rgba(255, 255, 255, 0.03); }
-        .code-tag {
-            background: rgba(56, 189, 248, 0.15);
-            color: #38bdf8;
-            padding: 3px 8px;
-            border-radius: 6px;
-            font-weight: 800;
-            font-size: 0.8rem;
-        }
-        .btn-join {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            padding: 14px 24px;
-            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-            color: white;
-            font-weight: 800;
-            text-decoration: none;
-            border-radius: 12px;
-            box-shadow: 0 4px 20px rgba(16, 185, 129, 0.4);
-            transition: all 0.2s ease;
-            text-align: center;
-        }
-        .btn-join:hover { transform: translateY(-2px); box-shadow: 0 6px 25px rgba(16, 185, 129, 0.6); }
     </style>
 </head>
-<body>
-    <div class="wrapper">
-        <div class="header-box">
-            <div class="header-title">PAPAN PERINGKAT LIVE REFERRAL</div>
-            <div class="header-subtitle">Daftar Anggota &amp; Poin Event Affiliate Jajan Digital</div>
-        </div>
+<body class="p-4 sm:p-6 flex flex-col items-center justify-start min-h-screen transition-colors duration-200">
 
-        <div class="stats-grid">
-            <div class="stat-card">
-                <div class="stat-value" id="statAffiliates">0</div>
-                <div class="stat-label">Total Affiliate Aktif</div>
+    <div class="w-full max-w-3xl mx-auto space-y-5">
+        
+        <!-- Header -->
+        <header class="flex items-center justify-between">
+            <div class="flex items-center gap-2.5">
+                <div class="w-9 h-9 rounded-xl bg-indigo-600 text-white flex items-center justify-center font-extrabold text-sm shadow-sm">
+                    JD
+                </div>
+                <div>
+                    <h1 class="text-sm font-bold leading-tight">Jajan Digital</h1>
+                    <p class="text-[10px] text-[var(--text-muted)] font-medium">Papan Peringkat Afiliasi & Referral</p>
+                </div>
             </div>
-            <div class="stat-card">
-                <div class="stat-value" id="statInvites">0</div>
-                <div class="stat-label">Total Member Diundang</div>
+
+            <div class="flex items-center gap-2">
+                <button onclick="togglePortalTheme()" class="p-2 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-color)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] shadow-sm">
+                    <i data-lucide="sun" id="theme-icon" class="w-4 h-4"></i>
+                </button>
             </div>
-            <div class="stat-card">
-                <div class="stat-value" id="statPoints">0</div>
-                <div class="stat-label">Total Poin Terkumpul</div>
+        </header>
+
+        <!-- Banner Hero -->
+        <div class="enterprise-card p-5 text-center space-y-2 bg-gradient-to-br from-indigo-900/20 via-[var(--bg-surface)] to-[var(--bg-surface)]">
+            <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-400 text-xs font-bold">
+                <i data-lucide="crown" class="w-3.5 h-3.5"></i>
+                <span>Event Referral Komunitas</span>
+            </div>
+            <h2 class="text-lg sm:text-xl font-bold text-[var(--text-primary)]">Papan Peringkat Member Teraktif</h2>
+            <p class="text-xs text-[var(--text-muted)] max-w-md mx-auto">Undang teman bergabung ke grup WhatsApp dan kumpulkan poin reward untuk ditukarkan produk!</p>
+        </div>
+
+        <!-- Global Stats Grid -->
+        <div class="grid grid-cols-3 gap-3">
+            <div class="enterprise-card p-3.5 text-center">
+                <p class="text-[10px] text-[var(--text-muted)] font-medium uppercase">Total Peserta</p>
+                <h3 id="statTotalAffiliates" class="text-lg font-bold font-mono-num text-indigo-400 mt-0.5">0</h3>
+            </div>
+            <div class="enterprise-card p-3.5 text-center">
+                <p class="text-[10px] text-[var(--text-muted)] font-medium uppercase">Total Undangan</p>
+                <h3 id="statTotalInvites" class="text-lg font-bold font-mono-num text-emerald-400 mt-0.5">0</h3>
+            </div>
+            <div class="enterprise-card p-3.5 text-center">
+                <p class="text-[10px] text-[var(--text-muted)] font-medium uppercase">Poin Dibagikan</p>
+                <h3 id="statTotalPoints" class="text-lg font-bold font-mono-num text-amber-400 mt-0.5">0</h3>
             </div>
         </div>
 
-        <div id="podiumSection" class="podium-grid" style="display:none;"></div>
-
-        <input type="text" id="searchInput" class="search-box" placeholder="Cari Nama, Nomor, atau Kode Referral..." oninput="filterTable()">
-
-        <div class="table-container">
-            <table>
-                <thead>
-                    <tr>
-                        <th>Peringkat</th>
-                        <th>Nama Affiliate</th>
-                        <th>Nomor WA</th>
-                        <th>Kode Unik</th>
-                        <th>Undangan</th>
-                        <th>Total Poin</th>
-                    </tr>
-                </thead>
-                <tbody id="referralTableBody">
-                    <tr><td colspan="6" style="text-align:center; padding:30px; color:#94a3b8;">Memuat data leaderboard...</td></tr>
-                </tbody>
-            </table>
+        <!-- Top 3 Podium Cards -->
+        <div id="podium-container" class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <!-- Populated dynamically -->
         </div>
 
-        <div style="text-align:center; margin-top:10px;">
-            <a href="https://chat.whatsapp.com/GKppODkdFKc9YLkqLWQpkO?s=cl&amp;p=a&amp;ilr=4&amp;amv=2" target="_blank" class="btn-join">
-                Gabung Grup WA &amp; Buat Kode Referral Anda!
-            </a>
+        <!-- Leaderboard Table -->
+        <div class="enterprise-card overflow-hidden">
+            <div class="p-4 border-b border-[var(--border-color)] flex items-center justify-between">
+                <h3 class="text-xs font-bold uppercase tracking-wider text-[var(--text-primary)] flex items-center gap-2">
+                    <i data-lucide="trophy" class="w-4 h-4 text-amber-400"></i>
+                    Daftar Semua Peringkat
+                </h3>
+                <span class="text-[10px] text-[var(--text-muted)] font-mono-num">Update Real-time</span>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-xs">
+                    <thead>
+                        <tr class="bg-[var(--bg-subtle)] border-b border-[var(--border-color)] text-[10px] text-[var(--text-muted)] uppercase tracking-wider">
+                            <th class="py-2.5 px-4">Rank</th>
+                            <th class="py-2.5 px-4">Member</th>
+                            <th class="py-2.5 px-4">Kode</th>
+                            <th class="py-2.5 px-4 text-center">Undangan</th>
+                            <th class="py-2.5 px-4 text-right">Poin</th>
+                        </tr>
+                    </thead>
+                    <tbody id="leaderboard-table-body" class="divide-y divide-[var(--border-color)]">
+                        <tr><td colspan="5" class="py-8 text-center text-xs text-[var(--text-muted)]">Memuat papan peringkat...</td></tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
+
+        <!-- Footer -->
+        <footer class="text-center text-[10px] text-[var(--text-muted)] pt-2">
+            <p>© 2026 Jajan Digital • Program Afiliasi Komunitas</p>
+        </footer>
+
     </div>
 
     <script>
-        let allCodesData = [];
-
-        function maskPhone(phone) {
-            if (!phone) return '-';
-            const clean = phone.replace(/\\D/g, '');
-            if (clean.length < 7) return clean;
-            return clean.substring(0, 4) + '****' + clean.substring(clean.length - 4);
+        function initTheme() {
+            const saved = localStorage.getItem('portal_theme') || 'dark';
+            setTheme(saved);
         }
 
-        async function fetchReferralData() {
+        function setTheme(t) {
+            document.documentElement.setAttribute('data-theme', t);
+            localStorage.setItem('portal_theme', t);
+            const icon = document.getElementById('theme-icon');
+            if (icon) icon.setAttribute('data-lucide', t === 'light' ? 'moon' : 'sun');
+            if (window.lucide) lucide.createIcons();
+        }
+
+        function togglePortalTheme() {
+            const cur = document.documentElement.getAttribute('data-theme') || 'dark';
+            setTheme(cur === 'light' ? 'dark' : 'light');
+        }
+
+        async function loadLeaderboard() {
             try {
                 const res = await fetch('/api/referrals/codes');
                 const data = await res.json();
-
                 if (data.success && Array.isArray(data.codes)) {
-                    allCodesData = data.codes;
-                    renderStats(allCodesData);
-                    renderPodium(allCodesData);
-                    renderTable(allCodesData);
+                    renderLeaderboard(data.codes);
                 }
-            } catch (err) {
-                console.error('Gagal mengambil data referral:', err);
+            } catch(e) {
+                console.error(e);
             }
         }
 
-        function renderStats(codes) {
+        function renderLeaderboard(codes) {
+            codes.sort((a, b) => (b.points || 0) - (a.points || 0) || (b.total_invites || 0) - (a.total_invites || 0));
+
             let totalInvites = 0;
             let totalPoints = 0;
             codes.forEach(c => {
@@ -257,83 +207,70 @@
                 totalPoints += (c.points || 0);
             });
 
-            document.getElementById('statAffiliates').textContent = codes.length.toLocaleString('id-ID');
-            document.getElementById('statInvites').textContent = totalInvites.toLocaleString('id-ID');
-            document.getElementById('statPoints').textContent = totalPoints.toLocaleString('id-ID');
-        }
+            document.getElementById('statTotalAffiliates').textContent = codes.length.toLocaleString('id-ID');
+            document.getElementById('statTotalInvites').textContent = totalInvites.toLocaleString('id-ID');
+            document.getElementById('statTotalPoints').textContent = totalPoints.toLocaleString('id-ID');
 
-        function renderPodium(codes) {
-            const podiumSec = document.getElementById('podiumSection');
-            if (codes.length === 0) {
-                podiumSec.style.display = 'none';
-                return;
-            }
-
+            // Render Podium (Top 3)
+            const podium = document.getElementById('podium-container');
             const top3 = codes.slice(0, 3);
-            let podiumHtml = '';
+            if (podium && top3.length > 0) {
+                podium.innerHTML = top3.map((item, idx) => {
+                    const colors = [
+                        { border: 'border-amber-500/40', badge: 'bg-amber-500/20 text-amber-400', rank: 'JUARA 1' },
+                        { border: 'border-slate-400/40', badge: 'bg-slate-500/20 text-slate-300', rank: 'JUARA 2' },
+                        { border: 'border-amber-700/40', badge: 'bg-amber-700/20 text-amber-500', rank: 'JUARA 3' }
+                    ];
+                    const cfg = colors[idx] || colors[1];
+                    const cleanPhone = (item.user_phone || '').slice(0, 6) + '••••' + (item.user_phone || '').slice(-2);
 
-            top3.forEach((c, idx) => {
-                const rankNum = idx + 1;
-                const badgeClass = 'badge-' + rankNum;
-                const cardClass = 'podium-rank-' + rankNum;
-                const rankTitle = rankNum === 1 ? 'JUARA 1' : (rankNum === 2 ? 'JUARA 2' : 'JUARA 3');
-
-                podiumHtml += \`
-                    <div class="podium-card \${cardClass}">
-                        <div class="podium-badge \${badgeClass}">\${rankTitle}</div>
-                        <div class="podium-name">\${c.user_name || 'Member'}</div>
-                        <div class="podium-code">\${c.code}</div>
-                        <div class="podium-score">\${c.total_invites} Undangan (\${c.points} Poin)</div>
-                    </div>
-                \`;
-            });
-
-            podiumSec.innerHTML = podiumHtml;
-            podiumSec.style.display = 'grid';
-        }
-
-        function renderTable(codes) {
-            const tbody = document.getElementById('referralTableBody');
-            if (codes.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:30px; color:#94a3b8;">Belum ada peserta referral. Jadi orang pertama yang buat kode dengan ketik <b>!myref</b> di grup!</td></tr>';
-                return;
+                    return `
+                        <div class="enterprise-card p-4 text-center space-y-2 border ${cfg.border}">
+                            <span class="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold ${cfg.badge}">${cfg.rank}</span>
+                            <h4 class="font-bold text-xs text-[var(--text-primary)]">${item.user_name || 'Member'}</h4>
+                            <p class="text-[10px] font-mono text-[var(--text-muted)]">+${cleanPhone}</p>
+                            <div class="pt-1 flex items-center justify-center gap-3 text-xs">
+                                <span>${item.total_invites || 0} Undangan</span>
+                                <span class="font-bold text-amber-400">${item.points || 0} Poin</span>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
             }
 
-            let html = '';
-            codes.forEach((c, idx) => {
-                html += \`
-                    <tr>
-                        <td style="font-weight:800; color:#38bdf8;">#\${idx + 1}</td>
-                        <td style="font-weight:600; color:#f8fafc;">\${c.user_name || 'Member'}</td>
-                        <td style="color:#94a3b8;">\${maskPhone(c.phone)}</td>
-                        <td><span class="code-tag">\${c.code}</span></td>
-                        <td style="font-weight:700; color:#10b981;">\${c.total_invites}</td>
-                        <td style="font-weight:700; color:#f59e0b;">\${c.points} Poin</td>
-                    </tr>
-                \`;
-            });
-
-            tbody.innerHTML = html;
-        }
-
-        function filterTable() {
-            const query = document.getElementById('searchInput').value.toLowerCase().trim();
-            if (!query) {
-                renderTable(allCodesData);
-                return;
+            // Render Table
+            const tbody = document.getElementById('leaderboard-table-body');
+            if (tbody) {
+                if (codes.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="5" class="py-8 text-center text-xs text-[var(--text-muted)]">Belum ada peserta terdaftar.</td></tr>';
+                    return;
+                }
+                tbody.innerHTML = codes.map((item, idx) => {
+                    const cleanPhone = (item.user_phone || '').slice(0, 6) + '••••' + (item.user_phone || '').slice(-2);
+                    return `
+                        <tr class="hover:bg-[var(--bg-subtle)]">
+                            <td class="py-2.5 px-4 font-mono-num font-bold text-xs text-indigo-400">#${idx + 1}</td>
+                            <td class="py-2.5 px-4">
+                                <div class="font-bold text-[var(--text-primary)]">${item.user_name || 'Member'}</div>
+                                <div class="text-[10px] text-[var(--text-muted)] font-mono">+${cleanPhone}</div>
+                            </td>
+                            <td class="py-2.5 px-4">
+                                <code class="px-1.5 py-0.5 rounded bg-[var(--bg-subtle)] border border-[var(--border-color)] font-mono text-[10px] text-indigo-300">${item.code}</code>
+                            </td>
+                            <td class="py-2.5 px-4 text-center font-mono-num">${item.total_invites || 0}</td>
+                            <td class="py-2.5 px-4 text-right font-mono-num font-bold text-amber-400">${item.points || 0}</td>
+                        </tr>
+                    `;
+                }).join('');
             }
 
-            const filtered = allCodesData.filter(c => 
-                (c.user_name && c.user_name.toLowerCase().includes(query)) ||
-                (c.code && c.code.toLowerCase().includes(query)) ||
-                (c.phone && c.phone.includes(query))
-            );
-
-            renderTable(filtered);
+            if (window.lucide) lucide.createIcons();
         }
 
-        fetchReferralData();
-        setInterval(fetchReferralData, 10000);
+        document.addEventListener('DOMContentLoaded', () => {
+            initTheme();
+            loadLeaderboard();
+        });
     </script>
 </body>
 </html>
