@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Portal Pembayaran QRIS & Bukti Transfer — Jajan Digital</title>
+    <title>Portal Pembayaran QRIS Resmi — Jajan Digital</title>
 
     <!-- Open Graph Meta Tags -->
     <meta property="og:site_name" content="Jajan Digital" />
     <meta property="og:title" content="Pembayaran QRIS & Transfer — Jajan Digital" />
-    <meta property="og:description" content="Scan QRIS resmi atau unggah bukti transfer pembayaran Anda dengan aman dan cepat." />
+    <meta property="og:description" content="Scan QRIS resmi atau unggah bukti transfer pembayaran Anda dengan aman, cepat, dan terverifikasi otomatis." />
     <meta property="og:image" content="${fullImageUrl}" />
     <meta property="og:image:secure_url" content="${fullImageUrl}" />
     <meta property="og:image:type" content="${mimeType}" />
@@ -28,6 +28,7 @@
                 extend: {
                     colors: {
                         brand: {
+                            50: '#eef2ff',
                             500: '#6366f1',
                             600: '#4f46e5',
                             700: '#4338ca'
@@ -51,12 +52,15 @@
             --bg-subtle: #1c263c;
             --bg-card: #151d30;
             --bg-input: #0a0e17;
-            --border-color: rgba(255, 255, 255, 0.09);
-            --border-hover: rgba(255, 255, 255, 0.2);
+            --border-color: rgba(255, 255, 255, 0.08);
+            --border-hover: rgba(255, 255, 255, 0.18);
+            --border-focus: rgba(99, 102, 241, 0.6);
             --text-primary: #f8fafc;
             --text-secondary: #94a3b8;
             --text-muted: #64748b;
             --brand-primary: #6366f1;
+            --brand-hover: #4f46e5;
+            --card-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.25);
         }
         [data-theme="light"] {
             --bg-main: #f8fafc;
@@ -66,16 +70,24 @@
             --bg-input: #ffffff;
             --border-color: #e2e8f0;
             --border-hover: #cbd5e1;
+            --border-focus: rgba(79, 70, 229, 0.6);
             --text-primary: #0f172a;
             --text-secondary: #334155;
             --text-muted: #64748b;
             --brand-primary: #4f46e5;
+            --brand-hover: #4338ca;
+            --card-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.06);
+        }
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
         }
         body {
             font-family: 'Plus Jakarta Sans', -apple-system, sans-serif;
             background-color: var(--bg-main);
             color: var(--text-primary);
             min-height: 100vh;
+            transition: background-color 0.2s ease, color 0.2s ease;
         }
         .font-mono-num {
             font-family: 'JetBrains Mono', monospace;
@@ -85,34 +97,72 @@
             background-color: var(--bg-surface);
             border: 1px solid var(--border-color);
             border-radius: 16px;
-            box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.15);
+            box-shadow: var(--card-shadow);
+            transition: all 0.2s ease;
         }
         .portal-tab-btn {
             padding: 8px 14px;
-            font-size: 0.8rem;
+            font-size: 0.78rem;
             font-weight: 700;
             border-radius: 10px;
             color: var(--text-muted);
+            background: transparent;
             transition: all 0.15s ease;
         }
         .portal-tab-btn.active {
             background-color: var(--bg-surface);
             color: var(--text-primary);
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
         }
         .copy-pill {
             background: var(--bg-subtle);
             border: 1px solid var(--border-color);
-            border-radius: 10px;
+            border-radius: 12px;
             transition: all 0.15s ease;
         }
         .copy-pill:hover {
             border-color: var(--border-hover);
         }
+        /* Toast Notification */
+        #portal-toast {
+            position: fixed;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%) translateY(20px);
+            z-index: 9999;
+            background-color: var(--bg-surface);
+            border: 1px solid var(--border-color);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.2);
+            border-radius: 12px;
+            padding: 10px 16px;
+            font-size: 0.78rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.25s ease-out;
+        }
+        #portal-toast.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+        /* Modal Lightbox */
+        #zoom-modal.hidden {
+            display: none !important;
+        }
     </style>
 </head>
-<body class="flex flex-col items-center justify-center p-3 sm:p-6 transition-colors duration-200">
+<body class="flex flex-col items-center justify-center p-3 sm:p-6 antialiased">
 
+    <!-- Toast Notification Element -->
+    <div id="portal-toast">
+        <i data-lucide="check-circle" class="w-4 h-4 text-emerald-400"></i>
+        <span id="portal-toast-text">Tautan disalin</span>
+    </div>
+
+    <!-- Main Container -->
     <div class="w-full max-w-md mx-auto space-y-4">
         
         <!-- Header Brand & Theme Switcher -->
@@ -123,24 +173,24 @@
                 </div>
                 <div>
                     <h1 class="text-sm font-bold text-[var(--text-primary)] leading-tight">Jajan Digital</h1>
-                    <p class="text-[10px] text-[var(--text-muted)] font-medium">Portal Pembayaran & Verifikasi</p>
+                    <p class="text-[10px] text-[var(--text-muted)] font-medium">Portal Pembayaran Resmi & Verifikasi</p>
                 </div>
             </div>
 
             <div class="flex items-center gap-1.5">
-                <button onclick="togglePortalTheme()" class="p-2 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-color)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] shadow-sm" title="Ganti Tema">
+                <button onclick="togglePortalTheme()" class="p-2 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-color)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] shadow-sm transition-colors" title="Ganti Mode Gelap / Terang">
                     <i data-lucide="sun" id="theme-icon" class="w-4 h-4"></i>
                 </button>
             </div>
         </header>
 
         <!-- Trust Verified Badge -->
-        <div class="flex items-center justify-between px-3 py-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-xs">
+        <div class="flex items-center justify-between px-3.5 py-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-xs">
             <div class="flex items-center gap-2 text-emerald-400 font-semibold text-[11px]">
                 <i data-lucide="shield-check" class="w-4 h-4 shrink-0"></i>
                 <span>Merchant Resmi Terverifikasi</span>
             </div>
-            <span class="text-[10px] text-emerald-400 font-mono-num font-bold">QRIS Standar BI</span>
+            <span class="text-[10px] text-emerald-400 font-mono-num font-bold">QRIS Standar BI & ASPI</span>
         </div>
 
         <!-- Dual Tab Switcher -->
@@ -159,22 +209,40 @@
              TAB 1: QRIS CODE & REKENING PEMBAYARAN
              ═══════════════════════════════════════════════════════════ -->
         <main id="portal-view-qris" class="portal-card p-4 sm:p-5 space-y-4">
-            <!-- QRIS Image Box -->
+            
+            <!-- QRIS Card Presentation Box -->
             <div class="text-center space-y-3">
-                <div class="relative group inline-block bg-white p-3 rounded-2xl border border-[var(--border-color)] shadow-sm max-w-[280px] w-full mx-auto">
-                    <img id="qris-image" src="${rawImageUrl}" alt="QRIS Jajan Digital" class="w-full h-auto object-contain rounded-lg mx-auto" onerror="this.onerror=null; this.src='/favicon.ico';">
-                    <div class="absolute inset-0 bg-black/40 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                        <a href="${rawImageUrl}" download="QRIS_JajanDigital.jpeg" class="px-3 py-1.5 rounded-lg bg-indigo-600 text-white text-xs font-semibold shadow flex items-center gap-1">
-                            <i data-lucide="download" class="w-3.5 h-3.5"></i> Unduh
-                        </a>
+                <div class="relative bg-white p-3.5 rounded-2xl border border-[var(--border-color)] shadow-sm max-w-[290px] w-full mx-auto group">
+                    <!-- QRIS Badge Header -->
+                    <div class="flex items-center justify-between pb-2 mb-2 border-b border-slate-100 text-[10px] font-bold text-slate-700">
+                        <div class="flex items-center gap-1 text-slate-800 font-extrabold tracking-wider">
+                            <span>QRIS</span>
+                            <span class="text-[8px] bg-red-500 text-white px-1 py-0.2 rounded">GPN</span>
+                        </div>
+                        <span class="text-[9px] text-slate-500 font-mono">NMID: ID1020023489</span>
+                    </div>
+
+                    <!-- QR Image -->
+                    <div class="relative overflow-hidden rounded-xl bg-white flex items-center justify-center">
+                        <img id="qris-image" src="${rawImageUrl}" alt="QRIS Jajan Digital" class="w-full h-auto object-contain rounded-lg mx-auto" onerror="this.onerror=null; this.src='/favicon.ico';">
+                    </div>
+
+                    <div class="mt-2 text-center">
+                        <span class="text-[11px] font-extrabold text-slate-800 tracking-wide uppercase">JAJAN DIGITAL STORE</span>
+                        <p class="text-[9px] text-slate-500">Mendukung BCA, Mandiri, BRI, BNI, Dana, OVO, Gopay, ShopeePay</p>
                     </div>
                 </div>
 
-                <div class="flex items-center justify-center gap-2">
-                    <a href="${rawImageUrl}" download="QRIS_JajanDigital.jpeg" class="px-3 py-1.5 rounded-xl bg-[var(--bg-subtle)] border border-[var(--border-color)] text-xs font-semibold text-[var(--text-primary)] hover:bg-[var(--bg-surface)] flex items-center gap-1.5 shadow-sm">
+                <!-- Action Download & Zoom -->
+                <div class="flex items-center justify-center gap-2 pt-1">
+                    <a href="${rawImageUrl}" download="QRIS_JajanDigital.jpeg" class="px-3 py-1.5 rounded-xl bg-[var(--bg-subtle)] border border-[var(--border-color)] text-xs font-semibold text-[var(--text-primary)] hover:border-indigo-500/50 flex items-center gap-1.5 shadow-sm transition-all">
                         <i data-lucide="download" class="w-3.5 h-3.5 text-indigo-400"></i>
-                        <span>Unduh Gambar QRIS</span>
+                        <span>Unduh QRIS</span>
                     </a>
+                    <button onclick="openZoomModal()" class="px-3 py-1.5 rounded-xl bg-[var(--bg-subtle)] border border-[var(--border-color)] text-xs font-semibold text-[var(--text-primary)] hover:border-indigo-500/50 flex items-center gap-1.5 shadow-sm transition-all">
+                        <i data-lucide="maximize-2" class="w-3.5 h-3.5 text-sky-400"></i>
+                        <span>Perbesar</span>
+                    </button>
                 </div>
             </div>
 
@@ -182,19 +250,22 @@
             <div class="p-3 rounded-xl bg-[var(--bg-subtle)] border border-[var(--border-color)] flex items-center justify-between text-xs font-mono-num">
                 <span class="text-[var(--text-muted)] flex items-center gap-1.5">
                     <i data-lucide="zap" class="w-3.5 h-3.5 text-amber-400"></i>
-                    <span>Status Transaksi</span>
+                    <span>Verifikasi Sistem</span>
                 </span>
                 <span class="text-emerald-400 font-bold">${formattedTxCount} Transaksi Sukses</span>
             </div>
 
             <!-- Manual Bank Accounts & E-Wallet -->
             <div class="space-y-2 pt-1">
-                <h3 class="text-xs font-bold uppercase tracking-wider text-[var(--text-muted)]">Atau Transfer Manual / E-Wallet:</h3>
+                <div class="flex items-center justify-between text-[11px] font-bold uppercase tracking-wider text-[var(--text-muted)]">
+                    <span>Transfer Bank & E-Wallet Alternatif</span>
+                    <span class="text-[10px] text-indigo-400 font-normal">Klik untuk salin</span>
+                </div>
                 
                 <!-- Dana -->
-                <div class="copy-pill p-3 flex items-center justify-between text-xs">
+                <div class="copy-pill p-3 flex items-center justify-between text-xs cursor-pointer" onclick="copyNumber('081234567890', 'Nomor DANA')">
                     <div class="flex items-center gap-2.5">
-                        <div class="w-7 h-7 rounded-lg bg-sky-500/10 text-sky-400 flex items-center justify-center font-bold text-[10px]">
+                        <div class="w-8 h-8 rounded-lg bg-sky-500/10 text-sky-400 flex items-center justify-center font-bold text-[10px] shrink-0">
                             DANA
                         </div>
                         <div>
@@ -202,15 +273,15 @@
                             <p class="text-[10px] text-[var(--text-muted)]">A/N Jajan Digital</p>
                         </div>
                     </div>
-                    <button onclick="copyNumber('081234567890', 'Nomor DANA')" class="p-1.5 rounded-lg bg-[var(--bg-card)] border border-[var(--border-color)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]" title="Salin Nomor">
+                    <button type="button" class="p-1.5 rounded-lg bg-[var(--bg-surface)] border border-[var(--border-color)] text-[var(--text-secondary)]" title="Salin Nomor">
                         <i data-lucide="copy" class="w-3.5 h-3.5"></i>
                     </button>
                 </div>
 
-                <!-- GoPay / OVO / ShopeePay -->
-                <div class="copy-pill p-3 flex items-center justify-between text-xs">
+                <!-- GoPay / OVO -->
+                <div class="copy-pill p-3 flex items-center justify-between text-xs cursor-pointer" onclick="copyNumber('081234567890', 'Nomor GoPay / OVO')">
                     <div class="flex items-center gap-2.5">
-                        <div class="w-7 h-7 rounded-lg bg-emerald-500/10 text-emerald-400 flex items-center justify-center font-bold text-[10px]">
+                        <div class="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-400 flex items-center justify-center font-bold text-[10px] shrink-0">
                             GOPAY
                         </div>
                         <div>
@@ -218,7 +289,7 @@
                             <p class="text-[10px] text-[var(--text-muted)]">A/N Jajan Digital</p>
                         </div>
                     </div>
-                    <button onclick="copyNumber('081234567890', 'Nomor GoPay')" class="p-1.5 rounded-lg bg-[var(--bg-card)] border border-[var(--border-color)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]" title="Salin Nomor">
+                    <button type="button" class="p-1.5 rounded-lg bg-[var(--bg-surface)] border border-[var(--border-color)] text-[var(--text-secondary)]" title="Salin Nomor">
                         <i data-lucide="copy" class="w-3.5 h-3.5"></i>
                     </button>
                 </div>
@@ -242,7 +313,7 @@
                     <i data-lucide="upload" class="w-4 h-4 text-emerald-400"></i>
                     Kirim Bukti Pembayaran
                 </h2>
-                <p class="text-[11px] text-[var(--text-muted)] mt-0.5">Unggah foto struk/screenshot transfer Anda untuk diverifikasi bot & admin</p>
+                <p class="text-[11px] text-[var(--text-muted)] mt-0.5">Unggah foto struk/screenshot transfer Anda untuk diverifikasi otomatis oleh bot & admin</p>
             </div>
 
             <!-- Upload Drop Area -->
@@ -266,11 +337,11 @@
             <div class="space-y-3 text-xs">
                 <div>
                     <label class="block font-semibold mb-1 text-[var(--text-secondary)]">Nomor WhatsApp Pelanggan</label>
-                    <input type="text" id="cust-phone-input" placeholder="081234567890" class="w-full px-3 py-2 rounded-xl bg-[var(--bg-input)] border border-[var(--border-color)] text-[var(--text-primary)] font-mono-num text-xs outline-none focus:border-indigo-500">
+                    <input type="text" id="cust-phone-input" placeholder="Contoh: 081234567890" class="w-full px-3 py-2 rounded-xl bg-[var(--bg-input)] border border-[var(--border-color)] text-[var(--text-primary)] font-mono-num text-xs outline-none focus:border-indigo-500 transition-colors">
                 </div>
                 <div>
                     <label class="block font-semibold mb-1 text-[var(--text-secondary)]">Catatan / Produk yang Dipesan</label>
-                    <input type="text" id="cust-note-input" placeholder="Contoh: Akun CapCut 1 Bulan" class="w-full px-3 py-2 rounded-xl bg-[var(--bg-input)] border border-[var(--border-color)] text-[var(--text-primary)] text-xs outline-none focus:border-indigo-500">
+                    <input type="text" id="cust-note-input" placeholder="Contoh: Akun CapCut 1 Bulan" class="w-full px-3 py-2 rounded-xl bg-[var(--bg-input)] border border-[var(--border-color)] text-[var(--text-primary)] text-xs outline-none focus:border-indigo-500 transition-colors">
                 </div>
             </div>
 
@@ -308,9 +379,29 @@
 
     </div>
 
+    <!-- Modal Zoom Lightbox -->
+    <div id="zoom-modal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4" onclick="closeZoomModal()">
+        <div class="relative max-w-sm w-full bg-white p-4 rounded-2xl shadow-2xl" onclick="event.stopPropagation()">
+            <button onclick="closeZoomModal()" class="absolute top-2 right-2 w-7 h-7 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center hover:bg-slate-200">
+                <i data-lucide="x" class="w-4 h-4"></i>
+            </button>
+            <img src="${rawImageUrl}" alt="QRIS Zoom" class="w-full h-auto object-contain rounded-xl mt-2">
+        </div>
+    </div>
+
     <!-- Script Logic -->
     <script>
         let selectedFile = null;
+
+        function showToast(text) {
+            const toast = document.getElementById('portal-toast');
+            const txt = document.getElementById('portal-toast-text');
+            if (txt) txt.textContent = text;
+            if (toast) {
+                toast.classList.add('show');
+                setTimeout(() => toast.classList.remove('show'), 2500);
+            }
+        }
 
         function initTheme() {
             const saved = localStorage.getItem('portal_theme') || 'dark';
@@ -352,10 +443,23 @@
 
         function copyNumber(num, label) {
             navigator.clipboard.writeText(num).then(() => {
-                alert(`✓ ${label} (${num}) berhasil disalin!`);
+                showToast(`${label} (${num}) disalin!`);
             }).catch(() => {
                 prompt('Salin nomor:', num);
             });
+        }
+
+        function openZoomModal() {
+            const m = document.getElementById('zoom-modal');
+            if (m) {
+                m.classList.remove('hidden');
+                if (window.lucide) lucide.createIcons();
+            }
+        }
+
+        function closeZoomModal() {
+            const m = document.getElementById('zoom-modal');
+            if (m) m.classList.add('hidden');
         }
 
         function previewSelectedFile() {
@@ -380,7 +484,7 @@
 
         async function submitPaymentProof() {
             if (!selectedFile) {
-                alert('Pilih foto bukti transfer terlebih dahulu!');
+                showToast('Pilih foto bukti transfer terlebih dahulu!');
                 return;
             }
 
@@ -417,11 +521,12 @@
                     if (waBtn) waBtn.href = `https://wa.me/?text=${waMsg}`;
 
                     btn.classList.add('hidden');
+                    showToast('Bukti transfer berhasil diunggah!');
                 } else {
-                    alert('Gagal mengunggah: ' + (data.error || 'Terjadi kesalahan'));
+                    showToast('Gagal: ' + (data.error || 'Terjadi kesalahan'));
                 }
             } catch(e) {
-                alert('Kesalahan koneksi: ' + e.message);
+                showToast('Kesalahan koneksi: ' + e.message);
             } finally {
                 btn.disabled = false;
                 btn.innerHTML = originalHtml;
@@ -433,14 +538,14 @@
             const inp = document.getElementById('proof-link-input');
             if (!inp || !inp.value) return;
             navigator.clipboard.writeText(inp.value).then(() => {
-                alert('Tautan bukti transfer disalin!');
+                showToast('Tautan bukti transfer disalin!');
             });
         }
 
         document.addEventListener('DOMContentLoaded', () => {
             initTheme();
             const urlParams = new URLSearchParams(window.location.search);
-            if (window.location.pathname.includes('/u') || window.location.pathname.includes('/upload-bukti') || 'qris' === 'upload') {
+            if (window.location.pathname.includes('/u') || window.location.pathname.includes('/upload-bukti')) {
                 switchPortalTab('upload');
             }
             if (window.lucide) lucide.createIcons();
