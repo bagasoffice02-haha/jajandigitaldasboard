@@ -1,0 +1,36 @@
+{
+  "mcpServers": {
+    "shadcn-space": {
+      "command": "npx",
+      "args": ["-y", "@shadcn/mcp-server@latest"],
+      "description": "Menyediakan katalog komponen, blok, dan template UI Shadcn"
+    },
+    "context7": {
+      "command": "npx",
+      "args": ["-y", "@upstash/context7-mcp@latest"],
+      "description": "Mengambil dokumentasi resmi library dan framework versi terbaru"
+    },
+    "chrome-devtools": {
+      "command": "npx",
+      "args": ["-y", "@chrome-devtools/mcp-server@latest"],
+      "description": "Inspeksi live browser, DOM snapshot, console log, dan testing interaksi"
+    },
+    "postgres": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-postgres",
+        "postgresql://username:password@localhost:5432/nama_database"
+      ],
+      "description": "Inspeksi skema basis data PostgreSQL dan pengujian query SQL"
+    },
+    "web-search": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-brave-search"],
+      "env": {
+        "BRAVE_API_KEY": "ISI_API_KEY_ANDA_DI_SINI"
+      },
+      "description": "Pencarian web eksternal untuk riset issue dan dokumentasi pihak ketiga"
+    }
+  }
+}
