@@ -145,12 +145,27 @@ function parseApiError(err) {
     return { code: 'UNKNOWN', message: err.message || 'Error tidak diketahui' };
 }
 
+// Helper: sanitize input strings (normalize smart quotes and unicode dashes)
+function sanitizeString(str) {
+    if (!str || typeof str !== 'string') return '';
+    return str
+        .replace(/[\u2010\u2011\u2012\u2013\u2014\u2015\u2212]/g, '-')
+        .replace(/[\u2018\u2019]/g, "'")
+        .replace(/[\u201C\u201D]/g, '"')
+        .trim();
+}
+
 // POST /api/test-api — Test satu API key tertentu
 router.post('/test-api', async (req, res) => {
     const axios = require('axios');
-    const { provider, key, model, url: customUrl } = req.body;
+    let { provider, key, model, url: customUrl } = req.body;
 
-    if (!provider || !key || !key.trim()) {
+    provider = sanitizeString(provider).toLowerCase();
+    key = sanitizeString(key);
+    model = sanitizeString(model);
+    customUrl = sanitizeString(customUrl);
+
+    if (!provider || !key) {
         return res.status(400).json({ success: false, error: 'provider dan key wajib diisi.' });
     }
 
@@ -164,7 +179,7 @@ router.post('/test-api', async (req, res) => {
             if (!modelName || !modelName.toLowerCase().startsWith('gemini')) {
                 modelName = getGeminiModel();
             }
-            const testUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${key.trim()}`;
+            const testUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${key}`;
             const resp = await axios.post(testUrl, {
                 contents: [{ role: 'user', parts: [{ text: 'Hi' }] }],
                 generationConfig: { maxOutputTokens: 5 }
@@ -184,13 +199,13 @@ router.post('/test-api', async (req, res) => {
 
         // ── GROQ CLOUD ──────────────────────────────────────────
         else if (provider === 'groq') {
-            const modelName = model || config.groq_model || 'llama-3.3-70b-versatile';
+            const modelName = model || config.groq_model || 'qwen/qwen3.8-27b';
             const resp = await axios.post('https://api.groq.com/openai/v1/chat/completions', {
                 model: modelName,
                 messages: [{ role: 'user', content: 'Hi' }],
                 max_tokens: 5
             }, {
-                headers: { 'Authorization': `Bearer ${key.trim()}`, 'Content-Type': 'application/json' },
+                headers: { 'Authorization': `Bearer ${key}`, 'Content-Type': 'application/json' },
                 timeout: 15000
             });
 

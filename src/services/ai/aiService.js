@@ -262,7 +262,9 @@ async function callGroqWithPool(systemPrompt, chatHistory, isJson = false) {
         throw new Error('Tidak ada API Key Groq yang tersedia di dalam stok (pool).');
     }
     
-    const model = config.groq_model || 'llama-3.3-70b-versatile';
+    const model = (config.groq_model || 'qwen/qwen3.8-27b')
+        .replace(/[\u2010\u2011\u2012\u2013\u2014\u2015\u2212]/g, '-')
+        .trim();
     const url = 'https://api.groq.com/openai/v1/chat/completions';
     let lastError = null;
     

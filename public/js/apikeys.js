@@ -6,7 +6,7 @@
 (function() {
     const PROVIDERS = {
         gemini:     { label: 'Google Gemini',   abbr: 'GM', color: '#4285f4', bg: 'rgba(66,133,244,0.12)', border: 'rgba(66,133,244,0.3)',  defaultModel: 'gemini-2.0-flash', pool: true },
-        groq:       { label: 'Groq Cloud',      abbr: 'GQ', color: '#f55036', bg: 'rgba(245,80,54,0.12)',  border: 'rgba(245,80,54,0.3)',   defaultModel: 'llama-3.3-70b-versatile', pool: true },
+        groq:       { label: 'Groq Cloud',      abbr: 'GQ', color: '#f55036', bg: 'rgba(245,80,54,0.12)',  border: 'rgba(245,80,54,0.3)',   defaultModel: 'qwen/qwen3.8-27b', pool: true },
         grok:       { label: 'xAI Grok',        abbr: 'GK', color: '#f8fafc', bg: 'rgba(255,255,255,0.08)',border: 'rgba(255,255,255,0.2)', defaultModel: 'grok-2-latest', pool: false },
         deepseek:   { label: 'DeepSeek AI',     abbr: 'DS', color: '#2563eb', bg: 'rgba(37,99,235,0.12)',  border: 'rgba(37,99,235,0.3)',   defaultModel: 'deepseek-chat', pool: false },
         qwen:       { label: 'Alibaba Qwen',    abbr: 'QW', color: '#f97316', bg: 'rgba(249,115,22,0.12)', border: 'rgba(249,115,22,0.3)',  defaultModel: 'qwen-plus', pool: false },
@@ -494,7 +494,9 @@
     window.testApiKeyBeforeAdd = async function() {
         const provider = document.getElementById('akm-add-provider').value;
         const key = document.getElementById('akm-add-key').value.trim();
-        const model = document.getElementById('akm-add-model').value.trim() || PROVIDERS[provider]?.defaultModel || '';
+        let model = document.getElementById('akm-add-model').value
+            .replace(/[\u2010\u2011\u2012\u2013\u2014\u2015\u2212]/g, '-')
+            .trim() || PROVIDERS[provider]?.defaultModel || '';
         const url = document.getElementById('akm-add-url').value.trim();
         const resEl = document.getElementById('akm-test-result');
 
@@ -530,7 +532,9 @@
     window.saveNewApiKey = async function() {
         const provider = document.getElementById('akm-add-provider').value;
         const key = document.getElementById('akm-add-key').value.trim();
-        const model = document.getElementById('akm-add-model').value.trim();
+        let model = document.getElementById('akm-add-model').value
+            .replace(/[\u2010\u2011\u2012\u2013\u2014\u2015\u2212]/g, '-')
+            .trim();
         const url = document.getElementById('akm-add-url').value.trim();
         const label = document.getElementById('akm-add-label').value.trim();
 
