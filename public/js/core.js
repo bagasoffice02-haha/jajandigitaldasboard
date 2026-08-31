@@ -224,23 +224,25 @@ window.closeMobileMoreSheet = function() {
 
 // ─── 6. SUB-TABS CONTROL (CONSOLIDATED) ────────────────────────
 window.switchSubTab = function(parentTab, subTab) {
-    if (parentTab === 'transactions') {
+        if (parentTab === 'transactions') {
         const ordersPanel = document.getElementById('panel-orders-container');
         const invoicesPanel = document.getElementById('panel-invoices-container');
+        const paymentsPanel = document.getElementById('panel-payments-container');
         const ordersBtn = document.getElementById('sub-tab-orders-btn');
         const invoicesBtn = document.getElementById('sub-tab-invoices-btn');
+        const paymentsBtn = document.getElementById('sub-tab-payments-btn');
 
-        if (subTab === 'orders') {
-            if (ordersPanel) ordersPanel.style.display = 'block';
-            if (invoicesPanel) invoicesPanel.style.display = 'none';
-            if (ordersBtn) ordersBtn.classList.add('active');
-            if (invoicesBtn) invoicesBtn.classList.remove('active');
-        } else {
-            if (ordersPanel) ordersPanel.style.display = 'none';
-            if (invoicesPanel) invoicesPanel.style.display = 'block';
-            if (ordersBtn) ordersBtn.classList.remove('active');
-            if (invoicesBtn) invoicesBtn.classList.add('active');
-        }
+        if (ordersPanel) ordersPanel.style.display = subTab === 'orders' ? 'block' : 'none';
+        if (invoicesPanel) invoicesPanel.style.display = subTab === 'invoices' ? 'block' : 'none';
+        if (paymentsPanel) paymentsPanel.style.display = subTab === 'payments' ? 'block' : 'none';
+
+        if (ordersBtn) ordersBtn.classList.toggle('active', subTab === 'orders');
+        if (invoicesBtn) invoicesBtn.classList.toggle('active', subTab === 'invoices');
+        if (paymentsBtn) paymentsBtn.classList.toggle('active', subTab === 'payments');
+
+        if (subTab === 'orders' && window.loadOrders) window.loadOrders();
+        if (subTab === 'invoices' && window.loadInvoices) window.loadInvoices();
+        if (subTab === 'payments' && window.loadPaymentProofs) window.loadPaymentProofs();
     } else if (parentTab === 'premium') {
         const accPanel = document.getElementById('panel-premium-accounts-container');
         const salesPanel = document.getElementById('panel-premium-sales-container');

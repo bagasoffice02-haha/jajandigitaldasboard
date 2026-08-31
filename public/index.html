@@ -1009,12 +1009,19 @@
                 </div>
 
                 <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-                    <div class="flex items-center gap-2 p-1 bg-[var(--bg-surface)] border border-[var(--border-color)] rounded-xl">
-                        <button id="sub-tab-orders-btn" onclick="switchSubTab('transactions', 'orders')" class="subtab-btn active px-3.5 py-1.5 rounded-lg text-xs font-semibold">
-                            Daftar Pesanan
+                    <div class="flex flex-wrap items-center gap-1.5 p-1 bg-[var(--bg-surface)] border border-[var(--border-color)] rounded-xl">
+                        <button id="sub-tab-orders-btn" onclick="switchSubTab('transactions', 'orders')" class="subtab-btn active px-3.5 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5">
+                            <i data-lucide="shopping-cart" class="w-3.5 h-3.5 text-indigo-400"></i>
+                            <span>Daftar Pesanan</span>
                         </button>
-                        <button id="sub-tab-invoices-btn" onclick="switchSubTab('transactions', 'invoices')" class="subtab-btn px-3.5 py-1.5 rounded-lg text-xs font-semibold">
-                            Faktur & Tagihan
+                        <button id="sub-tab-invoices-btn" onclick="switchSubTab('transactions', 'invoices')" class="subtab-btn px-3.5 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5">
+                            <i data-lucide="receipt" class="w-3.5 h-3.5 text-purple-400"></i>
+                            <span>Faktur & Tagihan</span>
+                        </button>
+                        <button id="sub-tab-payments-btn" onclick="switchSubTab('transactions', 'payments')" class="subtab-btn px-3.5 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5">
+                            <i data-lucide="image" class="w-3.5 h-3.5 text-emerald-400"></i>
+                            <span>Galeri Bukti Transfer</span>
+                            <span id="badge-payments-count" class="px-1.5 py-0.2 rounded-full bg-emerald-500/20 text-emerald-400 text-[10px] font-mono-num font-bold">0</span>
                         </button>
                     </div>
 
@@ -1059,6 +1066,45 @@
 
                     <div id="orders-mobile-cards" class="mobile-card-view">
                         <div class="py-6 text-center text-xs text-[var(--text-muted)]">Memuat pesanan...</div>
+                    </div>
+                </div>
+
+                
+                <!-- Panel Bukti Transfer (Gallery & Inspector) -->
+                <div id="panel-payments-container" class="space-y-4" style="display:none;">
+                    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 enterprise-card">
+                        <div>
+                            <h3 class="font-bold text-xs uppercase tracking-wider flex items-center gap-2">
+                                <i data-lucide="image" class="w-4 h-4 text-emerald-400"></i>
+                                Berkas Bukti Transfer Pelanggan (Upload Portal)
+                            </h3>
+                            <p class="text-[11px] text-[var(--text-muted)] mt-0.5">Semua foto struk/bukti transfer yang diunggah pelanggan via portal web /u atau /upload-bukti</p>
+                        </div>
+                        <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+                            <a href="/upload-bukti" target="_blank" class="enterprise-btn enterprise-btn-secondary text-xs flex items-center gap-1.5">
+                                <i data-lucide="external-link" class="w-3.5 h-3.5 text-indigo-400"></i>
+                                <span>Buka Portal Upload</span>
+                            </a>
+                            <button onclick="loadPaymentProofs()" class="enterprise-btn enterprise-btn-primary text-xs flex items-center gap-1.5">
+                                <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
+                                <span>Segarkan Galeri</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Filter Bar for Payments -->
+                    <div class="flex items-center justify-between gap-3">
+                        <div class="w-full sm:w-72">
+                            <input type="text" id="payment-search-input" onkeyup="filterPaymentProofs(this.value)" placeholder="Cari nama berkas/tanggal..." class="enterprise-input text-xs py-1.5">
+                        </div>
+                        <div class="text-[11px] text-[var(--text-muted)] font-mono-num">
+                            Menampilkan <strong id="payment-showing-count" class="text-[var(--text-primary)]">0</strong> bukti
+                        </div>
+                    </div>
+
+                    <!-- Payment Proofs Grid -->
+                    <div id="payment-proofs-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                        <div class="col-span-full text-center py-10 text-xs text-[var(--text-muted)]">Memuat galeri bukti transfer...</div>
                     </div>
                 </div>
 
@@ -1271,6 +1317,38 @@
     <!-- ══════════════════════════════════════════════════════════════
          6. MODAL DIALOGS
          ══════════════════════════════════════════════════════════════ -->
+
+    
+    <!-- MODAL: Lightbox Bukti Transfer -->
+    <div id="modal-payment-lightbox" class="modal-overlay hidden" role="dialog" aria-modal="true" onclick="closePaymentLightbox()">
+        <div class="modal-panel max-w-2xl bg-[var(--bg-surface)] space-y-4" onclick="event.stopPropagation()">
+            <div class="flex items-center justify-between pb-2 border-b border-[var(--border-color)]">
+                <div class="flex items-center gap-2">
+                    <i data-lucide="image" class="w-4 h-4 text-emerald-400"></i>
+                    <h3 id="lightbox-payment-filename" class="font-bold text-xs font-mono uppercase tracking-wider text-[var(--text-primary)]">Bukti Transfer</h3>
+                </div>
+                <button onclick="closePaymentLightbox()" class="text-[var(--text-muted)] hover:text-[var(--text-primary)]"><i data-lucide="x" class="w-4 h-4"></i></button>
+            </div>
+            <div class="rounded-xl overflow-hidden bg-black/50 border border-[var(--border-color)] p-2 flex items-center justify-center min-h-[280px] max-h-[500px]">
+                <img id="lightbox-payment-img" src="" alt="Bukti Transfer" class="max-w-full max-h-[480px] object-contain rounded-lg shadow-lg">
+            </div>
+            <div class="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-[var(--border-color)]">
+                <div id="lightbox-payment-meta" class="text-[11px] text-[var(--text-muted)] font-mono">
+                    <!-- Ukuran & Waktu -->
+                </div>
+                <div class="flex items-center gap-2">
+                    <a id="lightbox-payment-download" href="#" download="" class="enterprise-btn enterprise-btn-secondary text-xs flex items-center gap-1.5">
+                        <i data-lucide="download" class="w-3.5 h-3.5"></i>
+                        <span>Unduh Berkas</span>
+                    </a>
+                    <button id="lightbox-payment-copy-btn" onclick="" class="enterprise-btn enterprise-btn-primary text-xs flex items-center gap-1.5">
+                        <i data-lucide="link" class="w-3.5 h-3.5"></i>
+                        <span>Salin Link WhatsApp</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- MODAL: Tambah API Key -->
     <div id="akm-modal-add" class="modal-overlay hidden" role="dialog" aria-modal="true">
@@ -1521,16 +1599,16 @@
     <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
 
     <!-- 10 Modular Core Scripts -->
-    <script src="js/core.js?v=33"></script>
-    <script src="js/monitor.js?v=33"></script>
-    <script src="js/memory.js?v=33"></script>
-    <script src="js/groups.js?v=33"></script>
-    <script src="js/shop.js?v=33"></script>
-    <script src="js/transactions.js?v=33"></script>
-    <script src="js/premium.js?v=33"></script>
-    <script src="js/referral.js?v=33"></script>
-    <script src="js/apikeys.js?v=33"></script>
-    <script src="js/settings.js?v=33"></script>
+    <script src="js/core.js?v=34"></script>
+    <script src="js/monitor.js?v=34"></script>
+    <script src="js/memory.js?v=34"></script>
+    <script src="js/groups.js?v=34"></script>
+    <script src="js/shop.js?v=34"></script>
+    <script src="js/transactions.js?v=34"></script>
+    <script src="js/premium.js?v=34"></script>
+    <script src="js/referral.js?v=34"></script>
+    <script src="js/apikeys.js?v=34"></script>
+    <script src="js/settings.js?v=34"></script>
 
 </body>
 </html>

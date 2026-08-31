@@ -365,3 +365,194 @@ document.addEventListener('DOMContentLoaded', () => {
         if (window.loadOrders) window.loadOrders();
     }, 400);
 });
+
+// ─── 3. GALERI BUKTI TRANSFER PELANGGAN (/U & /UPLOAD-BUKTI) ─────────────
+let allPaymentProofs = [];
+let paymentSearchQuery = '';
+
+function formatBytes(bytes, decimals = 1) {
+    if (!bytes || bytes === 0) return '0 B';
+    const k = 1024;
+    const dm = decimals < 0 ? 0 : decimals;
+    const sizes = ['B', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+}
+
+window.loadPaymentProofs = async function() {
+    const grid = document.getElementById('payment-proofs-grid');
+    const countBadge = document.getElementById('badge-payments-count');
+    const showingCount = document.getElementById('payment-showing-count');
+
+    if (grid) grid.innerHTML = '<div class="col-span-full text-center py-10 text-xs text-[var(--text-muted)]">Memuat galeri bukti transfer...</div>';
+
+    try {
+        const res = await fetch('/api/files');
+        if (!res.ok) throw new Error('Gagal memuat berkas bukti');
+        const data = await res.json();
+        allPaymentProofs = Array.isArray(data.payments) ? data.payments : [];
+
+        if (countBadge) countBadge.textContent = allPaymentProofs.length;
+        if (showingCount) showingCount.textContent = allPaymentProofs.length;
+
+        window.renderPaymentProofs();
+    } catch(err) {
+        console.error('Error loadPaymentProofs:', err);
+        if (grid) grid.innerHTML = `<div class="col-span-full text-center py-8 text-xs text-rose-400">Gagal memuat: ${escapeHtml(err.message)}</div>`;
+    }
+};
+
+window.filterPaymentProofs = function(query) {
+    paymentSearchQuery = (query || '').toLowerCase().trim();
+    window.renderPaymentProofs();
+};
+
+window.renderPaymentProofs = function() {
+    const grid = document.getElementById('payment-proofs-grid');
+    const showingCount = document.getElementById('payment-showing-count');
+    if (!grid) return;
+
+    let filtered = allPaymentProofs;
+    if (paymentSearchQuery) {
+        filtered = filtered.filter(f => 
+            f.name.toLowerCase().includes(paymentSearchQuery) ||
+            new Date(f.mtime).toLocaleString('id-ID').toLowerCase().includes(paymentSearchQuery)
+        );
+    }
+
+    if (showingCount) showingCount.textContent = filtered.length;
+
+    if (filtered.length === 0) {
+        grid.innerHTML = `
+            <div class="col-span-full text-center py-12 text-xs text-[var(--text-muted)] space-y-2">
+                <i data-lucide="image-off" class="w-8 h-8 mx-auto opacity-40"></i>
+                <p>${paymentSearchQuery ? 'Tidak ada bukti transfer yang sesuai dengan pencarian.' : 'Belum ada bukti transfer yang diunggah pelanggan.'}</p>
+            </div>
+        `;
+        if (window.lucide) lucide.createIcons();
+        return;
+    }
+
+    grid.innerHTML = filtered.map(f => {
+        const dateStr = new Date(f.mtime).toLocaleString('id-ID', {
+            day: 'numeric', month: 'short', year: 'numeric',
+            hour: '2-digit', minute: '2-digit'
+        });
+        const sizeStr = formatBytes(f.size);
+        const previewUrl = `/b/${f.name}`;
+        const fullImgUrl = `/uploads/payments/${f.name}`;
+
+        return `
+            <div class="enterprise-card p-3 space-y-2.5 flex flex-col justify-between group hover:border-indigo-500/40 transition-all shadow-sm">
+                <!-- Thumbnail with hover zoom -->
+                <div class="relative rounded-xl overflow-hidden bg-black/40 border border-[var(--border-color)] aspect-square cursor-pointer flex items-center justify-center group" onclick="openPaymentLightbox('${fullImgUrl}', '${escapeHtml(f.name)}', '${sizeStr}', '${dateStr}')">
+                    <img src="${fullImgUrl}" alt="${escapeHtml(f.name)}" loading="lazy" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
+                    <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                        <span class="p-2 rounded-xl bg-white/20 backdrop-blur-sm text-white text-xs font-bold flex items-center gap-1">
+                            <i data-lucide="maximize-2" class="w-4 h-4"></i>
+                            <span>Perbesar</span>
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Meta Details -->
+                <div class="space-y-1">
+                    <div class="flex items-center justify-between">
+                        <span class="font-mono text-xs font-bold text-[var(--text-primary)] truncate" title="${escapeHtml(f.name)}">${escapeHtml(f.name)}</span>
+                        <span class="text-[10px] text-[var(--text-muted)] font-mono">${sizeStr}</span>
+                    </div>
+                    <p class="text-[10px] text-[var(--text-secondary)] font-mono">${dateStr} WIB</p>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="pt-2 border-t border-[var(--border-color)] flex items-center justify-between gap-1.5">
+                    <button onclick="openPaymentLightbox('${fullImgUrl}', '${escapeHtml(f.name)}', '${sizeStr}', '${dateStr}')" class="flex-1 enterprise-btn enterprise-btn-secondary text-[11px] py-1 px-2 flex items-center justify-center gap-1" title="Lihat Bukti">
+                        <i data-lucide="eye" class="w-3.5 h-3.5 text-indigo-400"></i>
+                        <span>Lihat</span>
+                    </button>
+                    <button onclick="copyPaymentPreviewLink('${previewUrl}')" class="enterprise-btn enterprise-btn-secondary text-[11px] py-1 px-2 flex items-center justify-center text-emerald-400" title="Salin Link WhatsApp (/b/...)">
+                        <i data-lucide="link" class="w-3.5 h-3.5"></i>
+                    </button>
+                    <button onclick="deletePaymentProof('${escapeHtml(f.name)}')" class="enterprise-btn enterprise-btn-secondary text-[11px] py-1 px-2 flex items-center justify-center text-rose-400 hover:bg-rose-500/10" title="Hapus Berkas">
+                        <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                    </button>
+                </div>
+            </div>
+        `;
+    }).join('');
+
+    if (window.lucide) lucide.createIcons();
+};
+
+window.openPaymentLightbox = function(url, filename, size, dateStr) {
+    const modal = document.getElementById('modal-payment-lightbox');
+    const img = document.getElementById('lightbox-payment-img');
+    const titleEl = document.getElementById('lightbox-payment-filename');
+    const metaEl = document.getElementById('lightbox-payment-meta');
+    const downloadA = document.getElementById('lightbox-payment-download');
+    const copyBtn = document.getElementById('lightbox-payment-copy-btn');
+
+    if (titleEl) titleEl.textContent = filename;
+    if (img) img.src = url;
+    if (metaEl) metaEl.textContent = `Ukuran: ${size} • Diunggah: ${dateStr} WIB`;
+    if (downloadA) {
+        downloadA.href = url;
+        downloadA.download = filename;
+    }
+    if (copyBtn) {
+        copyBtn.onclick = () => window.copyPaymentPreviewLink(`/b/${filename}`);
+    }
+
+    if (modal) {
+        modal.classList.remove('hidden');
+        modal.style.display = 'flex';
+    }
+    if (window.lucide) lucide.createIcons();
+};
+
+window.closePaymentLightbox = function() {
+    const modal = document.getElementById('modal-payment-lightbox');
+    if (modal) {
+        modal.classList.add('hidden');
+        modal.style.display = 'none';
+    }
+};
+
+window.copyPaymentPreviewLink = function(previewPath) {
+    const fullUrl = window.location.origin + previewPath;
+    navigator.clipboard.writeText(fullUrl).then(() => {
+        if (window.showToast) window.showToast('success', `Tautan pratinjau disalin: ${fullUrl}`);
+    }).catch(() => {
+        prompt('Salin link pratinjau:', fullUrl);
+    });
+};
+
+window.deletePaymentProof = async function(filename) {
+    const confirmed = await window.showEnterpriseConfirm({
+        title: 'Hapus Bukti Transfer',
+        message: `Apakah Anda yakin ingin menghapus berkas bukti transfer <strong class="font-mono text-rose-400">${escapeHtml(filename)}</strong>?`,
+        confirmText: 'Hapus Berkas',
+        cancelText: 'Batal',
+        type: 'danger',
+        icon: 'trash-2'
+    });
+
+    if (!confirmed) return;
+
+    try {
+        const res = await fetch('/api/files/delete', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ type: 'payments', filename: filename })
+        });
+        if (res.ok) {
+            if (window.showToast) window.showToast('success', `Berkas ${filename} berhasil dihapus.`);
+            window.loadPaymentProofs();
+        } else {
+            const err = await res.json();
+            throw new Error(err.error || 'Gagal menghapus');
+        }
+    } catch(err) {
+        if (window.showToast) window.showToast('error', 'Gagal: ' + err.message);
+    }
+};
