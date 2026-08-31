@@ -345,7 +345,17 @@ window.filterChatLogs = function() {
 };
 
 window.clearChatLogs = async function() {
-    if (!confirm('Hapus seluruh riwayat obrolan tersimpan?')) return;
+    const confirmed = await window.showEnterpriseConfirm({
+        title: 'Bersihkan Riwayat Obrolan',
+        message: 'Apakah Anda yakin ingin menghapus seluruh riwayat obrolan tersimpan dari database?',
+        confirmText: 'Ya, Bersihkan',
+        cancelText: 'Batal',
+        type: 'danger',
+        icon: 'trash-2'
+    });
+
+    if (!confirmed) return;
+
     try {
         await fetch('/api/chat/clear-logs', { method: 'POST' });
         const chatContainer = document.getElementById('chat-messages');

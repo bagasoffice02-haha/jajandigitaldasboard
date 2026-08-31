@@ -1394,6 +1394,31 @@
     </div>
 
     <!-- ══════════════════════════════════════════════════════════════
+         MODAL: Enterprise Universal Confirmation Dialog (In-App)
+         ══════════════════════════════════════════════════════════════ -->
+    <div id="enterprise-confirm-modal" class="modal-overlay hidden fixed inset-0 bg-black/75 backdrop-blur-md z-[9999] items-center justify-center p-4" role="dialog" aria-modal="true">
+        <div class="enterprise-card bg-slate-900 border border-white/15 max-w-sm w-full p-5 rounded-2xl shadow-2xl space-y-4 text-left">
+            <div class="flex items-start gap-3.5">
+                <div id="confirm-icon-box" class="w-10 h-10 rounded-xl bg-rose-500/15 text-rose-400 border border-rose-500/30 flex items-center justify-center shrink-0 shadow-inner">
+                    <i id="confirm-icon" data-lucide="log-out" class="w-5 h-5"></i>
+                </div>
+                <div class="flex-1 space-y-1">
+                    <h3 id="confirm-title" class="text-sm font-bold text-white tracking-tight">Konfirmasi Tindakan</h3>
+                    <p id="confirm-message" class="text-xs text-slate-300 leading-relaxed">Apakah Anda yakin ingin melanjutkan tindakan ini?</p>
+                </div>
+            </div>
+            <div class="flex items-center justify-end gap-2.5 pt-3 border-t border-white/10">
+                <button type="button" id="confirm-btn-cancel" onclick="window.resolveEnterpriseConfirm(false)" class="px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-slate-300 text-xs font-semibold transition-colors">
+                    Batal
+                </button>
+                <button type="button" id="confirm-btn-action" onclick="window.resolveEnterpriseConfirm(true)" class="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold shadow-lg shadow-rose-600/30 transition-colors flex items-center gap-1.5">
+                    <span id="confirm-action-text">Ya, Lanjutkan</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════════════
          7. SCRIPTS & PLUGINS
          ══════════════════════════════════════════════════════════════ -->
     <script src="https://unpkg.com/lucide@latest"></script>

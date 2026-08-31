@@ -353,11 +353,20 @@ window.sendBroadcast = async function() {
     const message = msgInput ? msgInput.value.trim() : '';
 
     if (!message) {
-        alert('Tulis pesan siaran massal terlebih dahulu!');
+        if (window.showToast) window.showToast('warn', 'Tulis pesan siaran massal terlebih dahulu!');
         return;
     }
 
-    if (!confirm('Apakah Anda yakin ingin mengirim pesan siaran ini?')) return;
+    const confirmed = await window.showEnterpriseConfirm({
+        title: 'Kirim Siaran Massal',
+        message: 'Apakah Anda yakin ingin mengirim pesan siaran ini ke kontak/grup terpilih?',
+        confirmText: 'Ya, Kirim Siaran',
+        cancelText: 'Batal',
+        type: 'primary',
+        icon: 'send'
+    });
+
+    if (!confirmed) return;
 
     try {
         const res = await fetch('/api/shop/broadcast', {
@@ -366,13 +375,13 @@ window.sendBroadcast = async function() {
             body: JSON.stringify({ targetType, customNumbers: customNumbersVal, targetGroup, message, delay: 5 })
         });
         if (res.ok) {
-            alert('Siaran massal berhasil diproses dan dikirim!');
+            if (window.showToast) window.showToast('success', 'Siaran massal berhasil diproses dan dikirim!');
             if (msgInput) msgInput.value = '';
         } else {
             throw new Error(await res.text());
         }
     } catch(err) {
-        alert('Gagal mengirim siaran: ' + err.message);
+        if (window.showToast) window.showToast('error', 'Gagal mengirim siaran: ' + err.message);
     }
 };
 

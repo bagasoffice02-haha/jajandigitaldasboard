@@ -89,7 +89,16 @@ window.uploadFile = async function() {
 };
 
 window.deleteFile = async function(type, filename) {
-    if (!confirm(`Apakah Anda yakin ingin menghapus berkas "${filename}"?`)) return;
+    const confirmed = await window.showEnterpriseConfirm({
+        title: 'Hapus Berkas Pengetahuan',
+        message: `Apakah Anda yakin ingin menghapus berkas <strong class="text-white">"${filename}"</strong> dari memori RAG AI?`,
+        confirmText: 'Ya, Hapus Berkas',
+        cancelText: 'Batal',
+        type: 'danger',
+        icon: 'trash-2'
+    });
+
+    if (!confirmed) return;
 
     try {
         const res = await fetch('/api/files/delete', {

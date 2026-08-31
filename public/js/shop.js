@@ -65,7 +65,17 @@ window.loadHostAdmins = async function() {
 };
 
 window.removeHostAdminDirect = async function(phoneJid) {
-    if (!confirm(`Hapus hak akses Host Admin untuk ${phoneJid}?`)) return;
+    const confirmed = await window.showEnterpriseConfirm({
+        title: 'Hapus Host Admin',
+        message: `Apakah Anda yakin ingin mencabut hak akses Host Admin untuk <strong class="text-white">${phoneJid}</strong>?`,
+        confirmText: 'Ya, Cabut Akses',
+        cancelText: 'Batal',
+        type: 'danger',
+        icon: 'trash-2'
+    });
+
+    if (!confirmed) return;
+
     try {
         const res = await fetch('/api/shop/admins', {
             method: 'DELETE',
@@ -389,14 +399,23 @@ window.addChildNode = function() {
     window.loadNodeDataToEditor(newId);
 };
 
-window.deleteNode = function() {
+window.deleteNode = async function() {
     if (!window.selectedGroupConfig || !window.selectedNodeId) return;
     if (window.selectedNodeId === 'root') {
         if (window.showToast) window.showToast('warning', 'Node Utama (Root) tidak dapat dihapus!');
         return;
     }
 
-    if (!confirm('Apakah Anda yakin ingin menghapus menu ini?')) return;
+    const confirmed = await window.showEnterpriseConfirm({
+        title: 'Hapus Item Menu Toko',
+        message: 'Apakah Anda yakin ingin menghapus menu ini beserta sub-menu di dalamnya?',
+        confirmText: 'Ya, Hapus Menu',
+        cancelText: 'Batal',
+        type: 'danger',
+        icon: 'trash-2'
+    });
+
+    if (!confirmed) return;
 
     function removeRecursive(parentNode, targetId) {
         if (!parentNode.children) return false;

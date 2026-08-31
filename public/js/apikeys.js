@@ -528,7 +528,16 @@
     };
 
     window.openDeleteConfirm = async function(provider, index, masked, providerLabel) {
-        if (!confirm(`Apakah Anda yakin ingin menghapus API Key ${providerLabel} (${masked})?`)) return;
+        const confirmed = await window.showEnterpriseConfirm({
+            title: 'Hapus API Key AI',
+            message: `Apakah Anda yakin ingin menghapus API Key <strong class="text-white">${providerLabel} (${masked})</strong>?`,
+            confirmText: 'Ya, Hapus Key',
+            cancelText: 'Batal',
+            type: 'danger',
+            icon: 'trash-2'
+        });
+
+        if (!confirmed) return;
 
         try {
             const r = await fetch(`/api/keys/${provider}/${index}`, {

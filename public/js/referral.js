@@ -232,8 +232,17 @@ window.openManualRewardModal = function(phone, name, currentPts) {
     });
 };
 
-window.deleteReferralCodeDirect = function(code) {
-    if (!confirm(`Hapus kode referral "${code}" dari sistem?`)) return;
+window.deleteReferralCodeDirect = async function(code) {
+    const confirmed = await window.showEnterpriseConfirm({
+        title: 'Hapus Kode Referral',
+        message: `Apakah Anda yakin ingin menghapus kode referral <strong class="text-white">"${code}"</strong> dari sistem?`,
+        confirmText: 'Ya, Hapus Kode',
+        cancelText: 'Batal',
+        type: 'danger',
+        icon: 'trash-2'
+    });
+
+    if (!confirmed) return;
 
     fetch('/api/referrals/codes', {
         method: 'DELETE',

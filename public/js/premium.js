@@ -342,7 +342,17 @@ window.savePremiumSale = async function() {
 };
 
 window.deletePremiumAccount = async function(id) {
-    if (!confirm('Hapus akun premium ini dari inventaris?')) return;
+    const confirmed = await window.showEnterpriseConfirm({
+        title: 'Hapus Akun Premium',
+        message: 'Apakah Anda yakin ingin menghapus akun premium ini dari inventaris?',
+        confirmText: 'Ya, Hapus Akun',
+        cancelText: 'Batal',
+        type: 'danger',
+        icon: 'trash-2'
+    });
+
+    if (!confirmed) return;
+
     try {
         const res = await fetch(`/api/premium/accounts/${id}`, { method: 'DELETE' });
         if (res.ok) {
@@ -353,7 +363,17 @@ window.deletePremiumAccount = async function(id) {
 };
 
 window.deletePremiumSale = async function(id) {
-    if (!confirm('Hapus riwayat penjualan ini?')) return;
+    const confirmed = await window.showEnterpriseConfirm({
+        title: 'Hapus Catatan Penjualan',
+        message: 'Apakah Anda yakin ingin menghapus riwayat transaksi penjualan ini?',
+        confirmText: 'Ya, Hapus Transaksi',
+        cancelText: 'Batal',
+        type: 'danger',
+        icon: 'trash-2'
+    });
+
+    if (!confirmed) return;
+
     try {
         const res = await fetch(`/api/premium/sales/${id}`, { method: 'DELETE' });
         if (res.ok) {

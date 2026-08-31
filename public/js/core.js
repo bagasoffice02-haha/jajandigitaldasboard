@@ -272,25 +272,111 @@ window.copyPublicUrl = function(pathUrl) {
     });
 };
 
-window.logoutDashboard = async function() {
-    if (confirm('Apakah Anda yakin ingin keluar dari sistem dasbor?')) {
-        try {
-            await fetch('/api/logout', { 
-                method: 'POST', 
-                headers: { 'Content-Type': 'application/json' } 
-            });
-        } catch (_) {}
-        document.cookie = 'session_token=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;';
-        window.location.href = '/login';
+// ─── 7. UNIVERSAL ENTERPRISE CONFIRMATION DIALOG MODAL ───────
+let activeConfirmResolver = null;
+
+window.showEnterpriseConfirm = function(options = {}) {
+    const {
+        title = 'Konfirmasi Tindakan',
+        message = 'Apakah Anda yakin ingin melanjutkan tindakan ini?',
+        confirmText = 'Ya, Lanjutkan',
+        cancelText = 'Batal',
+        type = 'danger', // 'danger' | 'warning' | 'primary'
+        icon = 'alert-triangle'
+    } = options;
+
+    return new Promise((resolve) => {
+        activeConfirmResolver = resolve;
+
+        const modal = document.getElementById('enterprise-confirm-modal');
+        const titleEl = document.getElementById('confirm-title');
+        const msgEl = document.getElementById('confirm-message');
+        const actionBtn = document.getElementById('confirm-btn-action');
+        const cancelBtn = document.getElementById('confirm-btn-cancel');
+        const iconBox = document.getElementById('confirm-icon-box');
+        const iconEl = document.getElementById('confirm-icon');
+        const actionTextEl = document.getElementById('confirm-action-text');
+
+        if (titleEl) titleEl.textContent = title;
+        if (msgEl) msgEl.innerHTML = message;
+        if (actionTextEl) actionTextEl.textContent = confirmText;
+        if (cancelBtn) cancelBtn.textContent = cancelText;
+
+        if (iconBox && iconEl) {
+            if (type === 'danger') {
+                iconBox.className = 'w-10 h-10 rounded-xl bg-rose-500/15 text-rose-400 border border-rose-500/30 flex items-center justify-center shrink-0 shadow-inner';
+                if (actionBtn) actionBtn.className = 'px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold shadow-lg shadow-rose-600/30 transition-colors flex items-center gap-1.5';
+                iconEl.setAttribute('data-lucide', icon || 'log-out');
+            } else if (type === 'warning') {
+                iconBox.className = 'w-10 h-10 rounded-xl bg-amber-500/15 text-amber-400 border border-amber-500/30 flex items-center justify-center shrink-0 shadow-inner';
+                if (actionBtn) actionBtn.className = 'px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-500 text-white text-xs font-bold shadow-lg shadow-amber-600/30 transition-colors flex items-center gap-1.5';
+                iconEl.setAttribute('data-lucide', icon || 'alert-triangle');
+            } else {
+                iconBox.className = 'w-10 h-10 rounded-xl bg-indigo-500/15 text-indigo-400 border border-indigo-500/30 flex items-center justify-center shrink-0 shadow-inner';
+                if (actionBtn) actionBtn.className = 'px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold shadow-lg shadow-indigo-600/30 transition-colors flex items-center gap-1.5';
+                iconEl.setAttribute('data-lucide', icon || 'check-circle');
+            }
+        }
+
+        if (modal) {
+            modal.classList.remove('hidden');
+            modal.style.display = 'flex';
+        }
+        if (window.lucide) lucide.createIcons();
+    });
+};
+
+window.resolveEnterpriseConfirm = function(result) {
+    const modal = document.getElementById('enterprise-confirm-modal');
+    if (modal) {
+        modal.classList.add('hidden');
+        modal.style.display = 'none';
     }
+    if (typeof activeConfirmResolver === 'function') {
+        const resolver = activeConfirmResolver;
+        activeConfirmResolver = null;
+        resolver(Boolean(result));
+    }
+};
+
+window.logoutDashboard = async function() {
+    const confirmed = await window.showEnterpriseConfirm({
+        title: 'Keluar dari Sistem',
+        message: 'Apakah Anda yakin ingin mengakhiri sesi admin dasbor saat ini?',
+        confirmText: 'Ya, Keluar Sistem',
+        cancelText: 'Tetap di Sini',
+        type: 'danger',
+        icon: 'log-out'
+    });
+
+    if (!confirmed) return;
+
+    if (window.showToast) window.showToast('info', 'Mengakhiri sesi admin...');
+    try {
+        await fetch('/api/logout', { 
+            method: 'POST', 
+            headers: { 'Content-Type': 'application/json' } 
+        });
+    } catch (_) {}
+    document.cookie = 'session_token=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;';
+    window.location.href = '/login';
 };
 
 // ─── 8. GLOBAL KEYBOARD SHORTCUTS ──────────────────────────
 document.addEventListener('keydown', (e) => {
-    // ESC: Close open modals
+    // ESC: Close open modals & cancel active confirmation dialog
     if (e.key === 'Escape') {
+        if (activeConfirmResolver) {
+            window.resolveEnterpriseConfirm(false);
+            return;
+        }
         const openModals = document.querySelectorAll('.modal-overlay:not(.hidden)');
         openModals.forEach(m => m.classList.add('hidden'));
+    }
+    // Enter on active confirmation dialog: confirm
+    if (e.key === 'Enter' && activeConfirmResolver) {
+        window.resolveEnterpriseConfirm(true);
+        return;
     }
     // Ctrl+K / Cmd+K: Open Quick Links
     if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
