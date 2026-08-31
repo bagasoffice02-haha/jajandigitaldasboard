@@ -50,9 +50,14 @@ window.loadHostAdmins = async function() {
                         <p class="text-[11px] text-[var(--text-muted)] font-mono">+${cleanPhone}</p>
                     </div>
                 </div>
-                <button onclick="window.removeHostAdminDirect('${cleanPhone}@c.us')" class="p-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/20 text-xs transition-all" title="Hapus Admin">
-                    <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
-                </button>
+                <div class="flex items-center gap-1.5 shrink-0">
+                    <button onclick="window.openAdminModal('edit', '${cleanPhone}', '${escapeHtml(name)}')" class="p-1.5 rounded-lg bg-sky-500/10 hover:bg-sky-500/20 text-sky-400 border border-sky-500/20 text-xs transition-all" title="Edit Admin">
+                        <i data-lucide="edit-3" class="w-3.5 h-3.5"></i>
+                    </button>
+                    <button onclick="window.removeHostAdminDirect('${cleanPhone}')" class="p-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/20 text-xs transition-all" title="Hapus Admin">
+                        <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                    </button>
+                </div>
             `;
             list.appendChild(card);
         });
@@ -64,10 +69,96 @@ window.loadHostAdmins = async function() {
     }
 };
 
+window.openAdminModal = function(mode = 'add', phone = '', name = '') {
+    const modal = document.getElementById('modal-shop-admin');
+    const titleEl = document.getElementById('admin-modal-title');
+    const modeEl = document.getElementById('admin-modal-mode');
+    const oldPhoneEl = document.getElementById('admin-modal-old-phone');
+    const nameInput = document.getElementById('admin-modal-name');
+    const phoneInput = document.getElementById('admin-modal-phone');
+    const saveBtn = document.getElementById('admin-modal-save-btn');
+
+    if (modeEl) modeEl.value = mode;
+    if (oldPhoneEl) oldPhoneEl.value = phone;
+    if (nameInput) nameInput.value = name || (mode === 'add' ? '' : 'Host Admin');
+    if (phoneInput) phoneInput.value = phone || '';
+
+    if (titleEl) {
+        titleEl.innerHTML = `
+            <i data-lucide="shield-check" class="w-4 h-4 text-sky-400"></i>
+            <span>${mode === 'add' ? 'Tambah Host Admin' : 'Edit Host Admin'}</span>
+        `;
+    }
+    if (saveBtn) saveBtn.textContent = mode === 'add' ? 'Simpan Admin' : 'Perbarui Admin';
+
+    if (modal) modal.classList.remove('hidden');
+    if (window.lucide) lucide.createIcons();
+};
+
+window.closeAdminModal = function() {
+    const modal = document.getElementById('modal-shop-admin');
+    if (modal) modal.classList.add('hidden');
+};
+
+window.saveHostAdmin = async function() {
+    const mode = document.getElementById('admin-modal-mode')?.value || 'add';
+    const oldPhone = document.getElementById('admin-modal-old-phone')?.value || '';
+    const nameInput = document.getElementById('admin-modal-name');
+    const phoneInput = document.getElementById('admin-modal-phone');
+    const saveBtn = document.getElementById('admin-modal-save-btn');
+
+    const name = nameInput ? nameInput.value.trim() : 'Host Admin';
+    const phone = phoneInput ? phoneInput.value.replace(/\D/g, '') : '';
+
+    if (!phone) {
+        if (window.showToast) window.showToast('warn', 'Nomor WhatsApp admin wajib diisi!');
+        return;
+    }
+
+    if (saveBtn) {
+        saveBtn.disabled = true;
+        saveBtn.textContent = 'Menyimpan...';
+    }
+
+    try {
+        let res;
+        if (mode === 'edit') {
+            res = await fetch('/api/shop/admin', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ oldPhone, phone, name })
+            });
+        } else {
+            res = await fetch('/api/shop/admin', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ phone, name })
+            });
+        }
+
+        const data = await res.json();
+        if (res.ok && data.success) {
+            if (window.showToast) window.showToast('success', data.message || 'Host Admin berhasil disimpan.');
+            window.closeAdminModal();
+            window.loadHostAdmins();
+        } else {
+            throw new Error(data.error || 'Gagal menyimpan Host Admin');
+        }
+    } catch (err) {
+        if (window.showToast) window.showToast('error', err.message);
+    } finally {
+        if (saveBtn) {
+            saveBtn.disabled = false;
+            saveBtn.textContent = mode === 'add' ? 'Simpan Admin' : 'Perbarui Admin';
+        }
+    }
+};
+
 window.removeHostAdminDirect = async function(phoneJid) {
+    const cleanPhone = (phoneJid || '').replace(/\D/g, '');
     const confirmed = await window.showEnterpriseConfirm({
         title: 'Hapus Host Admin',
-        message: `Apakah Anda yakin ingin mencabut hak akses Host Admin untuk <strong class="text-white">${phoneJid}</strong>?`,
+        message: `Apakah Anda yakin ingin mencabut hak akses Host Admin untuk <strong class="text-white">+${cleanPhone}</strong>?`,
         confirmText: 'Ya, Cabut Akses',
         cancelText: 'Batal',
         type: 'danger',
@@ -80,7 +171,7 @@ window.removeHostAdminDirect = async function(phoneJid) {
         const res = await fetch('/api/shop/admins', {
             method: 'DELETE',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ phone: phoneJid })
+            body: JSON.stringify({ phone: cleanPhone })
         });
         if (res.ok) {
             if (window.showToast) window.showToast('success', 'Host Admin berhasil dihapus.');
@@ -89,7 +180,7 @@ window.removeHostAdminDirect = async function(phoneJid) {
             throw new Error(await res.text());
         }
     } catch (err) {
-        if (window.showToast) window.showToast('error', 'Gagal menghapus admin: ' + err.message);
+        if (window.showToast) window.showToast('error', 'Gagal menghapus: ' + err.message);
     }
 };
 

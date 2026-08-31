@@ -90,7 +90,17 @@ async function getShopData() {
 
 async function addAdmin(phone, name) {
     const db = getDb();
-    await db.run('INSERT OR REPLACE INTO shop_admins (phone, name) VALUES (?, ?)', phone, name || '');
+    await db.run('INSERT OR REPLACE INTO shop_admins (phone, name) VALUES (?, ?)', phone, name || 'Host Admin');
+}
+
+async function updateAdmin(oldPhone, newPhone, name) {
+    const db = getDb();
+    if (oldPhone === newPhone) {
+        await db.run('UPDATE shop_admins SET name = ? WHERE phone = ?', name || 'Host Admin', oldPhone);
+    } else {
+        await db.run('DELETE FROM shop_admins WHERE phone = ?', oldPhone);
+        await db.run('INSERT OR REPLACE INTO shop_admins (phone, name) VALUES (?, ?)', newPhone, name || 'Host Admin');
+    }
 }
 
 async function removeAdmin(phone) {
@@ -393,6 +403,7 @@ module.exports = {
     clearChatSession,
     getShopData,
     addAdmin,
+    updateAdmin,
     removeAdmin,
     addCustomer,
     removeCustomer,

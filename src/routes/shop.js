@@ -3,7 +3,7 @@ const express = require('express');
 const router = express.Router();
 const fs = require('fs');
 const { getDb } = require('../db/sqlite');
-const { getGroupConfigs, getShopData, addAdmin, addCustomer, setCustomerMuteAi } = require('../db/models');
+const { getGroupConfigs, getShopData, addAdmin, updateAdmin, removeAdmin, addCustomer, setCustomerMuteAi } = require('../db/models');
 const { getClient, getStatus, setMessagesAdminsOnlyHelper } = require('../services/whatsapp/client');
 
 let cancelBroadcastFlag = false;
@@ -12,9 +12,9 @@ let cancelBroadcastFlag = false;
 router.get('/pinned-chats', async (req, res) => {
     try {
         const db = getDb();
-        const admins = await db.all('SELECT phone, name FROM shop_admins') || [];
+        const admins = await db.all('SELECT phone, name FROM shop_admins ORDER BY id ASC') || [];
         const result = admins.map(a => {
-            const clean = a.phone.replace(/\D/g, '');
+            const clean = (a.phone || '').replace(/\D/g, '');
             return { id: `${clean}@c.us`, name: a.name || clean, phone: clean, isHostAdmin: true };
         });
         res.json(result);
@@ -26,9 +26,48 @@ router.get('/pinned-chats', async (req, res) => {
 // ─── ADMINS ───────────────────────────────────────────────
 router.get('/admins', async (req, res) => {
     try {
-        const shopData = await getShopData();
-        const cleanAdmins = (shopData.host_admins || []).map(a => a.replace(/\D/g, ''));
-        res.json(cleanAdmins);
+        const db = getDb();
+        const admins = await db.all('SELECT phone, name FROM shop_admins ORDER BY id ASC') || [];
+        res.json(admins);
+    } catch(err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+router.post('/admin', async (req, res) => {
+    try {
+        const { phone, name } = req.body;
+        if (!phone) return res.status(400).json({ error: 'Nomor WhatsApp wajib diisi' });
+        const cleanPhone = phone.replace(/\D/g, '');
+        if (!cleanPhone) return res.status(400).json({ error: 'Nomor WhatsApp tidak valid' });
+        await addAdmin(cleanPhone, name || 'Host Admin');
+        res.json({ success: true, message: 'Host Admin berhasil ditambahkan' });
+    } catch(err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+router.put('/admin', async (req, res) => {
+    try {
+        const { oldPhone, phone, name } = req.body;
+        if (!oldPhone || !phone) return res.status(400).json({ error: 'Nomor WhatsApp lama dan baru wajib diisi' });
+        const cleanOld = oldPhone.replace(/\D/g, '');
+        const cleanNew = phone.replace(/\D/g, '');
+        if (!cleanNew) return res.status(400).json({ error: 'Nomor WhatsApp baru tidak valid' });
+        await updateAdmin(cleanOld, cleanNew, name || 'Host Admin');
+        res.json({ success: true, message: 'Host Admin berhasil diperbarui' });
+    } catch(err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+router.delete('/admins', async (req, res) => {
+    try {
+        const { phone } = req.body;
+        if (!phone) return res.status(400).json({ error: 'Nomor WhatsApp wajib diisi' });
+        const cleanPhone = phone.replace(/\D/g, '');
+        await removeAdmin(cleanPhone);
+        res.json({ success: true, message: 'Host Admin berhasil dihapus' });
     } catch(err) {
         res.status(500).json({ error: err.message });
     }
@@ -43,9 +82,10 @@ router.post('/admins', async (req, res) => {
         await db.run('DELETE FROM shop_admins');
         const added = new Set();
         for (const phone of admins) {
-            const cleanPhone = phone.split('@')[0].replace(/\D/g, '');
+            const cleanPhone = typeof phone === 'string' ? phone.split('@')[0].replace(/\D/g, '') : (phone.phone || '').replace(/\D/g, '');
+            const adminName = typeof phone === 'object' && phone.name ? phone.name : 'Host Admin';
             if (cleanPhone && !added.has(cleanPhone)) {
-                await addAdmin(cleanPhone, 'Admin Host');
+                await addAdmin(cleanPhone, adminName);
                 added.add(cleanPhone);
             }
         }

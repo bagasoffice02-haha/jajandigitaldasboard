@@ -640,11 +640,15 @@
             <div id="tab-shop" class="tab-content hidden space-y-5">
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
                     <div class="enterprise-card space-y-3">
-                        <div class="pb-2 border-b border-[var(--border-color)]">
+                        <div class="flex items-center justify-between pb-2 border-b border-[var(--border-color)]">
                             <h3 class="font-bold text-xs uppercase tracking-wider flex items-center gap-2">
                                 <i data-lucide="shield-check" class="w-4 h-4 text-sky-400"></i>
                                 Host Admin Toko
                             </h3>
+                            <button onclick="window.openAdminModal('add')" class="enterprise-btn enterprise-btn-primary py-1 px-2.5 text-xs flex items-center gap-1.5" title="Tambah Host Admin Baru">
+                                <i data-lucide="user-plus" class="w-3.5 h-3.5"></i>
+                                <span>Tambah Admin</span>
+                            </button>
                         </div>
                         <div id="shop-admins-list" class="space-y-2">
                             <div class="text-center py-4 text-xs text-[var(--text-muted)]">Memuat host admin...</div>
@@ -1389,6 +1393,36 @@
                     </div>
                     <button onclick="copyPublicUrl('/referral')" class="enterprise-btn enterprise-btn-secondary text-xs">Salin Link</button>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: Tambah / Edit Host Admin Toko -->
+    <div id="modal-shop-admin" class="modal-overlay hidden" role="dialog" aria-modal="true">
+        <div class="modal-panel max-w-sm">
+            <div class="flex items-center justify-between pb-2 border-b border-[var(--border-color)]">
+                <h3 id="admin-modal-title" class="font-bold text-xs uppercase tracking-wider flex items-center gap-2">
+                    <i data-lucide="shield-check" class="w-4 h-4 text-sky-400"></i>
+                    <span>Tambah Host Admin</span>
+                </h3>
+                <button onclick="window.closeAdminModal()" class="text-[var(--text-muted)] hover:text-[var(--text-primary)]"><i data-lucide="x" class="w-4 h-4"></i></button>
+            </div>
+            <div class="space-y-3 text-xs">
+                <input type="hidden" id="admin-modal-mode" value="add">
+                <input type="hidden" id="admin-modal-old-phone" value="">
+                <div>
+                    <label class="block font-semibold mb-1">Nama Host Admin</label>
+                    <input type="text" id="admin-modal-name" placeholder="Misal: Bagas Admin, Owner, Tim CS" class="enterprise-input">
+                </div>
+                <div>
+                    <label class="block font-semibold mb-1">Nomor WhatsApp Admin</label>
+                    <input type="text" id="admin-modal-phone" placeholder="Contoh: 6281234567890" class="enterprise-input font-mono-num">
+                    <p class="text-[10px] text-[var(--text-muted)] mt-1">Gunakan format angka tanpa spasi/simbol (awalan 62).</p>
+                </div>
+            </div>
+            <div class="flex items-center justify-end gap-2 pt-2 border-t border-[var(--border-color)]">
+                <button onclick="window.closeAdminModal()" class="enterprise-btn enterprise-btn-secondary text-xs">Batal</button>
+                <button id="admin-modal-save-btn" onclick="window.saveHostAdmin()" class="enterprise-btn enterprise-btn-primary text-xs">Simpan Admin</button>
             </div>
         </div>
     </div>
