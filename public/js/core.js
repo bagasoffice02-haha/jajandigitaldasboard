@@ -468,5 +468,6 @@ document.addEventListener('keydown', (e) => {
 document.addEventListener('DOMContentLoaded', () => {
     window.initTheme();
     startLiveClock();
+    window.switchTab('monitor');
     if (window.lucide) lucide.createIcons();
 });

@@ -48,19 +48,43 @@ window.switchMonitorStudioMode = function(mode) {
     if (logsBtn) logsBtn.className = mode === 'logs' ? activeBtnClass : inactiveBtnClass;
 
     // Toggle controls
-    if (chatControls) chatControls.style.display = mode === 'chat' ? 'flex' : 'none';
-    if (analyticsControls) analyticsControls.style.display = mode === 'analytics' ? 'flex' : 'none';
-    if (logsControls) logsControls.style.display = mode === 'logs' ? 'flex' : 'none';
+    if (chatControls) {
+        if (mode === 'chat') { chatControls.classList.remove('hidden'); chatControls.style.display = 'flex'; }
+        else { chatControls.classList.add('hidden'); chatControls.style.display = 'none'; }
+    }
+    if (analyticsControls) {
+        if (mode === 'analytics') { analyticsControls.classList.remove('hidden'); analyticsControls.style.display = 'flex'; }
+        else { analyticsControls.classList.add('hidden'); analyticsControls.style.display = 'none'; }
+    }
+    if (logsControls) {
+        if (mode === 'logs') { logsControls.classList.remove('hidden'); logsControls.style.display = 'flex'; }
+        else { logsControls.classList.add('hidden'); logsControls.style.display = 'none'; }
+    }
 
     // Toggle panes
-    if (chatPane) chatPane.style.display = mode === 'chat' ? 'flex' : 'none';
+    if (chatPane) {
+        if (mode === 'chat') { chatPane.classList.remove('hidden'); chatPane.style.display = 'flex'; }
+        else { chatPane.classList.add('hidden'); chatPane.style.display = 'none'; }
+    }
     if (analyticsPane) {
-        analyticsPane.style.display = mode === 'analytics' ? 'flex' : 'none';
-        if (mode === 'analytics') window.fetchChatAnalytics();
+        if (mode === 'analytics') {
+            analyticsPane.classList.remove('hidden');
+            analyticsPane.style.display = 'flex';
+            window.fetchChatAnalytics();
+        } else {
+            analyticsPane.classList.add('hidden');
+            analyticsPane.style.display = 'none';
+        }
     }
     if (logsPane) {
-        logsPane.style.display = mode === 'logs' ? 'flex' : 'none';
-        if (mode === 'logs') window.fetchInitialSystemLogs();
+        if (mode === 'logs') {
+            logsPane.classList.remove('hidden');
+            logsPane.style.display = 'flex';
+            window.fetchInitialSystemLogs();
+        } else {
+            logsPane.classList.add('hidden');
+            logsPane.style.display = 'none';
+        }
     }
 
     if (window.lucide) lucide.createIcons();
@@ -668,7 +692,16 @@ window.fetchInitialSystemLogs = async function() {
             if (data.success && Array.isArray(data.logs)) {
                 const logsContainer = document.getElementById('system-logs-container');
                 if (logsContainer) logsContainer.innerHTML = '';
-                data.logs.forEach(l => window.appendSystemLog(l));
+                if (data.logs.length === 0) {
+                    window.appendSystemLog({
+                        level: 'info',
+                        message: 'Sistem live logger aktif. Menunggu aktivitas pesan obrolan dan transaksi...',
+                        tag: 'SISTEM',
+                        timestamp: Date.now()
+                    });
+                } else {
+                    data.logs.forEach(l => window.appendSystemLog(l));
+                }
             }
         }
     } catch(_) {}
