@@ -151,12 +151,12 @@ body {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════════
-   3. ENTERPRISE COMPACT CARDS & CONTAINERS
+   3. ENTERPRISE COMPACT CARDS & CONTAINERS (Compact Density)
    ═══════════════════════════════════════════════════════════════════════════════ */
 .enterprise-card {
     background-color: var(--bg-surface);
     border: 1px solid var(--border-color);
-    border-radius: 14px;
+    border-radius: 12px;
     padding: 16px;
     box-shadow: var(--card-shadow);
     transition: border-color 0.15s ease, box-shadow 0.15s ease, background-color 0.2s ease;
@@ -167,7 +167,7 @@ body {
     background-color: var(--bg-input);
     color: var(--text-primary);
     border: 1px solid var(--border-color);
-    border-radius: 10px;
+    border-radius: 8px;
     padding: 8px 12px;
     font-size: 0.82rem;
     font-family: inherit;
@@ -188,7 +188,7 @@ body {
     justify-content: center;
     gap: 6px;
     padding: 8px 14px;
-    border-radius: 10px;
+    border-radius: 8px;
     font-size: 0.8rem;
     font-weight: 600;
     cursor: pointer;
@@ -231,7 +231,7 @@ body {
     align-items: center;
     gap: 10px;
     padding: 8px 12px;
-    border-radius: 10px;
+    border-radius: 8px;
     font-size: 0.8rem;
     font-weight: 600;
     color: var(--text-secondary);
@@ -378,7 +378,7 @@ body {
 .enterprise-table-container {
     background-color: var(--bg-surface);
     border: 1px solid var(--border-color);
-    border-radius: 14px;
+    border-radius: 12px;
     overflow: hidden;
     box-shadow: var(--card-shadow);
 }
@@ -454,7 +454,7 @@ body {
     align-items: center;
     gap: 10px;
     padding: 10px 14px;
-    border-radius: 12px;
+    border-radius: 8px;
     background: var(--bg-surface);
     border: 1px solid var(--border-color);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
@@ -517,7 +517,7 @@ body {
 .modal-panel {
     background-color: var(--bg-surface);
     border: 1px solid var(--border-color);
-    border-radius: 16px;
+    border-radius: 12px;
     width: 100%;
     max-width: 500px;
     padding: 20px;

@@ -350,11 +350,24 @@
             if (window.lucide) lucide.createIcons();
         }
 
+        function showToast(message, type = 'success') {
+            const toast = document.createElement('div');
+            toast.className = 'fixed top-4 right-4 z-50 px-4 py-2.5 rounded-xl bg-slate-900/95 border border-emerald-500/40 text-emerald-300 text-xs font-semibold shadow-2xl flex items-center gap-2 backdrop-blur-md transition-all duration-300 transform translate-y-0 opacity-100';
+            toast.innerHTML = `<i data-lucide="check-circle" class="w-4 h-4 text-emerald-400"></i><span>${message}</span>`;
+            document.body.appendChild(toast);
+            if (window.lucide) lucide.createIcons();
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateY(-10px)';
+                setTimeout(() => toast.remove(), 300);
+            }, 2500);
+        }
+
         function copyNumber(num, label) {
             navigator.clipboard.writeText(num).then(() => {
-                alert(`✓ ${label} (${num}) berhasil disalin!`);
+                showToast(`${label} (${num}) berhasil disalin!`);
             }).catch(() => {
-                prompt('Salin nomor:', num);
+                showToast(`${label}: ${num}`);
             });
         }
 

@@ -353,7 +353,7 @@ function createNodeHTML(node, depth) {
         statusBadge = `<span class="badge-chip ${chipClass}" onclick="window.quickToggleStatus(event, '${node.id}')" title="Klik untuk ganti status">${node.status}</span>`;
     }
 
-    const promoBadge = node.isPromo ? '<span class="badge-chip badge-rose">🔥 PROMO</span>' : '';
+    const promoBadge = node.isPromo ? '<span class="badge-chip badge-rose"><i data-lucide="flame" class="w-2.5 h-2.5"></i> PROMO</span>' : '';
 
     header.innerHTML = `
         <i data-lucide="${iconName}" class="w-3.5 h-3.5 ${iconColor} shrink-0"></i>
