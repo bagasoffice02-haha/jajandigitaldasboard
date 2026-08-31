@@ -132,6 +132,9 @@ function maskKey(key = '') {
 function parseApiError(err) {
     if (err.response && err.response.data) {
         const d = err.response.data;
+        if (err.response.status === 401 || (d.error && d.error.code === 'invalid_api_key')) {
+            return { code: 401, message: 'API Key tidak valid atau telah dicabut (Invalid API Key 401). Periksa kembali di dashboard resmi provider.' };
+        }
         if (d.error && d.error.message) return { code: d.error.code || err.response.status, message: d.error.message };
         if (d.error && typeof d.error === 'string') return { code: err.response.status, message: d.error };
         return { code: err.response.status, message: JSON.stringify(d).substring(0, 200) };
@@ -179,10 +182,30 @@ router.post('/test-api', async (req, res) => {
             }
         }
 
-        // ── GROQ ───────────────────────────────────────────────
+        // ── GROQ CLOUD ──────────────────────────────────────────
         else if (provider === 'groq') {
             const modelName = model || config.groq_model || 'llama-3.3-70b-versatile';
             const resp = await axios.post('https://api.groq.com/openai/v1/chat/completions', {
+                model: modelName,
+                messages: [{ role: 'user', content: 'Hi' }],
+                max_tokens: 5
+            }, {
+                headers: { 'Authorization': `Bearer ${key.trim()}`, 'Content-Type': 'application/json' },
+                timeout: 15000
+            });
+
+            result = {
+                success: true,
+                model: resp.data.model || modelName,
+                latency: Date.now() - startTime,
+                info: `Model: ${resp.data.model || modelName} | Tokens: ${resp.data.usage?.total_tokens || '-'}`
+            };
+        }
+
+        // ── xAI GROK ────────────────────────────────────────────
+        else if (provider === 'grok' || provider === 'xai') {
+            const modelName = model || config.xai_model || 'grok-2-latest';
+            const resp = await axios.post('https://api.x.ai/v1/chat/completions', {
                 model: modelName,
                 messages: [{ role: 'user', content: 'Hi' }],
                 max_tokens: 5
@@ -441,6 +464,8 @@ function getGeminiModel() {
 const PROVIDER_CONFIG_MAP = {
     gemini:     { arrayField: 'gemini_api_keys',  modelField: 'gemini_model',      single: false },
     groq:       { arrayField: 'groq_api_keys',    modelField: 'groq_model',        single: false },
+    grok:       { keyField:   'xai_api_key',      modelField: 'xai_model',         single: true  },
+    xai:        { keyField:   'xai_api_key',      modelField: 'xai_model',         single: true  },
     deepseek:   { keyField:   'deepseek_api_key', modelField: 'deepseek_model',    single: true  },
     qwen:       { keyField:   'qwen_api_key',     modelField: 'qwen_model',        single: true  },
     openrouter: { keyField:   'openrouter_api_key', modelField: 'openrouter_model', single: true },

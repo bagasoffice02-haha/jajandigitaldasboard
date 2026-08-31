@@ -352,6 +352,14 @@ async function callSingleProvider(providerName, systemPrompt, chatHistory, isJso
             return await callGeminiWithPool(systemPrompt, chatHistory, isJson);
         } else if (providerName === 'groq') {
             return await callGroqWithPool(systemPrompt, chatHistory, isJson);
+        } else if (providerName === 'grok' || providerName === 'xai') {
+            const apiKey = config.xai_api_key;
+            const model = config.xai_model || 'grok-2-latest';
+            const url = 'https://api.x.ai/v1/chat/completions';
+            result = await callOpenAiCompatible(url, apiKey, model, systemPrompt, chatHistory, isJson);
+            try { require('http').request({ hostname:'localhost', port: config.port || 3000, path:'/api/keys/increment-usage', method:'POST', headers:{'Content-Type':'application/json'} }, ()=>{}).end(JSON.stringify({ provider:'grok', index:0 })); } catch(_){}
+            emitAiActivity({ provider: 'grok', index: 0, model, latency: Date.now() - startTime, status: 'ok' });
+            return result;
         } else if (providerName === 'deepseek') {
             const apiKey = config.deepseek_api_key;
             const model = config.deepseek_model || 'deepseek-chat';

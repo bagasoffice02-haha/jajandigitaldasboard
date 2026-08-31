@@ -7,6 +7,7 @@
     const PROVIDERS = {
         gemini:     { label: 'Google Gemini',   abbr: 'GM', color: '#4285f4', bg: 'rgba(66,133,244,0.12)', border: 'rgba(66,133,244,0.3)',  defaultModel: 'gemini-2.0-flash', pool: true },
         groq:       { label: 'Groq Cloud',      abbr: 'GQ', color: '#f55036', bg: 'rgba(245,80,54,0.12)',  border: 'rgba(245,80,54,0.3)',   defaultModel: 'llama-3.3-70b-versatile', pool: true },
+        grok:       { label: 'xAI Grok',        abbr: 'GK', color: '#f8fafc', bg: 'rgba(255,255,255,0.08)',border: 'rgba(255,255,255,0.2)', defaultModel: 'grok-2-latest', pool: false },
         deepseek:   { label: 'DeepSeek AI',     abbr: 'DS', color: '#2563eb', bg: 'rgba(37,99,235,0.12)',  border: 'rgba(37,99,235,0.3)',   defaultModel: 'deepseek-chat', pool: false },
         qwen:       { label: 'Alibaba Qwen',    abbr: 'QW', color: '#f97316', bg: 'rgba(249,115,22,0.12)', border: 'rgba(249,115,22,0.3)',  defaultModel: 'qwen-plus', pool: false },
         openrouter: { label: 'OpenRouter',      abbr: 'OR', color: '#7c3aed', bg: 'rgba(124,58,237,0.12)', border: 'rgba(124,58,237,0.3)',  defaultModel: 'meta-llama/llama-3.3-70b-instruct', pool: false },
@@ -39,6 +40,12 @@
                     <rect width="24" height="24" rx="6" fill="#F55036"/>
                     <path d="M16 12C16 14.2 14.2 16 12 16C9.8 16 8 14.2 8 12C8 9.8 9.8 8 12 8C13.6 8 14.9 8.9 15.6 10.2H12.5V12H16Z" fill="white"/>
                     <circle cx="16" cy="8" r="1.5" fill="#FFE2DC"/>
+                </svg>`;
+            case 'grok':
+            case 'xai':
+                return `<svg class="${className}" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect width="24" height="24" rx="6" fill="#090D16" stroke="#334155" stroke-width="1.5"/>
+                    <path d="M7 6L17 18M17 6L7 18" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
                 </svg>`;
             case 'deepseek':
                 return `<svg class="${className}" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
