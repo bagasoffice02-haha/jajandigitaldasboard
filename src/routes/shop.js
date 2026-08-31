@@ -12,7 +12,7 @@ let cancelBroadcastFlag = false;
 router.get('/pinned-chats', async (req, res) => {
     try {
         const db = getDb();
-        const admins = await db.all('SELECT phone, name FROM shop_admins ORDER BY id ASC') || [];
+        const admins = await db.all('SELECT phone, name, created_at FROM shop_admins ORDER BY rowid ASC') || [];
         const result = admins.map(a => {
             const clean = (a.phone || '').replace(/\D/g, '');
             return { id: `${clean}@c.us`, name: a.name || clean, phone: clean, isHostAdmin: true };
@@ -27,7 +27,7 @@ router.get('/pinned-chats', async (req, res) => {
 router.get('/admins', async (req, res) => {
     try {
         const db = getDb();
-        const admins = await db.all('SELECT phone, name FROM shop_admins ORDER BY id ASC') || [];
+        const admins = await db.all('SELECT phone, name, created_at FROM shop_admins ORDER BY rowid ASC') || [];
         res.json(admins);
     } catch(err) {
         res.status(500).json({ error: err.message });

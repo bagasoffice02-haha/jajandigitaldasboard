@@ -82,54 +82,32 @@
 
                 <!-- Navigation List -->
                 <nav class="space-y-1">
-                    <div class="px-2 py-1 text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-wider">Operasional & AI</div>
+                    <div class="px-2 py-1 text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-wider">Operasional & Analitik</div>
                     <button id="sidebar-btn-monitor" onclick="switchTab('monitor')" class="sidebar-nav-btn active">
                         <i data-lucide="activity" class="w-4 h-4"></i>
-                        <span>Live Monitor</span>
-                    </button>
-                    <button id="sidebar-btn-memory" onclick="switchTab('memory')" class="sidebar-nav-btn">
-                        <i data-lucide="brain" class="w-4 h-4"></i>
-                        <span>Basis Pengetahuan</span>
-                    </button>
-                    <button id="sidebar-btn-features" onclick="switchTab('features')" class="sidebar-nav-btn">
-                        <i data-lucide="zap" class="w-4 h-4"></i>
-                        <span>Fitur Auto-Reply</span>
-                    </button>
-                    <button id="sidebar-btn-notes" onclick="switchTab('notes')" class="sidebar-nav-btn">
-                        <i data-lucide="file-edit" class="w-4 h-4"></i>
-                        <span>Catatan & Memo</span>
-                    </button>
-
-                    <div class="px-2 pt-4 pb-1 text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-wider">Komunitas & Toko</div>
-                    <button id="sidebar-btn-groups" onclick="switchTab('groups')" class="sidebar-nav-btn">
-                        <i data-lucide="users" class="w-4 h-4"></i>
-                        <span>Manajemen Grup</span>
-                    </button>
-                    <button id="sidebar-btn-shop" onclick="switchTab('shop')" class="sidebar-nav-btn">
-                        <i data-lucide="store" class="w-4 h-4"></i>
-                        <span>Toko & CRM</span>
+                        <span>Live Monitor & Analitik</span>
                     </button>
                     <button id="sidebar-btn-transactions" onclick="switchTab('transactions')" class="sidebar-nav-btn">
                         <i data-lucide="credit-card" class="w-4 h-4"></i>
                         <span>Transaksi & Kasir</span>
                     </button>
-                    <button id="sidebar-btn-premium" onclick="switchTab('premium')" class="sidebar-nav-btn">
-                        <i data-lucide="crown" class="w-4 h-4"></i>
-                        <span>Akun Premium</span>
+                    <button id="sidebar-btn-shop" onclick="switchTab('shop')" class="sidebar-nav-btn">
+                        <i data-lucide="store" class="w-4 h-4"></i>
+                        <span>Katalog, Stok & Toko</span>
+                    </button>
+                    <button id="sidebar-btn-groups" onclick="switchTab('groups')" class="sidebar-nav-btn">
+                        <i data-lucide="users" class="w-4 h-4"></i>
+                        <span>Komunitas & Grup</span>
                     </button>
 
-                    <div class="px-2 pt-4 pb-1 text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-wider">Pengaturan & API</div>
-                    <button id="sidebar-btn-referral" onclick="switchTab('referral')" class="sidebar-nav-btn">
-                        <i data-lucide="gift" class="w-4 h-4"></i>
-                        <span>Program Referral</span>
-                    </button>
-                    <button id="sidebar-btn-apikeys" onclick="switchTab('apikeys')" class="sidebar-nav-btn">
-                        <i data-lucide="key-round" class="w-4 h-4"></i>
-                        <span>API Key Manager</span>
+                    <div class="px-2 pt-4 pb-1 text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-wider">Kecerdasan & Sistem</div>
+                    <button id="sidebar-btn-memory" onclick="switchTab('memory')" class="sidebar-nav-btn">
+                        <i data-lucide="brain" class="w-4 h-4"></i>
+                        <span>Basis Pengetahuan & Logika</span>
                     </button>
                     <button id="sidebar-btn-settings" onclick="switchTab('settings')" class="sidebar-nav-btn">
-                        <i data-lucide="settings" class="w-4 h-4"></i>
-                        <span>Pengaturan Bot</span>
+                        <i data-lucide="sliders" class="w-4 h-4"></i>
+                        <span>Pengaturan & API Key</span>
                     </button>
                 </nav>
             </div>
@@ -393,19 +371,19 @@
                                 <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
                                     <div class="p-2.5 rounded-xl bg-[var(--bg-subtle)] border border-[var(--border-color)]">
                                         <p class="text-[10px] text-[var(--text-secondary)] font-medium">Total Pesan Terdata</p>
-                                        <h4 id="analytics-total-msgs" class="text-sm sm:text-base font-bold font-mono-num text-white mt-0.5">0</h4>
+                                        <h4 id="analytics-total-msgs" class="text-sm sm:text-base font-bold font-mono-num text-[var(--text-primary)] mt-0.5">0</h4>
                                     </div>
                                     <div class="p-2.5 rounded-xl bg-[var(--bg-subtle)] border border-[var(--border-color)]">
                                         <p class="text-[10px] text-[var(--text-secondary)] font-medium">Trafik 24 Jam Terakhir</p>
-                                        <h4 id="analytics-today-msgs" class="text-sm sm:text-base font-bold font-mono-num text-emerald-400 mt-0.5">0</h4>
+                                        <h4 id="analytics-today-msgs" class="text-sm sm:text-base font-bold font-mono-num text-emerald-500 mt-0.5">0</h4>
                                     </div>
                                     <div class="p-2.5 rounded-xl bg-[var(--bg-subtle)] border border-[var(--border-color)]">
                                         <p class="text-[10px] text-[var(--text-secondary)] font-medium">Jam Paling Sibuk</p>
-                                        <h4 id="analytics-peak-hour" class="text-xs sm:text-sm font-bold text-amber-400 mt-0.5 truncate">—</h4>
+                                        <h4 id="analytics-peak-hour" class="text-xs sm:text-sm font-bold text-amber-500 mt-0.5 truncate">—</h4>
                                     </div>
                                     <div class="p-2.5 rounded-xl bg-[var(--bg-subtle)] border border-[var(--border-color)]">
                                         <p class="text-[10px] text-[var(--text-secondary)] font-medium">Rasio Balasan Bot AI</p>
-                                        <h4 id="analytics-bot-ratio" class="text-sm sm:text-base font-bold font-mono-num text-indigo-400 mt-0.5">0%</h4>
+                                        <h4 id="analytics-bot-ratio" class="text-sm sm:text-base font-bold font-mono-num text-indigo-500 mt-0.5">0%</h4>
                                     </div>
                                 </div>
 
@@ -413,14 +391,14 @@
                                 <div class="p-3.5 rounded-2xl bg-[var(--bg-subtle)] border border-[var(--border-color)] space-y-3">
                                     <div class="flex items-center justify-between">
                                         <div class="flex items-center gap-2">
-                                            <div class="w-2 h-2 rounded-full bg-purple-400"></div>
-                                            <h4 class="text-xs font-bold text-white">Distribusi Aktivitas Obrolan 24 Jam (00:00 - 23:00 WIB)</h4>
+                                            <div class="w-2 h-2 rounded-full bg-purple-500"></div>
+                                            <h4 class="text-xs font-bold text-[var(--text-primary)]">Distribusi Aktivitas Obrolan 24 Jam (00:00 - 23:00 WIB)</h4>
                                         </div>
                                         <span class="text-[10px] text-[var(--text-muted)] font-mono">Trafik Real-Time</span>
                                     </div>
                                     
                                     <!-- Hourly Bars Canvas -->
-                                    <div id="analytics-hourly-chart" class="h-28 flex items-end gap-1 sm:gap-1.5 pt-4 pb-1 border-b border-white/5">
+                                    <div id="analytics-hourly-chart" class="h-28 flex items-end gap-1 sm:gap-1.5 pt-4 pb-1 border-b border-[var(--border-color)]">
                                         <!-- 24 Hour Bars will be dynamically injected here -->
                                     </div>
                                 </div>
@@ -429,9 +407,9 @@
                                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                     <!-- 7-Day Activity Trend -->
                                     <div class="p-3 rounded-2xl bg-[var(--bg-subtle)] border border-[var(--border-color)] space-y-2">
-                                        <div class="flex items-center justify-between pb-1 border-b border-white/5">
-                                            <h5 class="text-[11px] font-bold text-white flex items-center gap-1.5">
-                                                <i data-lucide="calendar" class="w-3.5 h-3.5 text-emerald-400"></i>
+                                        <div class="flex items-center justify-between pb-1 border-b border-[var(--border-color)]">
+                                            <h5 class="text-[11px] font-bold text-[var(--text-primary)] flex items-center gap-1.5">
+                                                <i data-lucide="calendar" class="w-3.5 h-3.5 text-emerald-500"></i>
                                                 <span>Trafik 7 Hari Terakhir</span>
                                             </h5>
                                             <span class="text-[9px] text-[var(--text-muted)]">Mingguan</span>
@@ -444,29 +422,25 @@
                                     <!-- Interaction Ratio Breakdown -->
                                     <div class="p-3 rounded-2xl bg-[var(--bg-subtle)] border border-[var(--border-color)] space-y-3 flex flex-col justify-between">
                                         <div>
-                                            <div class="flex items-center justify-between pb-1 border-b border-white/5">
-                                                <h5 class="text-[11px] font-bold text-white flex items-center gap-1.5">
-                                                    <i data-lucide="pie-chart" class="w-3.5 h-3.5 text-indigo-400"></i>
+                                            <div class="flex items-center justify-between pb-1 border-b border-[var(--border-color)]">
+                                                <h5 class="text-[11px] font-bold text-[var(--text-primary)] flex items-center gap-1.5">
+                                                    <i data-lucide="pie-chart" class="w-3.5 h-3.5 text-indigo-500"></i>
                                                     <span>Rasio Interaksi Obrolan</span>
                                                 </h5>
                                                 <span class="text-[9px] text-[var(--text-muted)]">Pelanggan vs Bot</span>
                                             </div>
                                             <div class="mt-3 space-y-2">
-                                                <div class="w-full h-3 rounded-full bg-white/5 overflow-hidden flex">
+                                                <div class="w-full h-3 rounded-full bg-[var(--border-color)] overflow-hidden flex">
                                                     <div id="gauge-incoming-bar" class="h-full bg-emerald-500 transition-all duration-500" style="width: 50%;"></div>
                                                     <div id="gauge-outgoing-bar" class="h-full bg-indigo-500 transition-all duration-500" style="width: 50%;"></div>
                                                 </div>
-                                                <div class="flex items-center justify-between text-[10px] text-slate-300 font-mono">
+                                                <div class="flex items-center justify-between text-[10px] text-[var(--text-secondary)] font-mono">
                                                     <span class="flex items-center gap-1">
                                                         <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
-                                                        <span>Pelanggan: <strong id="gauge-incoming-label">50%</strong></span>
+                                                        <span>Pelanggan: <strong id="gauge-incoming-label" class="text-[var(--text-primary)]">50%</strong></span>
                                                     </span>
                                                     <span class="flex items-center gap-1">
                                                         <span class="w-2 h-2 rounded-full bg-indigo-500"></span>
-                                                        <span>Bot AI: <strong id="gauge-outgoing-label">50%</strong></span>
-                                                    </span>
-                                                </div>
-                                            </div>
                                         </div>
                                         <div class="p-2 rounded-xl bg-white/5 border border-white/5 text-[10px] text-[var(--text-muted)] flex items-center gap-2">
                                             <i data-lucide="sparkles" class="w-3.5 h-3.5 text-purple-400 shrink-0"></i>
@@ -497,83 +471,114 @@
                 </div>
             </div>
 
-            <!-- ─── TAB 2: BASIS PENGETAHUAN (RAG) ─────────────────────── -->
+                        <!-- ─── TAB: BASIS PENGETAHUAN & LOGIKA (CONSOLIDATED) ───────── -->
             <div id="tab-memory" class="tab-content hidden space-y-5">
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+                <!-- Subtab Switcher -->
+                <div class="flex items-center gap-1.5 p-1 bg-[var(--bg-surface)] border border-[var(--border-color)] rounded-xl w-fit">
+                    <button id="subtab-mem-knowledge-btn" onclick="switchSubTab('memory', 'knowledge')" class="subtab-btn active px-3.5 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all">
+                        <i data-lucide="book-open" class="w-3.5 h-3.5 text-indigo-400"></i>
+                        <span>Memori Dokumen & FAQ</span>
+                    </button>
+                    <button id="subtab-mem-features-btn" onclick="switchSubTab('memory', 'features')" class="subtab-btn px-3.5 py-1.5 rounded-lg text-xs font-semibold text-[var(--text-muted)] flex items-center gap-1.5 transition-all">
+                        <i data-lucide="zap" class="w-3.5 h-3.5 text-amber-400"></i>
+                        <span>Fitur Auto-Reply & Keyword</span>
+                    </button>
+                    <button id="subtab-mem-notes-btn" onclick="switchSubTab('memory', 'notes')" class="subtab-btn px-3.5 py-1.5 rounded-lg text-xs font-semibold text-[var(--text-muted)] flex items-center gap-1.5 transition-all">
+                        <i data-lucide="file-edit" class="w-3.5 h-3.5 text-sky-400"></i>
+                        <span>Catatan & Memo Kerja</span>
+                    </button>
+                </div>
+
+                <!-- SUB-PANE 1: DOKUMEN & FAQ -->
+                <div id="subpane-mem-knowledge" class="space-y-5">
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+                        <div class="enterprise-card space-y-4">
+                            <div class="flex items-center justify-between pb-3 border-b border-[var(--border-color)]">
+                                <div>
+                                    <h3 class="font-bold text-xs uppercase tracking-wider flex items-center gap-2">
+                                        <i data-lucide="upload-cloud" class="w-4 h-4 text-indigo-400"></i>
+                                        Unggah Dokumen Pengetahuan
+                                    </h3>
+                                    <p class="text-[10px] text-[var(--text-muted)] mt-0.5">Format: TXT, PDF, DOCX, CSV, MD</p>
+                                </div>
+                            </div>
+                            
+                            <div id="drop-zone" class="p-6 text-center border-2 border-dashed border-[var(--border-color)] rounded-xl bg-[var(--bg-subtle)] hover:border-indigo-500/40 transition-colors cursor-pointer" onclick="document.getElementById('file-input').click()">
+                                <input type="file" id="file-input" class="hidden" multiple onchange="handleFileUpload(this.files)">
+                                <i data-lucide="file-up" class="w-8 h-8 mx-auto text-indigo-400 mb-2"></i>
+                                <p class="text-xs font-semibold text-[var(--text-primary)]">Klik untuk pilih berkas atau tarik ke sini</p>
+                                <p class="text-[10px] text-[var(--text-muted)] mt-1">Maksimal 10MB per berkas</p>
+                            </div>
+
+                            <div class="space-y-2">
+                                <div class="flex items-center justify-between text-xs font-semibold pb-1">
+                                    <span>Berkas Tersimpan (<span id="file-count">0</span>)</span>
+                                    <button onclick="loadFiles()" class="text-[10px] text-indigo-400 hover:underline">Segarkan</button>
+                                </div>
+                                <div id="files-list" class="space-y-2 max-h-48 overflow-y-auto pr-1">
+                                    <div class="text-center py-4 text-xs text-[var(--text-muted)]">Memuat daftar berkas...</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="enterprise-card space-y-3 flex flex-col">
+                            <div class="flex items-center justify-between pb-2 border-b border-[var(--border-color)]">
+                                <h3 class="font-bold text-xs uppercase tracking-wider flex items-center gap-2">
+                                    <i data-lucide="brain" class="w-4 h-4 text-purple-400"></i>
+                                    System Prompt & Aturan Kepribadian AI
+                                </h3>
+                                <button onclick="saveMemoryContent()" class="enterprise-btn enterprise-btn-primary py-1 px-3 text-xs">Simpan</button>
+                            </div>
+                            <textarea id="ai-memory-text" rows="14" class="enterprise-input flex-1 font-mono-num text-xs leading-relaxed" placeholder="Instruksi sistem, FAQ, panduan harga..."></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SUB-PANE 2: FITUR AUTO-REPLY -->
+                <div id="subpane-mem-features" class="hidden space-y-5">
                     <div class="enterprise-card space-y-4">
-                        <div class="pb-3 border-b border-[var(--border-color)]">
-                            <h3 class="font-bold text-xs uppercase tracking-wider flex items-center gap-2">
-                                <i data-lucide="file-text" class="w-4 h-4 text-indigo-400"></i>
-                                Dokumen Pengetahuan RAG (PDF, TXT, DOCX)
-                            </h3>
-                        </div>
-                        <div class="border-2 border-dashed border-[var(--border-color)] rounded-xl p-5 text-center bg-[var(--bg-subtle)]">
-                            <input type="file" id="file-upload-input" class="hidden" onchange="uploadFile()">
-                            <i data-lucide="upload-cloud" class="w-8 h-8 mx-auto text-indigo-400 mb-2"></i>
-                            <p class="text-xs font-semibold">Klik untuk unggah dokumen referensi AI</p>
-                            <p class="text-[11px] text-[var(--text-muted)] mt-0.5">Maksimal 15MB per berkas</p>
-                            <button onclick="document.getElementById('file-upload-input').click()" class="mt-3 enterprise-btn enterprise-btn-primary">
-                                Pilih Berkas
-                            </button>
-                        </div>
-                        <div id="files-list" class="space-y-2 max-h-[280px] overflow-y-auto">
-                            <div class="text-center py-4 text-xs text-[var(--text-muted)]">Memuat daftar berkas...</div>
-                        </div>
-                    </div>
-
-                    <div class="enterprise-card space-y-4 flex flex-col">
                         <div class="flex items-center justify-between pb-3 border-b border-[var(--border-color)]">
-                            <h3 class="font-bold text-xs uppercase tracking-wider flex items-center gap-2">
-                                <i data-lucide="brain" class="w-4 h-4 text-purple-400"></i>
-                                System Prompt & Aturan Kepribadian AI
-                            </h3>
-                            <button onclick="saveMemoryContent()" class="enterprise-btn enterprise-btn-primary py-1 px-3 text-xs">Simpan</button>
+                            <div>
+                                <h3 class="font-bold text-xs uppercase tracking-wider flex items-center gap-2">
+                                    <i data-lucide="zap" class="w-4 h-4 text-amber-400"></i>
+                                    Aturan Pemicu Pesan Otomatis (Auto-Reply)
+                                </h3>
+                                <p class="text-[10px] text-[var(--text-muted)] mt-0.5">Atur respon otomatis saat chat pribadi atau di luar jam operasional</p>
+                            </div>
+                            <button onclick="saveFeaturesConfig()" class="enterprise-btn enterprise-btn-primary text-xs">Simpan Aturan</button>
                         </div>
-                        <textarea id="ai-memory-text" rows="14" class="enterprise-input flex-1 font-mono-num text-xs leading-relaxed" placeholder="Instruksi sistem, FAQ, panduan harga..."></textarea>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+                            <div class="space-y-2">
+                                <label class="block font-semibold">Pesan Sambutan Chat Pribadi (DM)</label>
+                                <textarea id="feat-welcome-dm" rows="5" class="enterprise-input text-xs" placeholder="Halo kak, ada yang bisa kami bantu?"></textarea>
+                            </div>
+                            <div class="space-y-2">
+                                <label class="block font-semibold">Pesan Luar Jam Operasional</label>
+                                <textarea id="feat-off-hours-msg" rows="5" class="enterprise-input text-xs" placeholder="Toko kami sedang tutup..."></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SUB-PANE 3: CATATAN & MEMO -->
+                <div id="subpane-mem-notes" class="hidden space-y-5">
+                    <div class="enterprise-card space-y-4">
+                        <div class="flex items-center justify-between pb-3 border-b border-[var(--border-color)]">
+                            <div>
+                                <h3 class="font-bold text-xs uppercase tracking-wider flex items-center gap-2">
+                                    <i data-lucide="file-edit" class="w-4 h-4 text-sky-400"></i>
+                                    Notepad Sinkron Operasional
+                                </h3>
+                                <p class="text-[10px] text-[var(--text-muted)] mt-0.5">Catatan internal admin yang tersimpan aman di peramban</p>
+                            </div>
+                            <button onclick="saveLocalNotes()" class="enterprise-btn enterprise-btn-primary text-xs">Simpan Catatan</button>
+                        </div>
+                        <textarea id="local-notepad-input" rows="15" class="enterprise-input font-mono-num text-xs" placeholder="Tuliskan catatan internal di sini..."></textarea>
                     </div>
                 </div>
             </div>
 
-            <!-- ─── TAB 3: FITUR OBROLAN ───────────────────────────────── -->
-            <div id="tab-features" class="tab-content hidden space-y-5">
-                <div class="enterprise-card space-y-4">
-                    <div class="flex items-center justify-between pb-3 border-b border-[var(--border-color)]">
-                        <div>
-                            <h3 class="font-bold text-xs uppercase tracking-wider flex items-center gap-2">
-                                <i data-lucide="zap" class="w-4 h-4 text-amber-400"></i>
-                                Aturan Pemicu Pesan Otomatis (Auto-Reply)
-                            </h3>
-                        </div>
-                        <button onclick="saveFeaturesConfig()" class="enterprise-btn enterprise-btn-primary">Simpan Aturan</button>
-                    </div>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
-                        <div class="space-y-2">
-                            <label class="block font-semibold">Pesan Sambutan Chat Pribadi (DM)</label>
-                            <textarea id="feat-welcome-dm" rows="4" class="enterprise-input" placeholder="Halo kak, ada yang bisa kami bantu?"></textarea>
-                        </div>
-                        <div class="space-y-2">
-                            <label class="block font-semibold">Pesan Luar Jam Operasional</label>
-                            <textarea id="feat-off-hours-msg" rows="4" class="enterprise-input" placeholder="Toko kami sedang tutup..."></textarea>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- ─── TAB 4: CATATAN & MEMO ──────────────────────────────── -->
-            <div id="tab-notes" class="tab-content hidden space-y-5">
-                <div class="enterprise-card space-y-4">
-                    <div class="flex items-center justify-between pb-3 border-b border-[var(--border-color)]">
-                        <h3 class="font-bold text-xs uppercase tracking-wider flex items-center gap-2">
-                            <i data-lucide="file-edit" class="w-4 h-4 text-indigo-400"></i>
-                            Notepad Sinkron Operasional
-                        </h3>
-                        <button onclick="saveLocalNotes()" class="enterprise-btn enterprise-btn-primary">Simpan Catatan</button>
-                    </div>
-                    <textarea id="local-notepad-input" rows="15" class="enterprise-input font-mono-num text-xs" placeholder="Tuliskan catatan internal di sini..."></textarea>
-                </div>
-            </div>
-
-            <!-- ─── TAB 5: MANAJEMEN GRUP ──────────────────────────────── -->
+            <!-- ─── TAB 4: MANAJEMEN GRUP ──────────────────────────────── -->
             <div id="tab-groups" class="tab-content hidden space-y-5">
                 <div class="enterprise-card space-y-4">
                     <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pb-3 border-b border-[var(--border-color)]">
@@ -636,156 +641,347 @@
                 </div>
             </div>
 
-            <!-- ─── TAB 6: TOKO, CRM & MENU TREE ───────────────────────── -->
+                        <!-- ─── TAB 3: KATALOG, STOK & TOKO (CONSOLIDATED) ────────── -->
             <div id="tab-shop" class="tab-content hidden space-y-5">
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
-                    <div class="enterprise-card space-y-3">
-                        <div class="flex items-center justify-between pb-2 border-b border-[var(--border-color)]">
-                            <h3 class="font-bold text-xs uppercase tracking-wider flex items-center gap-2">
-                                <i data-lucide="shield-check" class="w-4 h-4 text-sky-400"></i>
-                                Host Admin Toko
-                            </h3>
-                            <button onclick="window.openAdminModal('add')" class="enterprise-btn enterprise-btn-primary py-1 px-2.5 text-xs flex items-center gap-1.5" title="Tambah Host Admin Baru">
-                                <i data-lucide="user-plus" class="w-3.5 h-3.5"></i>
-                                <span>Tambah Admin</span>
-                            </button>
-                        </div>
-                        <div id="shop-admins-list" class="space-y-2">
-                            <div class="text-center py-4 text-xs text-[var(--text-muted)]">Memuat host admin...</div>
-                        </div>
+                <!-- Subtab Navigation Bar -->
+                <div class="flex flex-wrap items-center justify-between gap-3 pb-2 border-b border-[var(--border-color)]">
+                    <div class="flex flex-wrap items-center gap-1.5 p-1 bg-[var(--bg-surface)] border border-[var(--border-color)] rounded-xl">
+                        <button id="subtab-shop-menutree-btn" onclick="switchSubTab('shop', 'menutree')" class="subtab-btn active px-3.5 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all">
+                            <i data-lucide="git-fork" class="w-3.5 h-3.5 text-purple-400"></i>
+                            <span>Pohon Menu & Katalog</span>
+                        </button>
+                        <button id="subtab-shop-premium-btn" onclick="switchSubTab('shop', 'premium')" class="subtab-btn px-3.5 py-1.5 rounded-lg text-xs font-semibold text-[var(--text-muted)] flex items-center gap-1.5 transition-all">
+                            <i data-lucide="crown" class="w-3.5 h-3.5 text-amber-400"></i>
+                            <span>Stok Akun Premium</span>
+                        </button>
+                        <button id="subtab-shop-referral-btn" onclick="switchSubTab('shop', 'referral')" class="subtab-btn px-3.5 py-1.5 rounded-lg text-xs font-semibold text-[var(--text-muted)] flex items-center gap-1.5 transition-all">
+                            <i data-lucide="gift" class="w-3.5 h-3.5 text-indigo-400"></i>
+                            <span>Program Referral</span>
+                        </button>
+                        <button id="subtab-shop-admins-btn" onclick="switchSubTab('shop', 'admins')" class="subtab-btn px-3.5 py-1.5 rounded-lg text-xs font-semibold text-[var(--text-muted)] flex items-center gap-1.5 transition-all">
+                            <i data-lucide="shield-check" class="w-3.5 h-3.5 text-sky-400"></i>
+                            <span>Host Admin Toko</span>
+                        </button>
+                        <button id="subtab-shop-customers-btn" onclick="switchSubTab('shop', 'customers')" class="subtab-btn px-3.5 py-1.5 rounded-lg text-xs font-semibold text-[var(--text-muted)] flex items-center gap-1.5 transition-all">
+                            <i data-lucide="contact" class="w-3.5 h-3.5 text-emerald-400"></i>
+                            <span>Kontak CRM Pelanggan</span>
+                        </button>
                     </div>
+                </div>
 
-                    <div class="lg:col-span-2 enterprise-card space-y-3">
-                        <div class="flex items-center justify-between pb-2 border-b border-[var(--border-color)]">
-                            <h3 class="font-bold text-xs uppercase tracking-wider flex items-center gap-2">
-                                <i data-lucide="contact" class="w-4 h-4 text-indigo-400"></i>
-                                CRM Kontak Pelanggan
-                            </h3>
+                <!-- SUB-PANE 1: MENU TREE & KATALOG -->
+                <div id="subpane-shop-menutree" class="space-y-4">
+                    <div class="enterprise-card space-y-4">
+                        <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-3 pb-3 border-b border-[var(--border-color)]">
+                            <div>
+                                <h3 class="font-bold text-xs uppercase tracking-wider flex items-center gap-2">
+                                    <i data-lucide="git-fork" class="w-4 h-4 text-purple-400"></i>
+                                    Visual Editor Pohon Menu (Menu Tree)
+                                </h3>
+                                <p class="text-[11px] text-[var(--text-muted)] mt-0.5">Kelola struktur alur pesan interaktif untuk grup WhatsApp yang dipilih</p>
+                            </div>
+                            <div class="flex flex-wrap items-center gap-2 w-full md:w-auto">
+                                <div class="w-full sm:w-60">
+                                    <select id="menu-tree-group-select" onchange="window.selectGroup(this.value)" class="enterprise-input text-xs">
+                                        <option value="">-- Pilih Grup WhatsApp --</option>
+                                    </select>
+                                </div>
+                                <button onclick="addChildNode()" class="enterprise-btn enterprise-btn-secondary text-xs">
+                                    <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+                                    <span>Tambah Menu</span>
+                                </button>
+                                <button onclick="saveGroupConfiguration()" class="enterprise-btn enterprise-btn-primary text-xs">
+                                    <i data-lucide="save" class="w-3.5 h-3.5"></i>
+                                    <span>Simpan Menu</span>
+                                </button>
+                            </div>
                         </div>
-                        <div id="shop-customers-list" class="space-y-2 max-h-[320px] overflow-y-auto">
-                            <div class="text-center py-6 text-xs text-[var(--text-muted)]">Memuat data kontak...</div>
+
+                        <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
+                            <!-- Left: Visual Tree -->
+                            <div class="lg:col-span-5 bg-[var(--bg-subtle)] border border-[var(--border-color)] rounded-xl p-3 max-h-[480px] overflow-y-auto">
+                                <div id="menu-tree-visualizer" class="space-y-1">
+                                    <div class="text-center py-8 text-xs text-[var(--text-muted)]">Memuat struktur menu...</div>
+                                </div>
+                            </div>
+
+                            <!-- Right: Active Node Editor -->
+                            <div class="lg:col-span-7 bg-[var(--bg-subtle)] border border-[var(--border-color)] rounded-xl p-4 flex flex-col justify-between space-y-3">
+                                <div id="node-editor-placeholder" class="text-center py-16 text-xs text-[var(--text-muted)]">
+                                    <i data-lucide="mouse-pointer-click" class="w-8 h-8 mx-auto mb-2 opacity-40"></i>
+                                    <p>Pilih salah satu menu di sebelah kiri untuk mengedit.</p>
+                                </div>
+
+                                <div id="node-editor-form" class="hidden space-y-3">
+                                    <div class="flex items-center justify-between pb-2 border-b border-[var(--border-color)]">
+                                        <h4 id="node-editor-title" class="text-xs font-bold uppercase tracking-wider">Edit Menu</h4>
+                                        <button onclick="deleteNode()" class="p-1.5 rounded-lg bg-rose-500/10 text-rose-400 border border-rose-500/20 text-xs font-semibold flex items-center gap-1">
+                                            <i data-lucide="trash-2" class="w-3 h-3"></i>
+                                            <span>Hapus</span>
+                                        </button>
+                                    </div>
+
+                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                        <div>
+                                            <label class="block text-[11px] font-semibold mb-1">Nama Menu / Label</label>
+                                            <input type="text" id="node-name" class="enterprise-input">
+                                        </div>
+                                        <div>
+                                            <label class="block text-[11px] font-semibold mb-1">Status Produk</label>
+                                            <select id="node-status" class="enterprise-input">
+                                                <option value="Tersedia">Tersedia (Ready)</option>
+                                                <option value="Habis">Habis (Sold Out)</option>
+                                                <option value="Pre-order">Pre-order</option>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                        <div>
+                                            <label class="block text-[11px] font-semibold mb-1">Kata Kunci Alternatif (Aliases)</label>
+                                            <input type="text" id="node-aliases" class="enterprise-input" placeholder="capcut, cpc, cc">
+                                        </div>
+                                        <div class="flex items-center gap-4 pt-4">
+                                            <label class="flex items-center gap-2 cursor-pointer text-xs">
+                                                <input type="checkbox" id="node-promo" class="rounded">
+                                                <span class="flex items-center gap-1"><i data-lucide="flame" class="w-3.5 h-3.5 text-rose-400"></i><span>Tag Promo</span></span>
+                                            </label>
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <label class="block text-[11px] font-semibold mb-1">Nama Berkas Media / Gambar (Opsional)</label>
+                                        <input type="text" id="node-media" class="enterprise-input" placeholder="Qris.jpeg / banner.png">
+                                    </div>
+
+                                    <div id="node-sec-text" class="space-y-1">
+                                        <div class="flex items-center justify-between">
+                                            <label class="block text-[11px] font-semibold">Isi Balasan Teks</label>
+                                            <div class="flex items-center gap-1">
+                                                <button type="button" onclick="insertFormatToElement('node-text', '*')" class="px-2 py-0.5 rounded bg-[var(--bg-card)] border border-[var(--border-color)] text-[10px] font-bold">B (*)</button>
+                                                <button type="button" onclick="insertFormatToElement('node-text', '_')" class="px-2 py-0.5 rounded bg-[var(--bg-card)] border border-[var(--border-color)] text-[10px] italic">I (_)</button>
+                                                <button type="button" onclick="insertFormatToElement('node-text', '~')" class="px-2 py-0.5 rounded bg-[var(--bg-card)] border border-[var(--border-color)] text-[10px] line-through">S (~)</button>
+                                                <button type="button" onclick="insertFormatToElement('node-text', '```')" class="px-2 py-0.5 rounded bg-[var(--bg-card)] border border-[var(--border-color)] text-[10px] font-mono-num">Code</button>
+                                            </div>
+                                        </div>
+                                        <textarea id="node-text" rows="5" class="enterprise-input font-mono-num text-xs leading-relaxed" placeholder="Deskripsi paket, harga, cara order..."></textarea>
+                                    </div>
+
+                                    <!-- Live WhatsApp Preview Bubble -->
+                                    <div class="p-3 rounded-xl bg-[var(--bg-card)] border border-[var(--border-color)] space-y-1.5">
+                                        <div class="flex items-center justify-between text-[10px] text-[var(--text-muted)] font-semibold uppercase tracking-wider">
+                                            <span class="flex items-center gap-1"><i data-lucide="eye" class="w-3 h-3 text-emerald-400"></i> Pratinjau Pesan WhatsApp</span>
+                                            <span class="font-mono">Chat Pelanggan</span>
+                                        </div>
+                                        <div class="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-xs text-[var(--text-primary)] leading-relaxed" id="node-wa-preview">
+                                            <p class="text-[var(--text-muted)] italic">Ketik isi balasan teks untuk melihat pratinjau pesan di sini...</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- 2-Column Visual Menu Tree Builder -->
-                <div class="enterprise-card space-y-4">
-                    <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-3 pb-3 border-b border-[var(--border-color)]">
-                        <div>
-                            <h3 class="font-bold text-xs uppercase tracking-wider flex items-center gap-2">
-                                <i data-lucide="git-fork" class="w-4 h-4 text-purple-400"></i>
-                                Visual Editor Pohon Menu (Menu Tree)
-                            </h3>
-                            <p class="text-[11px] text-[var(--text-muted)] mt-0.5">Kelola struktur alur pesan interaktif untuk grup WhatsApp yang dipilih</p>
+                <!-- SUB-PANE 2: STOK AKUN PREMIUM -->
+                <div id="subpane-shop-premium" class="hidden space-y-5">
+                    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                        <div class="enterprise-card p-3.5">
+                            <p class="text-[10px] text-[var(--text-secondary)] font-medium">Pelanggan Aktif</p>
+                            <h4 id="stat-active-subscribers" class="text-base font-bold font-mono-num mt-0.5">0</h4>
                         </div>
-                        <div class="flex flex-wrap items-center gap-2 w-full md:w-auto">
-                            <!-- Group Selector Dropdown -->
-                            <div class="w-full sm:w-60">
-                                <select id="menu-tree-group-select" onchange="window.selectGroup(this.value)" class="enterprise-input text-xs">
-                                    <option value="">-- Pilih Grup WhatsApp --</option>
-                                </select>
-                            </div>
-                            <button onclick="addChildNode()" class="enterprise-btn enterprise-btn-secondary text-xs">
-                                <i data-lucide="plus" class="w-3.5 h-3.5"></i>
-                                <span>Tambah Menu</span>
+                        <div class="enterprise-card p-3.5">
+                            <p class="text-[10px] text-[var(--text-secondary)] font-medium">Stok Akun Ready</p>
+                            <h4 id="stat-stock-ratio" class="text-base font-bold font-mono-num mt-0.5">0 / 0</h4>
+                        </div>
+                        <div class="enterprise-card p-3.5">
+                            <p class="text-[10px] text-[var(--text-secondary)] font-medium">Estimasi Omset</p>
+                            <h4 id="stat-monthly-revenue" class="text-base font-bold font-mono-num mt-0.5 text-emerald-500">Rp 0</h4>
+                        </div>
+                        <div class="enterprise-card p-3.5">
+                            <p class="text-[10px] text-[var(--text-secondary)] font-medium">Jatuh Tempo (5 Hari)</p>
+                            <h4 id="stat-expiring-soon" class="text-base font-bold font-mono-num mt-0.5 text-amber-500">0</h4>
+                        </div>
+                    </div>
+
+                    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                        <div class="flex items-center gap-2 p-1 bg-[var(--bg-surface)] border border-[var(--border-color)] rounded-xl">
+                            <button id="sub-tab-acc-btn" onclick="switchSubTab('premium', 'accounts')" class="subtab-btn active px-3.5 py-1.5 rounded-lg text-xs font-semibold">
+                                Stok Akun
                             </button>
-                            <button onclick="saveGroupConfiguration()" class="enterprise-btn enterprise-btn-primary text-xs">
-                                <i data-lucide="save" class="w-3.5 h-3.5"></i>
-                                <span>Simpan Menu</span>
+                            <button id="sub-tab-sales-btn" onclick="switchSubTab('premium', 'sales')" class="subtab-btn px-3.5 py-1.5 rounded-lg text-xs font-semibold">
+                                Riwayat Penjualan
+                            </button>
+                        </div>
+
+                        <div class="flex items-center gap-2">
+                            <button onclick="openPremiumModal('account')" class="enterprise-btn enterprise-btn-secondary text-xs">
+                                <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+                                <span>Tambah Akun</span>
+                            </button>
+                            <button onclick="openPremiumModal('sale')" class="enterprise-btn enterprise-btn-primary text-xs">
+                                <i data-lucide="user-plus" class="w-3.5 h-3.5"></i>
+                                <span>Catat Jual</span>
                             </button>
                         </div>
                     </div>
 
-                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
-                        <!-- Left: Visual Tree -->
-                        <div class="lg:col-span-5 bg-[var(--bg-subtle)] border border-[var(--border-color)] rounded-xl p-3 max-h-[480px] overflow-y-auto">
-                            <div id="menu-tree-visualizer" class="space-y-1">
-                                <div class="text-center py-8 text-xs text-[var(--text-muted)]">Memuat struktur menu...</div>
+                    <!-- Panel Accounts -->
+                    <div id="panel-premium-accounts-container" class="space-y-4">
+                        <div class="desktop-table-view enterprise-table-container">
+                            <table class="enterprise-table">
+                                <thead>
+                                    <tr>
+                                        <th>Aplikasi / APK</th>
+                                        <th>Akun & Kredensial</th>
+                                        <th>Slot / Pengguna</th>
+                                        <th>Status</th>
+                                        <th class="text-right">Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="premium-accounts-table-body">
+                                    <tr><td colspan="5" class="py-8 text-center text-xs text-[var(--text-muted)]">Memuat akun...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div id="premium-accounts-mobile-cards" class="mobile-card-view">
+                            <div class="py-6 text-center text-xs text-[var(--text-muted)]">Memuat akun...</div>
+                        </div>
+                    </div>
+
+                    <!-- Panel Sales -->
+                    <div id="panel-premium-sales-container" class="space-y-4" style="display:none;">
+                        <div class="desktop-table-view enterprise-table-container">
+                            <table class="enterprise-table">
+                                <thead>
+                                    <tr>
+                                        <th>Aplikasi</th>
+                                        <th>Pembeli</th>
+                                        <th>Slot Profile</th>
+                                        <th>Masa Aktif</th>
+                                        <th>Pembayaran</th>
+                                        <th class="text-right">Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="premium-sales-table-body">
+                                    <tr><td colspan="6" class="py-8 text-center text-xs text-[var(--text-muted)]">Memuat riwayat penjualan...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div id="premium-sales-mobile-cards" class="mobile-card-view">
+                            <div class="py-6 text-center text-xs text-[var(--text-muted)]">Memuat riwayat penjualan...</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SUB-PANE 3: PROGRAM REFERRAL -->
+                <div id="subpane-shop-referral" class="hidden space-y-5">
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        <div class="enterprise-card p-4 flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-xl bg-indigo-500/10 text-indigo-400 flex items-center justify-center shrink-0">
+                                <i data-lucide="users" class="w-5 h-5"></i>
+                            </div>
+                            <div>
+                                <p class="text-[10px] text-[var(--text-secondary)] font-medium">Total Peserta</p>
+                                <h3 id="dashRefTotalAffiliates" class="text-lg font-bold font-mono-num">0</h3>
+                            </div>
+                        </div>
+                        <div class="enterprise-card p-4 flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center shrink-0">
+                                <i data-lucide="user-plus" class="w-5 h-5"></i>
+                            </div>
+                            <div>
+                                <p class="text-[10px] text-[var(--text-secondary)] font-medium">Undangan Sukses</p>
+                                <h3 id="dashRefTotalInvites" class="text-lg font-bold font-mono-num">0</h3>
+                            </div>
+                        </div>
+                        <div class="enterprise-card p-4 flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-400 flex items-center justify-center shrink-0">
+                                <i data-lucide="coins" class="w-5 h-5"></i>
+                            </div>
+                            <div>
+                                <p class="text-[10px] text-[var(--text-secondary)] font-medium">Poin Terdistribusi</p>
+                                <h3 id="dashRefTotalPoints" class="text-lg font-bold font-mono-num">0</h3>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="enterprise-card space-y-4">
+                        <div class="flex items-center justify-between pb-3 border-b border-[var(--border-color)]">
+                            <h3 class="font-bold text-xs uppercase tracking-wider flex items-center gap-2">
+                                <i data-lucide="gift" class="w-4 h-4 text-indigo-400"></i>
+                                Daftar Anggota & Poin Referral
+                            </h3>
+                            <div class="w-48">
+                                <input type="text" id="ref-search-input" onkeyup="filterReferralDashboardTable()" placeholder="Cari member/kode..." class="enterprise-input text-xs py-1">
                             </div>
                         </div>
 
-                        <!-- Right: Active Node Editor -->
-                        <div class="lg:col-span-7 bg-[var(--bg-subtle)] border border-[var(--border-color)] rounded-xl p-4 flex flex-col justify-between space-y-3">
-                            <div id="node-editor-placeholder" class="text-center py-16 text-xs text-[var(--text-muted)]">
-                                <i data-lucide="mouse-pointer-click" class="w-8 h-8 mx-auto mb-2 opacity-40"></i>
-                                <p>Pilih salah satu menu di sebelah kiri untuk mengedit.</p>
+                        <div class="desktop-table-view enterprise-table-container">
+                            <table class="enterprise-table">
+                                <thead>
+                                    <tr>
+                                        <th>Nama Member</th>
+                                        <th>WhatsApp</th>
+                                        <th>Kode Referral</th>
+                                        <th>Undangan</th>
+                                        <th>Total Poin</th>
+                                        <th class="text-right">Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="dashRefTableBody">
+                                    <tr><td colspan="6" class="py-8 text-center text-xs text-[var(--text-muted)]">Memuat data referral...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div id="dashRefMobileCards" class="mobile-card-view">
+                            <div class="py-6 text-center text-xs text-[var(--text-muted)]">Memuat data referral...</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SUB-PANE 4: HOST ADMIN TOKO -->
+                <div id="subpane-shop-admins" class="hidden space-y-4">
+                    <div class="enterprise-card space-y-3">
+                        <div class="flex items-center justify-between pb-2 border-b border-[var(--border-color)]">
+                            <div>
+                                <h3 class="font-bold text-xs uppercase tracking-wider flex items-center gap-2">
+                                    <i data-lucide="shield-check" class="w-4 h-4 text-sky-400"></i>
+                                    Host Admin Toko Terdaftar
+                                </h3>
+                                <p class="text-[11px] text-[var(--text-muted)] mt-0.5">Nomor WhatsApp admin yang memiliki hak kontrol penuh atas bot dan perintah toko</p>
                             </div>
+                            <button onclick="window.openAdminModal('add')" class="enterprise-btn enterprise-btn-primary py-1.5 px-3 text-xs flex items-center gap-1.5" title="Tambah Host Admin Baru">
+                                <i data-lucide="user-plus" class="w-3.5 h-3.5"></i>
+                                <span>Tambah Admin</span>
+                            </button>
+                        </div>
+                        <div id="shop-admins-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                            <div class="col-span-full text-center py-6 text-xs text-[var(--text-muted)]">Memuat host admin...</div>
+                        </div>
+                    </div>
+                </div>
 
-                            <div id="node-editor-form" class="hidden space-y-3">
-                                <div class="flex items-center justify-between pb-2 border-b border-[var(--border-color)]">
-                                    <h4 id="node-editor-title" class="text-xs font-bold uppercase tracking-wider">Edit Menu</h4>
-                                    <button onclick="deleteNode()" class="p-1.5 rounded-lg bg-rose-500/10 text-rose-400 border border-rose-500/20 text-xs font-semibold flex items-center gap-1">
-                                        <i data-lucide="trash-2" class="w-3 h-3"></i>
-                                        <span>Hapus</span>
-                                    </button>
-                                </div>
-
-                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                    <div>
-                                        <label class="block text-[11px] font-semibold mb-1">Nama Menu / Label</label>
-                                        <input type="text" id="node-name" class="enterprise-input">
-                                    </div>
-                                    <div>
-                                        <label class="block text-[11px] font-semibold mb-1">Status Produk</label>
-                                        <select id="node-status" class="enterprise-input">
-                                            <option value="Tersedia">Tersedia (Ready)</option>
-                                            <option value="Habis">Habis (Sold Out)</option>
-                                            <option value="Pre-order">Pre-order</option>
-                                        </select>
-                                    </div>
-                                </div>
-
-                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                    <div>
-                                        <label class="block text-[11px] font-semibold mb-1">Kata Kunci Alternatif (Aliases)</label>
-                                        <input type="text" id="node-aliases" class="enterprise-input" placeholder="capcut, cpc, cc">
-                                    </div>
-                                    <div class="flex items-center gap-4 pt-4">
-                                        <label class="flex items-center gap-2 cursor-pointer text-xs">
-                                            <input type="checkbox" id="node-promo" class="rounded">
-                                            <span class="flex items-center gap-1"><i data-lucide="flame" class="w-3.5 h-3.5 text-rose-400"></i><span>Tag Promo</span></span>
-                                        </label>
-                                    </div>
-                                </div>
-
-                                <div>
-                                    <label class="block text-[11px] font-semibold mb-1">Nama Berkas Media / Gambar (Opsional)</label>
-                                    <input type="text" id="node-media" class="enterprise-input" placeholder="Qris.jpeg / banner.png">
-                                </div>
-
-                                
-                                <div id="node-sec-text" class="space-y-1">
-                                    <div class="flex items-center justify-between">
-                                        <label class="block text-[11px] font-semibold">Isi Balasan Teks</label>
-                                        <div class="flex items-center gap-1">
-                                            <button type="button" onclick="insertFormatToElement('node-text', '*')" class="px-2 py-0.5 rounded bg-[var(--bg-card)] border border-[var(--border-color)] text-[10px] font-bold">B (*)</button>
-                                            <button type="button" onclick="insertFormatToElement('node-text', '_')" class="px-2 py-0.5 rounded bg-[var(--bg-card)] border border-[var(--border-color)] text-[10px] italic">I (_)</button>
-                                            <button type="button" onclick="insertFormatToElement('node-text', '~')" class="px-2 py-0.5 rounded bg-[var(--bg-card)] border border-[var(--border-color)] text-[10px] line-through">S (~)</button>
-                                            <button type="button" onclick="insertFormatToElement('node-text', '```')" class="px-2 py-0.5 rounded bg-[var(--bg-card)] border border-[var(--border-color)] text-[10px] font-mono-num">Code</button>
-                                        </div>
-                                    </div>
-                                    <textarea id="node-text" rows="5" class="enterprise-input font-mono-num text-xs leading-relaxed" placeholder="Deskripsi paket, harga, cara order..."></textarea>
-                                </div>
-
-                                <!-- Live WhatsApp Preview Bubble -->
-                                <div class="p-3 rounded-xl bg-[var(--bg-card)] border border-[var(--border-color)] space-y-1.5">
-                                    <div class="flex items-center justify-between text-[10px] text-[var(--text-muted)] font-semibold uppercase tracking-wider">
-                                        <span class="flex items-center gap-1"><i data-lucide="eye" class="w-3 h-3 text-emerald-400"></i> Pratinjau Pesan WhatsApp</span>
-                                        <span class="font-mono">Chat Pelanggan</span>
-                                    </div>
-                                    <div class="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-xs text-[var(--text-primary)] leading-relaxed" id="node-wa-preview">
-                                        <p class="text-[var(--text-muted)] italic">Ketik isi balasan teks untuk melihat pratinjau pesan di sini...</p>
-                                    </div>
-                                </div>
-
+                <!-- SUB-PANE 5: DATA PELANGGAN CRM -->
+                <div id="subpane-shop-customers" class="hidden space-y-4">
+                    <div class="enterprise-card space-y-3">
+                        <div class="flex items-center justify-between pb-2 border-b border-[var(--border-color)]">
+                            <div>
+                                <h3 class="font-bold text-xs uppercase tracking-wider flex items-center gap-2">
+                                    <i data-lucide="contact" class="w-4 h-4 text-indigo-400"></i>
+                                    Data Kontak & Riwayat Pelanggan CRM
+                                </h3>
+                                <p class="text-[11px] text-[var(--text-muted)] mt-0.5">Daftar pelanggan terdaftar, status Mute AI, dan riwayat interaksi</p>
                             </div>
+                        </div>
+                        <div id="shop-customers-list" class="space-y-2 max-h-[480px] overflow-y-auto">
+                            <div class="text-center py-6 text-xs text-[var(--text-muted)]">Memuat data kontak...</div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            
-            <!-- ─── TAB 7: TRANSAKSI & KASIR ───────────────────────────── -->
+            <!-- ─── TAB 2: TRANSAKSI & KASIR ───────────────────────────── -->
             <div id="tab-transactions" class="tab-content hidden space-y-5">
                 <!-- Summary KPI Cards -->
                 <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
@@ -795,15 +991,15 @@
                     </div>
                     <div class="enterprise-card p-3.5">
                         <p class="text-[10px] text-[var(--text-muted)] font-medium">Omset Lunas</p>
-                        <h4 id="stat-trans-total-revenue" class="text-base font-bold font-mono-num mt-0.5 text-emerald-400">Rp 0</h4>
+                        <h4 id="stat-trans-total-revenue" class="text-base font-bold font-mono-num mt-0.5 text-emerald-500">Rp 0</h4>
                     </div>
                     <div class="enterprise-card p-3.5">
                         <p class="text-[10px] text-[var(--text-muted)] font-medium">Pesanan Pending</p>
-                        <h4 id="stat-trans-pending-orders" class="text-base font-bold font-mono-num mt-0.5 text-amber-400">0</h4>
+                        <h4 id="stat-trans-pending-orders" class="text-base font-bold font-mono-num mt-0.5 text-amber-500">0</h4>
                     </div>
                     <div class="enterprise-card p-3.5">
                         <p class="text-[10px] text-[var(--text-muted)] font-medium">Faktur Belum Lunas</p>
-                        <h4 id="stat-trans-unpaid-invoices" class="text-base font-bold font-mono-num mt-0.5 text-rose-400">Rp 0</h4>
+                        <h4 id="stat-trans-unpaid-invoices" class="text-base font-bold font-mono-num mt-0.5 text-rose-500">Rp 0</h4>
                     </div>
                 </div>
 
@@ -828,8 +1024,7 @@
                     </div>
                 </div>
 
-
-                <!-- Panel Orders (Dual-View: Desktop Table + Mobile Cards) -->
+                <!-- Panel Orders -->
                 <div id="panel-orders-container" class="space-y-4">
                     <div class="flex items-center gap-2 overflow-x-auto pb-1">
                         <button onclick="filterOrders('ALL')" data-status="ALL" class="order-filter-btn active enterprise-btn enterprise-btn-secondary text-xs py-1 px-3">Semua</button>
@@ -838,7 +1033,6 @@
                         <button onclick="filterOrders('CANCELLED')" data-status="CANCELLED" class="order-filter-btn enterprise-btn enterprise-btn-secondary text-xs py-1 px-3">Batal</button>
                     </div>
 
-                    <!-- 1. Desktop Table -->
                     <div class="desktop-table-view enterprise-table-container">
                         <table class="enterprise-table">
                             <thead>
@@ -858,13 +1052,12 @@
                         </table>
                     </div>
 
-                    <!-- 2. Mobile App Cards -->
                     <div id="orders-mobile-cards" class="mobile-card-view">
                         <div class="py-6 text-center text-xs text-[var(--text-muted)]">Memuat pesanan...</div>
                     </div>
                 </div>
 
-                <!-- Panel Invoices (Dual-View) -->
+                <!-- Panel Invoices -->
                 <div id="panel-invoices-container" class="space-y-4" style="display:none;">
                     <div class="desktop-table-view enterprise-table-container">
                         <table class="enterprise-table">
@@ -891,243 +1084,101 @@
                 </div>
             </div>
 
-            <!-- ─── TAB 8: AKUN PREMIUM ────────────────────────────────── -->
-            <div id="tab-premium" class="tab-content hidden space-y-5">
-                <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
-                    <div class="enterprise-card p-3.5">
-                        <p class="text-[10px] text-[var(--text-secondary)] font-medium">Pelanggan Aktif</p>
-                        <h4 id="stat-active-subscribers" class="text-base font-bold font-mono-num mt-0.5">0</h4>
-                    </div>
-                    <div class="enterprise-card p-3.5">
-                        <p class="text-[10px] text-[var(--text-secondary)] font-medium">Stok Akun Ready</p>
-                        <h4 id="stat-stock-ratio" class="text-base font-bold font-mono-num mt-0.5">0 / 0</h4>
-                    </div>
-                    <div class="enterprise-card p-3.5">
-                        <p class="text-[10px] text-[var(--text-secondary)] font-medium">Estimasi Omset</p>
-                        <h4 id="stat-monthly-revenue" class="text-base font-bold font-mono-num mt-0.5 text-emerald-400">Rp 0</h4>
-                    </div>
-                    <div class="enterprise-card p-3.5">
-                        <p class="text-[10px] text-[var(--text-secondary)] font-medium">Jatuh Tempo (5 Hari)</p>
-                        <h4 id="stat-expiring-soon" class="text-base font-bold font-mono-num mt-0.5 text-amber-400">0</h4>
-                    </div>
-                </div>
-
-                <div class="flex items-center justify-between">
-                    <div class="flex items-center gap-2 p-1 bg-[var(--bg-surface)] border border-[var(--border-color)] rounded-xl">
-                        <button id="sub-tab-acc-btn" onclick="switchSubTab('premium', 'accounts')" class="subtab-btn active px-3.5 py-1.5 rounded-lg text-xs font-semibold">
-                            Stok Akun
-                        </button>
-                        <button id="sub-tab-sales-btn" onclick="switchSubTab('premium', 'sales')" class="subtab-btn px-3.5 py-1.5 rounded-lg text-xs font-semibold">
-                            Riwayat Penjualan
-                        </button>
-                    </div>
-
-                    <div class="flex items-center gap-2">
-                        <button onclick="openPremiumModal('account')" class="enterprise-btn enterprise-btn-secondary text-xs">
-                            <i data-lucide="plus" class="w-3.5 h-3.5"></i>
-                            <span>Tambah Akun</span>
-                        </button>
-                        <button onclick="openPremiumModal('sale')" class="enterprise-btn enterprise-btn-primary text-xs">
-                            <i data-lucide="user-plus" class="w-3.5 h-3.5"></i>
-                            <span>Catat Jual</span>
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Panel Accounts (Dual View) -->
-                <div id="panel-premium-accounts-container" class="space-y-4">
-                    <div class="desktop-table-view enterprise-table-container">
-                        <table class="enterprise-table">
-                            <thead>
-                                <tr>
-                                    <th>Aplikasi / APK</th>
-                                    <th>Akun & Kredensial</th>
-                                    <th>Slot / Pengguna</th>
-                                    <th>Status</th>
-                                    <th class="text-right">Aksi</th>
-                                </tr>
-                            </thead>
-                            <tbody id="premium-accounts-table-body">
-                                <tr><td colspan="5" class="py-8 text-center text-xs text-[var(--text-muted)]">Memuat akun...</td></tr>
-                            </tbody>
-                        </table>
-                    </div>
-                    <div id="premium-accounts-mobile-cards" class="mobile-card-view">
-                        <div class="py-6 text-center text-xs text-[var(--text-muted)]">Memuat akun...</div>
-                    </div>
-                </div>
-
-                <!-- Panel Sales (Dual View) -->
-                <div id="panel-premium-sales-container" class="space-y-4" style="display:none;">
-                    <div class="desktop-table-view enterprise-table-container">
-                        <table class="enterprise-table">
-                            <thead>
-                                <tr>
-                                    <th>Aplikasi</th>
-                                    <th>Pembeli</th>
-                                    <th>Slot Profile</th>
-                                    <th>Masa Aktif</th>
-                                    <th>Pembayaran</th>
-                                    <th class="text-right">Aksi</th>
-                                </tr>
-                            </thead>
-                            <tbody id="premium-sales-table-body">
-                                <tr><td colspan="6" class="py-8 text-center text-xs text-[var(--text-muted)]">Memuat riwayat penjualan...</td></tr>
-                            </tbody>
-                        </table>
-                    </div>
-                    <div id="premium-sales-mobile-cards" class="mobile-card-view">
-                        <div class="py-6 text-center text-xs text-[var(--text-muted)]">Memuat riwayat penjualan...</div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- ─── TAB 9: PROGRAM REFERRAL ────────────────────────────── -->
-            <div id="tab-referral" class="tab-content hidden space-y-5">
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                    <div class="enterprise-card p-4 flex items-center gap-3">
-                        <div class="w-10 h-10 rounded-xl bg-indigo-500/10 text-indigo-400 flex items-center justify-center shrink-0">
-                            <i data-lucide="users" class="w-5 h-5"></i>
-                        </div>
-                        <div>
-                            <p class="text-[10px] text-[var(--text-secondary)] font-medium">Total Peserta</p>
-                            <h3 id="dashRefTotalAffiliates" class="text-lg font-bold font-mono-num">0</h3>
-                        </div>
-                    </div>
-                    <div class="enterprise-card p-4 flex items-center gap-3">
-                        <div class="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center shrink-0">
-                            <i data-lucide="user-plus" class="w-5 h-5"></i>
-                        </div>
-                        <div>
-                            <p class="text-[10px] text-[var(--text-secondary)] font-medium">Undangan Sukses</p>
-                            <h3 id="dashRefTotalInvites" class="text-lg font-bold font-mono-num">0</h3>
-                        </div>
-                    </div>
-                    <div class="enterprise-card p-4 flex items-center gap-3">
-                        <div class="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-400 flex items-center justify-center shrink-0">
-                            <i data-lucide="coins" class="w-5 h-5"></i>
-                        </div>
-                        <div>
-                            <p class="text-[10px] text-[var(--text-secondary)] font-medium">Poin Terdistribusi</p>
-                            <h3 id="dashRefTotalPoints" class="text-lg font-bold font-mono-num">0</h3>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="enterprise-card space-y-4">
-                    <div class="flex items-center justify-between pb-3 border-b border-[var(--border-color)]">
-                        <h3 class="font-bold text-xs uppercase tracking-wider flex items-center gap-2">
-                            <i data-lucide="gift" class="w-4 h-4 text-indigo-400"></i>
-                            Daftar Anggota & Poin Referral
-                        </h3>
-                        <div class="w-48">
-                            <input type="text" id="ref-search-input" onkeyup="filterReferralDashboardTable()" placeholder="Cari member/kode..." class="enterprise-input text-xs py-1">
-                        </div>
-                    </div>
-
-                    <!-- Dual-View: Desktop Table + Mobile Cards -->
-                    <div class="desktop-table-view enterprise-table-container">
-                        <table class="enterprise-table">
-                            <thead>
-                                <tr>
-                                    <th>Nama Member</th>
-                                    <th>WhatsApp</th>
-                                    <th>Kode Referral</th>
-                                    <th>Undangan</th>
-                                    <th>Total Poin</th>
-                                    <th class="text-right">Aksi</th>
-                                </tr>
-                            </thead>
-                            <tbody id="dashRefTableBody">
-                                <tr><td colspan="6" class="py-8 text-center text-xs text-[var(--text-muted)]">Memuat data referral...</td></tr>
-                            </tbody>
-                        </table>
-                    </div>
-                    <div id="dashRefMobileCards" class="mobile-card-view">
-                        <div class="py-6 text-center text-xs text-[var(--text-muted)]">Memuat data referral...</div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- ─── TAB 10: API KEY MANAGER (AKM) ──────────────────────── -->
-            <div id="tab-apikeys" class="tab-content hidden space-y-5">
-                <!-- Top Summary & Actions -->
-                <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 enterprise-card">
-                    <div>
-                        <h2 class="text-sm font-bold flex items-center gap-2">
-                            <i data-lucide="key-round" class="w-4 h-4 text-indigo-400"></i>
-                            API Key Manager & Health Diagnostic
-                        </h2>
-                        <p class="text-xs text-[var(--text-muted)] mt-0.5">Kelola kunci API provider, rotasi pool, dan uji latensi respons real-time</p>
-                        <div class="flex flex-wrap items-center gap-2 mt-2.5">
-                            <span class="badge-chip badge-slate">Total: <strong id="akm-stat-total" class="font-mono-num">0</strong></span>
-                            <span class="badge-chip badge-blue">Pool: <strong id="akm-stat-pool" class="font-mono-num">0</strong></span>
-                            <span class="badge-chip badge-emerald">Single: <strong id="akm-stat-single" class="font-mono-num">0</strong></span>
-                            <span class="badge-chip badge-amber">Terpakai: <strong id="akm-stat-used" class="font-mono-num">0</strong></span>
-                        </div>
-                    </div>
-
-                    <div class="flex items-center gap-2 w-full sm:w-auto">
-                        <button id="akm-btn-check-live" onclick="runLiveHealthCheck(false)" class="flex-1 sm:flex-none enterprise-btn enterprise-btn-secondary text-amber-400 text-xs">
-                            <i data-lucide="zap" class="w-3.5 h-3.5"></i>
-                            <span>Scan Semua API</span>
-                        </button>
-                        <button onclick="openAddKeyModal()" class="flex-1 sm:flex-none enterprise-btn enterprise-btn-primary text-xs">
-                            <i data-lucide="plus" class="w-3.5 h-3.5"></i>
-                            <span>Tambah Key Baru</span>
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Primary AI Engine Selector Card -->
-                <div class="enterprise-card space-y-3">
-                    <div class="flex items-center justify-between pb-2 border-b border-[var(--border-color)]">
-                        <div>
-                            <h3 class="font-bold text-xs uppercase tracking-wider flex items-center gap-2">
-                                <i data-lucide="cpu" class="w-4 h-4 text-purple-400"></i>
-                                Pilih Engine AI Utama Bot
-                            </h3>
-                            <p class="text-[11px] text-[var(--text-muted)]">Klik provider untuk mengalihkan mesin kecerdasan buatan utama yang aktif merespons chat</p>
-                        </div>
-                    </div>
-                    <div id="akm-engine-selector-container" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2.5">
-                        <!-- Populated dynamically by apikeys.js -->
-                    </div>
-                </div>
-
-                <!-- Filter Tabs Bar -->
-                <div class="flex items-center justify-between gap-3 overflow-x-auto pb-1">
-                    <div id="akm-filter-tabs" class="flex items-center gap-2">
-                        <button class="akm-filter-tab active" onclick="setAkmFilter('all')">Semua Provider</button>
-                    </div>
-                </div>
-
-                <!-- Cards Grid -->
-                <div id="akm-key-list" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div class="col-span-full text-center py-8 text-xs text-[var(--text-muted)]">Memuat daftar API Key...</div>
-                </div>
-            </div>
-
-            <!-- ─── TAB 11: PENGATURAN BOT ─────────────────────────────── -->
+            <!-- ─── TAB 6: PENGATURAN SISTEM & API KEY (CONSOLIDATED) ──── -->
             <div id="tab-settings" class="tab-content hidden space-y-5">
-                <div class="enterprise-card space-y-4">
-                    <div class="pb-3 border-b border-[var(--border-color)]">
-                        <h3 class="font-bold text-xs uppercase tracking-wider flex items-center gap-2">
-                            <i data-lucide="send" class="w-4 h-4 text-sky-400"></i>
-                            Integrasi Bot Telegram
-                        </h3>
-                    </div>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
-                        <div class="space-y-2">
-                            <label class="block font-semibold">Token Bot Telegram</label>
-                            <input type="password" id="cfg-tg-token" class="enterprise-input font-mono-num" placeholder="123456789:ABCDefGhI...">
+                <!-- Subtab Navigation Bar -->
+                <div class="flex items-center gap-1.5 p-1 bg-[var(--bg-surface)] border border-[var(--border-color)] rounded-xl w-fit">
+                    <button id="subtab-set-apikeys-btn" onclick="switchSubTab('settings', 'apikeys')" class="subtab-btn active px-3.5 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all">
+                        <i data-lucide="key-round" class="w-3.5 h-3.5 text-purple-400"></i>
+                        <span>Engine AI & API Key Manager</span>
+                    </button>
+                    <button id="subtab-set-server-btn" onclick="switchSubTab('settings', 'server')" class="subtab-btn px-3.5 py-1.5 rounded-lg text-xs font-semibold text-[var(--text-muted)] flex items-center gap-1.5 transition-all">
+                        <i data-lucide="sliders" class="w-3.5 h-3.5 text-sky-400"></i>
+                        <span>Integrasi Server & Telegram</span>
+                    </button>
+                </div>
+
+                <!-- SUB-PANE 1: API KEY MANAGER -->
+                <div id="subpane-set-apikeys" class="space-y-5">
+                    <!-- Top Summary & Actions -->
+                    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 enterprise-card">
+                        <div>
+                            <h2 class="text-sm font-bold flex items-center gap-2">
+                                <i data-lucide="key-round" class="w-4 h-4 text-indigo-400"></i>
+                                API Key Manager & Health Diagnostic
+                            </h2>
+                            <p class="text-xs text-[var(--text-muted)] mt-0.5">Kelola kunci API provider, rotasi pool, dan uji latensi respons real-time</p>
+                            <div class="flex flex-wrap items-center gap-2 mt-2.5">
+                                <span class="badge-chip badge-slate">Total: <strong id="akm-stat-total" class="font-mono-num">0</strong></span>
+                                <span class="badge-chip badge-blue">Pool: <strong id="akm-stat-pool" class="font-mono-num">0</strong></span>
+                                <span class="badge-chip badge-emerald">Single: <strong id="akm-stat-single" class="font-mono-num">0</strong></span>
+                                <span class="badge-chip badge-amber">Terpakai: <strong id="akm-stat-used" class="font-mono-num">0</strong></span>
+                            </div>
                         </div>
-                        <div class="space-y-2">
-                            <label class="block font-semibold">Chat ID Admin Telegram</label>
-                            <input type="text" id="cfg-tg-admin-chat-id" class="enterprise-input font-mono-num" placeholder="-100123456789">
+
+                        <div class="flex items-center gap-2 w-full sm:w-auto">
+                            <button id="akm-btn-check-live" onclick="runLiveHealthCheck(false)" class="flex-1 sm:flex-none enterprise-btn enterprise-btn-secondary text-amber-500 text-xs">
+                                <i data-lucide="zap" class="w-3.5 h-3.5"></i>
+                                <span>Scan Semua API</span>
+                            </button>
+                            <button onclick="openAddKeyModal()" class="flex-1 sm:flex-none enterprise-btn enterprise-btn-primary text-xs">
+                                <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+                                <span>Tambah Key Baru</span>
+                            </button>
                         </div>
                     </div>
-                    <button onclick="saveTelegramSettings()" class="enterprise-btn enterprise-btn-primary text-xs">Simpan Telegram</button>
+
+                    <!-- Primary AI Engine Selector Card -->
+                    <div class="enterprise-card space-y-3">
+                        <div class="flex items-center justify-between pb-2 border-b border-[var(--border-color)]">
+                            <div>
+                                <h3 class="font-bold text-xs uppercase tracking-wider flex items-center gap-2">
+                                    <i data-lucide="cpu" class="w-4 h-4 text-purple-400"></i>
+                                    Pilih Engine AI Utama Bot
+                                </h3>
+                                <p class="text-[11px] text-[var(--text-muted)]">Klik provider untuk mengalihkan mesin kecerdasan buatan utama yang aktif merespons chat</p>
+                            </div>
+                        </div>
+                        <div id="akm-engine-selector-container" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2.5">
+                            <!-- Populated dynamically by apikeys.js -->
+                        </div>
+                    </div>
+
+                    <!-- Filter Tabs Bar -->
+                    <div class="flex items-center justify-between gap-3 overflow-x-auto pb-1">
+                        <div id="akm-filter-tabs" class="flex items-center gap-2">
+                            <button class="akm-filter-tab active" onclick="setAkmFilter('all')">Semua Provider</button>
+                        </div>
+                    </div>
+
+                    <!-- Cards Grid -->
+                    <div id="akm-key-list" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="col-span-full text-center py-8 text-xs text-[var(--text-muted)]">Memuat daftar API Key...</div>
+                    </div>
+                </div>
+
+                <!-- SUB-PANE 2: SERVER & TELEGRAM CONFIG -->
+                <div id="subpane-set-server" class="hidden space-y-5">
+                    <div class="enterprise-card space-y-4">
+                        <div class="pb-3 border-b border-[var(--border-color)]">
+                            <h3 class="font-bold text-xs uppercase tracking-wider flex items-center gap-2">
+                                <i data-lucide="send" class="w-4 h-4 text-sky-400"></i>
+                                Integrasi Bot Telegram
+                            </h3>
+                            <p class="text-[11px] text-[var(--text-muted)] mt-0.5">Hubungkan bot Telegram sebagai kanal paralel otomatis</p>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+                            <div class="space-y-2">
+                                <label class="block font-semibold">Token Bot Telegram</label>
+                                <input type="password" id="cfg-tg-token" class="enterprise-input font-mono-num" placeholder="123456789:ABCDefGhI...">
+                            </div>
+                            <div class="space-y-2">
+                                <label class="block font-semibold">Chat ID Admin Telegram</label>
+                                <input type="text" id="cfg-tg-admin-chat-id" class="enterprise-input font-mono-num" placeholder="-100123456789">
+                            </div>
+                        </div>
+                        <button onclick="saveTelegramSettings()" class="enterprise-btn enterprise-btn-primary text-xs">Simpan Telegram</button>
+                    </div>
                 </div>
             </div>
 
@@ -1142,21 +1193,25 @@
             <i data-lucide="activity" class="w-5 h-5"></i>
             <span>Monitor</span>
         </button>
-        <button id="mob-nav-memory" onclick="switchTab('memory')" class="mobile-nav-item">
-            <i data-lucide="brain" class="w-5 h-5"></i>
-            <span>Memori</span>
-        </button>
-        <button id="mob-nav-groups" onclick="switchTab('groups')" class="mobile-nav-item">
-            <i data-lucide="users" class="w-5 h-5"></i>
-            <span>Grup</span>
+        <button id="mob-nav-transactions" onclick="switchTab('transactions')" class="mobile-nav-item">
+            <i data-lucide="credit-card" class="w-5 h-5"></i>
+            <span>Kasir</span>
         </button>
         <button id="mob-nav-shop" onclick="switchTab('shop')" class="mobile-nav-item">
             <i data-lucide="store" class="w-5 h-5"></i>
             <span>Toko</span>
         </button>
-        <button id="mob-nav-transactions" onclick="switchTab('transactions')" class="mobile-nav-item">
-            <i data-lucide="credit-card" class="w-5 h-5"></i>
-            <span>Transaksi</span>
+        <button id="mob-nav-groups" onclick="switchTab('groups')" class="mobile-nav-item">
+            <i data-lucide="users" class="w-5 h-5"></i>
+            <span>Grup</span>
+        </button>
+        <button id="mob-nav-memory" onclick="switchTab('memory')" class="mobile-nav-item">
+            <i data-lucide="brain" class="w-5 h-5"></i>
+            <span>Memori</span>
+        </button>
+        <button id="mob-nav-settings" onclick="switchTab('settings')" class="mobile-nav-item">
+            <i data-lucide="sliders" class="w-5 h-5"></i>
+            <span>Setelan</span>
         </button>
     </nav>
 
@@ -1166,33 +1221,33 @@
     <div id="mobile-more-sheet" class="modal-overlay hidden" onclick="closeMobileMoreSheet()">
         <div class="modal-panel bg-[var(--bg-surface)] space-y-4" onclick="event.stopPropagation()">
             <div class="flex items-center justify-between pb-2 border-b border-[var(--border-color)]">
-                <h3 class="font-bold text-xs uppercase tracking-wider">Menu Navigasi Tambahan</h3>
+                <h3 class="font-bold text-xs uppercase tracking-wider">Akses Cepat Modul</h3>
                 <button onclick="closeMobileMoreSheet()" class="text-[var(--text-muted)] hover:text-[var(--text-primary)]"><i data-lucide="x" class="w-4 h-4"></i></button>
             </div>
             <div class="grid grid-cols-2 gap-2 text-xs">
-                <button onclick="switchTab('premium')" class="p-3 rounded-xl bg-[var(--bg-subtle)] border border-[var(--border-color)] flex items-center gap-2.5 font-semibold text-left">
-                    <i data-lucide="crown" class="w-4 h-4 text-amber-400"></i>
-                    <span>Akun Premium</span>
+                <button onclick="switchTab('shop'); switchSubTab('shop', 'menutree');" class="p-3 rounded-xl bg-[var(--bg-subtle)] border border-[var(--border-color)] flex items-center gap-2.5 font-semibold text-left">
+                    <i data-lucide="git-fork" class="w-4 h-4 text-purple-400"></i>
+                    <span>Pohon Menu</span>
                 </button>
-                <button onclick="switchTab('referral')" class="p-3 rounded-xl bg-[var(--bg-subtle)] border border-[var(--border-color)] flex items-center gap-2.5 font-semibold text-left">
+                <button onclick="switchTab('shop'); switchSubTab('shop', 'premium');" class="p-3 rounded-xl bg-[var(--bg-subtle)] border border-[var(--border-color)] flex items-center gap-2.5 font-semibold text-left">
+                    <i data-lucide="crown" class="w-4 h-4 text-amber-400"></i>
+                    <span>Stok Premium</span>
+                </button>
+                <button onclick="switchTab('shop'); switchSubTab('shop', 'referral');" class="p-3 rounded-xl bg-[var(--bg-subtle)] border border-[var(--border-color)] flex items-center gap-2.5 font-semibold text-left">
                     <i data-lucide="gift" class="w-4 h-4 text-indigo-400"></i>
                     <span>Program Referral</span>
                 </button>
-                <button onclick="switchTab('apikeys')" class="p-3 rounded-xl bg-[var(--bg-subtle)] border border-[var(--border-color)] flex items-center gap-2.5 font-semibold text-left">
+                <button onclick="switchTab('shop'); switchSubTab('shop', 'admins');" class="p-3 rounded-xl bg-[var(--bg-subtle)] border border-[var(--border-color)] flex items-center gap-2.5 font-semibold text-left">
+                    <i data-lucide="shield-check" class="w-4 h-4 text-sky-400"></i>
+                    <span>Host Admin</span>
+                </button>
+                <button onclick="switchTab('settings'); switchSubTab('settings', 'apikeys');" class="p-3 rounded-xl bg-[var(--bg-subtle)] border border-[var(--border-color)] flex items-center gap-2.5 font-semibold text-left">
                     <i data-lucide="key-round" class="w-4 h-4 text-purple-400"></i>
                     <span>API Key Manager</span>
                 </button>
-                <button onclick="switchTab('notes')" class="p-3 rounded-xl bg-[var(--bg-subtle)] border border-[var(--border-color)] flex items-center gap-2.5 font-semibold text-left">
-                    <i data-lucide="file-edit" class="w-4 h-4 text-sky-400"></i>
-                    <span>Catatan Memo</span>
-                </button>
-                <button onclick="switchTab('features')" class="p-3 rounded-xl bg-[var(--bg-subtle)] border border-[var(--border-color)] flex items-center gap-2.5 font-semibold text-left">
+                <button onclick="switchTab('memory'); switchSubTab('memory', 'features');" class="p-3 rounded-xl bg-[var(--bg-subtle)] border border-[var(--border-color)] flex items-center gap-2.5 font-semibold text-left">
                     <i data-lucide="zap" class="w-4 h-4 text-emerald-400"></i>
                     <span>Fitur Auto-Reply</span>
-                </button>
-                <button onclick="switchTab('settings')" class="p-3 rounded-xl bg-[var(--bg-subtle)] border border-[var(--border-color)] flex items-center gap-2.5 font-semibold text-left">
-                    <i data-lucide="settings" class="w-4 h-4 text-slate-400"></i>
-                    <span>Pengaturan Bot</span>
                 </button>
             </div>
             <div class="pt-2 border-t border-[var(--border-color)] flex items-center justify-between">
@@ -1206,6 +1261,7 @@
                 </button>
             </div>
         </div>
+    </div>
     </div>
 
     <!-- ══════════════════════════════════════════════════════════════

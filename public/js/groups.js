@@ -14,7 +14,7 @@ window.loadGroupsList = async function() {
 
     if (container) {
         container.innerHTML = `
-            <div class="p-6 text-center bg-[#0b1120] border border-[var(--border-color)] rounded-2xl">
+            <div class="p-6 text-center bg-[var(--bg-subtle)] border border-[var(--border-color)] rounded-2xl">
                 <div class="flex items-center justify-center gap-3 mb-2">
                     <div class="w-4 h-4 border-2 border-indigo-500/20 border-t-indigo-500 rounded-full animate-spin"></div>
                     <p id="group-loading-text" class="text-xs text-[var(--text-muted)] font-medium">Mengambil daftar grup WhatsApp...</p>
@@ -84,10 +84,10 @@ window.renderGroupsListSidebar = function() {
 
     if (!window.activeGroups || window.activeGroups.length === 0) {
         container.innerHTML = `
-            <div class="p-8 text-center bg-[#0b1120] border border-[var(--border-color)] rounded-2xl space-y-3">
-                <i data-lucide="users" class="w-8 h-8 mx-auto text-slate-600"></i>
+            <div class="p-8 text-center bg-[var(--bg-subtle)] border border-[var(--border-color)] rounded-2xl space-y-3">
+                <i data-lucide="users" class="w-8 h-8 mx-auto text-[var(--text-muted)]"></i>
                 <p class="text-xs text-[var(--text-muted)]">Belum ada grup yang terdeteksi di database.</p>
-                <button onclick="addNewGroupJidManual()" class="px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-[var(--text-primary)] text-xs font-semibold shadow-sm">
+                <button onclick="addNewGroupJidManual()" class="px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold shadow-sm">
                     Tambah ID JID Grup Manual
                 </button>
             </div>
@@ -101,7 +101,9 @@ window.renderGroupsListSidebar = function() {
         const isSelected = window.selectedGroupId === g.id;
         const card = document.createElement('div');
         card.className = `group-card p-4 rounded-xl border transition-all cursor-pointer ${
-            isSelected ? 'bg-indigo-600/10 border-indigo-500/50 shadow-sm' : 'bg-[#0b1120] border-[var(--border-color)] hover:border-white/20'
+            isSelected 
+                ? 'bg-indigo-600/10 border-indigo-500/50 shadow-sm' 
+                : 'bg-[var(--bg-subtle)] border-[var(--border-color)] hover:border-indigo-500/30'
         }`;
         card.onclick = () => window.selectGroup(g.id);
 

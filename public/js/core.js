@@ -7,17 +7,18 @@ const socket = io();
 window.socket = socket;
 
 const TAB_TITLES = {
-    monitor:      { title: 'Live Monitor', category: 'Operasional & AI' },
-    memory:       { title: 'Basis Pengetahuan (RAG)', category: 'Operasional & AI' },
-    features:     { title: 'Fitur Auto-Reply', category: 'Operasional & AI' },
-    notes:        { title: 'Catatan & Memo Operasional', category: 'Operasional & AI' },
-    groups:       { title: 'Manajemen Grup WhatsApp', category: 'Komunitas & Toko' },
-    shop:         { title: 'Toko, CRM & Menu Tree', category: 'Komunitas & Toko' },
-    transactions: { title: 'Transaksi & Kasir', category: 'Komunitas & Toko' },
-    premium:      { title: 'Akun Premium & Inventaris', category: 'Komunitas & Toko' },
-    referral:     { title: 'Program Referral & Afiliasi', category: 'Pengaturan & API' },
-    apikeys:      { title: 'API Key Manager & Diagnosa', category: 'Pengaturan & API' },
-    settings:     { title: 'Pengaturan Bot & Integrasi', category: 'Pengaturan & API' }
+    monitor:      { title: 'Live Monitor & Analitik Obrolan', category: 'Operasional & Analitik' },
+    transactions: { title: 'Transaksi, Pembayaran & Kasir', category: 'Operasional & Analitik' },
+    shop:         { title: 'Katalog, Stok Akun & Manajemen Toko', category: 'Operasional & Analitik' },
+    groups:       { title: 'Manajemen Komunitas & Grup WhatsApp', category: 'Operasional & Analitik' },
+    memory:       { title: 'Basis Pengetahuan, Auto-Reply & Memo AI', category: 'Kecerdasan & Sistem' },
+    settings:     { title: 'Pengaturan Sistem, Kredensial & API Key', category: 'Kecerdasan & Sistem' },
+    // Backward compatibility aliases
+    features:     { title: 'Fitur Auto-Reply', category: 'Kecerdasan & Sistem' },
+    notes:        { title: 'Catatan & Memo', category: 'Kecerdasan & Sistem' },
+    premium:      { title: 'Stok Akun Premium', category: 'Operasional & Analitik' },
+    referral:     { title: 'Program Referral', category: 'Operasional & Analitik' },
+    apikeys:      { title: 'API Key Manager', category: 'Kecerdasan & Sistem' }
 };
 
 // ─── 1. TEMA GELAP & TERANG (DARK / LIGHT THEME ENGINE) ────
@@ -110,6 +111,27 @@ window.showToast = function(typeOrMsg, msg, duration = 3500) {
 
 // ─── 3. DUAL-NAV TAB SWITCHER (DESKTOP & MOBILE) ───────────
 window.switchTab = function(tabId) {
+    // Aliasing untuk subtab yang sudah digabung
+    let targetTab = tabId;
+    let targetSubTab = null;
+
+    if (tabId === 'features') {
+        targetTab = 'memory';
+        targetSubTab = 'features';
+    } else if (tabId === 'notes') {
+        targetTab = 'memory';
+        targetSubTab = 'notes';
+    } else if (tabId === 'premium') {
+        targetTab = 'shop';
+        targetSubTab = 'premium';
+    } else if (tabId === 'referral') {
+        targetTab = 'shop';
+        targetSubTab = 'referral';
+    } else if (tabId === 'apikeys') {
+        targetTab = 'settings';
+        targetSubTab = 'apikeys';
+    }
+
     // Sembunyikan semua tab konten
     document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
     
@@ -117,23 +139,33 @@ window.switchTab = function(tabId) {
     document.querySelectorAll('.sidebar-nav-btn, .mobile-nav-item').forEach(el => el.classList.remove('active'));
     
     // Tampilkan tab yang dipilih
-    const selectedTab = document.getElementById(`tab-${tabId}`);
+    const selectedTab = document.getElementById('tab-' + targetTab);
     if (selectedTab) selectedTab.classList.remove('hidden');
     
     // Aktifkan tombol sidebar desktop
-    const deskBtn = document.getElementById(`sidebar-btn-${tabId}`);
+    const deskBtn = document.getElementById('sidebar-btn-' + targetTab);
     if (deskBtn) deskBtn.classList.add('active');
 
     // Aktifkan tombol mobile bottom bar
-    let mobileTarget = tabId;
-    if (['features', 'notes', 'referral', 'apikeys', 'settings', 'premium'].includes(tabId)) {
-        mobileTarget = 'more';
-    }
-    const mobBtn = document.getElementById(`mob-nav-${mobileTarget}`);
+    const mobBtn = document.getElementById('mob-nav-' + targetTab);
     if (mobBtn) mobBtn.classList.add('active');
 
     // Update Desktop Breadcrumb & Tab Title
-    updateWorkbenchHeader(tabId);
+    updateWorkbenchHeader(targetTab);
+
+    // Aktifkan subtab jika ada
+    if (targetSubTab) {
+        window.switchSubTab(targetTab, targetSubTab);
+    } else {
+        // Default subtab loading
+        if (targetTab === 'shop') {
+            window.switchSubTab('shop', 'menutree');
+        } else if (targetTab === 'memory') {
+            window.switchSubTab('memory', 'knowledge');
+        } else if (targetTab === 'settings') {
+            window.switchSubTab('settings', 'apikeys');
+        }
+    }
 
     // Tutup mobile more sheet jika terbuka
     window.closeMobileMoreSheet();
@@ -142,30 +174,11 @@ window.switchTab = function(tabId) {
     window.scrollTo({ top: 0, behavior: 'smooth' });
 
     // Auto-fetch data per tab
-    if (tabId === 'groups' || tabId === 'broadcast') {
+    if (targetTab === 'groups') {
         if (window.loadGroupsList) window.loadGroupsList();
-    } else if (tabId === 'shop') {
-        if (window.loadHostAdmins) window.loadHostAdmins();
-        if (window.loadCustomersList) window.loadCustomersList();
-        if (window.loadGroupsList) window.loadGroupsList();
-        if (window.renderMenuTreeVisual) window.renderMenuTreeVisual();
-    } else if (tabId === 'transactions') {
+    } else if (targetTab === 'transactions') {
         if (window.loadOrders) window.loadOrders();
         if (window.loadInvoices) window.loadInvoices();
-    } else if (tabId === 'premium') {
-        if (window.loadPremiumData) window.loadPremiumData();
-    } else if (tabId === 'notes') {
-        if (window.loadLocalNotes) window.loadLocalNotes();
-    } else if (tabId === 'settings') {
-        setTimeout(() => { 
-            if (window.loadTelegramConfig) window.loadTelegramConfig(); 
-        }, 150);
-    } else if (tabId === 'referral') {
-        if (window.loadReferralDashboardData) window.loadReferralDashboardData();
-    } else if (tabId === 'apikeys') {
-        if (window.loadApiKeys) window.loadApiKeys();
-    } else if (tabId === 'memory') {
-        if (window.loadFiles) window.loadFiles();
     }
 
     if (window.lucide) lucide.createIcons();
@@ -209,7 +222,7 @@ window.closeMobileMoreSheet = function() {
     if (sheet) sheet.classList.add('hidden');
 };
 
-// ─── 6. SUB-TABS CONTROL ───────────────────────────────────
+// ─── 6. SUB-TABS CONTROL (CONSOLIDATED) ────────────────────────
 window.switchSubTab = function(parentTab, subTab) {
     if (parentTab === 'transactions') {
         const ordersPanel = document.getElementById('panel-orders-container');
@@ -245,6 +258,72 @@ window.switchSubTab = function(parentTab, subTab) {
             if (accBtn) accBtn.classList.remove('active');
             if (salesBtn) salesBtn.classList.add('active');
         }
+    } else if (parentTab === 'memory') {
+        const panes = ['knowledge', 'features', 'notes'];
+        panes.forEach(p => {
+            const el = document.getElementById('subpane-mem-' + p);
+            const btn = document.getElementById('subtab-mem-' + p + '-btn');
+            if (p === subTab) {
+                if (el) el.classList.remove('hidden');
+                if (btn) {
+                    btn.classList.add('active', 'font-bold', 'text-[var(--text-primary)]');
+                    btn.classList.remove('text-[var(--text-muted)]');
+                }
+            } else {
+                if (el) el.classList.add('hidden');
+                if (btn) {
+                    btn.classList.remove('active', 'font-bold', 'text-[var(--text-primary)]');
+                    btn.classList.add('text-[var(--text-muted)]');
+                }
+            }
+        });
+        if (subTab === 'knowledge' && window.loadFiles) window.loadFiles();
+        if (subTab === 'notes' && window.loadLocalNotes) window.loadLocalNotes();
+    } else if (parentTab === 'shop') {
+        const panes = ['menutree', 'premium', 'referral', 'admins', 'customers'];
+        panes.forEach(p => {
+            const el = document.getElementById('subpane-shop-' + p);
+            const btn = document.getElementById('subtab-shop-' + p + '-btn');
+            if (p === subTab) {
+                if (el) el.classList.remove('hidden');
+                if (btn) {
+                    btn.classList.add('active', 'font-bold', 'text-[var(--text-primary)]');
+                    btn.classList.remove('text-[var(--text-muted)]');
+                }
+            } else {
+                if (el) el.classList.add('hidden');
+                if (btn) {
+                    btn.classList.remove('active', 'font-bold', 'text-[var(--text-primary)]');
+                    btn.classList.add('text-[var(--text-muted)]');
+                }
+            }
+        });
+        if (subTab === 'menutree' && window.renderMenuTreeVisual) window.renderMenuTreeVisual();
+        if (subTab === 'premium' && window.loadPremiumData) window.loadPremiumData();
+        if (subTab === 'referral' && window.loadReferralDashboardData) window.loadReferralDashboardData();
+        if (subTab === 'admins' && window.loadHostAdmins) window.loadHostAdmins();
+        if (subTab === 'customers' && window.loadCustomersList) window.loadCustomersList();
+    } else if (parentTab === 'settings') {
+        const panes = ['apikeys', 'server'];
+        panes.forEach(p => {
+            const el = document.getElementById('subpane-set-' + p);
+            const btn = document.getElementById('subtab-set-' + p + '-btn');
+            if (p === subTab) {
+                if (el) el.classList.remove('hidden');
+                if (btn) {
+                    btn.classList.add('active', 'font-bold', 'text-[var(--text-primary)]');
+                    btn.classList.remove('text-[var(--text-muted)]');
+                }
+            } else {
+                if (el) el.classList.add('hidden');
+                if (btn) {
+                    btn.classList.remove('active', 'font-bold', 'text-[var(--text-primary)]');
+                    btn.classList.add('text-[var(--text-muted)]');
+                }
+            }
+        });
+        if (subTab === 'apikeys' && window.loadApiKeys) window.loadApiKeys();
+        if (subTab === 'server' && window.loadTelegramConfig) window.loadTelegramConfig();
     }
     if (window.lucide) lucide.createIcons();
 };
