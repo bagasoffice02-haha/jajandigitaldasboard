@@ -738,7 +738,8 @@ async function handleTextMessage(bot, msg, io) {
 
         } catch (err) {
             console.error('[TG AI Fallback] Gagal:', err.message);
-            await bot.sendMessage(chatId, 'Maaf, sistem sedang sibuk. Coba beberapa saat lagi ya.', {
+            const tgFallback = `Halo Kak! 🙏\nMohon maaf, asisten bot sedang dalam sinkronisasi sistem singkat.\n\n📌 Ketik /menu untuk melihat katalog produk dan layanan kami ya!`;
+            await bot.sendMessage(chatId, tgFallback, {
                 reply_to_message_id: isGroup ? msg.message_id : undefined
             });
         }

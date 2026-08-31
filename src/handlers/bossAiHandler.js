@@ -259,7 +259,7 @@ async function handleUnifiedAiDispatcher(msg, {
         else if (config.provider === 'qwen') providerName = 'Qwen';
         else if (config.provider === 'openrouter') providerName = 'OpenRouter';
 
-        const errorFallbackMsg = `⚠️ Maaf Bos, server AI ${providerName} tidak merespon. Silakan gunakan pintasan berikut:\n- Catat Keuangan: \`+ 50rb Beli bensin\`\n- Catat Agenda: \`#agenda Besok jam 10 | Rapat\`\n- Atau ketik *bantuan* untuk panduan lengkap.`;
+        const errorFallbackMsg = `⚠️ *Pemberitahuan Sistem AI*\n\nMohon maaf Bos, server AI (${providerName}) sedang mengalami kendala jaringan sementara.\n\n📌 *Pintasan Perintah Tetap Aktif:*\n• Catat Keuangan: \`+ 50rb Beli bensin\`\n• Catat Agenda: \`#agenda Besok jam 10 | Rapat\`\n• Cek Panduan: Ketik *!bantuan*`;
         await msg.reply(errorFallbackMsg);
         if (ioInstance) ioInstance.emit('message_log', { chatId, body: errorFallbackMsg, type: 'outgoing', timestamp: Date.now() });
     } finally {

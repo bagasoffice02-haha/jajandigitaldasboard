@@ -603,12 +603,17 @@ ${knowledge}
                 if (ioInstance) ioInstance.emit('message_log', { chatId, body: aiIntro, type: 'outgoing', timestamp: Date.now() });
             } catch (err) {
                 console.error('Gagal menjalankan CS AI Fallback:', err.message);
+                const fallbackMessage = (config.ai_error_template && config.ai_error_template.trim()) 
+                    ? config.ai_error_template.trim()
+                    : `Halo Kak! 🙏\nMohon maaf, asisten AI kami sedang melakukan sinkronisasi sistem sejenak.\n\n📌 *Layanan Mandiri Tetap Aktif:*\n• Ketik *!menu* untuk melihat katalog produk & harga\n• Ketik *!caraorder* untuk panduan pemesanan\n• Silakan kirim bukti bayar jika sudah transfer\n\nAdmin kami juga siap membantu Kakak sebentar lagi ya!`;
+                
                 try {
                     if (isGroup || (chatId && chatId.includes('@g.us'))) {
-                        await clientInstance.sendMessage(chatId, 'Maaf Kak, saat ini sistem CS sedang sibuk. Silakan coba beberapa saat lagi.');
+                        await clientInstance.sendMessage(chatId, fallbackMessage);
                     } else {
-                        await msg.reply('Maaf Kak, saat ini sistem CS sedang sibuk. Silakan coba beberapa saat lagi.');
+                        await msg.reply(fallbackMessage);
                     }
+                    if (ioInstance) ioInstance.emit('message_log', { chatId, body: fallbackMessage, type: 'outgoing', timestamp: Date.now() });
                 } catch(_) {}
             } finally {
                 // Stop typing loop & release lock & clear safety timer
