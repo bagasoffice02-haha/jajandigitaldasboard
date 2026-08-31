@@ -191,6 +191,39 @@ async function initDatabase() {
             )
         `);
 
+        // Persistent Chat Logs table (across all devices & server restarts)
+        await db.exec(`
+            CREATE TABLE IF NOT EXISTS chat_logs (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                chat_id TEXT NOT NULL,
+                sender_id TEXT,
+                sender_name TEXT,
+                body TEXT,
+                type TEXT DEFAULT 'incoming',
+                is_group INTEGER DEFAULT 0,
+                is_simulation INTEGER DEFAULT 0,
+                file_sent TEXT,
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                timestamp INTEGER NOT NULL
+            )
+        `);
+        await db.exec(`CREATE INDEX IF NOT EXISTS idx_chat_logs_timestamp ON chat_logs(timestamp)`);
+        await db.exec(`CREATE INDEX IF NOT EXISTS idx_chat_logs_chat_id ON chat_logs(chat_id)`);
+
+        // Persistent System & Activity Diagnostics Logs
+        await db.exec(`
+            CREATE TABLE IF NOT EXISTS system_activity_logs (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                level TEXT DEFAULT 'info',
+                tag TEXT DEFAULT 'SISTEM',
+                message TEXT NOT NULL,
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                timestamp INTEGER NOT NULL
+            )
+        `);
+        await db.exec(`CREATE INDEX IF NOT EXISTS idx_sys_logs_timestamp ON system_activity_logs(timestamp)`);
+        await db.exec(`CREATE INDEX IF NOT EXISTS idx_sys_logs_level ON system_activity_logs(level)`);
+
         // 2. Perform table-specific migrations from key_value_store if the tables are empty
         
         // A. Migrate group_configs

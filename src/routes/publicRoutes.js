@@ -148,15 +148,29 @@ module.exports = function(dependencies) {
         return res.status(401).json({ success: false, error: 'Username atau password salah!' });
     });
 
-    router.post('/api/logout', (req, res) => {
-        const token = req.cookies.session_token;
+    const handleLogout = (req, res) => {
+        let token = null;
+        const cookies = req.headers.cookie;
+        if (cookies) {
+            for (const part of cookies.split(';')) {
+                const [k, v] = part.trim().split('=');
+                if (k === 'session_token') { token = v; break; }
+            }
+        }
         if (token) {
             activeSessions.delete(token);
             saveSessions();
-            res.clearCookie('session_token');
         }
-        res.json({ success: true });
-    });
+        res.clearCookie('session_token', { path: '/' });
+        if (req.xhr || req.headers.accept?.includes('json') || req.method === 'POST') {
+            return res.json({ success: true, message: 'Berhasil keluar' });
+        }
+        return res.redirect('/login');
+    };
+
+    router.post('/api/logout', handleLogout);
+    router.get('/api/logout', handleLogout);
+    router.get('/logout', handleLogout);
 
     router.post('/api/upload-bukti', (req, res, next) => {
         const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress || 'unknown';

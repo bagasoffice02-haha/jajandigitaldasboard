@@ -1,15 +1,17 @@
 // =========================================================================
-// LIVE MONITOR & ENTERPRISE SYSTEM DIAGNOSTICS STUDIO
+// LIVE MONITOR & ENTERPRISE PERSISTENT CHAT & HOURLY ANALYTICS STUDIO
 // =========================================================================
 
 let messageCount = 0;
 let errorLogCount = 0;
 let activeSessionsSet = new Set();
 let botStartTime = Date.now();
-let currentMonitorMode = 'chat'; // 'chat' | 'logs'
-let currentChatFilter = 'all'; // 'all' | 'incoming' | 'outgoing'
-let currentLogFilter = 'all'; // 'all' | 'error' | 'warn' | 'ai'
+let currentMonitorMode = 'chat'; // 'chat' | 'analytics' | 'logs'
+let currentChatFilter = 'all';   // 'all' | 'incoming' | 'outgoing'
+let currentLogFilter = 'all';    // 'all' | 'error' | 'warn' | 'ai'
 let systemLogsCache = [];
+let chatLogsCache = [];
+let analyticsCache = null;
 
 // Helper escape HTML
 function escapeHtml(str) {
@@ -22,63 +24,43 @@ function escapeHtml(str) {
         .replace(/'/g, '&#039;');
 }
 
-// ── 1. STUDIO MODE SWITCHER (LIVE CHAT VS LOGS) ───────────────────────────
+// ── 1. STUDIO MODE SWITCHER (LIVE CHAT VS ANALYTICS VS LOGS) ──────────────
 window.switchMonitorStudioMode = function(mode) {
     currentMonitorMode = mode;
     const chatBtn = document.getElementById('monitor-mode-chat-btn');
+    const analyticsBtn = document.getElementById('monitor-mode-analytics-btn');
     const logsBtn = document.getElementById('monitor-mode-logs-btn');
+
     const chatControls = document.getElementById('monitor-chat-controls');
     const logsControls = document.getElementById('monitor-logs-controls');
+    const analyticsControls = document.getElementById('monitor-analytics-controls');
+
     const chatPane = document.getElementById('monitor-pane-chat');
+    const analyticsPane = document.getElementById('monitor-pane-analytics');
     const logsPane = document.getElementById('monitor-pane-logs');
 
-    if (mode === 'chat') {
-        if (chatBtn) {
-            chatBtn.className = 'px-3 py-1 text-xs font-bold rounded-lg bg-[var(--bg-surface)] text-[var(--text-primary)] shadow-sm flex items-center gap-1.5 transition-all';
-        }
-        if (logsBtn) {
-            logsBtn.className = 'px-3 py-1 text-xs font-semibold rounded-lg text-[var(--text-muted)] hover:text-[var(--text-primary)] flex items-center gap-1.5 transition-all';
-        }
-        if (chatControls) {
-            chatControls.classList.remove('hidden');
-            chatControls.style.display = 'flex';
-        }
-        if (logsControls) {
-            logsControls.classList.add('hidden');
-            logsControls.style.display = 'none';
-        }
-        if (chatPane) {
-            chatPane.classList.remove('hidden');
-            chatPane.style.display = 'flex';
-        }
-        if (logsPane) {
-            logsPane.classList.add('hidden');
-            logsPane.style.display = 'none';
-        }
-    } else {
-        if (logsBtn) {
-            logsBtn.className = 'px-3 py-1 text-xs font-bold rounded-lg bg-[var(--bg-surface)] text-[var(--text-primary)] shadow-sm flex items-center gap-1.5 transition-all';
-        }
-        if (chatBtn) {
-            chatBtn.className = 'px-3 py-1 text-xs font-semibold rounded-lg text-[var(--text-muted)] hover:text-[var(--text-primary)] flex items-center gap-1.5 transition-all';
-        }
-        if (logsControls) {
-            logsControls.classList.remove('hidden');
-            logsControls.style.display = 'flex';
-        }
-        if (chatControls) {
-            chatControls.classList.add('hidden');
-            chatControls.style.display = 'none';
-        }
-        if (logsPane) {
-            logsPane.classList.remove('hidden');
-            logsPane.style.display = 'flex';
-            window.fetchInitialSystemLogs();
-        }
-        if (chatPane) {
-            chatPane.classList.add('hidden');
-            chatPane.style.display = 'none';
-        }
+    const activeBtnClass = 'px-3 py-1 text-xs font-bold rounded-lg bg-[var(--bg-surface)] text-[var(--text-primary)] shadow-sm flex items-center gap-1.5 transition-all';
+    const inactiveBtnClass = 'px-3 py-1 text-xs font-semibold rounded-lg text-[var(--text-muted)] hover:text-[var(--text-primary)] flex items-center gap-1.5 transition-all';
+
+    // Reset buttons
+    if (chatBtn) chatBtn.className = mode === 'chat' ? activeBtnClass : inactiveBtnClass;
+    if (analyticsBtn) analyticsBtn.className = mode === 'analytics' ? activeBtnClass : inactiveBtnClass;
+    if (logsBtn) logsBtn.className = mode === 'logs' ? activeBtnClass : inactiveBtnClass;
+
+    // Toggle controls
+    if (chatControls) chatControls.style.display = mode === 'chat' ? 'flex' : 'none';
+    if (analyticsControls) analyticsControls.style.display = mode === 'analytics' ? 'flex' : 'none';
+    if (logsControls) logsControls.style.display = mode === 'logs' ? 'flex' : 'none';
+
+    // Toggle panes
+    if (chatPane) chatPane.style.display = mode === 'chat' ? 'flex' : 'none';
+    if (analyticsPane) {
+        analyticsPane.style.display = mode === 'analytics' ? 'flex' : 'none';
+        if (mode === 'analytics') window.fetchChatAnalytics();
+    }
+    if (logsPane) {
+        logsPane.style.display = mode === 'logs' ? 'flex' : 'none';
+        if (mode === 'logs') window.fetchInitialSystemLogs();
     }
 
     if (window.lucide) lucide.createIcons();
@@ -249,7 +231,7 @@ window.checkInitialWhatsAppStatus = async function() {
     }
 };
 
-// ── 3. LIVE CHAT STREAM MODULE ───────────────────────────────────────────
+// ── 3. LIVE CHAT STREAM MODULE & PERSISTENT HISTORY ───────────────────────
 window.setChatFilter = function(filter) {
     currentChatFilter = filter;
     const btnAll = document.getElementById('chat-filter-all');
@@ -266,7 +248,7 @@ window.setChatFilter = function(filter) {
     window.filterChatLogs();
 };
 
-window.appendMessageLog = function(msg) {
+window.appendMessageLog = function(msg, isBulk = false) {
     const chatContainer = document.getElementById('chat-messages');
     if (!chatContainer) return;
 
@@ -317,10 +299,34 @@ window.appendMessageLog = function(msg) {
     `;
 
     chatContainer.appendChild(bubble);
-    chatContainer.scrollTop = chatContainer.scrollHeight;
+    if (!isBulk) {
+        chatContainer.scrollTop = chatContainer.scrollHeight;
+        window.filterChatLogs();
+        if (window.lucide) lucide.createIcons();
+    }
+};
 
-    window.filterChatLogs();
-    if (window.lucide) lucide.createIcons();
+window.fetchInitialChatLogs = async function() {
+    try {
+        const res = await fetch('/api/chat/logs');
+        if (res.ok) {
+            const data = await res.json();
+            if (data.success && Array.isArray(data.logs) && data.logs.length > 0) {
+                const chatContainer = document.getElementById('chat-messages');
+                if (chatContainer) chatContainer.innerHTML = '';
+                messageCount = 0;
+                activeSessionsSet.clear();
+
+                data.logs.forEach(msg => window.appendMessageLog(msg, true));
+                
+                if (chatContainer) chatContainer.scrollTop = chatContainer.scrollHeight;
+                window.filterChatLogs();
+                if (window.lucide) lucide.createIcons();
+            }
+        }
+    } catch (err) {
+        console.warn('[Monitor] Gagal memuat riwayat obrolan:', err.message);
+    }
 };
 
 window.filterChatLogs = function() {
@@ -338,19 +344,142 @@ window.filterChatLogs = function() {
     });
 };
 
-window.clearChatLogs = function() {
-    const chatContainer = document.getElementById('chat-messages');
-    if (!chatContainer) return;
-    chatContainer.innerHTML = `
-        <div class="text-center py-12 text-[var(--text-muted)] text-xs flex flex-col items-center justify-center">
-            <i data-lucide="inbox" class="w-8 h-8 mb-2 opacity-40"></i>
-            <span>Log obrolan telah dibersihkan.</span>
-        </div>
-    `;
-    if (window.lucide) lucide.createIcons();
+window.clearChatLogs = async function() {
+    if (!confirm('Hapus seluruh riwayat obrolan tersimpan?')) return;
+    try {
+        await fetch('/api/chat/clear-logs', { method: 'POST' });
+        const chatContainer = document.getElementById('chat-messages');
+        if (chatContainer) {
+            chatContainer.innerHTML = `
+                <div class="text-center py-12 text-[var(--text-muted)] text-xs flex flex-col items-center justify-center">
+                    <i data-lucide="inbox" class="w-8 h-8 mb-2 opacity-40"></i>
+                    <span>Log obrolan telah dibersihkan.</span>
+                </div>
+            `;
+        }
+        messageCount = 0;
+        activeSessionsSet.clear();
+        const statMsg = document.getElementById('stat-msg-count');
+        if (statMsg) statMsg.textContent = '0';
+        const statSess = document.getElementById('stat-session-count');
+        if (statSess) statSess.textContent = '0';
+        if (window.lucide) lucide.createIcons();
+    } catch (_) {}
 };
 
-// ── 4. CHAT SIMULATOR (TEST BOT LIVE) ────────────────────────────────────
+// ── 4. HOURLY CHAT ANALYTICS & PEAK HOUR TRAFFIC ENGINE ────────────────────
+window.fetchChatAnalytics = async function() {
+    try {
+        const res = await fetch('/api/chat/analytics');
+        if (res.ok) {
+            const data = await res.json();
+            if (data.success && data.stats) {
+                analyticsCache = data.stats;
+                window.renderChatAnalytics(data.stats);
+            }
+        }
+    } catch (err) {
+        console.warn('[Analytics] Gagal memuat analisa obrolan:', err.message);
+    }
+};
+
+window.renderChatAnalytics = function(stats) {
+    if (!stats) return;
+
+    // 1. KPI Cards
+    const totalEl = document.getElementById('analytics-total-msgs');
+    const todayEl = document.getElementById('analytics-today-msgs');
+    const peakHourEl = document.getElementById('analytics-peak-hour');
+    const botRatioEl = document.getElementById('analytics-bot-ratio');
+
+    if (totalEl) totalEl.textContent = Number(stats.totalMessages || 0).toLocaleString('id-ID');
+    if (todayEl) todayEl.textContent = Number(stats.todayCount || 0).toLocaleString('id-ID');
+    if (peakHourEl) peakHourEl.textContent = stats.peakHour || '—';
+
+    const totalSum = (stats.totalIncoming || 0) + (stats.totalOutgoing || 0);
+    const botRatioPct = totalSum > 0 ? Math.round(((stats.totalOutgoing || 0) / totalSum) * 100) : 0;
+    if (botRatioEl) botRatioEl.textContent = `${botRatioPct}%`;
+
+    // 2. 24-Hour Hourly Activity Bar Chart (00:00 - 23:00 WIB)
+    const hourlyContainer = document.getElementById('analytics-hourly-chart');
+    if (hourlyContainer && Array.isArray(stats.hourlyDistribution)) {
+        const maxVal = Math.max(...stats.hourlyDistribution, 1);
+        hourlyContainer.innerHTML = '';
+
+        stats.hourlyDistribution.forEach((count, hour) => {
+            const heightPct = Math.max(Math.round((count / maxVal) * 100), count > 0 ? 8 : 4);
+            const isPeak = count > 0 && count === stats.peakCount;
+            const hourLabel = String(hour).padStart(2, '0');
+            const inCount = stats.hourlyIncoming ? stats.hourlyIncoming[hour] || 0 : 0;
+            const outCount = stats.hourlyOutgoing ? stats.hourlyOutgoing[hour] || 0 : 0;
+
+            const barCol = document.createElement('div');
+            barCol.className = 'flex-1 flex flex-col items-center justify-end h-full group relative cursor-pointer';
+            
+            const barBg = isPeak 
+                ? 'bg-gradient-to-t from-indigo-600 to-purple-400 shadow-md shadow-indigo-500/40 border border-indigo-300/40' 
+                : (count > 0 ? 'bg-indigo-500/60 group-hover:bg-indigo-400' : 'bg-white/5');
+
+            barCol.innerHTML = `
+                <!-- Tooltip Hover -->
+                <div class="absolute bottom-full mb-2 hidden group-hover:flex flex-col items-center z-20 pointer-events-none">
+                    <div class="bg-slate-900 border border-white/15 px-2 py-1 rounded-lg text-[10px] text-white shadow-xl whitespace-nowrap font-mono">
+                        <p class="font-bold text-indigo-300">Jam ${hourLabel}:00 WIB</p>
+                        <p class="text-slate-300">Total: <strong class="text-white">${count}</strong> pesan</p>
+                        <p class="text-[9px] text-emerald-400">Masuk: ${inCount} | AI: ${outCount}</p>
+                    </div>
+                    <div class="w-1.5 h-1.5 bg-slate-900 border-r border-b border-white/15 rotate-45 -mt-1"></div>
+                </div>
+
+                <!-- Bar Column -->
+                <div class="w-full max-w-[14px] rounded-t-md ${barBg} transition-all duration-300" style="height: ${heightPct}%;"></div>
+                
+                <!-- Hour Label (Tiap 3 jam atau saat hover) -->
+                <span class="text-[8px] text-[var(--text-muted)] mt-1.5 font-mono ${hour % 3 === 0 ? 'opacity-100' : 'opacity-0 sm:opacity-40'}">${hourLabel}</span>
+            `;
+
+            hourlyContainer.appendChild(barCol);
+        });
+    }
+
+    // 3. 7-Day Trend Chart
+    const dailyContainer = document.getElementById('analytics-daily-chart');
+    if (dailyContainer && Array.isArray(stats.dailyDistribution)) {
+        const maxDaily = Math.max(...stats.dailyDistribution.map(d => d.count), 1);
+        dailyContainer.innerHTML = '';
+
+        stats.dailyDistribution.forEach(d => {
+            const pct = Math.max(Math.round((d.count / maxDaily) * 100), d.count > 0 ? 10 : 4);
+            const row = document.createElement('div');
+            row.className = 'space-y-1';
+            row.innerHTML = `
+                <div class="flex items-center justify-between text-[11px]">
+                    <span class="font-semibold text-slate-300">${d.label}</span>
+                    <span class="font-mono text-[var(--text-muted)]">${d.count} pesan</span>
+                </div>
+                <div class="w-full h-2 rounded-full bg-white/5 overflow-hidden">
+                    <div class="h-full bg-gradient-to-r from-emerald-500 to-teal-400 rounded-full transition-all duration-500" style="width: ${pct}%;"></div>
+                </div>
+            `;
+            dailyContainer.appendChild(row);
+        });
+    }
+
+    // 4. Interaction Ratio Bar Gauge
+    const inPct = totalSum > 0 ? Math.round(((stats.totalIncoming || 0) / totalSum) * 100) : 50;
+    const outPct = 100 - inPct;
+    const gaugeIn = document.getElementById('gauge-incoming-bar');
+    const gaugeOut = document.getElementById('gauge-outgoing-bar');
+    const gaugeInLabel = document.getElementById('gauge-incoming-label');
+    const gaugeOutLabel = document.getElementById('gauge-outgoing-label');
+
+    if (gaugeIn) gaugeIn.style.width = `${inPct}%`;
+    if (gaugeOut) gaugeOut.style.width = `${outPct}%`;
+    if (gaugeInLabel) gaugeInLabel.textContent = `${inPct}% (${stats.totalIncoming || 0})`;
+    if (gaugeOutLabel) gaugeOutLabel.textContent = `${outPct}% (${stats.totalOutgoing || 0})`;
+};
+
+// ── 5. CHAT SIMULATOR (TEST BOT LIVE) ────────────────────────────────────
 window.sendSimulatedTestMessage = async function() {
     const input = document.getElementById('sim-message-input');
     if (!input || !input.value.trim()) return;
@@ -373,7 +502,7 @@ window.sendSimulatedTestMessage = async function() {
     }
 };
 
-// ── 5. ENTERPRISE SYSTEM & ERROR DIAGNOSTICS LOG STREAM ───────────────────
+// ── 6. ENTERPRISE SYSTEM & ERROR DIAGNOSTICS LOG STREAM ───────────────────
 window.setLogFilter = function(filter) {
     currentLogFilter = filter;
     const btnAll = document.getElementById('log-filter-all');
@@ -535,7 +664,7 @@ window.fetchInitialSystemLogs = async function() {
     } catch(_) {}
 };
 
-// ── 6. UPTIME & SOCKET MONITORING ────────────────────────────────────────
+// ── 7. UPTIME & SOCKET MONITORING ────────────────────────────────────────
 setInterval(() => {
     const uptimeEl = document.getElementById('stat-uptime');
     if (!uptimeEl) return;
@@ -549,12 +678,14 @@ setInterval(() => {
     }
 }, 30000);
 
-// ── 7. SOCKET LISTENERS ──────────────────────────────────────────────────
+// ── 8. SOCKET LISTENERS ──────────────────────────────────────────────────
 if (window.socket) {
     window.socket.on('connect', () => {
         console.log('[Socket] Terhubung ke backend dashboard.');
         window.checkInitialWhatsAppStatus();
+        window.fetchInitialChatLogs();
         window.fetchInitialSystemLogs();
+        window.fetchChatAnalytics();
         const statSock = document.getElementById('stat-socket-clients');
         if (statSock) statSock.textContent = 'Terhubung';
     });
@@ -574,8 +705,42 @@ if (window.socket) {
         }
     });
 
+    window.socket.on('initial_chat_logs', (data) => {
+        if (data && Array.isArray(data.logs)) {
+            const chatContainer = document.getElementById('chat-messages');
+            if (chatContainer) chatContainer.innerHTML = '';
+            messageCount = 0;
+            activeSessionsSet.clear();
+            data.logs.forEach(msg => window.appendMessageLog(msg, true));
+            if (chatContainer) chatContainer.scrollTop = chatContainer.scrollHeight;
+            window.filterChatLogs();
+            if (window.lucide) lucide.createIcons();
+        }
+    });
+
     window.socket.on('message_log', (msg) => {
         window.appendMessageLog(msg);
+        if (currentMonitorMode === 'analytics') {
+            window.fetchChatAnalytics();
+        }
+    });
+
+    window.socket.on('chat_logs_cleared', () => {
+        const chatContainer = document.getElementById('chat-messages');
+        if (chatContainer) {
+            chatContainer.innerHTML = `
+                <div class="text-center py-12 text-[var(--text-muted)] text-xs flex flex-col items-center justify-center">
+                    <i data-lucide="inbox" class="w-8 h-8 mb-2 opacity-40"></i>
+                    <span>Log obrolan telah dibersihkan.</span>
+                </div>
+            `;
+        }
+        messageCount = 0;
+        activeSessionsSet.clear();
+        const statMsg = document.getElementById('stat-msg-count');
+        if (statMsg) statMsg.textContent = '0';
+        const statSess = document.getElementById('stat-session-count');
+        if (statSess) statSess.textContent = '0';
     });
 
     window.socket.on('system_log', (logObj) => {
@@ -594,10 +759,19 @@ if (window.socket) {
         const logsContainer = document.getElementById('system-logs-container');
         if (logsContainer) logsContainer.innerHTML = '<div class="text-slate-500 text-center py-10">Log sistem telah dibersihkan.</div>';
     });
+
+    window.socket.on('chat_analytics_init', (data) => {
+        if (data && data.stats) {
+            analyticsCache = data.stats;
+            window.renderChatAnalytics(data.stats);
+        }
+    });
 }
 
 // Inisialisasi awal
 document.addEventListener('DOMContentLoaded', () => {
     window.checkInitialWhatsAppStatus();
+    window.fetchInitialChatLogs();
     window.fetchInitialSystemLogs();
+    window.fetchChatAnalytics();
 });

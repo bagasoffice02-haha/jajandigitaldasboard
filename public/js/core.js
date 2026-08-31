@@ -272,10 +272,16 @@ window.copyPublicUrl = function(pathUrl) {
     });
 };
 
-window.logoutDashboard = function() {
-    if (confirm('Keluar dari sesi dashboard?')) {
-        document.cookie = 'auth=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;';
-        window.location.reload();
+window.logoutDashboard = async function() {
+    if (confirm('Apakah Anda yakin ingin keluar dari sistem dasbor?')) {
+        try {
+            await fetch('/api/logout', { 
+                method: 'POST', 
+                headers: { 'Content-Type': 'application/json' } 
+            });
+        } catch (_) {}
+        document.cookie = 'session_token=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;';
+        window.location.href = '/login';
     }
 };
 

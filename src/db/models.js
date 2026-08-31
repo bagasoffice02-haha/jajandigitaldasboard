@@ -175,6 +175,215 @@ async function deactivateReminder(id) {
     await db.run('UPDATE reminders SET is_active = 0 WHERE id = ?', id);
 }
 
+// ─── 6. Persistent Chat Logs & Real-Time Sync Helpers ─────────────────────────
+async function saveChatLogToDb(log) {
+    try {
+        const db = getDb();
+        if (!db) return null;
+        const ts = log.timestamp || Date.now();
+        const res = await db.run(
+            `INSERT INTO chat_logs (chat_id, sender_id, sender_name, body, type, is_group, is_simulation, file_sent, timestamp)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            log.chatId || '',
+            log.senderId || log.sender || '',
+            log.senderName || '',
+            log.body || '',
+            log.type || 'incoming',
+            log.isGroup ? 1 : 0,
+            log.isSimulation ? 1 : 0,
+            log.fileSent || '',
+            ts
+        );
+        return res ? res.lastID : null;
+    } catch (err) {
+        console.error('[DB saveChatLogToDb Error]:', err.message);
+        return null;
+    }
+}
+
+async function getRecentChatLogsFromDb(limit = 100) {
+    try {
+        const db = getDb();
+        if (!db) return [];
+        const rows = await db.all(
+            `SELECT id, chat_id as chatId, sender_id as senderId, sender_name as senderName,
+                    body, type, is_group as isGroup, is_simulation as isSimulation,
+                    file_sent as fileSent, timestamp, created_at as createdAt
+             FROM chat_logs
+             ORDER BY timestamp DESC
+             LIMIT ?`,
+            limit
+        );
+        return rows.reverse(); // Urutkan kronologis dari yang terlama ke terbaru
+    } catch (err) {
+        console.error('[DB getRecentChatLogsFromDb Error]:', err.message);
+        return [];
+    }
+}
+
+async function clearChatLogsFromDb() {
+    try {
+        const db = getDb();
+        if (!db) return false;
+        await db.run('DELETE FROM chat_logs');
+        return true;
+    } catch (err) {
+        console.error('[DB clearChatLogsFromDb Error]:', err.message);
+        return false;
+    }
+}
+
+// ─── 7. Chat Analytics & Peak Hour Response Insights ──────────────────────────
+async function getChatAnalyticsFromDb() {
+    try {
+        const db = getDb();
+        if (!db) return {
+            totalMessages: 0,
+            totalSessions: 0,
+            totalIncoming: 0,
+            totalOutgoing: 0,
+            todayCount: 0,
+            peakHour: '—',
+            hourlyDistribution: Array(24).fill(0),
+            dailyDistribution: []
+        };
+
+        const totalRow = await db.get('SELECT COUNT(*) as count FROM chat_logs');
+        const sessionRow = await db.get('SELECT COUNT(DISTINCT chat_id) as count FROM chat_logs');
+        const incomingRow = await db.get("SELECT COUNT(*) as count FROM chat_logs WHERE type = 'incoming'");
+        const outgoingRow = await db.get("SELECT COUNT(*) as count FROM chat_logs WHERE type = 'outgoing'");
+        
+        // Ambil semua timestamp untuk analisis per jam (WIB: UTC+7)
+        const recentRows = await db.all('SELECT timestamp, type FROM chat_logs ORDER BY timestamp DESC LIMIT 5000');
+        
+        const hourlyBuckets = Array(24).fill(0);
+        const hourlyIncoming = Array(24).fill(0);
+        const hourlyOutgoing = Array(24).fill(0);
+        
+        const now = Date.now();
+        const oneDayAgo = now - 24 * 60 * 60 * 1000;
+        let todayCount = 0;
+
+        recentRows.forEach(r => {
+            const date = new Date(r.timestamp);
+            // Konversi ke jam lokal (0 - 23)
+            const hour = date.getHours();
+            hourlyBuckets[hour]++;
+            if (r.type === 'incoming') hourlyIncoming[hour]++;
+            else hourlyOutgoing[hour]++;
+
+            if (r.timestamp >= oneDayAgo) {
+                todayCount++;
+            }
+        });
+
+        // Cari jam tersibuk (Peak Hour)
+        let maxCount = -1;
+        let peakHourIndex = 12;
+        hourlyBuckets.forEach((cnt, idx) => {
+            if (cnt > maxCount) {
+                maxCount = cnt;
+                peakHourIndex = idx;
+            }
+        });
+
+        const padZero = (n) => String(n).padStart(2, '0');
+        const peakHourStr = maxCount > 0 
+            ? `${padZero(peakHourIndex)}:00 - ${padZero((peakHourIndex + 1) % 24)}:00 WIB`
+            : 'Belum Ada Data';
+
+        // 7 Hari Terakhir
+        const daysMap = new Map();
+        for (let i = 6; i >= 0; i--) {
+            const d = new Date(now - i * 24 * 60 * 60 * 1000);
+            const dateKey = d.toISOString().slice(0, 10);
+            const dayName = d.toLocaleDateString('id-ID', { weekday: 'short' });
+            daysMap.set(dateKey, { label: dayName, count: 0 });
+        }
+
+        recentRows.forEach(r => {
+            const dateKey = new Date(r.timestamp).toISOString().slice(0, 10);
+            if (daysMap.has(dateKey)) {
+                daysMap.get(dateKey).count++;
+            }
+        });
+
+        return {
+            totalMessages: totalRow ? totalRow.count : 0,
+            totalSessions: sessionRow ? sessionRow.count : 0,
+            totalIncoming: incomingRow ? incomingRow.count : 0,
+            totalOutgoing: outgoingRow ? outgoingRow.count : 0,
+            todayCount,
+            peakHour: peakHourStr,
+            peakCount: maxCount > 0 ? maxCount : 0,
+            hourlyDistribution: hourlyBuckets,
+            hourlyIncoming,
+            hourlyOutgoing,
+            dailyDistribution: Array.from(daysMap.values())
+        };
+    } catch (err) {
+        console.error('[DB getChatAnalyticsFromDb Error]:', err.message);
+        return {
+            totalMessages: 0,
+            totalSessions: 0,
+            totalIncoming: 0,
+            totalOutgoing: 0,
+            todayCount: 0,
+            peakHour: '—',
+            hourlyDistribution: Array(24).fill(0),
+            dailyDistribution: []
+        };
+    }
+}
+
+// ─── 8. Persistent System & Diagnostics Logs ─────────────────────────────────
+async function saveSystemLogToDb(log) {
+    try {
+        const db = getDb();
+        if (!db) return null;
+        const ts = log.timestamp || Date.now();
+        const res = await db.run(
+            `INSERT INTO system_activity_logs (level, tag, message, timestamp)
+             VALUES (?, ?, ?, ?)`,
+            log.level || 'info',
+            log.tag || 'SISTEM',
+            log.message || '',
+            ts
+        );
+        return res ? res.lastID : null;
+    } catch (err) {
+        return null;
+    }
+}
+
+async function getRecentSystemLogsFromDb(limit = 150) {
+    try {
+        const db = getDb();
+        if (!db) return [];
+        const rows = await db.all(
+            `SELECT id, level, tag, message, timestamp, created_at as createdAt
+             FROM system_activity_logs
+             ORDER BY timestamp DESC
+             LIMIT ?`,
+            limit
+        );
+        return rows.reverse();
+    } catch (err) {
+        return [];
+    }
+}
+
+async function clearSystemLogsFromDb() {
+    try {
+        const db = getDb();
+        if (!db) return false;
+        await db.run('DELETE FROM system_activity_logs');
+        return true;
+    } catch (err) {
+        return false;
+    }
+}
+
 module.exports = {
     getGroupConfigs,
     saveGroupConfig,
@@ -193,5 +402,12 @@ module.exports = {
     saveLogHistory,
     getReminders,
     addReminder,
-    deactivateReminder
+    deactivateReminder,
+    saveChatLogToDb,
+    getRecentChatLogsFromDb,
+    clearChatLogsFromDb,
+    getChatAnalyticsFromDb,
+    saveSystemLogToDb,
+    getRecentSystemLogsFromDb,
+    clearSystemLogsFromDb
 };

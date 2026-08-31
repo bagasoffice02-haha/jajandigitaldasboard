@@ -12,6 +12,15 @@ const path = require('path');
 
 const { config } = require('./src/config/config');
 const { initDatabase, getDb } = require('./src/db/sqlite');
+const { 
+    saveSystemLogToDb, 
+    getRecentSystemLogsFromDb, 
+    clearSystemLogsFromDb,
+    saveChatLogToDb, 
+    getRecentChatLogsFromDb, 
+    clearChatLogsFromDb, 
+    getChatAnalyticsFromDb 
+} = require('./src/db/models');
 const { createNewClient, getClient, getStatus, getQrCode, cleanupHeadlessChrome } = require('./src/services/whatsapp/client');
 const { setSocketIo } = require('./src/services/ai/aiService');
 
@@ -62,7 +71,7 @@ const uploadRateBucket = new Map();
 
 function checkAuth(req, res, next) {
     const publicPaths = [
-        '/login', '/api/login', '/api/get-registered-admin-phone', 
+        '/login', '/api/login', '/logout', '/api/logout', '/api/get-registered-admin-phone', 
         '/api/request-reset-otp', '/api/verify-reset-otp', '/upload-bukti', 
         '/api/upload-bukti', '/qris', '/q', '/u', '/favicon.ico',
         '/referral', '/leaderboard', '/affiliate',
@@ -149,6 +158,7 @@ function pushSystemLog(level, message, tag = 'SISTEM') {
     if (global.recentSystemLogs.length > MAX_SYSTEM_LOGS) {
         global.recentSystemLogs.shift();
     }
+    saveSystemLogToDb(logObj);
     if (io) {
         io.emit('system_log', logObj);
     }
@@ -203,26 +213,64 @@ console.error = (...args) => {
     pushSystemLog('error', msg, 'ERROR');
 };
 
-// Endpoints untuk log sistem & simulasi pengujian
-app.get('/api/system/logs', (req, res) => {
-    res.json({ success: true, logs: global.recentSystemLogs || [] });
+// Endpoints untuk Log Obrolan Persisten & Analisa Trafik
+app.get('/api/chat/logs', async (req, res) => {
+    try {
+        const logs = await getRecentChatLogsFromDb(100);
+        res.json({ success: true, logs });
+    } catch(err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
 });
 
-app.post('/api/system/clear-logs', (req, res) => {
-    global.recentSystemLogs = [];
-    io.emit('system_logs_cleared');
-    res.json({ success: true });
+app.get('/api/chat/analytics', async (req, res) => {
+    try {
+        const stats = await getChatAnalyticsFromDb();
+        res.json({ success: true, stats });
+    } catch(err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
 });
 
-app.post('/api/system/simulate-chat', (req, res) => {
+app.post('/api/chat/clear-logs', async (req, res) => {
+    try {
+        await clearChatLogsFromDb();
+        io.emit('chat_logs_cleared');
+        res.json({ success: true });
+    } catch(err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// Endpoints untuk Log Sistem & Simulasi Pengujian
+app.get('/api/system/logs', async (req, res) => {
+    try {
+        const logs = await getRecentSystemLogsFromDb(150);
+        res.json({ success: true, logs: logs.length > 0 ? logs : (global.recentSystemLogs || []) });
+    } catch(err) {
+        res.json({ success: true, logs: global.recentSystemLogs || [] });
+    }
+});
+
+app.post('/api/system/clear-logs', async (req, res) => {
+    try {
+        await clearSystemLogsFromDb();
+        global.recentSystemLogs = [];
+        io.emit('system_logs_cleared');
+        res.json({ success: true });
+    } catch(err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+app.post('/api/system/simulate-chat', async (req, res) => {
     try {
         const { message, senderId, isGroup } = req.body;
         if (!message) return res.status(400).json({ error: 'Pesan simulasi wajib diisi.' });
 
         const simSender = senderId || '6281234567890@c.us';
         const simChatId = isGroup ? '120363000000000000@g.us' : simSender;
-
-        io.emit('message_log', {
+        const simLog = {
             chatId: simChatId,
             senderId: simSender,
             body: message,
@@ -230,7 +278,10 @@ app.post('/api/system/simulate-chat', (req, res) => {
             isGroup: Boolean(isGroup),
             timestamp: Date.now(),
             isSimulation: true
-        });
+        };
+
+        await saveChatLogToDb(simLog);
+        io.emit('message_log', simLog);
 
         pushSystemLog('info', `Simulasi pesan diterima: "${message}" dari ${simSender}`, 'SIMULATOR');
         res.json({ success: true, message: 'Simulasi pesan dikirim ke live monitor.' });
@@ -240,10 +291,20 @@ app.post('/api/system/simulate-chat', (req, res) => {
 });
 
 // ─── Socket.io & Global Protections ──────────────────────────────────────────
-io.on('connection', (socket) => {
+io.on('connection', async (socket) => {
     socket.emit('whatsapp_status', { status: getStatus() });
     if (getQrCode() && getStatus() !== 'CONNECTED') socket.emit('qr', getQrCode());
-    socket.emit('system_logs_batch', { logs: global.recentSystemLogs || [] });
+    
+    try {
+        const initialChatLogs = await getRecentChatLogsFromDb(100);
+        socket.emit('initial_chat_logs', { logs: initialChatLogs });
+
+        const initialSysLogs = await getRecentSystemLogsFromDb(150);
+        socket.emit('system_logs_batch', { logs: initialSysLogs.length > 0 ? initialSysLogs : (global.recentSystemLogs || []) });
+
+        const analytics = await getChatAnalyticsFromDb();
+        socket.emit('chat_analytics_init', { stats: analytics });
+    } catch(e) {}
 });
 
 process.on('uncaughtException', (err) => {

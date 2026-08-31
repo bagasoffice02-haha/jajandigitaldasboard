@@ -3,7 +3,7 @@ if (typeof global.DOMMatrix === 'undefined') {
 }
 
 const { config } = require('../../config/config');
-const { getGroupConfigs, getShopData } = require('../../db/models');
+const { getGroupConfigs, getShopData, saveChatLogToDb } = require('../../db/models');
 
 const setMessagesAdminsOnlyHelper = (...args) => require('./client').setMessagesAdminsOnlyHelper(...args);
 
@@ -132,16 +132,21 @@ async function handleIncomingMessage(msg) {
     const senderId = msg.fromMe ? (clientInstance && clientInstance.info ? clientInstance.info.wid._serialized : (msg.author || msg.from)) : (msg.author || msg.from);
     const isGroup = msg.isGroupMsg || chatId.includes('@g.us');
 
-    // Broadcast pesan masuk ke Live Stream Obrolan di Web Dashboard
-    if (ioInstance && userMessage) {
-        ioInstance.emit('message_log', {
+    // Simpan ke SQLite & Broadcast pesan masuk ke Live Stream Obrolan di Web Dashboard
+    if (userMessage) {
+        const incomingLog = {
             chatId,
             senderId,
             body: userMessage,
             type: msg.fromMe ? 'outgoing' : 'incoming',
             isGroup,
             timestamp: Date.now()
-        });
+        };
+        saveChatLogToDb(incomingLog);
+
+        if (ioInstance) {
+            ioInstance.emit('message_log', incomingLog);
+        }
     }
 
     // Jika pesan dari nomor bot sendiri, abaikan jika bukan command/shortcut
@@ -191,16 +196,21 @@ async function handleIncomingMessage(msg) {
 
         const replyResult = await originalReply(replacedContent, cid, opt);
 
-        // Broadcast balasan keluar ke Live Stream Obrolan di Web Dashboard
-        if (ioInstance && typeof replacedContent === 'string') {
-            ioInstance.emit('message_log', {
+        // Simpan ke SQLite & Broadcast balasan keluar ke Live Stream Obrolan di Web Dashboard
+        if (typeof replacedContent === 'string') {
+            const outgoingLog = {
                 chatId: cid || chatId,
                 senderId: 'BOT_AI',
                 body: replacedContent,
                 type: 'outgoing',
                 isGroup,
                 timestamp: Date.now()
-            });
+            };
+            saveChatLogToDb(outgoingLog);
+
+            if (ioInstance) {
+                ioInstance.emit('message_log', outgoingLog);
+            }
         }
 
         return replyResult;
