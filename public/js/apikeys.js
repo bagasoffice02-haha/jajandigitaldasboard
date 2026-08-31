@@ -19,6 +19,61 @@
     let _liveStatuses = {};
     let _isTestingLive = false;
 
+    
+    function getProviderLogoSvg(provider, className = 'w-5 h-5 shrink-0') {
+        switch(provider) {
+            case 'gemini':
+                return `<svg class="${className}" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 0C12 6.627 6.627 12 0 12C6.627 12 12 17.373 12 24C12 17.373 17.373 12 24 12C17.373 12 12 6.627 12 0Z" fill="url(#gemini-grad-svg)"/>
+                    <defs>
+                        <linearGradient id="gemini-grad-svg" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse">
+                            <stop offset="0%" stop-color="#1BA0F2"/>
+                            <stop offset="40%" stop-color="#4285F4"/>
+                            <stop offset="80%" stop-color="#9B72CB"/>
+                            <stop offset="100%" stop-color="#D96570"/>
+                        </linearGradient>
+                    </defs>
+                </svg>`;
+            case 'groq':
+                return `<svg class="${className}" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect width="24" height="24" rx="6" fill="#F55036"/>
+                    <path d="M16 12C16 14.2 14.2 16 12 16C9.8 16 8 14.2 8 12C8 9.8 9.8 8 12 8C13.6 8 14.9 8.9 15.6 10.2H12.5V12H16Z" fill="white"/>
+                    <circle cx="16" cy="8" r="1.5" fill="#FFE2DC"/>
+                </svg>`;
+            case 'deepseek':
+                return `<svg class="${className}" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect width="24" height="24" rx="6" fill="#1E40AF"/>
+                    <path d="M6 14C8 10.5 11.5 9.5 15.5 10C17 7.5 19 6.5 20 6C19 8.5 18 10.5 17.5 12C19.5 14.5 17.5 17.5 14 17.5C10 17.5 7.5 15.5 6 14Z" fill="#60A5FA"/>
+                    <path d="M10.5 13C12.5 11.5 14.5 12 15.5 13" stroke="white" stroke-width="1.6" stroke-linecap="round"/>
+                    <circle cx="8.5" cy="12.5" r="1" fill="#1E3A8A"/>
+                </svg>`;
+            case 'qwen':
+                return `<svg class="${className}" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 2L20.5 7V17L12 22L3.5 17V7L12 2Z" fill="#EA580C"/>
+                    <path d="M12 5.5L17.5 8.8V15.2L12 18.5L6.5 15.2V8.8L12 5.5Z" fill="#7C2D12"/>
+                    <path d="M12 8L15 10V14L12 16L9 14V10L12 8Z" fill="#FDBA74"/>
+                </svg>`;
+            case 'openrouter':
+                return `<svg class="${className}" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect width="24" height="24" rx="6" fill="#6366F1"/>
+                    <path d="M6 9L12 5.5L18 9V15L12 18.5L6 15V9Z" stroke="white" stroke-width="1.8" stroke-linejoin="round"/>
+                    <path d="M12 5.5V18.5M6 9L18 15M18 9L6 15" stroke="white" stroke-width="1.2" opacity="0.6"/>
+                </svg>`;
+            case 'local':
+                return `<svg class="${className}" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect width="24" height="24" rx="6" fill="#0D9488"/>
+                    <path d="M7 8V16H17" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M7 12H13" stroke="#99F6E4" stroke-width="2.2" stroke-linecap="round"/>
+                    <circle cx="16" cy="16" r="2.5" fill="#5EEAD4"/>
+                </svg>`;
+            default:
+                return `<svg class="${className}" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect width="24" height="24" rx="6" fill="#475569"/>
+                    <path d="M12 6V18M6 12H18" stroke="white" stroke-width="2" stroke-linecap="round"/>
+                </svg>`;
+        }
+    }
+
     function timeAgo(iso) {
         if (!iso) return 'Baru ditambahkan';
         try {
@@ -99,8 +154,8 @@
             return `
                 <div onclick="window.setActiveProviderEngine('${key}')" class="enterprise-card p-3 cursor-pointer transition-all hover:scale-[1.01] flex items-center justify-between gap-3 ${isActive ? 'ring-2' : ''}" style="${activeBorder} ${isActive ? `--tw-ring-color:${p.color};` : ''}">
                     <div class="flex items-center gap-2.5 min-w-0">
-                        <div class="w-8 h-8 rounded-xl flex items-center justify-center font-extrabold text-xs shrink-0" style="background:${p.bg}; color:${p.color}; border:1px solid ${p.border};">
-                            ${p.abbr}
+                        <div class="w-8 h-8 rounded-xl flex items-center justify-center shrink-0 shadow-inner overflow-hidden p-1.5" style="background:${p.bg}; border:1px solid ${p.border};">
+                            ${getProviderLogoSvg(key, 'w-5 h-5')}
                         </div>
                         <div class="min-w-0">
                             <div class="flex items-center gap-1.5">
@@ -174,6 +229,7 @@
 
             return `
                 <button class="akm-filter-tab ${active}" onclick="window.setAkmFilter('${p}')">
+                    ${p !== 'all' ? getProviderLogoSvg(p, 'w-3.5 h-3.5') : '<i data-lucide="layers" class="w-3.5 h-3.5"></i>'}
                     <span>${label}</span>
                     <span class="akm-filter-count">${count}</span>
                 </button>
@@ -251,8 +307,8 @@
                     <!-- Header Line -->
                     <div class="flex items-start justify-between gap-2 pt-1">
                         <div class="flex items-center gap-2.5 min-w-0">
-                            <div class="w-8 h-8 rounded-xl flex items-center justify-center font-extrabold text-xs shrink-0" style="background:${p.bg}; color:${p.color}; border:1px solid ${p.border};">
-                                ${p.abbr}
+                            <div class="w-8 h-8 rounded-xl flex items-center justify-center shrink-0 shadow-inner overflow-hidden p-1.5" style="background:${p.bg}; border:1px solid ${p.border};">
+                                ${getProviderLogoSvg(key.provider, 'w-5 h-5')}
                             </div>
                             <div class="min-w-0">
                                 <div class="flex items-center gap-1.5 flex-wrap">
