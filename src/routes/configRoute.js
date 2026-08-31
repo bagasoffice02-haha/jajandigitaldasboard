@@ -576,44 +576,60 @@ router.get('/keys', (req, res) => {
 // POST /api/keys — Tambah key baru
 router.post('/keys', async (req, res) => {
     try {
-        const { provider, key, model, url, label } = req.body;
+        let { provider, key, model, url, label } = req.body;
+        provider = sanitizeString(provider).toLowerCase();
+        key = sanitizeString(key);
+        model = sanitizeString(model);
+        url = sanitizeString(url);
+        label = sanitizeString(label);
+
         if (!provider || !key) return res.status(400).json({ error: 'Provider dan key wajib diisi' });
 
         const cfg = PROVIDER_CONFIG_MAP[provider];
         if (!cfg) return res.status(400).json({ error: 'Provider tidak dikenal' });
 
+        // Auto fallback ke model default jika kolom model tidak diisi
+        if (!model) {
+            if (provider === 'groq') model = 'qwen/qwen3.8-27b';
+            else if (provider === 'gemini') model = 'gemini-2.0-flash';
+            else if (provider === 'grok' || provider === 'xai') model = 'grok-2-latest';
+            else if (provider === 'deepseek') model = 'deepseek-chat';
+            else if (provider === 'qwen') model = 'qwen-plus';
+            else if (provider === 'openrouter') model = 'meta-llama/llama-3.3-70b-instruct';
+            else if (provider === 'local') model = 'local-model';
+        }
+
         ensureMetadata();
         let newIndex = 0;
 
         if (cfg.single) {
-            config[cfg.keyField] = key.trim();
-            if (model) config[cfg.modelField] = model.trim();
-            if (url && cfg.urlField) config[cfg.urlField] = url.trim();
+            config[cfg.keyField] = key;
+            if (model) config[cfg.modelField] = model;
+            if (url && cfg.urlField) config[cfg.urlField] = url;
             newIndex = 0;
             // Reset metadata for single-key provider
             delete config.key_metadata[getMetaKey(provider, 0)];
         } else {
             if (!Array.isArray(config[cfg.arrayField])) config[cfg.arrayField] = [];
             // Cek duplikat
-            const trimmed = key.trim();
-            if (config[cfg.arrayField].includes(trimmed)) {
+            if (config[cfg.arrayField].includes(key)) {
                 return res.status(409).json({ error: 'API key ini sudah ada' });
             }
-            config[cfg.arrayField].push(trimmed);
+            config[cfg.arrayField].push(key);
             newIndex = config[cfg.arrayField].length - 1;
-            if (model) config[cfg.modelField] = model.trim();
+            if (model) config[cfg.modelField] = model;
         }
 
         // Set metadata
         config.key_metadata[getMetaKey(provider, newIndex)] = {
-            label: (label || '').trim(),
+            label: label || '',
             addedAt: new Date().toISOString(),
             usageCount: 0,
             lastUsedAt: null,
         };
 
         saveConfig(config);
-        res.json({ success: true, index: newIndex, provider });
+        res.json({ success: true, index: newIndex, provider, model });
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
