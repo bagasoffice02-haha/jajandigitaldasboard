@@ -23,8 +23,8 @@ const TAB_TITLES = {
 
 // ─── 1. TEMA GELAP & TERANG (DARK / LIGHT THEME ENGINE) ────
 window.initTheme = function() {
-    const savedTheme = localStorage.getItem('dashboard_theme') || 'dark';
-    window.setTheme(savedTheme, false);
+    const savedTheme = localStorage.getItem('jd_theme') || 'light';
+    setTheme(savedTheme);
 };
 
 window.setTheme = function(theme, notify = true) {
